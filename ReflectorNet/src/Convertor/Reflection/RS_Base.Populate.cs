@@ -3,12 +3,12 @@ using System;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
-using com.IvanMurzak.ReflectorNet.Common.Utils;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
-using static com.IvanMurzak.ReflectorNet.Common.Reflection.Reflector;
+using static com.IvanMurzak.ReflectorNet.Reflection.Reflector;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
 {
     public abstract partial class RS_Base<T> : IReflectionConvertor
     {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Data.Unity
+namespace com.IvanMurzak.ReflectorNet.Data.Unity
 {
     [Description(@"Method reference. Used to find method in codebase of the project.
 'namespace' (string) - namespace of the class. It may be empty if the class is in the global namespace or the namespace is unknown.

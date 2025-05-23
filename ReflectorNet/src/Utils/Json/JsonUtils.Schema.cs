@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
-using com.IvanMurzak.ReflectorNet.Common.Json;
+using com.IvanMurzak.ReflectorNet.Json;
 
-namespace com.IvanMurzak.ReflectorNet.Common
+namespace com.IvanMurzak.ReflectorNet
 {
     public static partial class JsonUtils
     {

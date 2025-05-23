@@ -1,9 +1,9 @@
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 using System;
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Reflection
+namespace com.IvanMurzak.ReflectorNet.Reflection
 {
     /// <summary>
     /// Serializes Unity components to JSON format.

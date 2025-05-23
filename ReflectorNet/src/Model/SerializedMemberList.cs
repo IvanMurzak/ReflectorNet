@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Data.Unity
+namespace com.IvanMurzak.ReflectorNet.Data.Unity
 {
     [Serializable]
     public class SerializedMemberList : List<SerializedMember>

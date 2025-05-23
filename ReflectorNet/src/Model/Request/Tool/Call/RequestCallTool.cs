@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Data
+namespace com.IvanMurzak.ReflectorNet.Data
 {
     public class RequestCallTool : IRequestCallTool
     {

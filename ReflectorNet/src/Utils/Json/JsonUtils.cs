@@ -1,12 +1,12 @@
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
-using com.IvanMurzak.ReflectorNet.Common.Data;
-using com.IvanMurzak.ReflectorNet.Common.Json;
+using com.IvanMurzak.ReflectorNet.Data;
+using com.IvanMurzak.ReflectorNet.Json;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-namespace com.IvanMurzak.ReflectorNet.Common
+namespace com.IvanMurzak.ReflectorNet
 {
     public static partial class JsonUtils
     {

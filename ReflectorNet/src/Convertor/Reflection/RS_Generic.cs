@@ -6,11 +6,11 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
-using com.IvanMurzak.ReflectorNet.Common.Utils;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
 {
     public partial class RS_Generic<T> : RS_NotArray<T>
     {

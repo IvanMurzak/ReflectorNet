@@ -7,11 +7,11 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
-using com.IvanMurzak.ReflectorNet.Common.Reflection;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Reflection;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Common.MCP
+namespace com.IvanMurzak.ReflectorNet.MCP
 {
     public class MethodWrapper
     {

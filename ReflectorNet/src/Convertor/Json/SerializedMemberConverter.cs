@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Json
+namespace com.IvanMurzak.ReflectorNet.Json
 {
     public class SerializedMemberConverter : JsonConverter<SerializedMember>, IJsonSchemaConverter
     {

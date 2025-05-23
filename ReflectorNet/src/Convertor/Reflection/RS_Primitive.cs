@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
 {
     public partial class RS_Primitive : RS_NotArray<object>
     {

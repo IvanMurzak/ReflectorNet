@@ -2,7 +2,7 @@
 
 using System;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Data
+namespace com.IvanMurzak.ReflectorNet.Data
 {
     public class RequestResourceContent : IRequestResourceContent
     {

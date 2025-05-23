@@ -1,6 +1,6 @@
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet.Common.MCP;
-using com.IvanMurzak.ReflectorNet.Common.Reflection;
+using com.IvanMurzak.ReflectorNet.MCP;
+using com.IvanMurzak.ReflectorNet.Reflection;
 using Microsoft.Extensions.Logging;
 
 public static class Tester

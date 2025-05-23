@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
 {
     public abstract partial class RS_Base<T> : IReflectionConvertor
     {

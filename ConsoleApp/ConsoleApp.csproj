@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\dotnetMcp\dotnetMcp.csproj" />
+    <ProjectReference Include="..\ReflectorNet\ReflectorNet.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Data
+namespace com.IvanMurzak.ReflectorNet.Data
 {
     public interface IRequestNotification : IRequestID, IDisposable
     {

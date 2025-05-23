@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Utils
+namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static class TypeUtils
     {

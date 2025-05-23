@@ -1,10 +1,10 @@
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet.Common.Data.Unity;
-using com.IvanMurzak.ReflectorNet.Common.Utils;
+using com.IvanMurzak.ReflectorNet.Data.Unity;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
 {
     public abstract partial class RS_Base<T> : IReflectionConvertor
     {

@@ -3,9 +3,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using com.IvanMurzak.ReflectorNet.Common.Reflection.Convertor;
+using com.IvanMurzak.ReflectorNet.Reflection.Convertor;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Reflection
+namespace com.IvanMurzak.ReflectorNet.Reflection
 {
     /// <summary>
     /// Serializes Unity components to JSON format.

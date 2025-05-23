@@ -3,7 +3,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Common.Data
+namespace com.IvanMurzak.ReflectorNet.Data
 {
     public static class ResponseDataExtension
     {
