@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
 {
-    public abstract partial class RS_Base<T> : IReflectionConvertor
+    public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
         public virtual object? Deserialize(Reflector reflector, SerializedMember data, ILogger? logger = null)
         {

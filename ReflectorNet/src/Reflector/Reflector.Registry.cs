@@ -19,9 +19,9 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
             public Registry()
             {
                 // Basics
-                Add(new RS_Primitive());
-                Add(new RS_Generic<object>());
-                Add(new RS_Array());
+                Add(new PrimitiveReflectionConvertor());
+                Add(new GenericReflectionConvertor<object>());
+                Add(new ArrayReflectionConvertor());
             }
 
             public void Add(IReflectionConvertor serializer)

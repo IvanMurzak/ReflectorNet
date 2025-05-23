@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
 {
-    public abstract class RS_NotArray<T> : RS_Base<T>
+    public abstract class NotArrayReflectionConvertor<T> : BaseReflectionConvertor<T>
     {
         public override int SerializationPriority(Type type, ILogger? logger = null)
         {
