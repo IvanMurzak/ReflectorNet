@@ -30,7 +30,7 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
                 }
             }
 
-            var properties = convertor.GetSerializableFields(this, type);
+            var properties = convertor.GetSerializableProperties(this, type);
             if (properties != null)
             {
                 foreach (var prop in properties)

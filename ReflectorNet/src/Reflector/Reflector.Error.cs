@@ -1,5 +1,7 @@
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
 
@@ -50,6 +52,16 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
 
             public static string NotSupportedInRuntime(Type type)
                 => $"[Error] Type '{type.FullName}' is not supported in runtime for now.";
+
+            public static string MoreThanOneMethodFound(List<MethodInfo> methods)
+            {
+                var methodsString = JsonUtils.Serialize(methods.Select(method => new MethodDataRef(method, justRef: false)));
+                return @$"[Error] Found more than one method. Only single method should be targeted. Please specify the method name more precisely.
+Found {methods.Count} method(s):
+```json
+{methodsString}
+```";
+            }
         }
     }
 }
