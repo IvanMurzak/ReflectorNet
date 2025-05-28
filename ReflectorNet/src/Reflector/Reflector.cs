@@ -23,6 +23,9 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
             Convertors = new Registry();
         }
 
+        /// <summary>
+        /// Serializes an object to a SerializedMember.
+        /// </summary>
         public SerializedMember Serialize(object? obj, Type? type = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
@@ -45,6 +48,9 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
             }
             throw new ArgumentException($"[Error] Type '{type?.FullName}' not supported for serialization.");
         }
+        /// <summary>
+        /// Deserializes a SerializedMember to an object.
+        /// </summary>
         public object? Deserialize(SerializedMember data, ILogger? logger = null)
         {
             if (string.IsNullOrEmpty(data?.typeName))
@@ -64,16 +70,25 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
             return obj;
         }
 
+        /// <summary>
+        /// Finds methods in the specified type that match the given criteria.
+        /// </summary>
         public IEnumerable<FieldInfo>? GetSerializableFields(Type type,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
             => Convertors.BuildDeserializersChain(type)?.GetSerializableFields(this, type, flags, logger);
 
+        /// <summary>
+        /// Finds properties in the specified type that match the given criteria.
+        /// </summary>
         public IEnumerable<PropertyInfo>? GetSerializableProperties(Type type,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
             => Convertors.BuildDeserializersChain(type)?.GetSerializableProperties(this, type, flags, logger);
 
+        /// <summary>
+        /// Populates an object with data from a SerializedMember.
+        /// </summary>
         public StringBuilder Populate(ref object obj, SerializedMember data, StringBuilder? stringBuilder = null, int depth = 0,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
@@ -103,6 +118,9 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
             return stringBuilder;
         }
 
+        /// <summary>
+        /// Populates a property of an object with data from a SerializedMember.
+        /// </summary>
         public StringBuilder PopulateAsProperty(ref object obj, PropertyInfo propertyInfo, SerializedMember data, StringBuilder? stringBuilder = null, int depth = 0,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
