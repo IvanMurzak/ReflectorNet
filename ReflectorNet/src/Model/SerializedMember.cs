@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Utils;
 
-namespace com.IvanMurzak.ReflectorNet.Data.Unity
+namespace com.IvanMurzak.ReflectorNet.Model
 {
     [Serializable]
     public class SerializedMember
