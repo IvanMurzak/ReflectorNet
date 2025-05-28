@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using com.IvanMurzak.ReflectorNet.Utils;
 
-namespace com.IvanMurzak.ReflectorNet.Data
+namespace com.IvanMurzak.ReflectorNet.Model
 {
     public class ResponseCallTool : IResponseCallTool
     {

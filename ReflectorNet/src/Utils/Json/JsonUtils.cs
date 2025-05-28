@@ -1,4 +1,4 @@
-using com.IvanMurzak.ReflectorNet.Data;
+using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Json;
 using System;
 using System.Text.Json;

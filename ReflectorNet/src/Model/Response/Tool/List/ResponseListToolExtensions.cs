@@ -2,7 +2,7 @@ using System;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Data
+namespace com.IvanMurzak.ReflectorNet.Model
 {
     public static class ResponseListToolExtensions
     {

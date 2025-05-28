@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace com.IvanMurzak.ReflectorNet.Data
+namespace com.IvanMurzak.ReflectorNet.Model
 {
     public interface IResponseCallTool
     {

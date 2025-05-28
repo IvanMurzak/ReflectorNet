@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace com.IvanMurzak.ReflectorNet.Data
+namespace com.IvanMurzak.ReflectorNet.Model
 {
     public interface IResponseListTool
     {

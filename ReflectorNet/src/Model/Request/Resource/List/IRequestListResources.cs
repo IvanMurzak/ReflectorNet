@@ -1,6 +1,6 @@
 using System;
 
-namespace com.IvanMurzak.ReflectorNet.Data
+namespace com.IvanMurzak.ReflectorNet.Model
 {
     public interface IRequestListResources : IRequestID, IDisposable
     {
