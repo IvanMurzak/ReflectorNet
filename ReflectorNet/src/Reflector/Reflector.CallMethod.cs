@@ -9,9 +9,6 @@ using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Reflection
 {
-    /// <summary>
-    /// Serializes Unity components to JSON format.
-    /// </summary>
     public partial class Reflector
     {
         public string MethodCall

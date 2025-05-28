@@ -1,4 +1,3 @@
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,9 +6,6 @@ using com.IvanMurzak.ReflectorNet.Data.Unity;
 
 namespace com.IvanMurzak.ReflectorNet.Reflection
 {
-    /// <summary>
-    /// Serializes Unity components to JSON format.
-    /// </summary>
     public partial class Reflector
     {
         static IEnumerable<Type> AllTypes => AppDomain.CurrentDomain.GetAssemblies()

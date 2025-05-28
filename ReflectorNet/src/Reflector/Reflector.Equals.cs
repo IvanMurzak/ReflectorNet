@@ -1,11 +1,7 @@
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 using System.Linq;
 
 namespace com.IvanMurzak.ReflectorNet.Reflection
 {
-    /// <summary>
-    /// Serializes Unity components to JSON format.
-    /// </summary>
     public partial class Reflector
     {
         public bool AreEqual(object? a, object? b)
