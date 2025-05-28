@@ -38,7 +38,7 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
             return 0;
         }
 
-        static int Compare(ParameterInfo[] original, List<MethodPointerRef.Parameter> value)
+        static int Compare(ParameterInfo[] original, List<MethodPointerRef.Parameter>? value)
         {
             if (original == null && value == null)
                 return 2;
@@ -74,8 +74,6 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
         {
             // Prepare Namespace
             filter.Namespace = filter.Namespace?.Trim()?.Replace("null", string.Empty);
-            if (string.IsNullOrEmpty(filter.TypeName))
-                filter.TypeName = null;
 
             var typesEnumerable = AllTypes
                 .Where(type => type.IsVisible)
