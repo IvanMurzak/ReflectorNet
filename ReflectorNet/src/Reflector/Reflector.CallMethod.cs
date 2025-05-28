@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
 using com.IvanMurzak.ReflectorNet.MCP;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Reflection
@@ -76,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet.Reflection
             Func<string> action = () =>
             {
                 var dictInputParameters = inputParameters?.ToImmutableDictionary(
-                    keySelector: p => p.name,
+                    keySelector: p => p.name!,
                     elementSelector: p => reflector.Deserialize(p, logger)
                 );
 

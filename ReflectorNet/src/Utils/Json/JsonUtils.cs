@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-namespace com.IvanMurzak.ReflectorNet
+namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class JsonUtils
     {

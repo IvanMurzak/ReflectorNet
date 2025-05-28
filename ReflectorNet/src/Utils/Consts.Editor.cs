@@ -1,6 +1,6 @@
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 #if UNITY_EDITOR
-namespace com.IvanMurzak.ReflectorNet
+namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class Consts
     {

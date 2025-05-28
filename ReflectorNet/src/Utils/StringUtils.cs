@@ -2,7 +2,7 @@
 
 using System.Linq;
 
-namespace com.IvanMurzak.ReflectorNet
+namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static class StringUtils
     {
