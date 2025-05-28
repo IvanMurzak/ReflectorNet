@@ -5,9 +5,9 @@ using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
-using static com.IvanMurzak.ReflectorNet.Reflection.Reflector;
+using static com.IvanMurzak.ReflectorNet.Reflector;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {

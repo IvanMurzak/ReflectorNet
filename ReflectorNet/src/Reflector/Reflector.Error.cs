@@ -5,7 +5,7 @@ using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
 using com.IvanMurzak.ReflectorNet.Utils;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection
+namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {

@@ -7,7 +7,7 @@ using com.IvanMurzak.ReflectorNet.Data.Unity;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public partial class PrimitiveReflectionConvertor : NotArrayReflectionConvertor<object>
     {

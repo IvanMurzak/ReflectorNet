@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection
+namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {

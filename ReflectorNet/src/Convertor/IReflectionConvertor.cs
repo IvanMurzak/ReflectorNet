@@ -5,7 +5,7 @@ using System.Text;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public interface IReflectionConvertor
     {

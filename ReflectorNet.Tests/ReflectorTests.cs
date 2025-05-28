@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
-using com.IvanMurzak.ReflectorNet.Reflection;
+using com.IvanMurzak.ReflectorNet;
 using Xunit;
 
 namespace ReflectorNet.Tests

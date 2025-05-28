@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection
+namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {

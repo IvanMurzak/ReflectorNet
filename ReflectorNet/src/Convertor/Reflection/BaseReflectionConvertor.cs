@@ -2,7 +2,7 @@ using System;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {

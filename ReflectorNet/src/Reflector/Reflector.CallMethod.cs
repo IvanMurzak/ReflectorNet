@@ -3,11 +3,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
-using com.IvanMurzak.ReflectorNet.MCP;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection
+namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {

@@ -6,7 +6,7 @@ using com.IvanMurzak.ReflectorNet.Data.Unity;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection
+namespace com.IvanMurzak.ReflectorNet
 {
     /// <summary>
     /// Provides methods to call methods on objects using reflection.

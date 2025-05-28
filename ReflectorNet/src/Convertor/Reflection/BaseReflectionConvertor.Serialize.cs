@@ -5,7 +5,7 @@ using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Data.Unity;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection.Convertor
+namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {

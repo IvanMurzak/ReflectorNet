@@ -2,9 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using com.IvanMurzak.ReflectorNet.Reflection.Convertor;
+using com.IvanMurzak.ReflectorNet.Convertor;
 
-namespace com.IvanMurzak.ReflectorNet.Reflection
+namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {
