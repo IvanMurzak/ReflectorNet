@@ -37,10 +37,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             jsonSerializerOptions.Converters.Add(converter);
         }
 
-        public static T? Deserialize<T>(string json, JsonSerializerOptions? options = null) where T : class
+        public static T? Deserialize<T>(string json, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize<T>(json, options ?? jsonSerializerOptions);
 
-        public static T? Deserialize<T>(JsonElement jsonElement, JsonSerializerOptions? options = null) where T : class
+        public static T? Deserialize<T>(JsonElement jsonElement, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize<T>(jsonElement, options ?? jsonSerializerOptions);
 
         public static object? Deserialize(JsonElement jsonElement, Type type, JsonSerializerOptions? options = null)
@@ -52,7 +52,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static object? Deserialize(ref Utf8JsonReader reader, Type returnType, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize(ref reader, returnType, options ?? jsonSerializerOptions);
 
-        public static TValue? Deserialize<TValue>(ref Utf8JsonReader reader, JsonSerializerOptions? options = null) where TValue : class
+        public static TValue? Deserialize<TValue>(ref Utf8JsonReader reader, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize<TValue>(ref reader, options ?? jsonSerializerOptions);
 
         public static JsonElement SerializeToElement(object data, JsonSerializerOptions? options = null)
