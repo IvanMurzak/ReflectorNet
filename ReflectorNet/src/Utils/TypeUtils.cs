@@ -12,7 +12,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     .SelectMany(a => a.GetTypes())
                     .FirstOrDefault(t => t.FullName == typeFullName);
 
-        public static T? GetDefaultValue<T>() where T : class
+        public static T? GetDefaultValue<T>()
             => (T?)GetDefaultValue(typeof(T));
         public static object? GetDefaultValue(Type type)
         {
@@ -39,7 +39,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return CastTo(obj, type, out error);
         }
 
-        public static T? CastTo<T>(object obj, out string? error) where T : class
+        public static T? CastTo<T>(object obj, out string? error)
             => CastTo(obj, typeof(T), out error) is T typedObj ? typedObj : default;
 
         public static object? CastTo(object obj, Type type, out string? error)

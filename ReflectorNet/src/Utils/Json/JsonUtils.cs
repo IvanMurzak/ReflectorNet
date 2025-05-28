@@ -75,7 +75,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
         }
 
-        public static string ToJson<T>(this IResponseData<T>? data, JsonSerializerOptions? options = null) where T : class
+        public static string ToJson<T>(this IResponseData<T>? data, JsonSerializerOptions? options = null)
         {
             if (data == null)
                 return "{}";
@@ -92,7 +92,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static IRequestCallTool? ParseRequestData(this string json, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize<IRequestCallTool>(json, options ?? jsonSerializerOptions);
 
-        public static IResponseData<T>? ParseResponseData<T>(this string json, JsonSerializerOptions? options = null) where T : class
+        public static IResponseData<T>? ParseResponseData<T>(this string json, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize<ResponseData<T>>(json, options ?? jsonSerializerOptions);
 
         public static class Resource

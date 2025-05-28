@@ -82,7 +82,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             return this;
         }
 
-        public T? GetValue<T>() where T : class
+        public T? GetValue<T>()
         {
             if (valueJsonElement == null)
                 return default;
