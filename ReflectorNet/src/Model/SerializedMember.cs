@@ -128,7 +128,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public static SerializedMember FromValue(Type type, object? value, string? name = null)
             => new SerializedMember(type, name).SetValue(value);
 
-        public static SerializedMember FromValue<T>(T? value, string? name = null) where T : class
+        public static SerializedMember FromValue<T>(T? value, string? name = null)
             => new SerializedMember(typeof(T), name).SetValue(value);
     }
 }
