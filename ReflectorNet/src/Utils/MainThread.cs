@@ -57,14 +57,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (IsMainThread())
                 return task;
 
-            var resultTask = new Task<T>(() =>
+            var taskResult = PushToMainThread(task).ContinueWith<T>(t =>
             {
-                PushToMainThread(task).Wait();
+                if (t.IsFaulted)
+                    throw t.Exception.InnerException;
                 return task.Result;
             });
 
-            resultTask.Start();
-            return resultTask;
+            taskResult.Start();
+            return taskResult;
         }
 
         public static Task<T> RunAsync<T>(Func<T> func)
