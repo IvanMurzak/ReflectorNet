@@ -57,14 +57,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (IsMainThread())
                 return task;
 
-            var taskResult = PushToMainThread(task).ContinueWith<T>(t =>
+            var taskResult = task.ContinueWith(t =>
             {
                 if (t.IsFaulted)
                     throw t.Exception.InnerException;
-                return task.Result;
+                return t.Result;
             });
 
-            taskResult.Start();
+            PushToMainThread(task);
             return taskResult;
         }
 

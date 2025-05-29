@@ -8,7 +8,7 @@
 
     <!-- NuGet Package Information -->
     <PackageId>com.IvanMurzak.ReflectorNet</PackageId>
-    <Version>0.1.8</Version>
+    <Version>0.1.9</Version>
     <Authors>Ivan Murzak</Authors>
     <Copyright>Copyright © Ivan Murzak 2025</Copyright>
     <Description>Made for AI usage. Search for C# method using query, let AI to call any method by providing json data of arguments, returns result of a method execution if any as json. Provides API to modify existed in memory instances using json data.</Description>
