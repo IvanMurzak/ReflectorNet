@@ -4,22 +4,30 @@ using System.Threading.Tasks;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
-    public static class MainThread
+    public class MainThread
     {
+        public static MainThread Instance { get; set; } = new MainThread();
+
         static SynchronizationContext mainContext = SynchronizationContext.Current;
 
         /// <summary>
         /// Determines if the current thread is the main thread.
         /// This delegate can be replaced for different environments (e.g. Unity).
         /// </summary>
-        public static Func<bool> IsMainThread { get; set; } = () => Thread.CurrentThread.ManagedThreadId == 1;
+        public virtual bool IsMainThread => Thread.CurrentThread.ManagedThreadId == 1;
 
-        /// <summary>
-        /// Pushes a task to be executed on the main thread.
-        /// This delegate can be replaced for different environments (e.g. Unity).
-        /// </summary>
-        public static Func<Task, Task> PushToMainThread { get; set; } = (task) =>
+        // Synchronous methods
+        public virtual void Run(Task task) => RunAsync(task).Wait();
+        public virtual T Run<T>(Task<T> task) => RunAsync(task).Result;
+        public virtual T Run<T>(Func<T> func) => RunAsync(func).Result;
+        public virtual void Run(Action action) => RunAsync(action).Wait();
+
+        // Asynchronous methods
+        public virtual Task RunAsync(Task task)
         {
+            if (IsMainThread)
+                return task;
+
             var tcs = new TaskCompletionSource<bool>();
             mainContext.Post(_ =>
             {
@@ -35,56 +43,72 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }, null);
 
             return tcs.Task;
-        };
-
-        // Synchronous methods
-        public static void Run(Task task) => RunAsync(task).Wait();
-        public static T Run<T>(Task<T> task) => RunAsync(task).Result;
-        public static T Run<T>(Func<T> func) => RunAsync(func).Result;
-        public static void Run(Action action) => RunAsync(action).Wait();
-
-        // Asynchronous methods
-        public static Task RunAsync(Task task)
-        {
-            if (IsMainThread())
-                return task;
-
-            return PushToMainThread(task);
         }
 
-        public static Task<T> RunAsync<T>(Task<T> task)
+        public virtual Task<T> RunAsync<T>(Task<T> task)
         {
-            if (IsMainThread())
+            if (IsMainThread)
                 return task;
 
-            var taskResult = task.ContinueWith(t =>
+            var tcs = new TaskCompletionSource<T>();
+            mainContext.Post(_ =>
             {
-                if (t.IsFaulted)
-                    throw t.Exception.InnerException;
-                return t.Result;
-            });
-
-            PushToMainThread(task);
-            return taskResult;
+                try
+                {
+                    var result = task.Result;
+                    tcs.SetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            }, null);
+            return tcs.Task;
         }
 
-        public static Task<T> RunAsync<T>(Func<T> func)
+        public virtual Task<T> RunAsync<T>(Func<T> func)
         {
-            if (IsMainThread())
+            if (IsMainThread)
                 return Task.FromResult(func());
 
-            return RunAsync(new Task<T>(func));
+            var tcs = new TaskCompletionSource<T>();
+            mainContext.Post(_ =>
+            {
+                try
+                {
+                    T result = func();
+                    tcs.SetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            }, null);
+            return tcs.Task;
         }
 
-        public static Task RunAsync(Action action)
+        public virtual Task RunAsync(Action action)
         {
-            if (IsMainThread())
+            if (IsMainThread)
             {
                 action();
                 return Task.CompletedTask;
             }
 
-            return RunAsync(new Task(action));
+            var tcs = new TaskCompletionSource<bool>();
+            mainContext.Post(_ =>
+            {
+                try
+                {
+                    action();
+                    tcs.SetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            }, null);
+            return tcs.Task;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         };
         public static ResponseData<T> Error(string requestId, string? message = null) => new ResponseData<T>(requestId, isError: true)
         {
-            Message = "[Error] " + message
+            Message = message
         };
     }
 }

@@ -104,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet
             };
 
             if (executeInMainThread)
-                return MainThread.Run(action);
+                return MainThread.Instance.Run(action);
 
             return action();
         }
