@@ -30,7 +30,7 @@ namespace com.IvanMurzak.ReflectorNet
                     ? 4
                     : 3;
 
-            if (original.Contains(value, StringComparison.OrdinalIgnoreCase))
+            if (original.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0)
                 return original.Contains(value)
                     ? 2
                     : 1;
