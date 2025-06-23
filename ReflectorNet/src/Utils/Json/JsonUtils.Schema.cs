@@ -12,6 +12,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class JsonUtils
     {
+        public const string SchemaId = "$id";
+        public const string SchemaDefs = "$defs";
+        public const string SchemaRef = "$ref";
+        public const string SchemaRefValue = "#/$defs/";
+
         public static JsonNode? GetSchema<T>() => GetSchema(typeof(T));
         public static JsonNode? GetSchema(Type type, bool justRef = false)
         {
@@ -80,21 +85,50 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return new JsonObject { ["type"] = "object" };
 
             var properties = new JsonObject();
+            var defines = new JsonObject();
             var required = new JsonArray();
+
             // Create a schema object manually
             var schema = new JsonObject
             {
                 ["type"] = "object",
                 ["properties"] = properties,
-                ["required"] = required
+                ["required"] = required,
+                [SchemaDefs] = defines
             };
+
+            var defineIds = new HashSet<string>();
+            var parameterSchema = default(JsonNode);
 
             foreach (var parameter in parameters)
             {
+                var isPrimitive = TypeUtils.IsPrimitive(parameter.ParameterType);
+                if (isPrimitive)
+                {
+                    parameterSchema = GetSchema(parameter.ParameterType, justRef: justRef);
+                    if (parameterSchema == null)
+                        continue;
+                }
+                else
+                {
+                    var id = parameter.ParameterType.FullName;
+
+                    if (defineIds.Contains(id))
+                        parameterSchema = GetSchema(parameter.ParameterType, justRef: true);
+                    else
+                    {
+                        var fullSchema = GetSchema(parameter.ParameterType, justRef: false);
+                        if (fullSchema == null)
+                            continue;
+                        defines[id] = fullSchema;
+                        defineIds.Add(id);
+                        parameterSchema = GetSchema(parameter.ParameterType, justRef: true);
+                    }
+
+                    if (parameterSchema == null)
+                        continue;
+                }
                 // Use JsonSchemaExporter to get the schema for each parameter type
-                var parameterSchema = GetSchema(parameter.ParameterType, justRef: justRef);
-                if (parameterSchema == null)
-                    continue;
 
                 properties[parameter.Name!] = parameterSchema;
 
@@ -109,6 +143,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 if (!parameter.HasDefaultValue)
                     required.Add(parameter.Name!);
             }
+
+            if (defines.Count == 0)
+                schema.Remove(SchemaDefs);
             return schema;
         }
 

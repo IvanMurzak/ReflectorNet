@@ -1,14 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
+﻿using System.Linq;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using Xunit;
+using Xunit.Abstractions;
 
 namespace ReflectorNet.Tests
 {
-    public class ReflectorTests
+    public class ReflectorTests : BaseTest
     {
+        public ReflectorTests(ITestOutputHelper output) : base(output) { }
+
         [Fact]
         public void FindMethod_WithKnownMethod_ShouldReturnMethod()
         {

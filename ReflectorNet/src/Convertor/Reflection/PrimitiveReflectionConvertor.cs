@@ -13,11 +13,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
     {
         public override int SerializationPriority(Type type, ILogger? logger = null)
         {
-            var isPrimitive = type.IsPrimitive ||
-                type.IsEnum ||
-                type == typeof(string) ||
-                type == typeof(decimal) ||
-                type == typeof(DateTime);
+            var isPrimitive = TypeUtils.IsPrimitive(type);
 
             return isPrimitive
                 ? MAX_DEPTH + 1

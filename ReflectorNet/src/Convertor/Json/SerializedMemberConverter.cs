@@ -13,7 +13,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public static string StaticId => typeof(SerializedMember).FullName;
         public static JsonNode Schema => new JsonObject
         {
-            ["id"] = StaticId,
+            [JsonUtils.SchemaId] = StaticId,
             ["type"] = "object",
             ["properties"] = new JsonObject
             {
@@ -29,7 +29,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     ["type"] = "array",
                     ["items"] = new JsonObject
                     {
-                        ["$ref"] = StaticId
+                        [JsonUtils.SchemaRef] = StaticId
                     }
                 },
                 [nameof(SerializedMember.props)] = new JsonObject
@@ -37,7 +37,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     ["type"] = "array",
                     ["items"] = new JsonObject
                     {
-                        ["$ref"] = StaticId
+                        [JsonUtils.SchemaRef] = StaticId
                     }
                 }
             },
@@ -45,7 +45,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         };
         public static JsonNode SchemaRef => new JsonObject
         {
-            ["$ref"] = StaticId
+            [JsonUtils.SchemaRef] = StaticId
         };
 
         public string Id => StaticId;

@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Json
 {
@@ -11,18 +12,18 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public static string StaticId => typeof(SerializedMemberList).FullName;
         public static JsonNode Schema => new JsonObject
         {
-            ["id"] = StaticId,
+            [JsonUtils.SchemaId] = StaticId,
             ["type"] = "array",
             ["items"] = new JsonObject
             {
-                ["$ref"] = SerializedMemberConverter.StaticId
+                [JsonUtils.SchemaRef] = SerializedMemberConverter.StaticId
             }
         };
         public string Id => StaticId;
         public JsonNode GetScheme() => Schema;
         public JsonNode GetSchemeRef() => new JsonObject
         {
-            ["$ref"] = Id
+            [JsonUtils.SchemaRef] = Id
         };
 
         public override SerializedMemberList? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
