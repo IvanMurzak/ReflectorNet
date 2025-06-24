@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -70,7 +69,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             Func<string> action = () =>
             {
-                var dictInputParameters = inputParameters?.ToImmutableDictionary(
+                var dictInputParameters = inputParameters?.ToDictionary(
                     keySelector: p => p.name!,
                     elementSelector: p => reflector.Deserialize(p, logger)
                 );
