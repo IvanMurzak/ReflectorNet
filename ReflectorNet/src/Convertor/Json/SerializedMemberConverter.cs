@@ -87,7 +87,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                             member.props = JsonUtils.Deserialize<List<SerializedMember>>(ref reader, options);
                             break;
                         default:
-                            throw new JsonException($"Unexpected property name: {propertyName}. "
+                            throw new JsonException($"Unexpected property name: '{propertyName}'. "
                                 + $"Did you want to use '{SerializedMember.ValueName}', '{nameof(SerializedMember.fields)}' or '{nameof(SerializedMember.props)}'?");
                     }
                 }
