@@ -32,9 +32,9 @@ namespace com.IvanMurzak.ReflectorNet.Model
             ReturnType = methodInfo.ReturnType.FullName;
             ReturnSchema = methodInfo.ReturnType == typeof(void)
                 ? null
-                : JsonUtils.GetSchema(methodInfo.ReturnType, justRef: justRef);
+                : JsonUtils.Schema.GetSchema(methodInfo.ReturnType, justRef: justRef);
             InputParametersSchema = methodInfo.GetParameters()
-                ?.Select(parameter => JsonUtils.GetSchema(parameter.ParameterType, justRef: justRef)!)
+                ?.Select(parameter => JsonUtils.Schema.GetSchema(parameter.ParameterType, justRef: justRef)!)
                 ?.ToList();
         }
     }

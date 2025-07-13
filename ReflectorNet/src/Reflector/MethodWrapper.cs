@@ -51,7 +51,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be static.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.GetArgumentsSchema(methodInfo);
+            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, object targetInstance, MethodInfo methodInfo)
@@ -65,7 +65,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.GetArgumentsSchema(methodInfo);
+            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, Type classType, MethodInfo methodInfo)
@@ -79,7 +79,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.GetArgumentsSchema(methodInfo);
+            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
         }
 
         public virtual async Task<object?> Invoke(params object?[] parameters)

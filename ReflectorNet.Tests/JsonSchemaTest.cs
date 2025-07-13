@@ -12,14 +12,14 @@ namespace ReflectorNet.Tests
         public void SerializedMemberList()
         {
             var methodInfo = typeof(TestClass).GetMethod(nameof(TestClass.SerializedMemberList_ReturnString))!;
-            var schema = JsonUtils.GetArgumentsSchema(methodInfo, justRef: false)!;
+            var schema = JsonUtils.Schema.GetArgumentsSchema(methodInfo, justRef: false)!;
 
             _output.WriteLine(schema.ToString());
 
             Assert.NotNull(schema);
-            Assert.NotNull(schema[JsonUtils.SchemaDefs]);
+            Assert.NotNull(schema[JsonUtils.Schema.Defs]);
 
-            var defines = schema[JsonUtils.SchemaDefs]?.AsObject();
+            var defines = schema[JsonUtils.Schema.Defs]?.AsObject();
             Assert.NotNull(defines);
 
             var targetSchema = defines[typeof(SerializedMemberList).FullName!];

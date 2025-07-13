@@ -12,18 +12,18 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public static string StaticId => typeof(SerializedMemberList).FullName;
         public static JsonNode Schema => new JsonObject
         {
-            [JsonUtils.SchemaId] = StaticId,
-            ["type"] = "array",
-            ["items"] = new JsonObject
+            [JsonUtils.Schema.Id] = StaticId,
+            [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
+            [JsonUtils.Schema.Items] = new JsonObject
             {
-                [JsonUtils.SchemaRef] = SerializedMemberConverter.StaticId
+                [JsonUtils.Schema.Ref] = SerializedMemberConverter.StaticId
             }
         };
         public string Id => StaticId;
         public JsonNode GetScheme() => Schema;
         public JsonNode GetSchemeRef() => new JsonObject
         {
-            [JsonUtils.SchemaRef] = Id
+            [JsonUtils.Schema.Ref] = Id
         };
 
         public override SerializedMemberList? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
