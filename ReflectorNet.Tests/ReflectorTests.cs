@@ -2,6 +2,7 @@
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
 using Xunit.Abstractions;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace ReflectorNet.Tests
 {
@@ -29,6 +30,8 @@ namespace ReflectorNet.Tests
                 methodNameMatchLevel: 6
             ).ToList();
 
+            _output.WriteLine(JsonUtils.Serialize(foundMethods));
+
             // Assert
             Assert.Single(foundMethods);
             Assert.Equal(nameof(TestClass.NoParameters_ReturnBool), foundMethods[0].Name);
@@ -54,6 +57,8 @@ namespace ReflectorNet.Tests
                 typeNameMatchLevel: 6,
                 methodNameMatchLevel: 2 // Lower level to match partial names
             ).ToList();
+
+            _output.WriteLine(JsonUtils.Serialize(foundMethods));
 
             // Assert
             Assert.Contains(foundMethods, m => m.Name == nameof(TestClass.NoParameters_ReturnBool));

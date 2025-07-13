@@ -13,7 +13,9 @@ namespace ReflectorNet.Tests
         {
             var methodInfo = typeof(TestClass).GetMethod(nameof(TestClass.SerializedMemberList_ReturnString))!;
             var schema = JsonUtils.GetArgumentsSchema(methodInfo, justRef: false)!;
+
             _output.WriteLine(schema.ToString());
+
             Assert.NotNull(schema);
             Assert.NotNull(schema[JsonUtils.SchemaDefs]);
 
