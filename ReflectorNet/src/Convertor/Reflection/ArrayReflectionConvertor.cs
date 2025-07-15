@@ -113,9 +113,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedList = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue<List<SerializedMember>>()
-                : JsonUtils.Deserialize<List<SerializedMember>>(value.valueJsonElement.Value);
+            var parsedList = value?.valueJsonElement != null && value.valueJsonElement.HasValue
+                ? JsonUtils.Deserialize<List<SerializedMember>>(value.valueJsonElement.Value)
+                : TypeUtils.GetDefaultValue<List<SerializedMember>>();
 
             try
             {
@@ -176,7 +176,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var hasValue = value?.valueJsonElement.HasValue ?? false;
+            var hasValue = value?.valueJsonElement != null && value.valueJsonElement.HasValue;
             var parsedList = hasValue
                 ? JsonUtils.Deserialize<List<SerializedMember>>(value!.valueJsonElement!.Value)
                 : TypeUtils.GetDefaultValue<List<SerializedMember>>();
