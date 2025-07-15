@@ -45,7 +45,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         };
         public static JsonNode SchemaRef => new JsonObject
         {
-            [JsonUtils.Schema.Ref] = StaticId
+            [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId
         };
 
         public string Id => StaticId;

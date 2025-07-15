@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public JsonNode GetScheme() => Schema;
         public JsonNode GetSchemeRef() => new JsonObject
         {
-            [JsonUtils.Schema.Ref] = Id
+            [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + Id
         };
 
         public override SerializedMemberList? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
