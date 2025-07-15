@@ -155,6 +155,7 @@ namespace com.IvanMurzak.ReflectorNet
                             : $"[Error] Failed to deserialize '{serializedMember.name}': {errorMessage}");
                     return false;
                 }
+
                 if (stringBuilder != null)
                     stringBuilder.AppendLine(parsedList == null
                         ? $"Deserializing '{serializedMember!.name}' enumerable with 'null' value."
