@@ -22,7 +22,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         protected override SerializedMember InternalSerialize(Reflector reflector, object? obj, Type? type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
-            => SerializedMember.FromValue(type, obj, name: name);
+        {
+            type ??= obj?.GetType() ?? typeof(object);
+            return SerializedMember.FromValue(type, obj, name: name);
+        }
 
         public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => null;
@@ -30,47 +33,79 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         public override IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => null;
 
-        protected override bool SetValue(Reflector reflector, ref object obj, Type type, JsonElement? value, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null)
         {
+            if (value == null)
+            {
+                obj = null;
+                return true;
+            }
             var parsedValue = JsonUtils.Deserialize(value.Value, type);
             obj = parsedValue;
             return true;
         }
 
-        public override bool SetAsField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            if (value == null)
+                return false;
+
+            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
+                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
+                : null;
+
             fieldInfo.SetValue(obj, parsedValue);
             stringBuilder?.AppendLine($"[Success] Field '{value.name}' modified to '{parsedValue}'.");
             return true;
         }
 
-        public override bool SetAsProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+
+            if (value == null)
+                return false;
+
+            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
+                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
+                : null;
+
             propertyInfo.SetValue(obj, parsedValue);
             stringBuilder?.AppendLine($"[Success] Property '{value.name}' modified to '{parsedValue}'.");
             return true;
         }
 
-        public override bool SetField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
+        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+
+            if (value == null)
+                return false;
+
+            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
+                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
+                : null;
+
             fieldInfo.SetValue(obj, parsedValue);
             return true;
         }
 
-        public override bool SetProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
+        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+
+            if (value == null)
+                return false;
+
+            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
+                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
+                : null;
+
             propertyInfo.SetValue(obj, parsedValue);
             return true;
         }

@@ -18,7 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return false;
             }
 
-            var lastSlashIndex = path.LastIndexOf('/');
+            var lastSlashIndex = path!.LastIndexOf('/');
             if (lastSlashIndex >= 0)
             {
                 parentPath = path.Substring(0, lastSlashIndex);

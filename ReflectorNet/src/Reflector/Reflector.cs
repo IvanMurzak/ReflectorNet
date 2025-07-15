@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// </summary>
         public object? Deserialize(SerializedMember data, ILogger? logger = null)
         {
-            if (string.IsNullOrEmpty(data?.typeName))
+            if (data == null || string.IsNullOrEmpty(data.typeName))
                 throw new ArgumentException(Error.DataTypeIsEmpty());
 
             var type = TypeUtils.GetType(data.typeName);
@@ -89,7 +89,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <summary>
         /// Populates an object with data from a SerializedMember.
         /// </summary>
-        public StringBuilder Populate(ref object obj, SerializedMember data, StringBuilder? stringBuilder = null, int depth = 0,
+        public StringBuilder Populate(ref object? obj, SerializedMember data, StringBuilder? stringBuilder = null, int depth = 0,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -98,7 +98,7 @@ namespace com.IvanMurzak.ReflectorNet
             if (string.IsNullOrEmpty(data?.typeName))
                 return stringBuilder.AppendLine(new string(' ', depth) + Error.DataTypeIsEmpty());
 
-            var type = TypeUtils.GetType(data.typeName);
+            var type = TypeUtils.GetType(data!.typeName);
             if (type == null)
                 return stringBuilder.AppendLine(new string(' ', depth) + Error.NotFoundType(data.typeName));
 
@@ -121,7 +121,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <summary>
         /// Populates a property of an object with data from a SerializedMember.
         /// </summary>
-        public StringBuilder PopulateAsProperty(ref object obj, PropertyInfo propertyInfo, SerializedMember data, StringBuilder? stringBuilder = null, int depth = 0,
+        public StringBuilder PopulateAsProperty(ref object? obj, PropertyInfo propertyInfo, SerializedMember data, StringBuilder? stringBuilder = null, int depth = 0,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -130,7 +130,7 @@ namespace com.IvanMurzak.ReflectorNet
             if (string.IsNullOrEmpty(data?.typeName))
                 return stringBuilder.AppendLine(new string(' ', depth) + Error.DataTypeIsEmpty());
 
-            var type = TypeUtils.GetType(data.typeName);
+            var type = TypeUtils.GetType(data!.typeName);
             if (type == null)
                 return stringBuilder.AppendLine(new string(' ', depth) + Error.NotFoundType(data.typeName));
 

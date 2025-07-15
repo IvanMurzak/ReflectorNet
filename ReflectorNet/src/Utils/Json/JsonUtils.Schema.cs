@@ -169,7 +169,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     foreach (var kvp in obj)
                     {
                         if (kvp.Key == fieldName)
-                            result.Add(kvp.Value);
+                            result.Add(kvp.Value!);
 
                         if (kvp.Value != null)
                             result.AddRange(FindAllProperties(kvp.Value, fieldName));
@@ -185,7 +185,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
                 return result;
             }
-            public static void PostprocessFields(JsonNode node)
+            public static void PostprocessFields(JsonNode? node)
             {
                 if (node == null)
                     return;

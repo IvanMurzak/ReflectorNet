@@ -107,7 +107,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
                 valueJsonElement = null;
                 return this;
             }
-            using (var doc = JsonDocument.Parse(json))
+            using (var doc = JsonDocument.Parse(json!))
             {
                 valueJsonElement = doc.RootElement.Clone();
             }

@@ -76,7 +76,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var methodWrapper = default(MethodWrapper);
 
-                if (string.IsNullOrEmpty(targetObject?.typeName))
+                if (targetObject == null || string.IsNullOrEmpty(targetObject.typeName))
                 {
                     // No object instance needed. Probably static method.
                     methodWrapper = new MethodWrapper(reflector, logger: logger, method);

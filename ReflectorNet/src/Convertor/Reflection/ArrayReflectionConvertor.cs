@@ -51,87 +51,215 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.CanRead);
 
-        protected override bool SetValue(Reflector reflector, ref object obj, Type type, JsonElement? value, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null)
         {
-            var parsedList = JsonUtils.Deserialize<List<SerializedMember>>(value.Value);
-            var enumerable = parsedList
-                .Select(element =>
+            if (value == null || !value.HasValue)
+            {
+                obj = null;
+                return true;
+            }
+            try
+            {
+                var success = true;
+                var parsedList = JsonUtils.Deserialize<List<SerializedMember>>(value.Value);
+                if (parsedList == null)
                 {
-                    var elementType = TypeUtils.GetType(element.typeName);
-                    var elementValue = JsonUtils.Deserialize(element.valueJsonElement.Value, elementType);
-                    return elementValue;
-                });
+                    obj = null;
+                    return true;
+                }
+                var enumerable = parsedList
+                    .Select((element, i) =>
+                    {
+                        if (element == null)
+                            return null;
 
-            obj = type.IsArray
-                ? enumerable.ToArray() as IEnumerable<object>
-                : enumerable.ToList() as IEnumerable<object>;
-            return true;
+                        if (element.valueJsonElement == null)
+                            return null;
+
+                        if (element.valueJsonElement.HasValue == false)
+                            return null;
+
+                        var elementType = TypeUtils.GetType(element.typeName);
+                        if (elementType == null)
+                        {
+                            if (logger != null)
+                                logger.LogError($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
+                            // throw new ArgumentException($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
+
+                            success = false;
+                            return null;
+                        }
+
+                        return JsonUtils.Deserialize(element.valueJsonElement.Value, elementType);
+                    });
+
+                if (!success)
+                    return false;
+
+                obj = type.IsArray
+                    ? enumerable.ToArray() as IEnumerable<object>
+                    : enumerable.ToList() as IEnumerable<object>;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (logger != null)
+                    logger.LogError($"[Error] Failed to deserialize array: {ex.Message}");
+                return false;
+            }
         }
 
-        public override bool SetAsField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var parsedList = value?.valueJsonElement == null
                 ? TypeUtils.GetDefaultValue<List<SerializedMember>>()
                 : JsonUtils.Deserialize<List<SerializedMember>>(value.valueJsonElement.Value);
-            var enumerable = parsedList
-                .Select(element =>
+
+            try
+            {
+                var success = true;
+                var arrayStringBuilder = stringBuilder != null
+                    ? new StringBuilder()
+                    : null;
+                var enumerable = parsedList
+                    .Select((element, i) =>
+                    {
+                        var elementType = TypeUtils.GetType(element.typeName);
+                        if (elementType == null)
+                        {
+                            if (logger != null)
+                                logger.LogError($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
+
+                            if (arrayStringBuilder != null)
+                                arrayStringBuilder.AppendLine($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
+
+                            success = false;
+                            return null;
+                        }
+
+                        var elementValue = element.valueJsonElement != null && element.valueJsonElement.HasValue
+                            ? JsonUtils.Deserialize(element.valueJsonElement.Value, elementType)
+                            : TypeUtils.GetDefaultValue(type);
+                        return elementValue;
+                    });
+
+                if (!success)
                 {
-                    var elementType = TypeUtils.GetType(element.typeName);
-                    var elementValue = element.valueJsonElement == null
-                        ? TypeUtils.GetDefaultValue(type)
-                        : JsonUtils.Deserialize(element.valueJsonElement.Value, elementType);
-                    return elementValue;
-                });
+                    if (stringBuilder != null)
+                    {
+                        stringBuilder.Append(arrayStringBuilder!.ToString());
+                        stringBuilder.AppendLine($"[Error] Failed to set field '{value?.name}': Some elements could not be deserialized.");
+                    }
+                    return false;
+                }
 
-            fieldInfo.SetValue(obj, type.IsArray
-                ? enumerable.ToArray() as IEnumerable<object>
-                : enumerable.ToList() as IEnumerable<object>);
+                fieldInfo.SetValue(obj, type.IsArray
+                    ? enumerable.ToArray() as IEnumerable<object>
+                    : enumerable.ToList() as IEnumerable<object>);
 
-            stringBuilder?.AppendLine($"[Success] Field '{value.name}' modified to '[{string.Join(", ", enumerable)}]'.");
-            return true;
+                stringBuilder?.AppendLine($"[Success] Field '{value?.name}' modified to '[{string.Join(", ", enumerable)}]'.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (logger != null)
+                    logger.LogError($"[Error] Failed to set field '{value?.name}': {ex.Message}");
+
+                stringBuilder?.AppendLine($"[Error] Failed to set field '{value?.name}': {ex.Message}");
+                return false;
+            }
         }
 
-        public override bool SetAsProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedList = JsonUtils.Deserialize<List<SerializedMember>>(value.valueJsonElement.Value);
-            var enumerable = parsedList
-                .Select(element =>
+            var hasValue = value?.valueJsonElement.HasValue ?? false;
+            var parsedList = hasValue
+                ? JsonUtils.Deserialize<List<SerializedMember>>(value!.valueJsonElement!.Value)
+                : TypeUtils.GetDefaultValue<List<SerializedMember>>();
+
+            try
+            {
+                var success = true;
+                var arrayStringBuilder = stringBuilder != null
+                    ? new StringBuilder()
+                    : null;
+                var enumerable = parsedList
+                    .Select((element, i) =>
+                    {
+                        if (element == null)
+                            return null;
+
+                        if (element.valueJsonElement == null)
+                            return null;
+
+                        if (element.valueJsonElement.HasValue == false)
+                            return null;
+
+                        var elementType = TypeUtils.GetType(element.typeName);
+                        if (elementType == null)
+                        {
+                            if (logger != null)
+                                logger.LogError($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
+
+                            if (arrayStringBuilder != null)
+                                arrayStringBuilder.AppendLine($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
+
+                            success = false;
+                            return null;
+                        }
+
+                        return JsonUtils.Deserialize(element.valueJsonElement.Value, elementType);
+                    });
+
+                if (!success)
                 {
-                    var elementType = TypeUtils.GetType(element.typeName);
-                    var elementValue = JsonUtils.Deserialize(element.valueJsonElement.Value, elementType);
-                    return elementValue;
-                });
+                    if (stringBuilder != null)
+                    {
+                        stringBuilder.Append(arrayStringBuilder!.ToString());
+                        stringBuilder.AppendLine($"[Error] Failed to set property '{value?.name}': Some elements could not be deserialized.");
+                    }
+                    return false;
+                }
 
-            propertyInfo.SetValue(obj, type.IsArray
-                ? enumerable.ToArray() as IEnumerable<object>
-                : enumerable.ToList() as IEnumerable<object>);
+                propertyInfo.SetValue(obj, type.IsArray
+                    ? enumerable.ToArray() as IEnumerable<object>
+                    : enumerable.ToList() as IEnumerable<object>);
 
-            stringBuilder?.AppendLine($"[Success] Property '{value.name}' modified to '{enumerable}'.");
-            return true;
+                stringBuilder?.AppendLine($"[Success] Property '{value?.name}' modified to '{enumerable}'.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (logger != null)
+                    logger.LogError($"[Error] Failed to set property '{value?.name}': {ex.Message}");
+
+                stringBuilder?.AppendLine($"[Error] Failed to set property '{value?.name}': {ex.Message}");
+                return false;
+            }
         }
 
-        public override bool SetField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
+        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            var parsedValue = value?.valueJsonElement != null && value.valueJsonElement.HasValue
+                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
+                : TypeUtils.GetDefaultValue(type);
             fieldInfo.SetValue(obj, parsedValue);
             return true;
         }
 
-        public override bool SetProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
+        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            var parsedValue = value?.valueJsonElement != null && value.valueJsonElement.HasValue
+                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
+                : TypeUtils.GetDefaultValue(type);
             propertyInfo.SetValue(obj, parsedValue);
             return true;
         }

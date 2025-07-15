@@ -2,32 +2,35 @@ using System;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
-using Microsoft.Extensions.Logging;
 using static com.IvanMurzak.ReflectorNet.Reflector;
 
 namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
-        public virtual StringBuilder? Populate(Reflector reflector, ref object obj, SerializedMember data, int depth = 0, StringBuilder? stringBuilder = null,
+        public virtual StringBuilder? Populate(Reflector reflector, ref object? obj, SerializedMember data, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
             if (string.IsNullOrEmpty(data.typeName))
-                return stringBuilder?.AppendLine("[Error] Type is null or empty.");
+                return stringBuilder?.AppendLine(new string(' ', depth) + "[Error] Type is null or empty.");
 
             var type = TypeUtils.GetType(data.typeName);
             if (type == null)
-                return stringBuilder?.AppendLine($"[Error] Type not found: {data.typeName}");
+                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Type not found: {data.typeName}");
+
+            if (obj == null)
+                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Object is null. Cannot populate type '{data.typeName}'.");
 
             TypeUtils.CastTo(obj, data.typeName, out var error);
             if (error != null)
-                return stringBuilder?.AppendLine(error);
+                return stringBuilder?.AppendLine(new string(' ', depth) + error);
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder?.AppendLine($"[Error] Type mismatch: {data.typeName} vs {obj.GetType().FullName}");
+                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Type mismatch: {data.typeName} vs {obj.GetType().FullName}");
 
             if (data.valueJsonElement != null)
             {
@@ -54,9 +57,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             return stringBuilder;
         }
-        protected abstract bool SetValue(Reflector reflector, ref object obj, Type type, JsonElement? value, ILogger? logger = null);
+        protected abstract bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null);
 
-        protected virtual StringBuilder? ModifyField(Reflector reflector, ref object obj, SerializedMember fieldValue, StringBuilder? stringBuilder = null, int depth = 0,
+        protected virtual StringBuilder? ModifyField(Reflector reflector, ref object? obj, SerializedMember fieldValue, StringBuilder? stringBuilder = null, int depth = 0,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -65,6 +68,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (string.IsNullOrEmpty(fieldValue.typeName))
                 return stringBuilder?.AppendLine(new string(' ', depth) + Error.ComponentFieldTypeIsEmpty());
+
+            if (obj == null)
+                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Field '{fieldValue.name}' modification failed: Object is null.");
 
             var fieldInfo = obj.GetType().GetField(fieldValue.name, flags);
             if (fieldInfo == null)
@@ -88,7 +94,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
         }
 
-        protected virtual StringBuilder? ModifyProperty(Reflector reflector, ref object obj, SerializedMember propertyValue, StringBuilder? stringBuilder = null, int depth = 0,
+        protected virtual StringBuilder? ModifyProperty(Reflector reflector, ref object? obj, SerializedMember propertyValue, StringBuilder? stringBuilder = null, int depth = 0,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -97,6 +103,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (string.IsNullOrEmpty(propertyValue.typeName))
                 return stringBuilder?.AppendLine(new string(' ', depth) + Error.ComponentPropertyTypeIsEmpty());
+
+            if (obj == null)
+                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Property '{propertyValue.name}' modification failed: Object is null.");
 
             var propInfo = obj.GetType().GetProperty(propertyValue.name, flags);
             if (propInfo == null)
@@ -128,19 +137,19 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
         }
 
-        public abstract bool SetAsField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public abstract bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 
-        public abstract bool SetAsProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public abstract bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 
-        public abstract bool SetField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
+        public abstract bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 
-        public abstract bool SetProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
+        public abstract bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
     }
