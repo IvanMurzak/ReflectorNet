@@ -56,9 +56,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            if (!value.TryDeserialize(type, out var parsedValue))
+            {
+                stringBuilder?.AppendLine($"[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
+                return false;
+            }
+
             fieldInfo.SetValue(obj, parsedValue);
             stringBuilder?.AppendLine($"[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
             return true;
@@ -68,9 +71,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            if (!value.TryDeserialize(type, out var parsedValue))
+            {
+                stringBuilder?.AppendLine($"[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
+                return false;
+            }
             propertyInfo.SetValue(obj, parsedValue);
             stringBuilder?.AppendLine($"[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
             return true;
@@ -80,9 +85,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            if (!value.TryDeserialize(type, out var parsedValue))
+                return false;
             fieldInfo.SetValue(obj, parsedValue);
             return true;
         }
@@ -91,9 +95,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            if (!value.TryDeserialize(type, out var parsedValue))
+                return false;
+
             propertyInfo.SetValue(obj, parsedValue);
             return true;
         }

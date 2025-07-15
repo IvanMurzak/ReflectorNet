@@ -35,13 +35,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null)
         {
-            if (value == null)
-            {
-                obj = null;
-                return true;
-            }
-            var parsedValue = JsonUtils.Deserialize(value.Value, type);
-            obj = parsedValue;
+            obj = value.Deserialize(type);
             return true;
         }
 
@@ -49,15 +43,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (value == null)
+            if (!value.TryDeserialize(type, out var parsedValue))
+            {
+                stringBuilder?.AppendLine($"[Error] Failed to deserialize value for property '{value?.name}'.");
                 return false;
-
-            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
-                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
-                : null;
+            }
 
             fieldInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"[Success] Field '{value.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"[Success] Field '{value!.name}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -65,16 +58,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-
-            if (value == null)
+            if (!value.TryDeserialize(type, out var parsedValue))
+            {
+                stringBuilder?.AppendLine($"[Error] Failed to deserialize value for property '{value?.name}'.");
                 return false;
-
-            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
-                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
-                : null;
+            }
 
             propertyInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"[Success] Property '{value.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"[Success] Property '{value!.name}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -82,13 +73,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-
-            if (value == null)
+            if (!value.TryDeserialize(type, out var parsedValue))
                 return false;
-
-            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
-                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
-                : null;
 
             fieldInfo.SetValue(obj, parsedValue);
             return true;
@@ -98,13 +84,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-
-            if (value == null)
+            if (!value.TryDeserialize(type, out var parsedValue))
                 return false;
-
-            var parsedValue = value.valueJsonElement != null && value.valueJsonElement.HasValue
-                ? JsonUtils.Deserialize(value.valueJsonElement.Value, type)
-                : null;
 
             propertyInfo.SetValue(obj, parsedValue);
             return true;
