@@ -55,7 +55,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (!value.TryDeserializeEnumerable(type, out var enumerable))
             {
                 obj = null;
-                return true;
+                return false;
             }
 
             obj = enumerable;
