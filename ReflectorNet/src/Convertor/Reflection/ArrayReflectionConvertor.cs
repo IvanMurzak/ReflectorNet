@@ -53,60 +53,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null)
         {
-            if (value == null || !value.HasValue)
+            if (!value.TryDeserializeEnumerable(type, out var enumerable))
             {
                 obj = null;
                 return true;
             }
-            try
-            {
-                var success = true;
-                var parsedList = JsonUtils.Deserialize<SerializedMemberList>(value.Value);
-                if (parsedList == null)
-                {
-                    obj = null;
-                    return true;
-                }
-                var enumerable = parsedList
-                    .Select((element, i) =>
-                    {
-                        if (element == null)
-                            return null;
 
-                        if (element.valueJsonElement == null)
-                            return null;
-
-                        if (element.valueJsonElement.HasValue == false)
-                            return null;
-
-                        var elementType = TypeUtils.GetType(element.typeName);
-                        if (elementType == null)
-                        {
-                            if (logger != null)
-                                logger.LogError($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
-                            // throw new ArgumentException($"[Error] Array element [{i}] Type '{element.typeName}' not found for deserialization.");
-
-                            success = false;
-                            return null;
-                        }
-
-                        return JsonUtils.Deserialize(element.valueJsonElement.Value, elementType);
-                    });
-
-                if (!success)
-                    return false;
-
-                obj = type.IsArray
-                    ? enumerable.ToArray() as IEnumerable<object>
-                    : enumerable.ToList() as IEnumerable<object>;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                if (logger != null)
-                    logger.LogError($"[Error] Failed to deserialize array: {ex.Message}");
-                return false;
-            }
+            obj = enumerable;
+            return true;
         }
 
         public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,

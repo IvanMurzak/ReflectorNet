@@ -144,69 +144,15 @@ namespace com.IvanMurzak.ReflectorNet
         }
         public static bool TryDeserializeEnumerable(this SerializedMember? serializedMember, Type type, out IEnumerable<object?>? result, StringBuilder? stringBuilder = null)
         {
-            try
+            if (serializedMember == null)
             {
-                if (!serializedMember.TryDeserialize<SerializedMemberList>(out var parsedList, out var errorMessage))
-                {
-                    result = null;
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine(serializedMember == null
-                            ? $"[Error] Failed to deserialize 'null': {errorMessage}"
-                            : $"[Error] Failed to deserialize '{serializedMember.name}': {errorMessage}");
-                    return false;
-                }
-
+                result = default;
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine(parsedList == null
-                        ? $"Deserializing '{serializedMember!.name}' enumerable with 'null' value."
-                        : $"Deserializing '{serializedMember!.name}' enumerable with {parsedList.Count} items.");
-
-                var success = true;
-                var enumerable = parsedList
-                    ?.Select((element, i) =>
-                    {
-                        if (!element.TryDeserialize(out var parsedValue, out var errorMessage))
-                        {
-                            success = false;
-                            if (stringBuilder != null)
-                                stringBuilder.AppendLine($"  [Error] Enumerable[{i}] deserialization failed: {errorMessage}");
-                            return null;
-                        }
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"  Enumerable[{i}] deserialized successfully.");
-                        return parsedValue;
-                    });
-
-                if (!success)
-                {
-                    result = null;
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"[Error] Failed to deserialize '{serializedMember!.name}': Some elements could not be deserialized.");
-                    return false;
-                }
-
-                if (type.IsArray)
-                {
-                    result = enumerable?.ToArray();
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"[Success] Deserialized '{serializedMember!.name}' as an array with {result.Count()} items.");
-                }
-                else // if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
-                {
-                    result = enumerable?.ToList();
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"[Success] Deserialized '{serializedMember!.name}' as a list with {result.Count()} items.");
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                result = null;
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine($"[Error] Failed to deserialize '{serializedMember?.name}': {ex.Message}");
+                    stringBuilder.AppendLine("SerializedMember is null.");
                 return false;
             }
+
+            return serializedMember.valueJsonElement.TryDeserializeEnumerable(type, out result, serializedMember.name, stringBuilder);
         }
     }
 }
