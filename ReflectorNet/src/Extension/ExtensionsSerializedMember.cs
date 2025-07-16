@@ -45,8 +45,9 @@ namespace com.IvanMurzak.ReflectorNet
                 result = serializedMember.valueJsonElement.Deserialize(targetType);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Exception in TryDeserialize with targetType: {ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }
