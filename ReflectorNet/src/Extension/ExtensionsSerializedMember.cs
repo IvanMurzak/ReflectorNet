@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -68,7 +67,7 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to deserialize member of type '{typeof(T)}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to deserialize member of type '{typeof(T)}': {ex.Message}");
                 result = default;
                 return false;
             }
