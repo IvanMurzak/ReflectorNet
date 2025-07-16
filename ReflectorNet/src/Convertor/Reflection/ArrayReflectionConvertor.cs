@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Convertor
