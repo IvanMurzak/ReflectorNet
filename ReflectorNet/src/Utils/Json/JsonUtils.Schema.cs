@@ -76,7 +76,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 {
                     var propertyDescription = type.GetCustomAttribute<DescriptionAttribute>()?.Description;
                     if (!string.IsNullOrEmpty(propertyDescription))
-                        parameterSchemaObject["description"] = JsonValue.Create(propertyDescription);
+                        parameterSchemaObject[Description] = JsonValue.Create(propertyDescription);
                 }
                 else
                 {
@@ -109,8 +109,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     [Defs] = defines
                 };
 
-                var defineIds = new HashSet<string>();
                 var parameterSchema = default(JsonNode);
+                var defineIds = new HashSet<string>();
 
                 foreach (var parameter in parameters)
                 {
@@ -148,7 +148,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     {
                         var propertyDescription = parameter.GetCustomAttribute<DescriptionAttribute>()?.Description;
                         if (!string.IsNullOrEmpty(propertyDescription))
-                            parameterSchemaObject["description"] = JsonValue.Create(propertyDescription);
+                            parameterSchemaObject[Description] = JsonValue.Create(propertyDescription);
                     }
 
                     // Check if the parameter has a default value
@@ -157,7 +157,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
 
                 if (defines.Count == 0)
-                    schema.Remove(Schema.Defs);
+                    schema.Remove(Defs);
                 return schema;
             }
 
@@ -168,11 +168,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 {
                     foreach (var kvp in obj)
                     {
-                        if (kvp.Key == fieldName)
-                            result.Add(kvp.Value!);
-
                         if (kvp.Value != null)
+                        {
+                            if (kvp.Key == fieldName)
+                                result.Add(kvp.Value);
+
                             result.AddRange(FindAllProperties(kvp.Value, fieldName));
+                        }
                     }
                 }
                 else if (node is JsonArray arr)
