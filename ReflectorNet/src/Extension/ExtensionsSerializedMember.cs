@@ -27,8 +27,9 @@ namespace com.IvanMurzak.ReflectorNet
                 result = serializedMember.valueJsonElement.Deserialize(type);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Exception during deserialization: {ex}");
                 result = null;
                 return false;
             }
