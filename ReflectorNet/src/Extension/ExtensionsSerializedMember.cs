@@ -65,8 +65,9 @@ namespace com.IvanMurzak.ReflectorNet
                 result = serializedMember.valueJsonElement.Deserialize<T>();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Failed to deserialize member of type '{typeof(T)}': {ex.Message}");
                 result = default;
                 return false;
             }
