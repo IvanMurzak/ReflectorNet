@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Json
 {
@@ -29,13 +30,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 foreach (var param in parametersElement.EnumerateArray())
                 {
                     var paramTypeName = param.GetProperty(Json.Type).GetString();
-                    var paramType = Type.GetType(paramTypeName);
+                    var paramType = TypeUtils.GetType(paramTypeName);
                     if (paramType != null)
                         parameterTypes.Add(paramType);
                 }
             }
 
-            var declaringType = Type.GetType(typeName);
+            var declaringType = TypeUtils.GetType(typeName);
             if (declaringType == null)
                 throw new JsonException($"Could not find type: {typeName}");
 
