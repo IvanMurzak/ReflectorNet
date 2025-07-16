@@ -27,8 +27,9 @@ namespace com.IvanMurzak.ReflectorNet
                 result = serializedMember.valueJsonElement.Deserialize(type);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Exception during deserialization: {ex}");
                 result = null;
                 return false;
             }
@@ -45,8 +46,9 @@ namespace com.IvanMurzak.ReflectorNet
                 result = serializedMember.valueJsonElement.Deserialize(targetType);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Exception in TryDeserialize with targetType: {ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }
@@ -64,8 +66,9 @@ namespace com.IvanMurzak.ReflectorNet
                 result = serializedMember.valueJsonElement.Deserialize<T>();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Failed to deserialize member of type '{typeof(T)}': {ex.Message}");
                 result = default;
                 return false;
             }
