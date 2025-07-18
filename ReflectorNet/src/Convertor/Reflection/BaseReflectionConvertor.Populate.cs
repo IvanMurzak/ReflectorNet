@@ -11,26 +11,30 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
-        public virtual StringBuilder? Populate(Reflector reflector, ref object? obj, SerializedMember data, int depth = 0, StringBuilder? stringBuilder = null,
+        public virtual StringBuilder? Populate(Reflector reflector, ref object? obj, SerializedMember data, Type? dataType = null, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            if (string.IsNullOrEmpty(data.typeName))
-                return stringBuilder?.AppendLine(new string(' ', depth) + "[Error] Type is null or empty.");
-
-            var type = TypeUtils.GetType(data.typeName);
+            var type = dataType;
             if (type == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Type not found: {data.typeName}");
+            {
+                if (string.IsNullOrEmpty(data.typeName))
+                    return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty.");
+
+                type = TypeUtils.GetType(data.typeName);
+                if (type == null)
+                    return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with name '{data.typeName}' not found.");
+            }
 
             if (obj == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Object is null. Cannot populate type '{data.typeName}'.");
+                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
 
-            TypeUtils.CastTo(obj, data.typeName, out var error);
+            TypeUtils.CastTo(obj, type, out var error);
             if (error != null)
                 return stringBuilder?.AppendLine(new string(' ', depth) + error);
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Type mismatch: {data.typeName} vs {obj.GetType().FullName}");
+                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().FullName ?? "null"}'.");
 
             if (data.valueJsonElement != null)
             {

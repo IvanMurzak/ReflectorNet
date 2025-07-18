@@ -20,6 +20,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             public const string Items = "items";
             public const string Array = "array";
             public const string Required = "required";
+
             public const string Null = "null";
             public const string String = "string";
             public const string Number = "number";
@@ -50,12 +51,65 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     }
                     else
                     {
-                        schema = jsonSerializerOptions.GetJsonSchemaAsNode(
-                            type: type,
-                            exporterOptions: new JsonSchemaExporterOptions
+                        if (justRef && !TypeUtils.IsPrimitive(type))
+                        {
+                            // If justRef is true and the type is not primitive, we return a reference schema
+                            schema = new JsonObject
                             {
-                                TreatNullObliviousAsNonNullable = false
-                            });
+                                [Ref] = RefValue + type.FullName
+                            };
+
+                            // Get description from the type if available
+                            var description = type.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                            if (!string.IsNullOrEmpty(description))
+                                schema[Description] = JsonValue.Create(description);
+                        }
+                        else
+                        {
+                            // For non-nullable types, get the schema directly
+                            schema = jsonSerializerOptions.GetJsonSchemaAsNode(
+                                type: type,
+                                exporterOptions: new JsonSchemaExporterOptions
+                                {
+                                    TreatNullObliviousAsNonNullable = false,
+                                    TransformSchemaNode = (context, node) =>
+                                    {
+                                        if (context.PropertyInfo == null)
+                                            return node;
+
+                                        var description = TypeUtils.GetPropertyDescription(context);
+
+                                        // If the type is primitive, we can return the schema directly
+                                        if (TypeUtils.IsPrimitive(context.PropertyInfo.PropertyType))
+                                        {
+                                            if (!string.IsNullOrEmpty(description))
+                                                node[Description] = JsonValue.Create(description);
+
+                                            return node;
+                                        }
+
+                                        // Otherwise, we need to ensure the schema is an object
+                                        if (node is JsonObject jsonObject)
+                                        {
+                                            jsonObject[Type] = Object;
+                                        }
+                                        else
+                                        {
+                                            node = new JsonObject { [Type] = Object, [Properties] = node };
+                                        }
+
+                                        if (!string.IsNullOrEmpty(description))
+                                            node[Description] = JsonValue.Create(description);
+
+                                        return node;
+                                    }
+                                });
+
+                            // Get description from the type if available
+                            var description = type.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                            if (!string.IsNullOrEmpty(description))
+                                schema[Description] = JsonValue.Create(description);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -109,11 +163,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     [Defs] = defines
                 };
 
-                var parameterSchema = default(JsonNode);
-                var defineIds = new HashSet<string>();
-
                 foreach (var parameter in parameters)
                 {
+                    var parameterSchema = default(JsonNode);
                     var isPrimitive = TypeUtils.IsPrimitive(parameter.ParameterType);
                     if (isPrimitive)
                     {
@@ -125,15 +177,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     {
                         var id = parameter.ParameterType.FullName;
 
-                        if (defineIds.Contains(id))
+                        if (defines.ContainsKey(id))
+                        {
                             parameterSchema = GetSchema(parameter.ParameterType, justRef: true);
+                        }
                         else
                         {
                             var fullSchema = GetSchema(parameter.ParameterType, justRef: false);
                             if (fullSchema == null)
                                 continue;
                             defines[id] = fullSchema;
-                            defineIds.Add(id);
                             parameterSchema = GetSchema(parameter.ParameterType, justRef: true);
                         }
 
@@ -154,6 +207,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     // Check if the parameter has a default value
                     if (!parameter.HasDefaultValue)
                         required.Add(parameter.Name!);
+
+                    // Add generic type parameters recursively if any
+                    foreach (var genericArgument in TypeUtils.GetGenericTypes(parameter.ParameterType))
+                    {
+                        if (TypeUtils.IsPrimitive(genericArgument))
+                            continue;
+                        if (defines.ContainsKey(genericArgument.FullName!))
+                            continue;
+
+                        var genericSchema = GetSchema(genericArgument, justRef: false);
+                        if (genericSchema != null)
+                            defines[genericArgument.FullName!] = genericSchema;
+                    }
                 }
 
                 if (defines.Count == 0)

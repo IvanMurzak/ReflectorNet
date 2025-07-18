@@ -22,15 +22,24 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonUtils.Schema.Type] = JsonUtils.Schema.String,
                     [JsonUtils.Schema.Description] = "Full type name. Eg: 'System.String', 'System.Int32', 'UnityEngine.Vector3', etc."
                 },
-                [nameof(SerializedMember.name)] = new JsonObject { [JsonUtils.Schema.Type] = JsonUtils.Schema.String },
-                [SerializedMember.ValueName] = new JsonObject { [JsonUtils.Schema.Type] = JsonUtils.Schema.Object },
+                [nameof(SerializedMember.name)] = new JsonObject
+                {
+                    [JsonUtils.Schema.Type] = JsonUtils.Schema.String,
+                    [JsonUtils.Schema.Description] = "Name of the member. Can be null or empty."
+                },
+                [SerializedMember.ValueName] = new JsonObject
+                {
+                    [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
+                    [JsonUtils.Schema.Description] = "Value of the member. Can be null.",
+                },
                 [nameof(SerializedMember.fields)] = new JsonObject
                 {
                     [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
                         [JsonUtils.Schema.Ref] = StaticId
-                    }
+                    },
+                    [JsonUtils.Schema.Description] = "List of fields of the member. Can be null or empty.",
                 },
                 [nameof(SerializedMember.props)] = new JsonObject
                 {
@@ -38,7 +47,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
                         [JsonUtils.Schema.Ref] = StaticId
-                    }
+                    },
+                    [JsonUtils.Schema.Description] = "List of properties of the member. Can be null or empty.",
                 }
             },
             [JsonUtils.Schema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName }

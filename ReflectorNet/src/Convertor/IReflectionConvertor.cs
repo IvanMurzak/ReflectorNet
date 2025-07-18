@@ -19,7 +19,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         SerializedMember Serialize(Reflector reflector, object? obj, Type? type = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
-        StringBuilder? Populate(Reflector reflector, ref object? obj, SerializedMember data, int depth = 0, StringBuilder? stringBuilder = null,
+        StringBuilder? Populate(Reflector reflector, ref object? obj, SerializedMember data, Type? dataType = null, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 
