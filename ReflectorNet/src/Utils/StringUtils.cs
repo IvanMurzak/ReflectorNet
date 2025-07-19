@@ -1,32 +1,33 @@
 
-using System.Collections.Generic;
-using System.Linq;
+using System;
+using System.Collections.Concurrent;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static class StringUtils
     {
-        static Dictionary<int, string> _paddingCache = new Dictionary<int, string>();
+        static readonly ConcurrentDictionary<int, string> _paddingCache = new ConcurrentDictionary<int, string>();
 
         public static string GetPadding(int depth)
         {
             if (depth < 0)
                 return string.Empty;
 
-            if (_paddingCache.TryGetValue(depth, out var padding))
-                return padding;
-
-            padding = new string(' ', depth);
-            _paddingCache[depth] = padding;
-            return padding;
+            return _paddingCache.GetOrAdd(depth, static d => new string(' ', d));
         }
 
         public static string? TrimPath(string? path)
-            => path?.TrimEnd('/')?.TrimStart('/');
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+
+            var span = path.AsSpan();
+            span = span.Trim('/');
+            return span.IsEmpty ? string.Empty : span.ToString();
+        }
 
         public static bool Path_ParseParent(string? path, out string? parentPath, out string? name)
         {
-            path = TrimPath(path);
             if (string.IsNullOrEmpty(path))
             {
                 parentPath = null;
@@ -34,29 +35,49 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return false;
             }
 
-            var lastSlashIndex = path!.LastIndexOf('/');
+            var span = path.AsSpan().Trim('/');
+            if (span.IsEmpty)
+            {
+                parentPath = null;
+                name = null;
+                return false;
+            }
+
+            var lastSlashIndex = span.LastIndexOf('/');
             if (lastSlashIndex >= 0)
             {
-                parentPath = path.Substring(0, lastSlashIndex);
-                name = path.Substring(lastSlashIndex + 1);
+                parentPath = span.Slice(0, lastSlashIndex).ToString();
+                name = span.Slice(lastSlashIndex + 1).ToString();
                 return true;
             }
             else
             {
                 parentPath = null;
-                name = path;
+                name = span.ToString();
                 return false;
             }
         }
         public static string? Path_GetParentFolderPath(string? path)
         {
-            if (path == null)
+            if (string.IsNullOrEmpty(path))
                 return null;
-            var trimmedPath = path.TrimEnd('/');
-            var lastSlashIndex = trimmedPath.LastIndexOf('/');
-            return lastSlashIndex >= 0 ? trimmedPath.Substring(0, lastSlashIndex) : trimmedPath;
+
+            var span = path.AsSpan().TrimEnd('/');
+            var lastSlashIndex = span.LastIndexOf('/');
+            return lastSlashIndex >= 0
+                ? span.Slice(0, lastSlashIndex).ToString()
+                : span.ToString();
         }
         public static string? Path_GetLastName(string? path)
-            => path?.TrimEnd('/')?.Split('/')?.Last();
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+
+            var span = path.AsSpan().TrimEnd('/');
+            var lastSlashIndex = span.LastIndexOf('/');
+            return lastSlashIndex >= 0
+                ? span.Slice(lastSlashIndex + 1).ToString()
+                : span.ToString();
+        }
     }
 }
