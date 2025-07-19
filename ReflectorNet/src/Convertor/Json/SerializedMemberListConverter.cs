@@ -16,7 +16,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
             [JsonUtils.Schema.Items] = new JsonObject
             {
-                [JsonUtils.Schema.Ref] = SerializedMemberConverter.StaticId
+                [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + SerializedMemberConverter.StaticId
             }
         };
         public string Id => StaticId;

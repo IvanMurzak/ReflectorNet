@@ -30,14 +30,15 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 [SerializedMember.ValueName] = new JsonObject
                 {
                     [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
-                    [JsonUtils.Schema.Description] = "Value of the member. Can be null.",
+                    [JsonUtils.Schema.Description] = "Member's value. Can be null or empty.",
                 },
                 [nameof(SerializedMember.fields)] = new JsonObject
                 {
                     [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
-                        [JsonUtils.Schema.Ref] = StaticId
+                        [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
+                        [JsonUtils.Schema.Description] = "Field's value, nested fields and properties."
                     },
                     [JsonUtils.Schema.Description] = "List of fields of the member. Can be null or empty.",
                 },
@@ -46,7 +47,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
-                        [JsonUtils.Schema.Ref] = StaticId
+                        [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
+                        [JsonUtils.Schema.Description] = "Property's value, nested fields and properties."
                     },
                     [JsonUtils.Schema.Description] = "List of properties of the member. Can be null or empty.",
                 }

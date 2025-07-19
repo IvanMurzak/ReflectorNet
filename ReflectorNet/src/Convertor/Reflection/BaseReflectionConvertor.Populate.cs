@@ -41,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 try
                 {
                     SetValue(reflector, ref obj, type, data.valueJsonElement, logger);
-                    stringBuilder?.AppendLine(new string(' ', depth) + $"[Success] Object '{obj}' modified to '{data.valueJsonElement}'.");
+                    stringBuilder?.AppendLine(new string(' ', depth) + $"[Success] Object '{obj}' modified to ```\n{data.valueJsonElement}\n```");
                 }
                 catch (Exception ex)
                 {
