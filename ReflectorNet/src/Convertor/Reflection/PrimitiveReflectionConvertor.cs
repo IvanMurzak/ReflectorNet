@@ -33,70 +33,70 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         public override IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => null;
 
-        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             var parsedValue = value.Deserialize(type);
-            if (stringBuilder != null)
-            {
-                var originalType = obj?.GetType() ?? type;
-                var newType = parsedValue?.GetType() ?? type;
-
-                stringBuilder.AppendLine($@"[Success] Set value
-was: type='{originalType.FullName ?? "null"}', value='{obj}'
-new: type='{newType.FullName ?? "null"}', value='{parsedValue}'.");
-            }
+            Print.SetNewValue(ref obj, ref parsedValue, type, depth, stringBuilder);
             obj = parsedValue;
             return true;
         }
 
-        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             if (!value.TryDeserialize(type, out var parsedValue))
             {
-                stringBuilder?.AppendLine($"[Error] Failed to deserialize value for property '{value?.name}'.");
+                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for property '{value?.name}'.");
                 return false;
             }
 
             fieldInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"[Success] Field '{value!.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Success] Field '{value!.name}' modified to '{parsedValue}'.");
             return true;
         }
 
-        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             if (!value.TryDeserialize(type, out var parsedValue))
             {
-                stringBuilder?.AppendLine($"[Error] Failed to deserialize value for property '{value?.name}'.");
+                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for property '{value?.name}'.");
                 return false;
             }
 
             propertyInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"[Success] Property '{value!.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Success] Property '{value!.name}' modified to '{parsedValue}'.");
             return true;
         }
 
-        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
+        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             if (!value.TryDeserialize(type, out var parsedValue))
+            {
+                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for field '{value?.name}'.");
                 return false;
+            }
 
+            // TODO: Print previous and new value in stringBuilder
             fieldInfo.SetValue(obj, parsedValue);
             return true;
         }
 
-        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
+        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             if (!value.TryDeserialize(type, out var parsedValue))
+            {
+                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for property '{value?.name}'.");
                 return false;
+            }
 
+            // TODO: Print previous and new value in stringBuilder
             propertyInfo.SetValue(obj, parsedValue);
             return true;
         }

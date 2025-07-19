@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Convertor
@@ -50,33 +51,24 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.CanRead);
 
-        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: 1, stringBuilder: stringBuilder))
+            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
             {
-                stringBuilder?.AppendLine($"[Error] Failed to set array value for '{obj}'.");
+                Print.FailedToSetNewValue(ref obj, type, depth, stringBuilder);
                 return false;
             }
 
-            if (stringBuilder != null)
-            {
-                var originalType = obj?.GetType() ?? type;
-                var newType = parsedValue?.GetType() ?? type;
-
-                stringBuilder.AppendLine($@"[Success] Set array value
-was: type='{originalType.FullName ?? "null"}', value='{obj}'
-new: type='{newType.FullName ?? "null"}', value='{parsedValue}'.");
-            }
-
+            Print.SetNewValueEnumerable(ref obj, ref parsedValue, type, depth, stringBuilder);
             obj = parsedValue;
             return true;
         }
 
-        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: 1, stringBuilder: stringBuilder))
+            if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder))
             {
                 stringBuilder?.AppendLine($"[Error] Failed to set field '{value?.name}'");
                 return false;
@@ -88,11 +80,11 @@ new: type='{newType.FullName ?? "null"}', value='{parsedValue}'.");
             return true;
         }
 
-        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: 1, stringBuilder: stringBuilder))
+            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
             {
                 stringBuilder?.AppendLine($"[Error] Failed to set property '{value?.name}'");
                 return false;
@@ -104,24 +96,26 @@ new: type='{newType.FullName ?? "null"}', value='{parsedValue}'.");
             return true;
         }
 
-        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
+        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             if (!value.TryDeserialize(type, out var parsedValue))
                 return false;
 
+            // TODO: Print previous and new value in stringBuilder
             fieldInfo.SetValue(obj, parsedValue);
             return true;
         }
 
-        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
+        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             if (!value.TryDeserialize(type, out var parsedValue))
                 return false;
 
+            // TODO: Print previous and new value in stringBuilder
             propertyInfo.SetValue(obj, parsedValue);
             return true;
         }
