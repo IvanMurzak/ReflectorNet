@@ -15,39 +15,40 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
             var type = dataType;
             if (type == null)
             {
                 if (string.IsNullOrEmpty(data.typeName))
-                    return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty.");
+                    return stringBuilder?.AppendLine(padding + $"[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty.");
 
                 type = TypeUtils.GetType(data.typeName);
                 if (type == null)
-                    return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with name '{data.typeName}' not found.");
+                    return stringBuilder?.AppendLine(padding + $"[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with name '{data.typeName}' not found.");
             }
 
             if (obj == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
+                return stringBuilder?.AppendLine(padding + $"[Error] Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
 
             TypeUtils.CastTo(obj, type, out var error);
             if (error != null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + error);
+                return stringBuilder?.AppendLine(padding + error);
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().FullName ?? "null"}'.");
+                return stringBuilder?.AppendLine(padding + $"[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().FullName ?? "null"}'.");
 
             if (data.valueJsonElement != null)
             {
                 try
                 {
                     var success = SetValue(reflector, ref obj, type, data.valueJsonElement, stringBuilder, logger: logger);
-                    stringBuilder?.AppendLine(new string(' ', depth) + (success
+                    stringBuilder?.AppendLine(padding + (success
                         ? $"[Success] Object '{obj}' modified to\n```\n{data.valueJsonElement}\n```"
                         : $"[Error] Object '{obj}' modification failed."));
                 }
                 catch (Exception ex)
                 {
-                    stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Object '{obj}' modification failed: {ex.Message}");
+                    stringBuilder?.AppendLine(padding + $"[Error] Object '{obj}' modification failed: {ex.Message}");
                 }
             }
 
@@ -55,17 +56,17 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (data.fields != null)
                 foreach (var field in data.fields)
-                    ModifyField(reflector, ref obj, field, stringBuilder, depth: nextDepth, flags: flags, logger: logger);
+                    ModifyField(reflector, ref obj, field, depth: nextDepth, stringBuilder: stringBuilder, flags: flags, logger: logger);
 
             if (data.props != null)
                 foreach (var property in data.props)
-                    ModifyProperty(reflector, ref obj, property, stringBuilder, depth: nextDepth, flags: flags, logger: logger);
+                    ModifyProperty(reflector, ref obj, property, depth: nextDepth, stringBuilder: stringBuilder, flags: flags, logger: logger);
 
             return stringBuilder;
         }
         protected abstract bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, StringBuilder? stringBuilder = null, ILogger? logger = null);
 
-        protected virtual StringBuilder? ModifyField(Reflector reflector, ref object? obj, SerializedMember fieldValue, StringBuilder? stringBuilder = null, int depth = 0,
+        protected virtual StringBuilder? ModifyField(Reflector reflector, ref object? obj, SerializedMember fieldValue, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -100,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
         }
 
-        protected virtual StringBuilder? ModifyProperty(Reflector reflector, ref object? obj, SerializedMember propertyValue, StringBuilder? stringBuilder = null, int depth = 0,
+        protected virtual StringBuilder? ModifyProperty(Reflector reflector, ref object? obj, SerializedMember propertyValue, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {

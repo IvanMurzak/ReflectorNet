@@ -1,10 +1,26 @@
 
+using System.Collections.Generic;
 using System.Linq;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static class StringUtils
     {
+        static Dictionary<int, string> _paddingCache = new Dictionary<int, string>();
+
+        public static string GetPadding(int depth)
+        {
+            if (depth < 0)
+                return string.Empty;
+
+            if (_paddingCache.TryGetValue(depth, out var padding))
+                return padding;
+
+            padding = new string(' ', depth);
+            _paddingCache[depth] = padding;
+            return padding;
+        }
+
         public static string? TrimPath(string? path)
             => path?.TrimEnd('/')?.TrimStart('/');
 

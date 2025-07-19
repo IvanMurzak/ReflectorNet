@@ -96,7 +96,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="depth">The depth of the hierarchy to include.</param>
         /// <param name="flags">Binding flags to control the visibility of members.</param>
         /// <param name="logger">Optional logger for logging messages.</param>
-        public StringBuilder Populate(ref object? obj, SerializedMember data, Type? dataType = null, StringBuilder? stringBuilder = null, int depth = 0,
+        public StringBuilder Populate(ref object? obj, SerializedMember data, Type? dataType = null, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -140,7 +140,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="depth">The depth of the hierarchy to include.</param>
         /// <param name="flags">Binding flags to control the visibility of members.</param>
         /// <param name="logger">Optional logger for logging messages.</param>
-        public StringBuilder PopulateAsProperty(ref object? obj, PropertyInfo propertyInfo, SerializedMember data, Type? dataType = null, StringBuilder? stringBuilder = null, int depth = 0,
+        public StringBuilder PopulateAsProperty(ref object? obj, PropertyInfo propertyInfo, SerializedMember data, Type? dataType = null, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
