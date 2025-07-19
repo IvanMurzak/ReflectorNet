@@ -43,8 +43,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 {
                     var success = SetValue(reflector, ref obj, type, data.valueJsonElement, depth: depth, stringBuilder: stringBuilder, logger: logger);
                     stringBuilder?.AppendLine(success
-                        ? $"{padding}[Success] Object '{obj}' modified to\n```\n{data.valueJsonElement}\n```"
-                        : $"{padding}[Warning] Object '{obj}' was not modified to value \n```{data.valueJsonElement}\n```");
+                        ? $"{padding}[Success] Object '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```"
+                        : $"{padding}[Warning] Object '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
                 }
                 catch (Exception ex)
                 {
@@ -91,7 +91,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 foreach (var convertor in reflector.Convertors.BuildPopulatorsChain(targetType))
-                    convertor.SetAsField(reflector, ref obj, targetType, fieldInfo, value: fieldValue, stringBuilder: stringBuilder, flags: flags, logger: logger);
+                    convertor.SetAsField(reflector, ref obj, targetType, fieldInfo, value: fieldValue,
+                        depth: depth, stringBuilder: stringBuilder,
+                        flags: flags, logger: logger);
 
                 return stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldValue.name}' modified to '{fieldValue.valueJsonElement}'.");
             }
@@ -133,7 +135,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 foreach (var convertor in reflector.Convertors.BuildPopulatorsChain(targetType))
-                    convertor.SetAsProperty(reflector, ref obj, targetType, propInfo, value: propertyValue, stringBuilder: stringBuilder, flags: flags, logger: logger);
+                    convertor.SetAsProperty(reflector, ref obj, targetType, propInfo, value: propertyValue,
+                        depth: depth, stringBuilder: stringBuilder,
+                        flags: flags, logger: logger);
 
                 return stringBuilder;
             }
