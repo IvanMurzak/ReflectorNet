@@ -12,43 +12,50 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (stringBuilder == null)
                 return;
 
-            stringBuilder.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to set new value for '{type.FullName}'.");
+            var padding = StringUtils.GetPadding(depth);
+            stringBuilder.AppendLine($"{padding}[Error] Failed to set new value for '{type.FullName}'.");
         }
         public static void SetNewValue<T>(ref object? obj, ref T? newValue, Type type, int depth = 0, StringBuilder? stringBuilder = null)
         {
             if (stringBuilder == null)
                 return;
 
+            var padding = StringUtils.GetPadding(depth);
+            var paddingNext = StringUtils.GetPadding(depth + 1);
             var originalType = obj?.GetType() ?? type;
             var newType = newValue?.GetType() ?? type;
 
-            stringBuilder.AppendLine($@"{StringUtils.GetPadding(depth)}[Success] Set value
-{StringUtils.GetPadding(depth + 1)}was: type='{originalType.FullName ?? "null"}', value='{obj}'
-{StringUtils.GetPadding(depth + 1)}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
+            stringBuilder.AppendLine($@"{padding}[Success] Set value
+{paddingNext}was: type='{originalType.FullName ?? "null"}', value='{obj}'
+{paddingNext}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
         }
         public static void SetNewValueEnumerable(ref object? obj, ref IEnumerable? newValue, Type type, int depth = 0, StringBuilder? stringBuilder = null)
         {
             if (stringBuilder == null)
                 return;
 
+            var padding = StringUtils.GetPadding(depth);
+            var paddingNext = StringUtils.GetPadding(depth + 1);
             var originalType = obj?.GetType() ?? type;
             var newType = newValue?.GetType() ?? type;
 
-            stringBuilder.AppendLine($@"{StringUtils.GetPadding(depth)}[Success] Set array value
-{StringUtils.GetPadding(depth + 1)}was: type='{originalType.FullName ?? "null"}', value='{obj}'
-{StringUtils.GetPadding(depth + 1)}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
+            stringBuilder.AppendLine($@"{padding}[Success] Set array value
+{paddingNext}was: type='{originalType.FullName ?? "null"}', value='{obj}'
+{paddingNext}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
         }
         public static void SetNewValueEnumerable<T>(ref object? obj, ref IEnumerable<T>? newValue, Type type, int depth = 0, StringBuilder? stringBuilder = null)
         {
             if (stringBuilder == null)
                 return;
 
+            var padding = StringUtils.GetPadding(depth);
+            var paddingNext = StringUtils.GetPadding(depth + 1);
             var originalType = obj?.GetType() ?? type;
             var newType = newValue?.GetType() ?? type;
 
-            stringBuilder.AppendLine($@"{StringUtils.GetPadding(depth)}[Success] Set array value
-{StringUtils.GetPadding(depth + 1)}was: type='{originalType.FullName ?? "null"}', value='{obj}'
-{StringUtils.GetPadding(depth + 1)}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
+            stringBuilder.AppendLine($@"{padding}[Success] Set array value
+{paddingNext}was: type='{originalType.FullName ?? "null"}', value='{obj}'
+{paddingNext}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
         }
     }
 }

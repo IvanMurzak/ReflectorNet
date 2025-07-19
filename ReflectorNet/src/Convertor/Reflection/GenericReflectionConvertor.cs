@@ -58,14 +58,16 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+
             if (!value.TryDeserialize(type, out var parsedValue))
             {
-                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
             }
 
             fieldInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -73,13 +75,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+
             if (!value.TryDeserialize(type, out var parsedValue))
             {
-                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;
             }
             propertyInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -87,9 +91,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+
             if (!value.TryDeserialize(type, out var parsedValue))
             {
-                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
             }
             // TODO: Print previous and new value in stringBuilder
@@ -101,9 +107,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+
             if (!value.TryDeserialize(type, out var parsedValue))
             {
-                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;
             }
             // TODO: Print previous and new value in stringBuilder

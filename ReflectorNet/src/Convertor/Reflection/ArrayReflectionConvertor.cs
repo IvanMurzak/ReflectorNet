@@ -68,15 +68,17 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+
             if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder))
             {
-                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to set field '{value?.name}'");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to set field '{value?.name}'");
                 return false;
             }
 
             fieldInfo.SetValue(obj, enumerable);
 
-            stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Success] Field '{value?.name}' modified to '[{string.Join(", ", enumerable)}]'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Field '{value?.name}' modified to '[{string.Join(", ", enumerable)}]'.");
             return true;
         }
 
@@ -84,15 +86,17 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+
             if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
             {
-                stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Error] Failed to set property '{value?.name}'");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to set property '{value?.name}'");
                 return false;
             }
 
             propertyInfo.SetValue(obj, parsedValue);
 
-            stringBuilder?.AppendLine($"{StringUtils.GetPadding(depth)}[Success] Property '{value?.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{value?.name}' modified to '{parsedValue}'.");
             return true;
         }
 
