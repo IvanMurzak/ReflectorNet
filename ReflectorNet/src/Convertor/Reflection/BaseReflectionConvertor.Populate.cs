@@ -70,34 +70,35 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
             if (string.IsNullOrEmpty(fieldValue.name))
-                return stringBuilder?.AppendLine(new string(' ', depth) + Error.ComponentFieldNameIsEmpty());
+                return stringBuilder?.AppendLine(padding + Error.ComponentFieldNameIsEmpty());
 
             if (string.IsNullOrEmpty(fieldValue.typeName))
-                return stringBuilder?.AppendLine(new string(' ', depth) + Error.ComponentFieldTypeIsEmpty());
+                return stringBuilder?.AppendLine(padding + Error.ComponentFieldTypeIsEmpty());
 
             if (obj == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Field '{fieldValue.name}' modification failed: Object is null.");
+                return stringBuilder?.AppendLine(padding + $"[Error] Field '{fieldValue.name}' modification failed: Object is null.");
 
             var fieldInfo = obj.GetType().GetField(fieldValue.name, flags);
             if (fieldInfo == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Field '{fieldValue.name}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?.");
+                return stringBuilder?.AppendLine(padding + $"[Error] Field '{fieldValue.name}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?.");
 
             var targetType = TypeUtils.GetType(fieldValue.typeName);
             if (targetType == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + Error.InvalidComponentFieldType(fieldValue, fieldInfo));
+                return stringBuilder?.AppendLine(padding + Error.InvalidComponentFieldType(fieldValue, fieldInfo));
 
             try
             {
                 foreach (var convertor in reflector.Convertors.BuildPopulatorsChain(targetType))
                     convertor.SetAsField(reflector, ref obj, targetType, fieldInfo, value: fieldValue, stringBuilder: stringBuilder, flags: flags, logger: logger);
 
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Success] Field '{fieldValue.name}' modified to '{fieldValue.valueJsonElement}'.");
+                return stringBuilder?.AppendLine(padding + $"[Success] Field '{fieldValue.name}' modified to '{fieldValue.valueJsonElement}'.");
             }
             catch (Exception ex)
             {
                 var message = $"[Error] Field '{fieldValue.name}' modification failed: {ex.Message}";
-                return stringBuilder?.AppendLine(new string(' ', depth) + message);
+                return stringBuilder?.AppendLine(padding + message);
             }
         }
 
@@ -105,30 +106,31 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
             if (string.IsNullOrEmpty(propertyValue.name))
-                return stringBuilder?.AppendLine(new string(' ', depth) + Error.ComponentPropertyNameIsEmpty());
+                return stringBuilder?.AppendLine(padding + Error.ComponentPropertyNameIsEmpty());
 
             if (string.IsNullOrEmpty(propertyValue.typeName))
-                return stringBuilder?.AppendLine(new string(' ', depth) + Error.ComponentPropertyTypeIsEmpty());
+                return stringBuilder?.AppendLine(padding + Error.ComponentPropertyTypeIsEmpty());
 
             if (obj == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + $"[Error] Property '{propertyValue.name}' modification failed: Object is null.");
+                return stringBuilder?.AppendLine(padding + $"[Error] Property '{propertyValue.name}' modification failed: Object is null.");
 
             var propInfo = obj.GetType().GetProperty(propertyValue.name, flags);
             if (propInfo == null)
             {
                 var warningMessage = $"[Error] Property '{propertyValue.name}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?.";
-                return stringBuilder?.AppendLine(new string(' ', depth) + warningMessage);
+                return stringBuilder?.AppendLine(padding + warningMessage);
             }
             if (!propInfo.CanWrite)
             {
                 var warningMessage = $"[Error] Property '{propertyValue.name}' is not writable. Can't modify property '{propertyValue.name}'.";
-                return stringBuilder?.AppendLine(new string(' ', depth) + warningMessage);
+                return stringBuilder?.AppendLine(padding + warningMessage);
             }
 
             var targetType = TypeUtils.GetType(propertyValue.typeName);
             if (targetType == null)
-                return stringBuilder?.AppendLine(new string(' ', depth) + Error.InvalidComponentPropertyType(propertyValue, propInfo));
+                return stringBuilder?.AppendLine(padding + Error.InvalidComponentPropertyType(propertyValue, propInfo));
 
             try
             {
@@ -140,7 +142,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             catch (Exception ex)
             {
                 var message = $"[Error] Property '{propertyValue.name}' modification failed: {ex.Message}";
-                return stringBuilder?.AppendLine(new string(' ', depth) + message);
+                return stringBuilder?.AppendLine(padding + message);
             }
         }
 

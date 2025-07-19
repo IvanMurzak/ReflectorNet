@@ -101,27 +101,28 @@ namespace com.IvanMurzak.ReflectorNet
             ILogger? logger = null)
         {
             stringBuilder ??= new StringBuilder();
+            var padding = StringUtils.GetPadding(depth);
 
             var type = dataType;
             if (type == null)
             {
                 if (string.IsNullOrEmpty(data?.typeName))
-                    return stringBuilder.AppendLine(new string(' ', depth) + Error.DataTypeIsEmpty());
+                    return stringBuilder.AppendLine(padding + Error.DataTypeIsEmpty());
 
                 type = TypeUtils.GetType(data!.typeName);
                 if (type == null)
-                    return stringBuilder.AppendLine(new string(' ', depth) + Error.NotFoundType(data.typeName));
+                    return stringBuilder.AppendLine(padding + Error.NotFoundType(data.typeName));
             }
 
             if (obj == null)
-                return stringBuilder.AppendLine(new string(' ', depth) + Error.TargetObjectIsNull());
+                return stringBuilder.AppendLine(padding + Error.TargetObjectIsNull());
 
             TypeUtils.CastTo(obj, type, out var error);
             if (error != null)
-                return stringBuilder.AppendLine(new string(' ', depth) + error);
+                return stringBuilder.AppendLine(padding + error);
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine(new string(' ', depth) + Error.TypeMismatch(data.typeName, obj.GetType().FullName ?? string.Empty));
+                return stringBuilder.AppendLine(padding + Error.TypeMismatch(data.typeName, obj.GetType().FullName ?? string.Empty));
 
             foreach (var convertor in Convertors.BuildPopulatorsChain(type))
                 convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
@@ -145,27 +146,28 @@ namespace com.IvanMurzak.ReflectorNet
             ILogger? logger = null)
         {
             stringBuilder ??= new StringBuilder();
+            var padding = StringUtils.GetPadding(depth);
 
             var type = dataType;
             if (type == null)
             {
                 if (string.IsNullOrEmpty(data?.typeName))
-                    return stringBuilder.AppendLine(new string(' ', depth) + Error.DataTypeIsEmpty());
+                    return stringBuilder.AppendLine(padding + Error.DataTypeIsEmpty());
 
                 type = TypeUtils.GetType(data!.typeName);
                 if (type == null)
-                    return stringBuilder.AppendLine(new string(' ', depth) + Error.NotFoundType(data.typeName));
+                    return stringBuilder.AppendLine(padding + Error.NotFoundType(data.typeName));
             }
 
             if (obj == null)
-                return stringBuilder.AppendLine(new string(' ', depth) + Error.TargetObjectIsNull());
+                return stringBuilder.AppendLine(padding + Error.TargetObjectIsNull());
 
             TypeUtils.CastTo(obj, type, out var error);
             if (error != null)
-                return stringBuilder.AppendLine(new string(' ', depth) + error);
+                return stringBuilder.AppendLine(padding + error);
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine(new string(' ', depth) + Error.TypeMismatch(data.typeName, obj.GetType().FullName ?? string.Empty));
+                return stringBuilder.AppendLine(padding + Error.TypeMismatch(data.typeName, obj.GetType().FullName ?? string.Empty));
 
             foreach (var convertor in Convertors.BuildPopulatorsChain(type))
                 convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
