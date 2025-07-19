@@ -33,9 +33,19 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         public override IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => null;
 
-        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            obj = value.Deserialize(type);
+            var parsedValue = value.Deserialize(type);
+            if (stringBuilder != null)
+            {
+                var originalType = obj?.GetType() ?? type;
+                var newType = parsedValue?.GetType() ?? type;
+
+                stringBuilder.AppendLine($@"[Success] Set value
+was: type='{originalType.FullName ?? "null"}', value='{obj}'
+new: type='{newType.FullName ?? "null"}', value='{parsedValue}'.");
+            }
+            obj = parsedValue;
             return true;
         }
 

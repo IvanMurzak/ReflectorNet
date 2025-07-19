@@ -43,11 +43,22 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.CanRead);
 
-        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             var parsedValue = value == null
                 ? TypeUtils.GetDefaultValue(type)
                 : JsonUtils.Deserialize(value.Value, type);
+
+            if (stringBuilder != null)
+            {
+                var originalType = obj?.GetType() ?? type;
+                var newType = parsedValue?.GetType() ?? type;
+
+                stringBuilder.AppendLine($@"[Success] Set value
+was: type='{originalType.FullName ?? "null"}', value='{obj}'
+new: type='{newType.FullName ?? "null"}', value='{parsedValue}'.");
+            }
+
             obj = parsedValue;
             return true;
         }

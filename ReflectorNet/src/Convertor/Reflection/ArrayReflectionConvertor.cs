@@ -50,15 +50,25 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.CanRead);
 
-        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            if (!value.TryDeserializeEnumerable(type, out var enumerable))
+            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: 1, stringBuilder: stringBuilder))
             {
-                obj = null;
+                stringBuilder?.AppendLine($"[Error] Failed to set array value for '{obj}'.");
                 return false;
             }
 
-            obj = enumerable;
+            if (stringBuilder != null)
+            {
+                var originalType = obj?.GetType() ?? type;
+                var newType = parsedValue?.GetType() ?? type;
+
+                stringBuilder.AppendLine($@"[Success] Set array value
+was: type='{originalType.FullName ?? "null"}', value='{obj}'
+new: type='{newType.FullName ?? "null"}', value='{parsedValue}'.");
+            }
+
+            obj = parsedValue;
             return true;
         }
 
@@ -66,7 +76,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserializeEnumerable(type, out var enumerable, stringBuilder))
+            if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: 1, stringBuilder: stringBuilder))
             {
                 stringBuilder?.AppendLine($"[Error] Failed to set field '{value?.name}'");
                 return false;
@@ -82,15 +92,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserializeEnumerable(type, out var enumerable, stringBuilder))
+            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: 1, stringBuilder: stringBuilder))
             {
                 stringBuilder?.AppendLine($"[Error] Failed to set property '{value?.name}'");
                 return false;
             }
 
-            propertyInfo.SetValue(obj, enumerable);
+            propertyInfo.SetValue(obj, parsedValue);
 
-            stringBuilder?.AppendLine($"[Success] Property '{value?.name}' modified to '{enumerable}'.");
+            stringBuilder?.AppendLine($"[Success] Property '{value?.name}' modified to '{parsedValue}'.");
             return true;
         }
 

@@ -22,7 +22,7 @@ namespace com.IvanMurzak.ReflectorNet
                 ? JsonUtils.Deserialize(jsonElement.Value, type)
                 : TypeUtils.GetDefaultValue(type);
         }
-        public static bool TryDeserializeEnumerable(this JsonElement? jsonElement, Type type, out IEnumerable<object?>? result, string? name = null, StringBuilder? stringBuilder = null)
+        public static bool TryDeserializeEnumerable(this JsonElement? jsonElement, Type type, out IEnumerable<object?>? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null)
         {
             try
             {
@@ -31,8 +31,8 @@ namespace com.IvanMurzak.ReflectorNet
 
                 if (stringBuilder != null)
                     stringBuilder.AppendLine(parsedList == null
-                        ? $"Deserializing '{name}' enumerable with 'null' value."
-                        : $"Deserializing '{name}' enumerable with {parsedList.Count} items.");
+                        ? new string(' ', depth) + $"Deserializing '{name}' enumerable with 'null' value."
+                        : new string(' ', depth) + $"Deserializing '{name}' enumerable with {parsedList.Count} items.");
 
                 var success = true;
                 var enumerable = parsedList
@@ -42,11 +42,11 @@ namespace com.IvanMurzak.ReflectorNet
                         {
                             success = false;
                             if (stringBuilder != null)
-                                stringBuilder.AppendLine($"  [Error] Enumerable[{i}] deserialization failed: {errorMessage}");
+                                stringBuilder.AppendLine(new string(' ', depth + 1) + $"[Error] Enumerable[{i}] deserialization failed: {errorMessage}");
                             return null;
                         }
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"  Enumerable[{i}] deserialized successfully.");
+                            stringBuilder.AppendLine(new string(' ', depth + 1) + $"Enumerable[{i}] deserialized successfully.");
                         return parsedValue;
                     });
 
@@ -54,7 +54,7 @@ namespace com.IvanMurzak.ReflectorNet
                 {
                     result = null;
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"[Error] Failed to deserialize '{name}': Some elements could not be deserialized.");
+                        stringBuilder.AppendLine(new string(' ', depth) + $"[Error] Failed to deserialize '{name}': Some elements could not be deserialized.");
                     return false;
                 }
 
@@ -62,13 +62,13 @@ namespace com.IvanMurzak.ReflectorNet
                 {
                     result = enumerable?.ToArray();
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"[Success] Deserialized '{name}' as an array with {result.Count()} items.");
+                        stringBuilder.AppendLine(new string(' ', depth) + $"[Success] Deserialized '{name}' as an array with {result.Count()} items.");
                 }
                 else // if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
                 {
                     result = enumerable?.ToList();
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"[Success] Deserialized '{name}' as a list with {result.Count()} items.");
+                        stringBuilder.AppendLine(new string(' ', depth) + $"[Success] Deserialized '{name}' as a list with {result.Count()} items.");
                 }
 
                 return true;
@@ -77,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 result = null;
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"[Error] Failed to deserialize '{name}': {ex.Message}");
+                    stringBuilder.AppendLine(new string(' ', depth) + $"[Error] Failed to deserialize '{name}': {ex.Message}");
                 return false;
             }
         }

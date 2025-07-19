@@ -144,7 +144,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
             }
         }
-        public static bool TryDeserializeEnumerable(this SerializedMember? serializedMember, Type type, out IEnumerable<object?>? result, StringBuilder? stringBuilder = null)
+        public static bool TryDeserializeEnumerable(this SerializedMember? serializedMember, Type type, out IEnumerable<object?>? result, int depth = 0, StringBuilder? stringBuilder = null)
         {
             if (serializedMember == null)
             {
@@ -154,7 +154,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
             }
 
-            return serializedMember.valueJsonElement.TryDeserializeEnumerable(type, out result, serializedMember.name, stringBuilder);
+            return serializedMember.valueJsonElement.TryDeserializeEnumerable(type, out result, serializedMember.name, depth: depth, stringBuilder: stringBuilder);
         }
     }
 }

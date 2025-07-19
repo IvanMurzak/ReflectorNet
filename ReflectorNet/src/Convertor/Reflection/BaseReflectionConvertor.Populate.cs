@@ -40,8 +40,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             {
                 try
                 {
-                    SetValue(reflector, ref obj, type, data.valueJsonElement, logger);
-                    stringBuilder?.AppendLine(new string(' ', depth) + $"[Success] Object '{obj}' modified to ```\n{data.valueJsonElement}\n```");
+                    var success = SetValue(reflector, ref obj, type, data.valueJsonElement, stringBuilder, logger: logger);
+                    stringBuilder?.AppendLine(new string(' ', depth) + (success
+                        ? $"[Success] Object '{obj}' modified to\n```\n{data.valueJsonElement}\n```"
+                        : $"[Error] Object '{obj}' modification failed."));
                 }
                 catch (Exception ex)
                 {
@@ -61,7 +63,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             return stringBuilder;
         }
-        protected abstract bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, ILogger? logger = null);
+        protected abstract bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, StringBuilder? stringBuilder = null, ILogger? logger = null);
 
         protected virtual StringBuilder? ModifyField(Reflector reflector, ref object? obj, SerializedMember fieldValue, StringBuilder? stringBuilder = null, int depth = 0,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,

@@ -9,8 +9,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
-        protected virtual IEnumerable<string> ignoredFields => Enumerable.Empty<string>();
-        protected virtual IEnumerable<string> ignoredProperties => Enumerable.Empty<string>();
+        protected virtual IEnumerable<string> GetIgnoredFields() => Enumerable.Empty<string>();
+        protected virtual IEnumerable<string> GetIgnoredProperties() => Enumerable.Empty<string>();
 
         public virtual SerializedMember Serialize(Reflector reflector, object? obj, Type? type = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -35,7 +35,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             foreach (var field in fields)
             {
-                if (ignoredFields.Contains(field.Name))
+                if (GetIgnoredFields().Contains(field.Name))
                     continue;
 
                 var value = field.GetValue(obj);
@@ -59,7 +59,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             foreach (var prop in properties)
             {
-                if (ignoredProperties.Contains(prop.Name))
+                if (GetIgnoredProperties().Contains(prop.Name))
                     continue;
                 try
                 {
