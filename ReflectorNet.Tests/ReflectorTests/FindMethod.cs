@@ -4,14 +4,14 @@ using com.IvanMurzak.ReflectorNet;
 using Xunit.Abstractions;
 using com.IvanMurzak.ReflectorNet.Utils;
 
-namespace ReflectorNet.Tests
+namespace ReflectorNet.Tests.ReflectorTests
 {
-    public class ReflectorTests : BaseTest
+    public class FindMethod : BaseTest
     {
-        public ReflectorTests(ITestOutputHelper output) : base(output) { }
+        public FindMethod(ITestOutputHelper output) : base(output) { }
 
         [Fact]
-        public void FindMethod_WithKnownMethod_ShouldReturnMethod()
+        public void WithKnownMethod_ShouldReturnMethod()
         {
             // Arrange
             var reflector = new Reflector();
@@ -39,7 +39,7 @@ namespace ReflectorNet.Tests
         }
 
         [Fact]
-        public void FindMethod_WithPartialMethodName_ShouldReturnMatchingMethods()
+        public void WithPartialMethodName_ShouldReturnMatchingMethods()
         {
             // Arrange
             var reflector = new Reflector();

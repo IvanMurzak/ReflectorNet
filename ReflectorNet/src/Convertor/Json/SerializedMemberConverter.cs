@@ -13,7 +13,6 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public static string StaticId => typeof(SerializedMember).FullName;
         public static JsonNode Schema => new JsonObject
         {
-            [JsonUtils.Schema.Id] = StaticId,
             [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
             [JsonUtils.Schema.Properties] = new JsonObject
             {
