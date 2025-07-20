@@ -29,6 +29,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             public const string Defs = "$defs";
             public const string Ref = "$ref";
             public const string RefValue = "#/$defs/";
+            public const string SchemaDraft = "$schema";
+            public const string SchemaDraftValue = "https://json-schema.org/draft/2020-12/schema";
 
             public static JsonNode? GetSchema<T>() => GetSchema(typeof(T));
             public static JsonNode? GetSchema(Type type, bool justRef = false)
@@ -95,11 +97,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                                         }
                                         else
                                         {
-                                            node = new JsonObject { [Type] = Object, [Properties] = node };
+                                            node = new JsonObject
+                                            {
+                                                [Type] = Object,
+                                                [Properties] = node
+                                            };
                                         }
 
                                         if (!string.IsNullOrEmpty(description))
                                             node[Description] = JsonValue.Create(description);
+
+                                        // Remove nested schema version if it exists
+                                        node.AsObject().Remove(SchemaDraft);
 
                                         return node;
                                     }
@@ -157,6 +166,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 // Create a schema object manually
                 var schema = new JsonObject
                 {
+                    [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
                     [Type] = Object,
                     [Properties] = properties,
                     [Required] = required,
