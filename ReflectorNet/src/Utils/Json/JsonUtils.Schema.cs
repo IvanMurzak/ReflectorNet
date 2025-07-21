@@ -304,20 +304,20 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     }
                 }
 
-                // For non-generic types that implement IEnumerable<T>, check if they're simple collections
-                var enumerableInterface = type.GetInterfaces()
-                    .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                // // For non-generic types that implement IEnumerable<T>, check if they're simple collections
+                // var enumerableInterface = type.GetInterfaces()
+                //     .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
-                if (enumerableInterface != null)
-                {
-                    // Only treat as array-like if it's a simple collection type (not Dictionary, etc.)
-                    // We can be more selective here - for now, let's be conservative and not treat
-                    // complex types like Dictionary as array-like
-                    if (type.Name.Contains("List") || type.Name.Contains("Collection") || type.Name.Contains("Array"))
-                    {
-                        return enumerableInterface.GetGenericArguments().FirstOrDefault();
-                    }
-                }
+                // if (enumerableInterface != null)
+                // {
+                //     // Only treat as array-like if it's a simple collection type (not Dictionary, etc.)
+                //     // We can be more selective here - for now, let's be conservative and not treat
+                //     // complex types like Dictionary as array-like
+                //     if (type.Name.Contains("List") || type.Name.Contains("Collection") || type.Name.Contains("Array"))
+                //     {
+                //         return enumerableInterface.GetGenericArguments().FirstOrDefault();
+                //     }
+                // }
 
                 return null;
             }
