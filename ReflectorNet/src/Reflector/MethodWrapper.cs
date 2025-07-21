@@ -218,7 +218,7 @@ namespace com.IvanMurzak.ReflectorNet
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: methodParameters[i].ParameterType, logger: _logger);
                         }
                     }
                     else
@@ -272,16 +272,16 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, methodParameters[i].ParameterType);
+                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, parameter.ParameterType);
                         }
                         catch
                         {
                             // Try #2: Parsing as SerializedMember
                             var serializedParameter = JsonUtils.Deserialize<SerializedMember>(jsonElement);
                             if (serializedParameter == null)
-                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
+                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: parameter.ParameterType, logger: _logger);
                         }
                     }
                     else

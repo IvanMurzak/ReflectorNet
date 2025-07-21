@@ -71,7 +71,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 var dictInputParameters = inputParameters?.ToDictionary(
                     keySelector: p => p.name!,
-                    elementSelector: p => reflector.Deserialize(p, logger)
+                    elementSelector: p => reflector.Deserialize(p, logger: logger)
                 );
 
                 var methodWrapper = default(MethodWrapper);
@@ -84,7 +84,7 @@ namespace com.IvanMurzak.ReflectorNet
                 else
                 {
                     // Object instance needed. Probably instance method.
-                    var obj = reflector.Deserialize(targetObject, logger);
+                    var obj = reflector.Deserialize(targetObject, logger: logger);
                     if (obj == null)
                         return $"[Error] '{nameof(targetObject)}' deserialized instance is null. Please specify the '{nameof(targetObject)}' properly.";
 
