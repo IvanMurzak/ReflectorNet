@@ -27,10 +27,10 @@ namespace ReflectorNet.Tests.SchemaTests
                 var methodParameter = methodInfo.GetParameters().FirstOrDefault(p => p.Name == parameterName);
                 Assert.NotNull(methodParameter);
 
-                var typeName = methodParameter.ParameterType.FullName!;
-                var refString = $"{JsonUtils.Schema.RefValue}{typeName}";
+                var typeId = JsonUtils.Schema.GetTypeId(methodParameter.ParameterType);
+                var refString = $"{JsonUtils.Schema.RefValue}{typeId}";
 
-                var targetDefine = defines[typeName];
+                var targetDefine = defines[typeId];
                 Assert.NotNull(targetDefine);
 
                 var refStringValue = properties.FirstOrDefault(kvp
@@ -59,8 +59,8 @@ namespace ReflectorNet.Tests.SchemaTests
 
             foreach (var expectedType in expectedTypes)
             {
-                var typeName = expectedType.FullName!;
-                var targetDefine = defines[typeName];
+                var typeId = JsonUtils.Schema.GetTypeId(expectedType);
+                var targetDefine = defines[typeId];
                 Assert.NotNull(targetDefine);
             }
         }
