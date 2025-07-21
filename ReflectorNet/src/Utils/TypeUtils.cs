@@ -57,19 +57,48 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
         public static string? GetPropertyDescription(JsonSchemaExporterContext context)
         {
-            if (context.PropertyInfo == null)
+            if (context.PropertyInfo == null || context.PropertyInfo.DeclaringType == null)
                 return null;
 
+            // First try to find the member by the exact name (in case no naming policy is applied)
             var memberInfo = context.PropertyInfo.DeclaringType
                 .GetMember(
                     name: context.PropertyInfo.Name,
                     bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .FirstOrDefault();
 
+            // If not found by exact name, try to convert camelCase back to PascalCase
+            // This handles the case where JSON naming policy transforms the property name (e.g., PascalCase -> camelCase)
+            if (memberInfo == null)
+            {
+                var pascalCaseName = ToPascalCase(context.PropertyInfo.Name);
+                memberInfo = context.PropertyInfo.DeclaringType
+                    .GetMember(
+                        name: pascalCaseName,
+                        bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .FirstOrDefault();
+            }
+
+            // If still not found, try to find by case-insensitive name match
+            if (memberInfo == null)
+            {
+                var allMembers = context.PropertyInfo.DeclaringType.GetMembers(BindingFlags.Public | BindingFlags.Instance);
+                memberInfo = allMembers.FirstOrDefault(m =>
+                    string.Equals(m.Name, context.PropertyInfo.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
             if (memberInfo == null)
                 return null;
 
             return GetDescription(memberInfo);
+        }
+
+        private static string ToPascalCase(string camelCase)
+        {
+            if (string.IsNullOrEmpty(camelCase))
+                return camelCase;
+
+            return char.ToUpperInvariant(camelCase[0]) + camelCase.Substring(1);
         }
         public static string? GetFieldDescription(FieldInfo fieldInfo)
         {
