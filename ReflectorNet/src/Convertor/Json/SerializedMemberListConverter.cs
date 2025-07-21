@@ -9,7 +9,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
 {
     public class SerializedMemberListConverter : JsonConverter<SerializedMemberList>, IJsonSchemaConverter
     {
-        public static string StaticId => typeof(SerializedMemberList).FullName;
+        public static string StaticId => JsonUtils.Schema.GetTypeId<SerializedMemberList>();
         public static JsonNode Schema => new JsonObject
         {
             [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
