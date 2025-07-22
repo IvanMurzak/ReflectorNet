@@ -5,6 +5,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static class StringUtils
     {
+        public const string Null = "null";
+
         static readonly ConcurrentDictionary<int, string> _paddingCache = new ConcurrentDictionary<int, string>();
 
         public static string GetPadding(int depth)
@@ -12,7 +14,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (depth < 0)
                 return string.Empty;
 
-            return _paddingCache.GetOrAdd(depth, static d => new string(' ', d));
+            return _paddingCache.GetOrAdd(depth, static d => new string(' ', d * 2));
         }
 
         public static string? TrimPath(string? path)
@@ -78,5 +80,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 ? span.Slice(lastSlashIndex + 1).ToString()
                 : span.ToString();
         }
+        public static string ValueOrNull(this string? value) => value == null ? Null : value;
     }
 }

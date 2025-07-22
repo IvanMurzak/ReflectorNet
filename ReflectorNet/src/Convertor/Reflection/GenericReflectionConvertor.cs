@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue))
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
@@ -77,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue))
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;
@@ -93,7 +93,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue))
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
@@ -109,7 +109,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue))
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;

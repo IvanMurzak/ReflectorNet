@@ -40,7 +40,9 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (declaringType == null)
                 throw new JsonException($"Could not find type: {typeName}");
 
-            var method = declaringType.GetMethod(methodName, parameterTypes.ToArray());
+            var method = string.IsNullOrEmpty(methodName)
+                ? null
+                : declaringType.GetMethod(methodName!, parameterTypes.ToArray());
             if (method == null)
                 throw new JsonException($"Could not find method: {methodName} on type: {typeName}");
 

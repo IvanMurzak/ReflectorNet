@@ -12,12 +12,26 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public partial class ArrayReflectionConvertor : BaseReflectionConvertor<Array>
     {
+        bool IsGenericList(Type type, out Type? elementType)
+        {
+            var iList = type.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+
+            if (iList == null)
+            {
+                elementType = null;
+                return false;
+            }
+            elementType = iList.GetGenericArguments()[0];
+            return true;
+        }
+
         public override int SerializationPriority(Type type, ILogger? logger = null)
         {
             if (type.IsArray)
                 return MAX_DEPTH + 1;
 
-            var isGenericList = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+            var isGenericList = IsGenericList(type, out var elementType);
             if (isGenericList)
                 return MAX_DEPTH + 1;
 
@@ -35,8 +49,30 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var serializedList = new List<SerializedMember>();
             var enumerable = (System.Collections.IEnumerable)obj;
 
+            // Determine the element type for handling null elements
+            Type? elementType = null;
+            if (type.IsArray)
+            {
+                elementType = type.GetElementType();
+            }
+            else if (type.IsGenericType)
+            {
+                var genericArgs = type.GetGenericArguments();
+                if (genericArgs.Length > 0)
+                    elementType = genericArgs[0];
+            }
+            else if (type.BaseType != null && type.BaseType.IsGenericType)
+            {
+                var genericArgs = type.BaseType.GetGenericArguments();
+                if (genericArgs.Length > 0)
+                    elementType = genericArgs[0];
+            }
+
             foreach (var element in enumerable)
-                serializedList.Add(reflector.Serialize(element, type: element?.GetType(), name: $"[{index++}]", recursive: recursive, flags: flags, logger: logger));
+            {
+                var elementTypeToUse = element?.GetType() ?? elementType;
+                serializedList.Add(reflector.Serialize(element, type: elementTypeToUse, name: $"[{index++}]", recursive: recursive, flags: flags, logger: logger));
+            }
 
             return SerializedMember.FromValue(type, serializedList, name: name);
         }
@@ -64,13 +100,99 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
+        public override object? Deserialize(Reflector reflector, SerializedMember data, ILogger? logger = null)
+        {
+            // For arrays and lists, we need special handling since the value is a IList<SerializedMember>
+            var type = TypeUtils.GetType(data.typeName);
+            if (type == null)
+            {
+                logger?.LogError("Type '{TypeName}' not found", data.typeName);
+                return null;
+            }
+
+            // Try to deserialize the value as a SerializedMemberList
+            var serializedMemberList = data.valueJsonElement.Deserialize<SerializedMemberList>();
+            if (serializedMemberList == null)
+            {
+                logger?.LogError("Failed to deserialize as SerializedMemberList");
+                return null;
+            }
+
+            logger?.LogDebug("Deserializing type: {TypeFullName}, IsArray: {IsArray}, IsList: {IsList}, InheritsFromList: {InheritsFromList}, ElementCount: {ElementCount}",
+                type.FullName.ValueOrNull(),
+                type.IsArray,
+                type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>),
+                type.BaseType != null && type.BaseType.IsGenericType && type.BaseType.GetGenericTypeDefinition() == typeof(IList<>),
+                serializedMemberList.Count);
+
+            if (type.IsArray)
+            {
+                // Handle arrays
+                var elementType = type.GetElementType();
+                if (elementType == null)
+                    return null;
+
+                var array = Array.CreateInstance(elementType, serializedMemberList.Count);
+
+                for (int i = 0; i < serializedMemberList.Count; i++)
+                {
+                    var element = serializedMemberList[i];
+                    var deserializedElement = reflector.Deserialize(element);
+                    if (deserializedElement != null)
+                    {
+                        array.SetValue(deserializedElement, i);
+                    }
+                }
+
+                return array;
+            }
+            else if (IsGenericList(type, out var elementType))
+            {
+                // Handle generic IList<T>
+                var list = Activator.CreateInstance(type);
+                if (list == null)
+                {
+                    logger?.LogError("Failed to create list instance for type: {TypeFullName}", type.FullName.ValueOrNull());
+                    return null;
+                }
+
+                var addMethod = type.GetMethod(nameof(IList<object>.Add));
+                if (addMethod == null)
+                {
+                    logger?.LogError("Failed to find Add method on list type: {TypeFullName}", type.FullName.ValueOrNull());
+                    return null;
+                }
+
+                foreach (var element in serializedMemberList)
+                {
+                    logger?.LogDebug("Deserializing element: {ElementName}, typeName: {TypeName}", element.name, element.typeName);
+                    var deserializedElement = reflector.Deserialize(element);
+                    if (deserializedElement != null)
+                    {
+                        logger?.LogDebug("Element deserialized successfully: {Element}", deserializedElement);
+                        addMethod.Invoke(list, new[] { deserializedElement });
+                    }
+                    else
+                    {
+                        logger?.LogWarning("Failed to deserialize element: {ElementName}", element.name);
+                    }
+                }
+
+                logger?.LogInformation("Successfully created list of type: {TypeFullName}", list.GetType().FullName.ValueOrNull());
+                return list;
+            }
+
+            logger?.LogWarning("Type {TypeFullName} is neither array nor generic list", type.FullName.ValueOrNull());
+            return null;
+        }
+
         public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder))
+            if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to set field '{value?.name}'");
                 return false;
@@ -78,7 +200,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             fieldInfo.SetValue(obj, enumerable);
 
-            stringBuilder?.AppendLine($"{padding}[Success] Field '{value?.name}' modified to '[{string.Join(", ", enumerable)}]'.");
+            stringBuilder?.AppendLine(enumerable == null
+                ? $"{padding}[Success] Field '{value?.name}' modified to 'null'."
+                : $"{padding}[Success] Field '{value?.name}' modified to '[{string.Join(", ", enumerable)}]'.");
             return true;
         }
 
@@ -88,7 +212,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
+            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to set property '{value?.name}'");
                 return false;
@@ -104,7 +228,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserialize(type, out var parsedValue))
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
                 return false;
 
             // TODO: Print previous and new value in stringBuilder
@@ -116,7 +240,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserialize(type, out var parsedValue))
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
                 return false;
 
             // TODO: Print previous and new value in stringBuilder

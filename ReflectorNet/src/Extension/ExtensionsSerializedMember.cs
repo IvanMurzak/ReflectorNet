@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsSerializedMember
     {
-        public static bool TryDeserialize(this SerializedMember? serializedMember, out object? result)
+        public static bool TryDeserialize(this SerializedMember? serializedMember, out object? result, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
@@ -28,12 +29,12 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Exception during deserialization: {ex}");
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }
         }
-        public static bool TryDeserialize(this SerializedMember? serializedMember, Type targetType, out object? result)
+        public static bool TryDeserialize(this SerializedMember? serializedMember, Type targetType, out object? result, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
@@ -47,13 +48,13 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Exception in TryDeserialize with targetType: {ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{targetType.FullName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }
         }
 
-        public static bool TryDeserialize<T>(this SerializedMember? serializedMember, out T? result)
+        public static bool TryDeserialize<T>(this SerializedMember? serializedMember, out T? result, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
@@ -67,13 +68,13 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to deserialize member of type '{typeof(T)}': {ex.Message}");
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{typeof(T).FullName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
                 result = default;
                 return false;
             }
         }
 
-        public static bool TryDeserialize(this SerializedMember? serializedMember, out object? result, out string? error)
+        public static bool TryDeserialize(this SerializedMember? serializedMember, out object? result, out string? error, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
@@ -96,12 +97,13 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                error = $"Failed to deserialize member '{serializedMember.name}' of type '{serializedMember.typeName}': {ex.Message}";
+                error = $"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}";
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }
         }
-        public static bool TryDeserialize(this SerializedMember? serializedMember, Type targetType, out object? result, out string? error)
+        public static bool TryDeserialize(this SerializedMember? serializedMember, Type targetType, out object? result, out string? error, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
@@ -117,13 +119,14 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                error = $"Failed to deserialize member '{serializedMember.name}' of type '{serializedMember.typeName}': {ex.Message}";
+                error = $"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}";
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }
         }
 
-        public static bool TryDeserialize<T>(this SerializedMember? serializedMember, out T? result, out string? error)
+        public static bool TryDeserialize<T>(this SerializedMember? serializedMember, out T? result, out string? error, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
@@ -140,11 +143,12 @@ namespace com.IvanMurzak.ReflectorNet
             catch (Exception ex)
             {
                 error = $"Failed to deserialize member '{serializedMember.name}' of type '{serializedMember.typeName}': {ex.Message}";
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
                 result = default;
                 return false;
             }
         }
-        public static bool TryDeserializeEnumerable(this SerializedMember? serializedMember, Type type, out IEnumerable<object?>? result, int depth = 0, StringBuilder? stringBuilder = null)
+        public static bool TryDeserializeEnumerable(this SerializedMember? serializedMember, Type type, out IEnumerable<object?>? result, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
@@ -154,7 +158,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
             }
 
-            return serializedMember.valueJsonElement.TryDeserializeEnumerable(type, out result, serializedMember.name, depth: depth, stringBuilder: stringBuilder);
+            return serializedMember.valueJsonElement.TryDeserializeEnumerable(type, out result, serializedMember.name, depth: depth, stringBuilder: stringBuilder, logger: logger);
         }
     }
 }

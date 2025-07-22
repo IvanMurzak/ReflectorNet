@@ -323,7 +323,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return;
 
             _logger.LogDebug((parameters?.Length ?? 0) > 0
-                ? $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}({string.Join(", ", parameters!.Select(x => $"{x?.GetType()?.Name ?? "null"}"))})"
+                ? $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}({string.Join(", ", parameters!.Select(x => $"{x?.GetType()?.Name.ValueOrNull()}"))})"
                 : $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}()");
 
             var methodParameters = _methodInfo.GetParameters();
@@ -334,7 +334,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 var parameterType = i < methodParameters.Length ? methodParameters[i].ParameterType.ToString() : "N/A";
                 var parameterName = i < methodParameters.Length ? methodParameters[i].Name : "N/A";
-                var parameterValue = i < (parameters?.Length ?? 0) ? parameters?[i]?.ToString() ?? "null" : "null";
+                var parameterValue = i < (parameters?.Length ?? 0) ? parameters?[i]?.ToString().ValueOrNull() : "null";
 
                 result[i] = $"{parameterType} {parameterName} = {parameterValue}";
             }

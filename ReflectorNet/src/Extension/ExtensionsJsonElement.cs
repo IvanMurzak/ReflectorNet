@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet
 {
@@ -22,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet
                 ? JsonUtils.Deserialize(jsonElement.Value, type)
                 : TypeUtils.GetDefaultValue(type);
         }
-        public static bool TryDeserializeEnumerable(this JsonElement? jsonElement, Type type, out IEnumerable<object?>? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null)
+        public static bool TryDeserializeEnumerable(this JsonElement? jsonElement, Type type, out IEnumerable<object?>? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
             var paddingNext = StringUtils.GetPadding(depth + 1);
@@ -40,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet
                 var enumerable = parsedList
                     ?.Select((element, i) =>
                     {
-                        if (!element.TryDeserialize(out var parsedValue, out var errorMessage))
+                        if (!element.TryDeserialize(out var parsedValue, out var errorMessage, logger: logger))
                         {
                             success = false;
                             if (stringBuilder != null)
@@ -62,15 +63,29 @@ namespace com.IvanMurzak.ReflectorNet
 
                 if (type.IsArray)
                 {
-                    result = enumerable?.ToArray();
+                    var elementType = type.GetElementType();
+                    if (elementType != null && enumerable != null)
+                    {
+                        var typedArray = Array.CreateInstance(elementType, enumerable.Count());
+                        var index = 0;
+                        foreach (var item in enumerable)
+                        {
+                            typedArray.SetValue(item, index++);
+                        }
+                        result = typedArray.Cast<object?>();
+                    }
+                    else
+                    {
+                        result = enumerable?.ToArray();
+                    }
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {result.Count()} items.");
+                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {result?.Count() ?? 0} items.");
                 }
                 else // if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
                 {
                     result = enumerable?.ToList();
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as a list with {result.Count()} items.");
+                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as a list with {result?.Count() ?? 0} items.");
                 }
 
                 return true;
@@ -80,6 +95,7 @@ namespace com.IvanMurzak.ReflectorNet
                 result = null;
                 if (stringBuilder != null)
                     stringBuilder.AppendLine($"{padding}[Error] Failed to deserialize '{name}': {ex.Message}");
+                logger?.LogCritical($"[Error] Failed to deserialize '{name}': {ex.Message}\n{ex.StackTrace}");
                 return false;
             }
         }

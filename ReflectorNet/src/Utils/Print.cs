@@ -26,8 +26,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var newType = newValue?.GetType() ?? type;
 
             stringBuilder.AppendLine($@"{padding}[Success] Set value
-{paddingNext}was: type='{originalType.FullName ?? "null"}', value='{obj}'
-{paddingNext}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
+{paddingNext}was: type='{originalType.FullName.ValueOrNull()}', value='{obj}'
+{paddingNext}new: type='{newType.FullName.ValueOrNull()}', value='{newValue}'.");
         }
         public static void SetNewValueEnumerable(ref object? obj, ref IEnumerable? newValue, Type type, int depth = 0, StringBuilder? stringBuilder = null)
         {
@@ -40,8 +40,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var newType = newValue?.GetType() ?? type;
 
             stringBuilder.AppendLine($@"{padding}[Success] Set array value
-{paddingNext}was: type='{originalType.FullName ?? "null"}', value='{obj}'
-{paddingNext}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
+{paddingNext}was: type='{originalType.FullName.ValueOrNull()}', value='{obj}'
+{paddingNext}new: type='{newType.FullName.ValueOrNull()}', value='{newValue}'.");
         }
         public static void SetNewValueEnumerable<T>(ref object? obj, ref IEnumerable<T>? newValue, Type type, int depth = 0, StringBuilder? stringBuilder = null)
         {
@@ -54,8 +54,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var newType = newValue?.GetType() ?? type;
 
             stringBuilder.AppendLine($@"{padding}[Success] Set array value
-{paddingNext}was: type='{originalType.FullName ?? "null"}', value='{obj}'
-{paddingNext}new: type='{newType.FullName ?? "null"}', value='{newValue}'.");
+{paddingNext}was: type='{originalType.FullName.ValueOrNull()}', value='{obj}'
+{paddingNext}new: type='{newType.FullName.ValueOrNull()}', value='{newValue}'.");
         }
     }
 }

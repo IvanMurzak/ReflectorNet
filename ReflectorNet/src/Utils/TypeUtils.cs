@@ -123,7 +123,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     .FirstOrDefault(t => t.FullName == typeFullName);
             if (type == null)
             {
-                error = $"[Error] Type '{typeFullName ?? "null"}' not found during casting.";
+                error = $"[Error] Type '{typeFullName.ValueOrNull()}' not found during casting.";
                 return default;
             }
             return CastTo(obj, type, out error);
