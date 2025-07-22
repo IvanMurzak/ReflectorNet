@@ -35,7 +35,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 return stringBuilder?.AppendLine($"{padding}{error}");
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder?.AppendLine($"{padding}[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().FullName.ValueOrNull()}'.");
+                return stringBuilder?.AppendLine($"{padding}[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.");
 
             if (data.valueJsonElement != null)
             {

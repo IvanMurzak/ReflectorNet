@@ -164,13 +164,13 @@ namespace ReflectorNet.Tests.SchemaTests
         public void SerializedMemberList_Validation_Tests()
         {
             // Arrange
-            var validList = new com.IvanMurzak.ReflectorNet.Model.SerializedMemberList
+            var validList = new SerializedMemberList
             {
                 new() { name = "param1", typeName = "System.String" },
                 new() { name = "param2", typeName = "System.Int32" }
             };
 
-            var invalidList = new com.IvanMurzak.ReflectorNet.Model.SerializedMemberList
+            var invalidList = new SerializedMemberList
             {
                 new() { name = "param1", typeName = "InvalidType.Name" },
                 new() { name = "param2", typeName = "System.Int32" }

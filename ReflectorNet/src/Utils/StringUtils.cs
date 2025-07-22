@@ -80,6 +80,5 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 ? span.Slice(lastSlashIndex + 1).ToString()
                 : span.ToString();
         }
-        public static string ValueOrNull(this string? value) => value == null ? Null : value;
     }
 }

@@ -119,7 +119,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
 
             logger?.LogDebug("Deserializing type: {TypeFullName}, IsArray: {IsArray}, IsList: {IsList}, InheritsFromList: {InheritsFromList}, ElementCount: {ElementCount}",
-                type.FullName.ValueOrNull(),
+                type.GetTypeName(pretty: true),
                 type.IsArray,
                 type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>),
                 type.BaseType != null && type.BaseType.IsGenericType && type.BaseType.GetGenericTypeDefinition() == typeof(IList<>),
@@ -152,14 +152,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 var list = Activator.CreateInstance(type);
                 if (list == null)
                 {
-                    logger?.LogError("Failed to create list instance for type: {TypeFullName}", type.FullName.ValueOrNull());
+                    logger?.LogError("Failed to create list instance for type: {TypeFullName}", type.GetTypeName(pretty: true));
                     return null;
                 }
 
                 var addMethod = type.GetMethod(nameof(IList<object>.Add));
                 if (addMethod == null)
                 {
-                    logger?.LogError("Failed to find Add method on list type: {TypeFullName}", type.FullName.ValueOrNull());
+                    logger?.LogError("Failed to find Add method on list type: {TypeFullName}", type.GetTypeName(pretty: true));
                     return null;
                 }
 
@@ -178,11 +178,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     }
                 }
 
-                logger?.LogInformation("Successfully created list of type: {TypeFullName}", list.GetType().FullName.ValueOrNull());
+                logger?.LogInformation("Successfully created list of type: {TypeFullName}", list.GetType().GetTypeName(pretty: true));
                 return list;
             }
 
-            logger?.LogWarning("Type {TypeFullName} is neither array nor generic list", type.FullName.ValueOrNull());
+            logger?.LogWarning("Type {TypeFullName} is neither array nor generic list", type.GetTypeName(pretty: true));
             return null;
         }
 

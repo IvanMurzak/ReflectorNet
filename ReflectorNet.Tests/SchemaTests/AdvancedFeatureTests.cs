@@ -33,7 +33,7 @@ namespace ReflectorNet.Tests.SchemaTests
             Assert.NotNull(propertiesOnly);
             Assert.NotNull(fieldsOnly);
             Assert.NotNull(allMembers);
-            Assert.Equal(typeof(GameObjectRef).FullName, propertiesOnly.typeName);
+            Assert.Equal(typeof(GameObjectRef).GetTypeName(pretty: false), propertiesOnly.typeName);
 
             _output.WriteLine($"Properties serialization: {propertiesOnly.typeName}");
             _output.WriteLine($"Fields serialization: {fieldsOnly.typeName}");

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
@@ -32,7 +33,7 @@ namespace ReflectorNet.Tests.SchemaTests
                 var methodParameter = methodInfo.GetParameters().FirstOrDefault(p => p.Name == parameterName);
                 Assert.NotNull(methodParameter);
 
-                var typeId = JsonUtils.Schema.GetTypeId(methodParameter.ParameterType);
+                var typeId = methodParameter.ParameterType.GetTypeId();
                 var refString = $"{JsonUtils.Schema.RefValue}{typeId}";
 
                 var targetDefine = defines[typeId];
@@ -65,7 +66,7 @@ namespace ReflectorNet.Tests.SchemaTests
 
             foreach (var expectedType in expectedTypes)
             {
-                var typeId = JsonUtils.Schema.GetTypeId(expectedType);
+                var typeId = expectedType.GetTypeId();
                 var targetDefine = defines[typeId];
                 Assert.NotNull(targetDefine);
             }

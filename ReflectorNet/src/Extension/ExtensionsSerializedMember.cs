@@ -48,7 +48,7 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{targetType.FullName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{targetType.GetTypeName(pretty: true)}': {ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }
@@ -68,7 +68,7 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{typeof(T).FullName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{typeof(T).GetTypeName(pretty: true)}': {ex.Message}\n{ex.StackTrace}");
                 result = default;
                 return false;
             }

@@ -24,14 +24,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     ? new SerializedMember()
                     {
                         name = name,
-                        typeName = type.FullName ?? string.Empty,
+                        typeName = type.GetTypeName(pretty: false) ?? string.Empty,
                         fields = SerializeFields(reflector, obj, flags),
                         props = SerializeProperties(reflector, obj, flags),
                         valueJsonElement = new JsonObject().ToJsonElement()
                     }
                     : SerializedMember.FromJson(type, JsonUtils.Serialize(obj), name: name);
             }
-            throw new ArgumentException($"Unsupported type: {type.FullName}");
+            throw new ArgumentException($"Unsupported type: {type.GetTypeName(pretty: false)}");
         }
         public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => objType.GetFields(flags)

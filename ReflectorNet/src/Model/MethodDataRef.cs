@@ -29,7 +29,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         {
             IsStatic = methodInfo.IsStatic;
             IsPublic = methodInfo.IsPublic;
-            ReturnType = methodInfo.ReturnType.FullName;
+            ReturnType = methodInfo.ReturnType.GetTypeName(pretty: false);
             ReturnSchema = methodInfo.ReturnType == typeof(void)
                 ? null
                 : JsonUtils.Schema.GetSchema(methodInfo.ReturnType, justRef: justRef);

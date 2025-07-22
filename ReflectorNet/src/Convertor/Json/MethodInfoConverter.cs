@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         {
             writer.WriteStartObject();
             writer.WriteString(Json.Name, value.Name);
-            writer.WriteString(Json.DeclaringType, value.DeclaringType?.AssemblyQualifiedName);
+            writer.WriteString(Json.DeclaringType, value.DeclaringType?.GetTypeName(pretty: false));
 
             writer.WritePropertyName(Json.Parameters);
             writer.WriteStartArray();
@@ -61,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             {
                 writer.WriteStartObject();
                 writer.WriteString(Json.Name, param.Name);
-                writer.WriteString(Json.Type, param.ParameterType.AssemblyQualifiedName);
+                writer.WriteString(Json.Type, param.ParameterType.GetTypeName(pretty: false));
                 writer.WriteEndObject();
             }
             writer.WriteEndArray();

@@ -16,6 +16,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     .SelectMany(a => a.GetTypes())
                     .FirstOrDefault(t => t.FullName == typeFullName || t.AssemblyQualifiedName == typeFullName);
 
+        public static string? GetTypeName<T>(bool pretty = false) => typeof(T).GetTypeName(pretty);
+
+        public static string GetTypeId<T>() => typeof(T).GetTypeId();
+
         public static T? GetDefaultValue<T>()
             => (T?)GetDefaultValue(typeof(T));
         public static object? GetDefaultValue(Type type)
@@ -141,7 +145,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             if (!type.IsAssignableFrom(obj.GetType()))
             {
-                error = $"[Error] Type mismatch between '{type.FullName}' and '{obj.GetType().FullName}'.";
+                error = $"[Error] Type mismatch between '{type.GetTypeName(pretty: false)}' and '{obj.GetType().GetTypeName(pretty: false)}'.";
                 return default;
             }
 
@@ -153,8 +157,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (!baseType.IsAssignableFrom(targetType))
                 return -1;
 
-            int distance = 0;
-            Type? current = targetType;
+            var distance = 0;
+            var current = targetType;
             while (current != null && current != baseType)
             {
                 current = current.BaseType;

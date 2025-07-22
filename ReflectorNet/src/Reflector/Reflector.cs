@@ -89,13 +89,13 @@ namespace com.IvanMurzak.ReflectorNet
 
             foreach (var serializer in Convertors.BuildSerializersChain(type))
             {
-                logger?.LogTrace("[Serializer] {0} for type {1}", serializer.GetType().Name, type?.FullName);
+                logger?.LogTrace("[Serializer] {0} for type {1}", serializer.GetType().Name, type?.GetTypeName(pretty: true));
 
                 var serializedMember = serializer.Serialize(this, obj, type: type, name: name, recursive, flags, logger);
                 if (serializedMember != null)
                     return serializedMember;
             }
-            throw new ArgumentException($"[Error] Type '{type?.FullName.ValueOrNull()}' not supported for serialization.");
+            throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
         }
 
         /// <summary>
@@ -166,9 +166,9 @@ namespace com.IvanMurzak.ReflectorNet
 
             var deserializer = Convertors.BuildDeserializersChain(type);
             if (deserializer == null)
-                throw new ArgumentException($"[Error] Type '{type?.FullName.ValueOrNull()}' not supported for deserialization.");
+                throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
 
-            logger?.LogTrace($"[Serializer] {deserializer.GetType().Name} for type {type?.FullName}");
+            logger?.LogTrace($"[Serializer] {deserializer.GetType().Name} for type {type?.GetTypeName(pretty: true)}");
 
             return deserializer.Deserialize(this, data, logger);
         }
@@ -275,7 +275,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return stringBuilder.AppendLine($"{padding}{error}");
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().FullName ?? string.Empty)}");
+                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false) ?? string.Empty)}");
 
             foreach (var convertor in Convertors.BuildPopulatorsChain(type))
                 convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
@@ -337,7 +337,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return stringBuilder.AppendLine($"{padding}{error}");
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().FullName ?? string.Empty)}");
+                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false) ?? string.Empty)}");
 
             foreach (var convertor in Convertors.BuildPopulatorsChain(type))
                 convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);

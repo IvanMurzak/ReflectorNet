@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
@@ -17,7 +18,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(SerializedMemberList);
             var genericTypes = TypeUtils.GetGenericTypes(type).ToList();
 
-            _output.WriteLine($"Generic types for {type.FullName}: {string.Join(", ", genericTypes.Select(t => t.FullName))}");
+            _output.WriteLine($"Generic types for {type.GetTypeName(pretty: true)}: {string.Join(", ", genericTypes.Select(t => t.GetTypeName(pretty: true)))}");
 
             Assert.NotEmpty(genericTypes);
 
@@ -31,7 +32,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<SerializedMemberList>);
             var genericTypes = TypeUtils.GetGenericTypes(type).ToList();
 
-            _output.WriteLine($"Generic types for {type.FullName}: {string.Join(", ", genericTypes.Select(t => t.FullName))}");
+            _output.WriteLine($"Generic types for {type.GetTypeName(pretty: true)}: {string.Join(", ", genericTypes.Select(t => t.GetTypeName(pretty: true)))}");
 
             Assert.NotEmpty(genericTypes);
 
@@ -48,7 +49,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<SerializedMember>);
             var genericTypes = TypeUtils.GetGenericTypes(type).ToList();
 
-            _output.WriteLine($"Generic types for {type.FullName}: {string.Join(", ", genericTypes.Select(t => t.FullName))}");
+            _output.WriteLine($"Generic types for {type.GetTypeName(pretty: true)}: {string.Join(", ", genericTypes.Select(t => t.GetTypeName(pretty: true)))}");
 
             Assert.NotEmpty(genericTypes);
 

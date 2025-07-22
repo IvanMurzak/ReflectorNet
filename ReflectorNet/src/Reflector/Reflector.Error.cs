@@ -41,14 +41,14 @@ namespace com.IvanMurzak.ReflectorNet
                 => $"[Error] Component property type is empty. It should be a valid property type.";
 
             public static string InvalidInstanceID(Type holderType, string? fieldName)
-                => $"[Error] Invalid instanceID '{fieldName.ValueOrNull()}' for '{holderType.FullName}'. It should be a valid field name.";
+                => $"[Error] Invalid instanceID '{fieldName.ValueOrNull()}' for '{holderType.GetTypeName(pretty: false)}'. It should be a valid field name.";
             public static string InvalidComponentPropertyType(SerializedMember serializedProperty, PropertyInfo propertyInfo)
-                => $"[Error] Invalid component property type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.PropertyType.FullName}'.";
+                => $"[Error] Invalid component property type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.PropertyType.GetTypeName(pretty: false)}'.";
             public static string InvalidComponentFieldType(SerializedMember serializedProperty, FieldInfo propertyInfo)
-                => $"[Error] Invalid component field type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.FieldType.FullName}'.";
+                => $"[Error] Invalid component field type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.FieldType.GetTypeName(pretty: false)}'.";
 
             public static string NotSupportedInRuntime(Type type)
-                => $"[Error] Type '{type.FullName.ValueOrNull()}' is not supported in runtime for now.";
+                => $"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' is not supported in runtime for now.";
 
             public static string MoreThanOneMethodFound(List<MethodInfo> methods)
             {

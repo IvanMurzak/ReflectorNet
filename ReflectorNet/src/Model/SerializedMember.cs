@@ -25,7 +25,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         protected SerializedMember(Type type, string? name = null)
         {
             this.name = name;
-            this.typeName = type.FullName ?? throw new ArgumentNullException(nameof(type));
+            this.typeName = type.GetTypeName(pretty: false) ?? throw new ArgumentNullException(nameof(type));
         }
 
         public SerializedMember SetName(string? name)

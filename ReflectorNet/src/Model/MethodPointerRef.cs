@@ -87,7 +87,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             }
             public Parameter(ParameterInfo parameter)
             {
-                TypeName = parameter.ParameterType.FullName;
+                TypeName = parameter.ParameterType.GetTypeName(pretty: false);
                 Name = parameter.Name;
             }
             public override string ToString()

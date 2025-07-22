@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace ReflectorNet.Tests.SchemaTests
@@ -12,7 +13,7 @@ namespace ReflectorNet.Tests.SchemaTests
     {
         void TestClassMembersDescription(Type type, BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
-            _output.WriteLine($"Testing members description for type: '{type.FullName}'");
+            _output.WriteLine($"Testing members description for type: '{type.GetTypeName(pretty: false)}'");
 
             var schema = JsonUtils.Schema.GetSchema(type, justRef: false);
             Assert.NotNull(schema);

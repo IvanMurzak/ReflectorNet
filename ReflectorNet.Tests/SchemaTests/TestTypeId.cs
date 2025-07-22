@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using com.IvanMurzak.ReflectorNet.Utils;
+using com.IvanMurzak.ReflectorNet;
 using Xunit.Abstractions;
 
 namespace ReflectorNet.Tests.SchemaTests
@@ -15,7 +15,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(int[]);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32Array", result);
@@ -29,7 +29,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(int[][]);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32ArrayArray", result);
@@ -43,7 +43,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(int[][][]);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32ArrayArrayArray", result);
@@ -57,7 +57,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(string[]);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.StringArray", result);
@@ -71,7 +71,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<int>);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32Array", result);
@@ -85,7 +85,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<int[]>);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32ArrayArray", result);
@@ -99,7 +99,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<List<int>>);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32ArrayArray", result);
@@ -113,7 +113,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<int[][]>);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32ArrayArrayArray", result);
@@ -127,7 +127,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<string[]>);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.StringArrayArray", result);
@@ -141,7 +141,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(List<List<string[]>[]>);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.StringArrayArrayArrayArray", result);
@@ -155,7 +155,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(string);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.String", result);
@@ -169,7 +169,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(int?);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32", result);
@@ -183,7 +183,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(int?[]);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Equal("System.Int32Array", result);
@@ -197,7 +197,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var type = typeof(Dictionary<string, int>);
 
             // Act
-            var result = JsonUtils.Schema.GetTypeId(type);
+            var result = type.GetTypeId();
 
             // Assert
             Assert.Contains("System.Collections.Generic.Dictionary", result);

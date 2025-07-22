@@ -4,6 +4,8 @@ using Xunit.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using com.IvanMurzak.ReflectorNet.Utils;
+using com.IvanMurzak.ReflectorNet.Model;
 
 namespace ReflectorNet.Tests.SchemaTests
 {
@@ -53,7 +55,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.Object_Int_Bool))!;
 
-            var inputParameters = new com.IvanMurzak.ReflectorNet.Model.SerializedMemberList
+            var inputParameters = new SerializedMemberList
             {
                 new() { name = "", typeName = "" }, // Will be enhanced
                 new() { name = "integer", typeName = "System.Int32" },
@@ -80,15 +82,15 @@ namespace ReflectorNet.Tests.SchemaTests
             var testType = typeof(GameObjectRef);
 
             // Act - Test introspection capabilities
-            var schema = com.IvanMurzak.ReflectorNet.Utils.JsonUtils.Schema.GetSchema(testType);
-            var typeId = com.IvanMurzak.ReflectorNet.Utils.JsonUtils.Schema.GetTypeId(testType);
+            var schema = testType.GetSchema();
+            var typeId = testType.GetTypeId();
 
             // Assert
             Assert.NotNull(schema);
             Assert.NotNull(typeId);
-            Assert.Equal(testType.FullName, typeId);
+            Assert.Equal("ReflectorNet.Tests.Schema.Model.GameObjectRef", typeId);
 
-            _output.WriteLine($"Type: {testType.FullName}");
+            _output.WriteLine($"Type: {testType.GetTypeName(pretty: false)}");
             _output.WriteLine($"Schema: {schema}");
             _output.WriteLine($"TypeId: {typeId}");
         }
@@ -97,17 +99,17 @@ namespace ReflectorNet.Tests.SchemaTests
         public void TypeUtils_Integration_Tests()
         {
             // Test type resolution
-            var stringType = com.IvanMurzak.ReflectorNet.Utils.TypeUtils.GetType("System.String");
+            var stringType = TypeUtils.GetType("System.String");
             Assert.Equal(typeof(string), stringType);
 
-            var gameObjectRefType = com.IvanMurzak.ReflectorNet.Utils.TypeUtils.GetType(typeof(GameObjectRef).FullName!);
+            var gameObjectRefType = TypeUtils.GetType(typeof(GameObjectRef).GetTypeName(pretty: false)!);
             Assert.Equal(typeof(GameObjectRef), gameObjectRefType);
 
             // Test default value generation
-            var defaultInt = com.IvanMurzak.ReflectorNet.Utils.TypeUtils.GetDefaultValue(typeof(int));
+            var defaultInt = TypeUtils.GetDefaultValue(typeof(int));
             Assert.Equal(0, defaultInt);
 
-            var defaultString = com.IvanMurzak.ReflectorNet.Utils.TypeUtils.GetDefaultValue(typeof(string));
+            var defaultString = TypeUtils.GetDefaultValue(typeof(string));
             Assert.Null(defaultString);
 
             _output.WriteLine("TypeUtils integration tests passed");
@@ -124,11 +126,11 @@ namespace ReflectorNet.Tests.SchemaTests
             };
 
             // Act - Test JsonUtils functionality
-            var serializedJson = com.IvanMurzak.ReflectorNet.Utils.JsonUtils.Serialize(testObject);
-            var deserializedObject = com.IvanMurzak.ReflectorNet.Utils.JsonUtils.Deserialize<GameObjectRefList>(serializedJson);
+            var serializedJson = JsonUtils.Serialize(testObject);
+            var deserializedObject = JsonUtils.Deserialize<GameObjectRefList>(serializedJson);
 
-            var schema = com.IvanMurzak.ReflectorNet.Utils.JsonUtils.Schema.GetSchema(typeof(GameObjectRefList), justRef: false);
-            var argumentsSchema = com.IvanMurzak.ReflectorNet.Utils.JsonUtils.Schema.GetArgumentsSchema(
+            var schema = JsonUtils.Schema.GetSchema(typeof(GameObjectRefList), justRef: false);
+            var argumentsSchema = JsonUtils.Schema.GetArgumentsSchema(
                 typeof(MethodHelper).GetMethod(nameof(MethodHelper.ListObject_ListObject))!);
 
             // Assert
@@ -150,7 +152,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var methodInfo = typeof(TestClass).GetMethod(nameof(TestClass.SerializedMemberList_ReturnString))!;
 
             // Act
-            var methodDataRef = new com.IvanMurzak.ReflectorNet.Model.MethodDataRef(methodInfo);
+            var methodDataRef = new MethodDataRef(methodInfo);
 
             // Assert
             Assert.Equal(typeof(TestClass).Namespace, methodDataRef.Namespace);
@@ -158,7 +160,7 @@ namespace ReflectorNet.Tests.SchemaTests
             Assert.Equal(nameof(TestClass.SerializedMemberList_ReturnString), methodDataRef.MethodName);
             Assert.Equal(methodInfo.IsPublic, methodDataRef.IsPublic);
             Assert.Equal(methodInfo.IsStatic, methodDataRef.IsStatic);
-            Assert.Equal(methodInfo.ReturnType.FullName, methodDataRef.ReturnType);
+            Assert.Equal(methodInfo.ReturnType.GetTypeName(pretty: false), methodDataRef.ReturnType);
             Assert.NotNull(methodDataRef.ReturnSchema);
             Assert.NotNull(methodDataRef.InputParametersSchema);
             Assert.Single(methodDataRef.InputParametersSchema); // SerializedMemberList parameter

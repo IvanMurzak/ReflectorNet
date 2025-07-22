@@ -79,7 +79,7 @@ namespace ReflectorNet.Tests.SchemaTests
                 MethodName = nameof(TestClass.SerializedMemberList_ReturnString),
                 InputParameters = new List<MethodPointerRef.Parameter>
                 {
-                    new() { TypeName = typeof(SerializedMemberList).FullName, Name = "gameObjectDiffs" }
+                    new() { TypeName = typeof(SerializedMemberList).GetTypeName(pretty: false), Name = "gameObjectDiffs" }
                 }
             };
 
@@ -143,7 +143,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.Object_Int_Bool))!;
 
-            var serializedList = new com.IvanMurzak.ReflectorNet.Model.SerializedMemberList
+            var serializedList = new SerializedMemberList
             {
                 reflector.Serialize(new GameObjectRef { instanceID = 456 }, name: "obj"),
                 reflector.Serialize(99, name: "integer")
@@ -171,7 +171,7 @@ namespace ReflectorNet.Tests.SchemaTests
 
             // Act - Create method reference from MethodInfo
             var methodRef = new com.IvanMurzak.ReflectorNet.Model.MethodPointerRef(methodInfo);
-            var methodDataRef = new com.IvanMurzak.ReflectorNet.Model.MethodDataRef(methodInfo);
+            var methodDataRef = new MethodDataRef(methodInfo);
 
             // Assert
             Assert.True(methodRef.IsValid);
