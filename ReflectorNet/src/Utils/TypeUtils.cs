@@ -14,7 +14,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             : Type.GetType(typeFullName) ??
                 AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeFullName);
+                    .FirstOrDefault(t => t.FullName == typeFullName || t.AssemblyQualifiedName == typeFullName);
 
         public static T? GetDefaultValue<T>()
             => (T?)GetDefaultValue(typeof(T));

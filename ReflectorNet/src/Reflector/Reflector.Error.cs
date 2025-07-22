@@ -45,7 +45,7 @@ namespace com.IvanMurzak.ReflectorNet
             public static string InvalidComponentPropertyType(SerializedMember serializedProperty, PropertyInfo propertyInfo)
                 => $"[Error] Invalid component property type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.PropertyType.FullName}'.";
             public static string InvalidComponentFieldType(SerializedMember serializedProperty, FieldInfo propertyInfo)
-                => $"[Error] Invalid component property type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.FieldType.FullName}'.";
+                => $"[Error] Invalid component field type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.FieldType.FullName}'.";
 
             public static string NotSupportedInRuntime(Type type)
                 => $"[Error] Type '{type.FullName.ValueOrNull()}' is not supported in runtime for now.";
