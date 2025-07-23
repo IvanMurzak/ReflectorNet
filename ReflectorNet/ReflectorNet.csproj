@@ -12,7 +12,7 @@
     <Version>0.2.0</Version>
     <Authors>Ivan Murzak</Authors>
     <Copyright>Copyright © Ivan Murzak 2025</Copyright>
-    <Description>Made for AI usage. Search for C# method using query, let AI to call any method by providing json data of arguments, returns result of a method execution if any as json. Provides API to modify existed in memory instances using json data.</Description>
+    <Description>ReflectorNet is an advanced .NET reflection toolkit designed for AI-driven scenarios. Effortlessly search for C# methods using natural language queries, invoke any method by supplying arguments as JSON, and receive results as JSON. The library also provides a powerful API to inspect, modify, and manage in-memory object instances dynamically via JSON data. Ideal for automation, testing, and AI integration workflows.</Description>
     <PackageTags>Reflection;AI;MCP</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
