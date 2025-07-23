@@ -1,6 +1,9 @@
+
 # ReflectorNet
 
 [![nuget](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet) [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
+
+[![.NET CI](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml)
 
 ReflectorNet is a powerful .NET library designed to provide advanced reflection-based serialization, deserialization, and dynamic method invocation capabilities. It enables developers to inspect, manipulate, and interact with .NET objects, types, and methods at runtime, making it ideal for building tools, frameworks, and applications that require deep introspection or dynamic behavior.
 
@@ -27,7 +30,6 @@ ReflectorNet is a powerful .NET library designed to provide advanced reflection-
 - **Integration-Ready**
   Designed for seamless integration with scripting engines, test frameworks, code analyzers, and documentation generators.
 
-
 ## Project Goals
 
 - **Maximum Flexibility:** Support a broad spectrum of .NET types and use cases, from simple primitives to deeply nested object graphs and custom types.
@@ -52,7 +54,7 @@ ReflectorNet is a powerful .NET library designed to provide advanced reflection-
 See the `docs/` folder and code comments for more details and advanced usage examples.
 This project is used in [Unity-MCP](https://github.com/IvanMurzak/Unity-MCP).
 
-# Usage API
+## Usage API
 
 - `Reflector.Serialize(...)`
 - `Reflector.Deserialize(...)`
@@ -61,7 +63,7 @@ This project is used in [Unity-MCP](https://github.com/IvanMurzak/Unity-MCP).
 - `Reflector.Populate(...)`
 - `Reflector.PopulateAsProperty(...)`
 
-# Override ReflectionConvertor for a custom type
+### Override ReflectionConvertor for a custom type
 
 You may need to override convertor in the same way as JsonConvertor works if you have a custom type that should be handled differently.
 

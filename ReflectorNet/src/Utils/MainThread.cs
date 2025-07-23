@@ -8,7 +8,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     {
         public static MainThread Instance { get; set; } = new MainThread();
 
-        static SynchronizationContext mainContext = SynchronizationContext.Current;
+        static SynchronizationContext mainContext = SynchronizationContext.Current!;
 
         /// <summary>
         /// Determines if the current thread is the main thread.

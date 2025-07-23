@@ -186,7 +186,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 {
                     foreach (var genericArgument in genericArguments)
                     {
-                        var compositeHashCode = HashCode.Combine(type.GetHashCode(), genericArgument.GetHashCode());
+                        // HashCode.Combine is not available in netstandard2.0, so use a simple combination
+                        var compositeHashCode = type.GetHashCode() ^ (genericArgument.GetHashCode() * 397);
                         if (visited.Contains(compositeHashCode))
                             continue;
 
