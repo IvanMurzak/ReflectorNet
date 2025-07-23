@@ -186,7 +186,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 {
                     foreach (var genericArgument in genericArguments)
                     {
-                        var compositeHashCode = type.GetHashCode() ^ genericArgument.GetHashCode();
+                        var compositeHashCode = HashCode.Combine(type.GetHashCode(), genericArgument.GetHashCode());
                         if (visited.Contains(compositeHashCode))
                             continue;
 
