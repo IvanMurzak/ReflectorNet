@@ -15,13 +15,13 @@ jobs:
         dotnet-version: [ '6.0.x', '8.0.x' ]
     steps:
     - uses: actions/checkout@v4
-    - name: Setup .NET
+    - name: Setup .NET ${{ matrix.dotnet-version }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Restore dependencies
-      run: dotnet restore --framework ${{ matrix.dotnet-version }}
+      run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore --configuration Release --framework ${{ matrix.dotnet-version }}
+      run: dotnet build --no-restore --configuration Release
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release --framework ${{ matrix.dotnet-version }}
+      run: dotnet test --no-build --verbosity normal --configuration Release
