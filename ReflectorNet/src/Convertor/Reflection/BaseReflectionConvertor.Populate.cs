@@ -87,8 +87,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         flags: flags, logger: logger);
 
                 return stringBuilder?.AppendLine(success
-                    ? $"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified to '{fieldValue.valueJsonElement}'."
-                    : $"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed.");
+                    ? $"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified to value '{fieldValue.valueJsonElement}'."
+                    : $"{padding}[Error] Failed to modify field '{fieldValue.name.ValueOrNull()}' to value '{fieldValue.valueJsonElement}'. Read error above for more details.");
             }
             catch (Exception ex)
             {
@@ -131,8 +131,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         flags: flags, logger: logger);
 
                 return stringBuilder?.AppendLine(success
-                    ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to '{propertyValue.valueJsonElement}'."
-                    : $"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed.");
+                    ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to value '{propertyValue.valueJsonElement}'."
+                    : $"{padding}[Error] Failed to modify property '{propertyValue.name.ValueOrNull()}' to value '{propertyValue.valueJsonElement}'. Read error above for more details.");
             }
             catch (Exception ex)
             {

@@ -24,7 +24,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             public const string Null = "null";
             public const string String = "string";
-            public const string Number = "number";
+            public const string Integer = "integer"; // int, long
+            public const string Number = "number"; // float, double, supports int as well
+            public const string Minimum = "minimum";
+            public const string Maximum = "maximum";
 
             public const string Id = "$id";
             public const string Defs = "$defs";
