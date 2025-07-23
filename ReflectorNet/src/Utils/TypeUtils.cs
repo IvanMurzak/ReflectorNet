@@ -7,21 +7,16 @@ using System.Text.Json.Schema;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
-    public static class TypeUtils
+    public static partial class TypeUtils
     {
-        public static Type? GetType(string? typeFullName) => string.IsNullOrEmpty(typeFullName)
+        public static Type? GetType(string? typeName) => string.IsNullOrEmpty(typeName)
             ? null
-            : Type.GetType(typeFullName) ??
+            : Type.GetType(typeName) ??
                 AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeFullName || t.AssemblyQualifiedName == typeFullName);
+                    .FirstOrDefault(t => t.FullName == typeName || t.AssemblyQualifiedName == typeName);
 
-        public static string? GetTypeName<T>(bool pretty = false) => typeof(T).GetTypeName(pretty);
-
-        public static string GetTypeId<T>() => typeof(T).GetTypeId();
-
-        public static T? GetDefaultValue<T>()
-            => (T?)GetDefaultValue(typeof(T));
+        public static T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));
         public static object? GetDefaultValue(Type type)
         {
             if (type.IsValueType)
