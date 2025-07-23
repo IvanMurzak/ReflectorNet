@@ -86,7 +86,7 @@ namespace com.IvanMurzak.ReflectorNet
             if (type == null)
             {
                 result = null;
-                error = $"Type '{serializedMember.typeName}' not found for member '{serializedMember.name}'.";
+                error = $"Type '{serializedMember.typeName}' not found for member '{serializedMember.name.ValueOrNull()}'.";
                 return false;
             }
             try
@@ -142,7 +142,7 @@ namespace com.IvanMurzak.ReflectorNet
             }
             catch (Exception ex)
             {
-                error = $"Failed to deserialize member '{serializedMember.name}' of type '{serializedMember.typeName}': {ex.Message}";
+                error = $"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}";
                 logger?.LogCritical($"Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{serializedMember.typeName.ValueOrNull()}': {ex.Message}\n{ex.StackTrace}");
                 result = default;
                 return false;

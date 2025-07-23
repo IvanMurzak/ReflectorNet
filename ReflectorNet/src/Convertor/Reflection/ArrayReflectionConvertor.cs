@@ -174,7 +174,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     }
                     else
                     {
-                        logger?.LogWarning("Failed to deserialize element: {ElementName}", element.name);
+                        logger?.LogWarning("Failed to deserialize element: {ElementName}", element.name.ValueOrNull());
                     }
                 }
 
@@ -194,15 +194,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to set field '{value?.name}'");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to set field '{value?.name.ValueOrNull()}'");
                 return false;
             }
 
             fieldInfo.SetValue(obj, enumerable);
 
             stringBuilder?.AppendLine(enumerable == null
-                ? $"{padding}[Success] Field '{value?.name}' modified to 'null'."
-                : $"{padding}[Success] Field '{value?.name}' modified to '[{string.Join(", ", enumerable)}]'.");
+                ? $"{padding}[Success] Field '{value?.name.ValueOrNull()}' modified to 'null'."
+                : $"{padding}[Success] Field '{value?.name.ValueOrNull()}' modified to '[{string.Join(", ", enumerable)}]'.");
             return true;
         }
 
@@ -214,13 +214,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to set property '{value?.name}'");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to set property '{value?.name.ValueOrNull()}'");
                 return false;
             }
 
             propertyInfo.SetValue(obj, parsedValue);
 
-            stringBuilder?.AppendLine($"{padding}[Success] Property '{value?.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{value?.name.ValueOrNull()}' modified to '{parsedValue}'.");
             return true;
         }
 

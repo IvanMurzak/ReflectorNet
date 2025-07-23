@@ -17,6 +17,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return _paddingCache.GetOrAdd(depth, static d => new string(' ', d * 2));
         }
 
+        public static bool IsNullOrEmpty(string? value) => string.IsNullOrEmpty(value) || value == Null;
+
         public static string? TrimPath(string? path)
         {
             if (string.IsNullOrEmpty(path))

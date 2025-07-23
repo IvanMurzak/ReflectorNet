@@ -49,12 +49,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{value?.name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{value?.name.ValueOrNull()}'.");
                 return false;
             }
 
             fieldInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"{padding}[Success] Field '{value!.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Field '{value?.name.ValueOrNull()}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -66,12 +66,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{value?.name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{value?.name.ValueOrNull()}'.");
                 return false;
             }
 
             propertyInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"{padding}[Success] Property '{value!.name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{value?.name.ValueOrNull()}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -83,7 +83,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{value?.name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{value?.name.ValueOrNull()}'.");
                 return false;
             }
 
@@ -100,7 +100,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{value?.name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{value?.name.ValueOrNull()}'.");
                 return false;
             }
 

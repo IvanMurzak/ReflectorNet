@@ -16,23 +16,16 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
-            var type = dataType;
+            var type = TypeUtils.GetTypeWithValuePriority(dataType, fallbackMember: data, out var typeError);
             if (type == null)
-            {
-                if (string.IsNullOrEmpty(data.typeName))
-                    return stringBuilder?.AppendLine($"{padding}[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty.");
-
-                type = TypeUtils.GetType(data.typeName);
-                if (type == null)
-                    return stringBuilder?.AppendLine($"{padding}[Error] {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with name '{data.typeName}' not found.");
-            }
+                return stringBuilder?.AppendLine($"{padding}[Error] {typeError}");
 
             if (obj == null)
                 return stringBuilder?.AppendLine($"{padding}[Error] Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
 
-            TypeUtils.CastTo(obj, type, out var error);
-            if (error != null)
-                return stringBuilder?.AppendLine($"{padding}{error}");
+            TypeUtils.CastTo(obj, type, out var castError);
+            if (castError != null)
+                return stringBuilder?.AppendLine($"{padding}{castError}");
 
             if (!type.IsAssignableFrom(obj.GetType()))
                 return stringBuilder?.AppendLine($"{padding}[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.");
@@ -74,32 +67,32 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (string.IsNullOrEmpty(fieldValue.name))
                 return stringBuilder?.AppendLine($"{padding}{Error.FieldNameIsEmpty()}");
 
-            if (string.IsNullOrEmpty(fieldValue.typeName))
-                return stringBuilder?.AppendLine($"{padding}{Error.FieldTypeIsEmpty()}");
-
             if (obj == null)
-                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name}' modification failed: Object is null.");
+                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed: Object is null.");
 
             var fieldInfo = obj.GetType().GetField(fieldValue.name, flags);
             if (fieldInfo == null)
-                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?.");
+                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?.");
 
-            var targetType = TypeUtils.GetType(fieldValue.typeName);
+            var targetType = TypeUtils.GetTypeWithNamePriority(fieldValue, fieldInfo.FieldType, out var error);
             if (targetType == null)
-                return stringBuilder?.AppendLine($"{padding}{Error.InvalidFieldType(fieldValue, fieldInfo)}");
+                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}'. {error}");
 
             try
             {
+                var success = false;
                 foreach (var convertor in reflector.Convertors.BuildPopulatorsChain(targetType))
-                    convertor.SetAsField(reflector, ref obj, targetType, fieldInfo, value: fieldValue,
+                    success |= convertor.SetAsField(reflector, ref obj, targetType, fieldInfo, value: fieldValue,
                         depth: depth, stringBuilder: stringBuilder,
                         flags: flags, logger: logger);
 
-                return stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldValue.name}' modified to '{fieldValue.valueJsonElement}'.");
+                return stringBuilder?.AppendLine(success
+                    ? $"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified to '{fieldValue.valueJsonElement}'."
+                    : $"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed.");
             }
             catch (Exception ex)
             {
-                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name}' modification failed: {ex.Message}");
+                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed: {ex.Message}");
             }
         }
 
@@ -112,38 +105,38 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (string.IsNullOrEmpty(propertyValue.name))
                 return stringBuilder?.AppendLine($"{padding}{Error.PropertyNameIsEmpty()}");
 
-            if (string.IsNullOrEmpty(propertyValue.typeName))
-                return stringBuilder?.AppendLine($"{padding}{Error.PropertyTypeIsEmpty()}");
-
             if (obj == null)
-                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name}' modification failed: Object is null.");
+                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed: Object is null.");
 
             var propInfo = obj.GetType().GetProperty(propertyValue.name, flags);
             if (propInfo == null)
             {
-                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?.");
+                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?.");
             }
             if (!propInfo.CanWrite)
             {
-                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name}' is not writable. Can't modify property '{propertyValue.name}'.");
+                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' is not writable. Can't modify property '{propertyValue.name}'.");
             }
 
-            var targetType = TypeUtils.GetType(propertyValue.typeName);
+            var targetType = TypeUtils.GetTypeWithNamePriority(propertyValue, propInfo.PropertyType, out var error);
             if (targetType == null)
-                return stringBuilder?.AppendLine($"{padding}{Error.InvalidPropertyType(propertyValue, propInfo)}");
+                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}'. {error}");
 
             try
             {
+                var success = false;
                 foreach (var convertor in reflector.Convertors.BuildPopulatorsChain(targetType))
-                    convertor.SetAsProperty(reflector, ref obj, targetType, propInfo, value: propertyValue,
+                    success |= convertor.SetAsProperty(reflector, ref obj, targetType, propInfo, value: propertyValue,
                         depth: depth, stringBuilder: stringBuilder,
                         flags: flags, logger: logger);
 
-                return stringBuilder;
+                return stringBuilder?.AppendLine(success
+                    ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to '{propertyValue.valueJsonElement}'."
+                    : $"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed.");
             }
             catch (Exception ex)
             {
-                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name}' modification failed: {ex.Message}");
+                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed: {ex.Message}");
             }
         }
 

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Schema;
+using com.IvanMurzak.ReflectorNet.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
@@ -240,6 +241,50 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
 
             return null;
+        }
+        public static Type? GetTypeWithNamePriority(SerializedMember? member, Type? fallbackType, out string? error)
+        {
+            if (StringUtils.IsNullOrEmpty(member?.typeName) && fallbackType == null)
+            {
+                error = $"{nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty. Provide proper {nameof(SerializedMember.typeName)}.";
+                return null;
+            }
+
+            var type = GetType(member?.typeName);
+            if (type == null)
+            {
+                if (fallbackType == null)
+                {
+                    error = $"Type '{member?.typeName}' not found.";
+                    return null;
+                }
+                error = null;
+                return fallbackType;
+            }
+
+            error = null;
+            return type;
+        }
+        public static Type? GetTypeWithValuePriority(Type? type, SerializedMember? fallbackMember, out string? error)
+        {
+            if (type == null)
+            {
+                if (fallbackMember == null)
+                {
+                    error = $"Type is unknown and {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty.";
+                    return null;
+                }
+                type = GetType(fallbackMember?.typeName);
+                if (type == null)
+                {
+                    error = $"Type '{fallbackMember?.typeName}' not found.";
+                    return null;
+                }
+                error = null;
+            }
+
+            error = null;
+            return type;
         }
     }
 }
