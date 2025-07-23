@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ReflectorNet\ReflectorNet.csproj" />
+    <ProjectReference Include="..\ReflectorNet.Tests\ReflectorNet.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

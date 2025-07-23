@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -76,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (string.IsNullOrEmpty(parameter.typeName))
                 {
                     var methodParameter = methodParameters[i];
-                    var typeName = methodParameter?.ParameterType?.FullName;
+                    var typeName = methodParameter?.ParameterType?.GetTypeName(pretty: false);
                     if (typeName == null)
                         continue;
                     parameter.typeName = typeName;

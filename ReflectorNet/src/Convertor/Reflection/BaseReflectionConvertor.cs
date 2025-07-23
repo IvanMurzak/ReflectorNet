@@ -20,7 +20,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             return distance >= 0
                 ? MAX_DEPTH - distance
-                : 0; ;
+                : 0;
         }
     }
 }

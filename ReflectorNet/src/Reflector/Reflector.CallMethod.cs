@@ -71,24 +71,29 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 var dictInputParameters = inputParameters?.ToDictionary(
                     keySelector: p => p.name!,
-                    elementSelector: p => reflector.Deserialize(p, logger)
+                    elementSelector: p => reflector.Deserialize(p, logger: logger)
                 );
 
                 var methodWrapper = default(MethodWrapper);
 
-                if (string.IsNullOrEmpty(targetObject?.typeName))
+                if (method.IsStatic)
                 {
-                    // No object instance needed. Probably static method.
+                    // Static method - no object instance needed
                     methodWrapper = new MethodWrapper(reflector, logger: logger, method);
                 }
-                else
+                else if (targetObject != null && !string.IsNullOrEmpty(targetObject.typeName))
                 {
-                    // Object instance needed. Probably instance method.
-                    var obj = reflector.Deserialize(targetObject, logger);
+                    // Instance method with target object provided
+                    var obj = reflector.Deserialize(targetObject, logger: logger);
                     if (obj == null)
                         return $"[Error] '{nameof(targetObject)}' deserialized instance is null. Please specify the '{nameof(targetObject)}' properly.";
 
                     methodWrapper = new MethodWrapper(reflector, logger: logger, targetInstance: obj, method);
+                }
+                else
+                {
+                    // Instance method without target object - create instance from type
+                    methodWrapper = new MethodWrapper(reflector, logger: logger, method.DeclaringType!, method);
                 }
 
                 if (!methodWrapper.VerifyParameters(dictInputParameters, out var error))

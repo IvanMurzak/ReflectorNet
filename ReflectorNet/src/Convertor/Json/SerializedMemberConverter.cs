@@ -10,42 +10,53 @@ namespace com.IvanMurzak.ReflectorNet.Json
 {
     public class SerializedMemberConverter : JsonConverter<SerializedMember>, IJsonSchemaConverter
     {
-        public static string StaticId => typeof(SerializedMember).FullName;
+        public static string StaticId => TypeUtils.GetTypeId<SerializedMember>();
         public static JsonNode Schema => new JsonObject
         {
-            ["id"] = StaticId,
-            ["type"] = "object",
-            ["properties"] = new JsonObject
+            [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
+            [JsonUtils.Schema.Properties] = new JsonObject
             {
                 [nameof(SerializedMember.typeName)] = new JsonObject
                 {
-                    ["type"] = "string",
-                    ["description"] = "Full type name. Eg: 'System.String', 'System.Int32', 'UnityEngine.Vector3', etc."
+                    [JsonUtils.Schema.Type] = JsonUtils.Schema.String,
+                    [JsonUtils.Schema.Description] = "Full type name. Eg: 'System.String', 'System.Int32', 'UnityEngine.Vector3', etc."
                 },
-                [nameof(SerializedMember.name)] = new JsonObject { ["type"] = "string" },
-                [SerializedMember.ValueName] = new JsonObject { ["type"] = "object" },
+                [nameof(SerializedMember.name)] = new JsonObject
+                {
+                    [JsonUtils.Schema.Type] = JsonUtils.Schema.String,
+                    [JsonUtils.Schema.Description] = "Name of the member. Can be null or empty."
+                },
+                [SerializedMember.ValueName] = new JsonObject
+                {
+                    [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
+                    [JsonUtils.Schema.Description] = "Member's value. Can be null or empty.",
+                },
                 [nameof(SerializedMember.fields)] = new JsonObject
                 {
-                    ["type"] = "array",
-                    ["items"] = new JsonObject
+                    [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
+                    [JsonUtils.Schema.Items] = new JsonObject
                     {
-                        ["$ref"] = StaticId
-                    }
+                        [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
+                        [JsonUtils.Schema.Description] = "Field's value, nested fields and properties."
+                    },
+                    [JsonUtils.Schema.Description] = "List of fields of the member. Can be null or empty.",
                 },
                 [nameof(SerializedMember.props)] = new JsonObject
                 {
-                    ["type"] = "array",
-                    ["items"] = new JsonObject
+                    [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
+                    [JsonUtils.Schema.Items] = new JsonObject
                     {
-                        ["$ref"] = StaticId
-                    }
+                        [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
+                        [JsonUtils.Schema.Description] = "Property's value, nested fields and properties."
+                    },
+                    [JsonUtils.Schema.Description] = "List of properties of the member. Can be null or empty.",
                 }
             },
-            ["required"] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName }
+            [JsonUtils.Schema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName }
         };
         public static JsonNode SchemaRef => new JsonObject
         {
-            ["$ref"] = StaticId
+            [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId
         };
 
         public string Id => StaticId;

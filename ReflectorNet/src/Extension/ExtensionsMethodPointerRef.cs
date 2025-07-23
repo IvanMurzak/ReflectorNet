@@ -11,10 +11,10 @@ namespace com.IvanMurzak.ReflectorNet
             if (methodPointer == null)
                 return;
 
+            methodPointer.InputParameters ??= new List<MethodPointerRef.Parameter>();
+
             if (parameters == null || parameters.Count == 0)
                 return;
-
-            methodPointer.InputParameters ??= new List<MethodPointerRef.Parameter>();
 
             foreach (var parameter in parameters)
             {

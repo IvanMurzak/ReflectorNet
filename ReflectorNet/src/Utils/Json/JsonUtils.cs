@@ -21,6 +21,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             Converters =
             {
                 new JsonStringEnumConverter(),
+                new MethodInfoConverter(),
                 new SerializedMemberConverter(),
                 new SerializedMemberListConverter(),
 

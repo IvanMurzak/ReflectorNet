@@ -1,19 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
+using System.Text.Json.Schema;
+using com.IvanMurzak.ReflectorNet.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
-    public static class TypeUtils
+    public static partial class TypeUtils
     {
-        public static Type? GetType(string? typeFullName) => string.IsNullOrEmpty(typeFullName)
+        public static Type? GetType(string? typeName) => string.IsNullOrEmpty(typeName)
             ? null
-            : Type.GetType(typeFullName) ??
+            : Type.GetType(typeName) ??
                 AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeFullName);
+                    .FirstOrDefault(t => t.FullName == typeName || t.AssemblyQualifiedName == typeName);
 
-        public static T? GetDefaultValue<T>()
-            => (T?)GetDefaultValue(typeof(T));
+        public static T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));
         public static object? GetDefaultValue(Type type)
         {
             if (type.IsValueType)
@@ -25,6 +29,92 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return null;
         }
 
+        public static string? GetDescription(Type type)
+        {
+            var descriptionAttribute = type.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                .FirstOrDefault() as DescriptionAttribute;
+            return descriptionAttribute?.Description;
+        }
+        public static string? GetDescription(MemberInfo memberInfo)
+        {
+            var descriptionAttribute = memberInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                .FirstOrDefault() as DescriptionAttribute;
+            return descriptionAttribute?.Description;
+        }
+        public static string? GetPropertyDescription(PropertyInfo propertyInfo)
+        {
+            if (propertyInfo == null)
+                return null;
+
+            var descriptionAttribute = propertyInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                .FirstOrDefault() as DescriptionAttribute;
+            return descriptionAttribute?.Description;
+        }
+        public static string? GetPropertyDescription(Type type, string propertyName)
+        {
+            var propertyInfo = type.GetProperty(propertyName);
+            return propertyInfo != null ? GetPropertyDescription(propertyInfo) : null;
+        }
+        public static string? GetPropertyDescription(JsonSchemaExporterContext context)
+        {
+            if (context.PropertyInfo == null || context.PropertyInfo.DeclaringType == null)
+                return null;
+
+            // First try to find the member by the exact name (in case no naming policy is applied)
+            var memberInfo = context.PropertyInfo.DeclaringType
+                .GetMember(
+                    name: context.PropertyInfo.Name,
+                    bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .FirstOrDefault();
+
+            // If not found by exact name, try to convert camelCase back to PascalCase
+            // This handles the case where JSON naming policy transforms the property name (e.g., PascalCase -> camelCase)
+            if (memberInfo == null)
+            {
+                var pascalCaseName = ToPascalCase(context.PropertyInfo.Name);
+                memberInfo = context.PropertyInfo.DeclaringType
+                    .GetMember(
+                        name: pascalCaseName,
+                        bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .FirstOrDefault();
+            }
+
+            // If still not found, try to find by case-insensitive name match
+            if (memberInfo == null)
+            {
+                var allMembers = context.PropertyInfo.DeclaringType.GetMembers(BindingFlags.Public | BindingFlags.Instance);
+                memberInfo = allMembers.FirstOrDefault(m =>
+                    string.Equals(m.Name, context.PropertyInfo.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (memberInfo == null)
+                return null;
+
+            return GetDescription(memberInfo);
+        }
+
+        private static string ToPascalCase(string camelCase)
+        {
+            if (string.IsNullOrEmpty(camelCase))
+                return camelCase;
+
+            return char.ToUpperInvariant(camelCase[0]) + camelCase.Substring(1);
+        }
+        public static string? GetFieldDescription(FieldInfo fieldInfo)
+        {
+            if (fieldInfo == null)
+                return null;
+
+            var descriptionAttribute = fieldInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                .FirstOrDefault() as DescriptionAttribute;
+            return descriptionAttribute?.Description;
+        }
+        public static string? GetFieldDescription(Type type, string fieldName)
+        {
+            var fieldInfo = type.GetField(fieldName);
+            return fieldInfo != null ? GetFieldDescription(fieldInfo) : null;
+        }
+
         public static object? CastTo(object obj, string typeFullName, out string? error)
         {
             var type = GetType(typeFullName) ??
@@ -33,7 +123,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     .FirstOrDefault(t => t.FullName == typeFullName);
             if (type == null)
             {
-                error = $"[Error] Type '{typeFullName}' not found.";
+                error = $"[Error] Type '{typeFullName.ValueOrNull()}' not found during casting.";
                 return default;
             }
             return CastTo(obj, type, out error);
@@ -51,7 +141,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             if (!type.IsAssignableFrom(obj.GetType()))
             {
-                error = $"[Error] Type mismatch between '{type.FullName}' and '{obj.GetType().FullName}'.";
+                error = $"[Error] Type mismatch between '{type.GetTypeName(pretty: false)}' and '{obj.GetType().GetTypeName(pretty: false)}'.";
                 return default;
             }
 
@@ -63,14 +153,138 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (!baseType.IsAssignableFrom(targetType))
                 return -1;
 
-            int distance = 0;
-            Type? current = targetType;
+            var distance = 0;
+            var current = targetType;
             while (current != null && current != baseType)
             {
                 current = current.BaseType;
                 distance++;
             }
             return current == baseType ? distance : -1;
+        }
+        public static bool IsPrimitive(Type type)
+        {
+            return type.IsPrimitive ||
+                   type.IsEnum ||
+                   type == typeof(string) ||
+                   type == typeof(decimal) ||
+                   type == typeof(DateTime) ||
+                   type == typeof(DateTimeOffset) ||
+                   type == typeof(TimeSpan) ||
+                   type == typeof(Guid);
+        }
+        public static IEnumerable<Type> GetGenericTypes(Type type, HashSet<int>? visited = null)
+        {
+            visited ??= new HashSet<int>();
+            if (visited.Contains(type.GetHashCode()))
+                yield break;
+
+            if (type.IsGenericType)
+            {
+                var genericArguments = type.GetGenericArguments();
+                if (genericArguments != null)
+                {
+                    foreach (var genericArgument in genericArguments)
+                    {
+                        var compositeHashCode = HashCode.Combine(type.GetHashCode(), genericArgument.GetHashCode());
+                        if (visited.Contains(compositeHashCode))
+                            continue;
+
+                        visited.Add(compositeHashCode);
+                        yield return genericArgument;
+
+                        foreach (var nestedGenericType in GetGenericTypes(genericArgument, visited))
+                            yield return nestedGenericType;
+                    }
+                }
+            }
+
+            if (type.BaseType == null)
+                yield break;
+            if (visited.Contains(type.BaseType.GetHashCode()))
+                yield break;
+
+            foreach (var baseGenericType in GetGenericTypes(type.BaseType, visited))
+                yield return baseGenericType;
+        }
+        public static Type? GetEnumerableItemType(Type type)
+        {
+            if (type.IsArray)
+                return type.GetElementType(); // For arrays, return the element type
+
+            // Check if the type itself is IEnumerable<T>
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                return type.GetGenericArguments().FirstOrDefault();
+
+            // Check if the type directly implements IEnumerable<T>
+            var enumerableInterface = type.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+            if (enumerableInterface != null)
+                return enumerableInterface.GetGenericArguments().FirstOrDefault();
+
+            // Check base types recursively
+            var baseType = type.BaseType;
+            while (baseType != null && baseType != typeof(object))
+            {
+                if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    return baseType.GetGenericArguments().FirstOrDefault();
+
+                // Check if base type implements IEnumerable<T>
+                enumerableInterface = baseType.GetInterfaces()
+                    .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+                if (enumerableInterface != null)
+                    return enumerableInterface.GetGenericArguments().FirstOrDefault();
+
+                baseType = baseType.BaseType;
+            }
+
+            return null;
+        }
+        public static Type? GetTypeWithNamePriority(SerializedMember? member, Type? fallbackType, out string? error)
+        {
+            if (StringUtils.IsNullOrEmpty(member?.typeName) && fallbackType == null)
+            {
+                error = $"{nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty. Provide proper {nameof(SerializedMember.typeName)}.";
+                return null;
+            }
+
+            var type = GetType(member?.typeName);
+            if (type == null)
+            {
+                if (fallbackType == null)
+                {
+                    error = $"Type '{member?.typeName}' not found.";
+                    return null;
+                }
+                error = null;
+                return fallbackType;
+            }
+
+            error = null;
+            return type;
+        }
+        public static Type? GetTypeWithValuePriority(Type? type, SerializedMember? fallbackMember, out string? error)
+        {
+            if (type == null)
+            {
+                if (fallbackMember == null)
+                {
+                    error = $"Type is unknown and {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty.";
+                    return null;
+                }
+                type = GetType(fallbackMember?.typeName);
+                if (type == null)
+                {
+                    error = $"Type '{fallbackMember?.typeName}' not found.";
+                    return null;
+                }
+                error = null;
+            }
+
+            error = null;
+            return type;
         }
     }
 }

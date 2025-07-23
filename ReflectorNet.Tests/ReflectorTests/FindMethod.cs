@@ -1,16 +1,17 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
+﻿using System.Linq;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using Xunit;
+using Xunit.Abstractions;
+using com.IvanMurzak.ReflectorNet.Utils;
 
-namespace ReflectorNet.Tests
+namespace ReflectorNet.Tests.ReflectorTests
 {
-    public class ReflectorTests
+    public class FindMethod : BaseTest
     {
+        public FindMethod(ITestOutputHelper output) : base(output) { }
+
         [Fact]
-        public void FindMethod_WithKnownMethod_ShouldReturnMethod()
+        public void WithKnownMethod_ShouldReturnMethod()
         {
             // Arrange
             var reflector = new Reflector();
@@ -29,6 +30,8 @@ namespace ReflectorNet.Tests
                 methodNameMatchLevel: 6
             ).ToList();
 
+            _output.WriteLine(JsonUtils.Serialize(foundMethods));
+
             // Assert
             Assert.Single(foundMethods);
             Assert.Equal(nameof(TestClass.NoParameters_ReturnBool), foundMethods[0].Name);
@@ -36,7 +39,7 @@ namespace ReflectorNet.Tests
         }
 
         [Fact]
-        public void FindMethod_WithPartialMethodName_ShouldReturnMatchingMethods()
+        public void WithPartialMethodName_ShouldReturnMatchingMethods()
         {
             // Arrange
             var reflector = new Reflector();
@@ -54,6 +57,8 @@ namespace ReflectorNet.Tests
                 typeNameMatchLevel: 6,
                 methodNameMatchLevel: 2 // Lower level to match partial names
             ).ToList();
+
+            _output.WriteLine(JsonUtils.Serialize(foundMethods));
 
             // Assert
             Assert.Contains(foundMethods, m => m.Name == nameof(TestClass.NoParameters_ReturnBool));

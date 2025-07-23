@@ -3,26 +3,26 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Json
 {
     public class SerializedMemberListConverter : JsonConverter<SerializedMemberList>, IJsonSchemaConverter
     {
-        public static string StaticId => typeof(SerializedMemberList).FullName;
+        public static string StaticId => TypeUtils.GetTypeId<SerializedMemberList>();
         public static JsonNode Schema => new JsonObject
         {
-            ["id"] = StaticId,
-            ["type"] = "array",
-            ["items"] = new JsonObject
+            [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
+            [JsonUtils.Schema.Items] = new JsonObject
             {
-                ["$ref"] = SerializedMemberConverter.StaticId
+                [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + SerializedMemberConverter.StaticId
             }
         };
         public string Id => StaticId;
         public JsonNode GetScheme() => Schema;
         public JsonNode GetSchemeRef() => new JsonObject
         {
-            ["$ref"] = Id
+            [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + Id
         };
 
         public override SerializedMemberList? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

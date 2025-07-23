@@ -15,6 +15,21 @@ namespace com.IvanMurzak.ReflectorNet
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
             .Where(method => method.DeclaringType != null && !method.DeclaringType.IsAbstract);
 
+        /// <summary>
+        /// Compares two strings and returns a match score based on similarity.
+        /// </summary>
+        /// <param name="original">The original string to compare against.</param>
+        /// <param name="value">The value string to compare with the original.</param>
+        /// <returns>
+        /// A match score:
+        /// 6 for exact case-sensitive match,
+        /// 5 for case-insensitive match,
+        /// 4 for case-sensitive prefix match,
+        /// 3 for case-insensitive prefix match,
+        /// 2 for case-sensitive substring match,
+        /// 1 for case-insensitive substring match,
+        /// 0 for no match.
+        /// </returns>
         static int Compare(string original, string value)
         {
             if (string.IsNullOrEmpty(original) || string.IsNullOrEmpty(value))
@@ -38,18 +53,48 @@ namespace com.IvanMurzak.ReflectorNet
             return 0;
         }
 
+        /// <summary>
+        /// Compares method parameters with a list of parameter references and returns a match score.
+        /// </summary>
+        /// <param name="original">The original method parameters to compare against.</param>
+        /// <param name="value">The list of parameter references to compare with the original parameters.</param>
+        /// <returns>
+        /// A match score:
+        /// 2 for perfect match (including optional parameters handling),
+        /// 1 for partial match (name or type mismatch),
+        /// 0 for no match or incompatible parameters.
+        /// </returns>
         static int Compare(ParameterInfo[] original, List<MethodPointerRef.Parameter>? value)
         {
             if (original == null && value == null)
                 return 2;
 
-            if (original == null || value == null)
+            if (original == null)
                 return 0;
 
-            if (original.Length != value.Count)
-                return 0;
+            if (value == null)
+            {
+                // If the method has no parameters and no parameters are specified, it's a match
+                return original.Length == 0 ? 2 : 0;
+            }
 
-            for (int i = 0; i < original.Length; i++)
+            // Check if we have fewer input parameters than method parameters
+            if (value.Count < original.Length)
+            {
+                // Allow if the remaining parameters are optional (have default values)
+                for (int i = value.Count; i < original.Length; i++)
+                {
+                    if (!original[i].IsOptional)
+                        return 0; // Required parameter missing
+                }
+            }
+            else if (original.Length != value.Count)
+            {
+                return 0; // Too many parameters provided
+            }
+
+            // Check the provided parameters
+            for (int i = 0; i < value.Count && i < original.Length; i++)
             {
                 var parameter = original[i];
                 var methodRefParameter = value[i];
@@ -57,7 +102,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (parameter.Name != methodRefParameter.Name)
                     return 1;
 
-                if (parameter.ParameterType.FullName != methodRefParameter.TypeName)
+                if (parameter.ParameterType.GetTypeName(pretty: false) != methodRefParameter.TypeName)
                     return 1;
             }
 
@@ -102,7 +147,7 @@ namespace com.IvanMurzak.ReflectorNet
                     // Is declared in the class
                     .Where(method => method.DeclaringType == type))
                 .Where(method => method.DeclaringType != null)
-                .Where(method => !method.DeclaringType.IsAbstract || method.DeclaringType.IsSealed) // ignore abstract non static classes
+                .Where(method => !method.DeclaringType!.IsAbstract || method.DeclaringType.IsSealed) // ignore abstract non static classes
                 .Where(method => !method.IsGenericMethodDefinition); // ignore generic methods (void Foo<T>)
 
             if (methodNameMatchLevel > 0 && !string.IsNullOrEmpty(filter.MethodName))

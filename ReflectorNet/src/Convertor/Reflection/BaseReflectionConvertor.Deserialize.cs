@@ -1,6 +1,5 @@
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Convertor
@@ -9,13 +8,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
     {
         public virtual object? Deserialize(Reflector reflector, SerializedMember data, ILogger? logger = null)
         {
-            var type = TypeUtils.GetType(data.typeName);
-            if (type == null)
+            if (!data.TryDeserialize(out var result, logger: logger))
                 return null;
 
-            var result = data.valueJsonElement != null
-                ? JsonUtils.Deserialize(data.valueJsonElement.Value, type)
-                : TypeUtils.GetDefaultValue(type);
+            var type = result!.GetType();
 
             if (data.fields != null)
             {
@@ -24,17 +20,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     if (string.IsNullOrEmpty(field.name))
                         continue;
 
-                    var fieldType = TypeUtils.GetType(field.typeName);
-                    if (fieldType == null)
+                    if (!field.TryDeserialize(out var parsedValue, logger: logger))
                         continue;
-
-                    var fieldValue = field.valueJsonElement != null
-                        ? JsonUtils.Deserialize(field.valueJsonElement.Value, fieldType)
-                        : TypeUtils.GetDefaultValue(fieldType);
 
                     var fieldInfo = type.GetField(field.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (fieldInfo != null)
-                        fieldInfo.SetValue(result, fieldValue);
+                        fieldInfo.SetValue(result, parsedValue);
                 }
             }
             if (data.props != null)
@@ -44,17 +35,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     if (string.IsNullOrEmpty(property.name))
                         continue;
 
-                    var fieldType = TypeUtils.GetType(property.typeName);
-                    if (fieldType == null)
+                    if (!property.TryDeserialize(out var parsedValue, logger: logger))
                         continue;
-
-                    var fieldValue = property.valueJsonElement != null
-                        ? JsonUtils.Deserialize(property.valueJsonElement.Value, fieldType)
-                        : TypeUtils.GetDefaultValue(fieldType);
 
                     var propertyInfo = type.GetProperty(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (propertyInfo != null && propertyInfo.CanWrite)
-                        propertyInfo.SetValue(result, fieldValue);
+                        propertyInfo.SetValue(result, parsedValue);
                 }
             }
 

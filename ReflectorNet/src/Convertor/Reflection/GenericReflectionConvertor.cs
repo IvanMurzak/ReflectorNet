@@ -24,14 +24,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     ? new SerializedMember()
                     {
                         name = name,
-                        typeName = type.FullName ?? string.Empty,
+                        typeName = type.GetTypeName(pretty: false) ?? string.Empty,
                         fields = SerializeFields(reflector, obj, flags),
                         props = SerializeProperties(reflector, obj, flags),
                         valueJsonElement = new JsonObject().ToJsonElement()
                     }
                     : SerializedMember.FromJson(type, JsonUtils.Serialize(obj), name: name);
             }
-            throw new ArgumentException($"Unsupported type: {type.FullName}");
+            throw new ArgumentException($"Unsupported type: {type.GetTypeName(pretty: false)}");
         }
         public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => objType.GetFields(flags)
@@ -43,57 +43,78 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.CanRead);
 
-        protected override bool SetValue(Reflector reflector, ref object obj, Type type, JsonElement? value, ILogger? logger = null)
+        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             var parsedValue = value == null
                 ? TypeUtils.GetDefaultValue(type)
                 : JsonUtils.Deserialize(value.Value, type);
+
+            Print.SetNewValue(ref obj, ref parsedValue, type, depth, stringBuilder);
             obj = parsedValue;
             return true;
         }
 
-        public override bool SetAsField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            var padding = StringUtils.GetPadding(depth);
+
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
+                return false;
+            }
+
             fieldInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
 
-        public override bool SetAsProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, StringBuilder? stringBuilder = null,
+        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            var padding = StringUtils.GetPadding(depth);
+
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
+                return false;
+            }
             propertyInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
 
-        public override bool SetField(Reflector reflector, ref object obj, Type type, FieldInfo fieldInfo, SerializedMember? value,
+        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            var padding = StringUtils.GetPadding(depth);
+
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
+                return false;
+            }
+            // TODO: Print previous and new value in stringBuilder
             fieldInfo.SetValue(obj, parsedValue);
             return true;
         }
 
-        public override bool SetProperty(Reflector reflector, ref object obj, Type type, PropertyInfo propertyInfo, SerializedMember? value,
+        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var parsedValue = value?.valueJsonElement == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.valueJsonElement.Value, type);
+            var padding = StringUtils.GetPadding(depth);
+
+            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
+                return false;
+            }
+            // TODO: Print previous and new value in stringBuilder
             propertyInfo.SetValue(obj, parsedValue);
             return true;
         }

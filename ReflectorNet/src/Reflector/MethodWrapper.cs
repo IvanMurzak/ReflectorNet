@@ -51,7 +51,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be static.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.GetArgumentsSchema(methodInfo);
+            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, object targetInstance, MethodInfo methodInfo)
@@ -65,7 +65,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.GetArgumentsSchema(methodInfo);
+            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, Type classType, MethodInfo methodInfo)
@@ -79,7 +79,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.GetArgumentsSchema(methodInfo);
+            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
         }
 
         public virtual async Task<object?> Invoke(params object?[] parameters)
@@ -218,7 +218,7 @@ namespace com.IvanMurzak.ReflectorNet
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: methodParameters[i].ParameterType, logger: _logger);
                         }
                     }
                     else
@@ -272,16 +272,16 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, methodParameters[i].ParameterType);
+                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, parameter.ParameterType);
                         }
                         catch
                         {
                             // Try #2: Parsing as SerializedMember
                             var serializedParameter = JsonUtils.Deserialize<SerializedMember>(jsonElement);
                             if (serializedParameter == null)
-                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
+                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: parameter.ParameterType, logger: _logger);
                         }
                     }
                     else
@@ -323,7 +323,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return;
 
             _logger.LogDebug((parameters?.Length ?? 0) > 0
-                ? $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}({string.Join(", ", parameters!.Select(x => $"{x?.GetType()?.Name ?? "null"}"))})"
+                ? $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}({string.Join(", ", parameters!.Select(x => $"{x?.GetType()?.Name.ValueOrNull()}"))})"
                 : $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}()");
 
             var methodParameters = _methodInfo.GetParameters();
@@ -334,7 +334,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 var parameterType = i < methodParameters.Length ? methodParameters[i].ParameterType.ToString() : "N/A";
                 var parameterName = i < methodParameters.Length ? methodParameters[i].Name : "N/A";
-                var parameterValue = i < (parameters?.Length ?? 0) ? parameters?[i]?.ToString() ?? "null" : "null";
+                var parameterValue = i < (parameters?.Length ?? 0) ? parameters?[i]?.ToString().ValueOrNull() : "null";
 
                 result[i] = $"{parameterType} {parameterName} = {parameterValue}";
             }
