@@ -72,10 +72,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             if (string.IsNullOrEmpty(fieldValue.name))
-                return stringBuilder?.AppendLine($"{padding}{Error.ComponentFieldNameIsEmpty()}");
+                return stringBuilder?.AppendLine($"{padding}{Error.FieldNameIsEmpty()}");
 
             if (string.IsNullOrEmpty(fieldValue.typeName))
-                return stringBuilder?.AppendLine($"{padding}{Error.ComponentFieldTypeIsEmpty()}");
+                return stringBuilder?.AppendLine($"{padding}{Error.FieldTypeIsEmpty()}");
 
             if (obj == null)
                 return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name}' modification failed: Object is null.");
@@ -86,7 +86,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             var targetType = TypeUtils.GetType(fieldValue.typeName);
             if (targetType == null)
-                return stringBuilder?.AppendLine($"{padding}{Error.InvalidComponentFieldType(fieldValue, fieldInfo)}");
+                return stringBuilder?.AppendLine($"{padding}{Error.InvalidFieldType(fieldValue, fieldInfo)}");
 
             try
             {
@@ -110,10 +110,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var padding = StringUtils.GetPadding(depth);
 
             if (string.IsNullOrEmpty(propertyValue.name))
-                return stringBuilder?.AppendLine($"{padding}{Error.ComponentPropertyNameIsEmpty()}");
+                return stringBuilder?.AppendLine($"{padding}{Error.PropertyNameIsEmpty()}");
 
             if (string.IsNullOrEmpty(propertyValue.typeName))
-                return stringBuilder?.AppendLine($"{padding}{Error.ComponentPropertyTypeIsEmpty()}");
+                return stringBuilder?.AppendLine($"{padding}{Error.PropertyTypeIsEmpty()}");
 
             if (obj == null)
                 return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name}' modification failed: Object is null.");
@@ -130,7 +130,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             var targetType = TypeUtils.GetType(propertyValue.typeName);
             if (targetType == null)
-                return stringBuilder?.AppendLine($"{padding}{Error.InvalidComponentPropertyType(propertyValue, propInfo)}");
+                return stringBuilder?.AppendLine($"{padding}{Error.InvalidPropertyType(propertyValue, propInfo)}");
 
             try
             {
