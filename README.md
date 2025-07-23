@@ -1,6 +1,9 @@
+
 # ReflectorNet
 
 [![nuget](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet) [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
+
+[![.NET CI](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml)
 
 ReflectorNet is a powerful .NET library designed to provide advanced reflection-based serialization, deserialization, and dynamic method invocation capabilities. It enables developers to inspect, manipulate, and interact with .NET objects, types, and methods at runtime, making it ideal for building tools, frameworks, and applications that require deep introspection or dynamic behavior.
 
