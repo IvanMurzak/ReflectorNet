@@ -47,6 +47,39 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                    type.GetTypeName(pretty: false) == typeName;
         }
 
+        /// <summary>
+        /// Returns the type name without namespace or assembly, but includes generic arguments if any.
+        /// For example: List<int>, Dictionary<string, List<double?>>
+        /// </summary>
+        public static string GetTypeShortName(Type? type)
+        {
+            if (type == null)
+                return Null;
+
+            // Handle nullable types
+            var underlyingNullableType = Nullable.GetUnderlyingType(type);
+            if (underlyingNullableType != null)
+                return $"{GetTypeShortName(underlyingNullableType)}?";
+
+            if (type.IsGenericType)
+            {
+                var genericTypeName = type.Name;
+                var tickIndex = genericTypeName.IndexOf('`');
+                if (tickIndex > 0)
+                    genericTypeName = genericTypeName.Substring(0, tickIndex);
+                var genericArgs = type.GetGenericArguments().Select(GetTypeShortName);
+                return $"{genericTypeName}<{string.Join(", ", genericArgs)}}}";
+            }
+
+            if (type.IsArray)
+            {
+                var elementType = type.GetElementType();
+                return $"{GetTypeShortName(elementType)}[]";
+            }
+
+            return type.Name;
+        }
+
         static string GetTypeIdRecursive(Type type)
         {
             // Special case: string is technically IEnumerable<char> but shouldn't be treated as an array
@@ -100,21 +133,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     return type.GetGenericArguments().FirstOrDefault();
                 }
             }
-
-            // // For non-generic types that implement IEnumerable<T>, check if they're simple collections
-            // var enumerableInterface = type.GetInterfaces()
-            //     .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-
-            // if (enumerableInterface != null)
-            // {
-            //     // Only treat as array-like if it's a simple collection type (not Dictionary, etc.)
-            //     // We can be more selective here - for now, let's be conservative and not treat
-            //     // complex types like Dictionary as array-like
-            //     if (type.Name.Contains("List") || type.Name.Contains("Collection") || type.Name.Contains("Array"))
-            //     {
-            //         return enumerableInterface.GetGenericArguments().FirstOrDefault();
-            //     }
-            // }
 
             return null;
         }
