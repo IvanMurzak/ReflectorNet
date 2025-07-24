@@ -25,13 +25,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     {
                         name = name,
                         typeName = type.GetTypeName(pretty: false) ?? string.Empty,
-                        fields = SerializeFields(reflector, obj, flags),
-                        props = SerializeProperties(reflector, obj, flags),
+                        fields = SerializeFields(reflector, obj, flags, logger: logger),
+                        props = SerializeProperties(reflector, obj, flags, logger: logger),
                         valueJsonElement = new JsonObject().ToJsonElement()
                     }
                     : SerializedMember.FromJson(type, JsonUtils.Serialize(obj), name: name);
             }
-            throw new ArgumentException($"Unsupported type: {type.GetTypeName(pretty: false)}");
+            throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}'");
         }
         public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => objType.GetFields(flags)

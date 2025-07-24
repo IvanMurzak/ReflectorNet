@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -79,23 +80,20 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            type ??= obj?.GetType();
-
+            type = TypeUtils.GetTypeWithObjectPriority(obj, type, out var error);
             if (type == null)
-                throw new ArgumentException($"No type provided for serialization.");
+                throw new ArgumentException(error);
 
-            if (obj == null)
-                return SerializedMember.FromJson(type, json: null, name: name);
+            var convertor = Convertors.BuildSerializersChain(type).FirstOrDefault();
+            if (convertor == null)
+                throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
 
-            foreach (var serializer in Convertors.BuildSerializersChain(type))
-            {
-                logger?.LogTrace("[Serializer] {0} for type {1}", serializer.GetType().Name, type?.GetTypeName(pretty: true));
+            if (logger != null && logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("[Reflector] Serialize. {0} used for type {1}", convertor.GetType().GetTypeShortName(), type?.GetTypeShortName());
 
-                var serializedMember = serializer.Serialize(this, obj, type: type, name: name, recursive, flags, logger);
-                if (serializedMember != null)
-                    return serializedMember;
-            }
-            throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
+            return convertor.Serialize(this, obj, type: type, name: name, recursive, flags, logger);
+
+            // return SerializedMember.FromJson(type!, json: null, name: name);
         }
 
         /// <summary>
@@ -164,13 +162,14 @@ namespace com.IvanMurzak.ReflectorNet
                 }
             }
 
-            var deserializer = Convertors.BuildDeserializersChain(type);
-            if (deserializer == null)
+            var convertor = Convertors.BuildDeserializersChain(type);
+            if (convertor == null)
                 throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
 
-            logger?.LogTrace($"[Serializer] {deserializer.GetType().Name} for type {type?.GetTypeName(pretty: true)}");
+            if (logger != null && logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("[Reflector] Deserialize. {0} used for type {1}", convertor.GetType().GetTypeShortName(), type?.GetTypeShortName());
 
-            return deserializer.Deserialize(this, data, logger);
+            return convertor.Deserialize(this, data, logger);
         }
 
         /// <summary>
@@ -275,72 +274,16 @@ namespace com.IvanMurzak.ReflectorNet
                 return stringBuilder.AppendLine($"{padding}{error}");
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false) ?? string.Empty)}");
+                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
 
-            foreach (var convertor in Convertors.BuildPopulatorsChain(type))
-                convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
+            var convertor = Convertors.BuildPopulatorsChain(type).FirstOrDefault();
+            if (convertor == null)
+                return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {type.GetTypeName(pretty: false)}");
 
-            return stringBuilder;
-        }
+            if (logger != null && logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("[Reflector] Populate. {0} used for type {1}", convertor.GetType().GetTypeShortName(), type?.GetTypeShortName());
 
-        /// <summary>
-        /// Populates a specific property of an object with data from a SerializedMember using the registered populator chain.
-        /// This method is designed for property-specific population scenarios where you need to populate individual
-        /// properties rather than entire objects, with the same comprehensive validation and error handling as the main Populate method.
-        ///
-        /// Behavior:
-        /// - Property-focused: Specifically designed for populating individual properties identified by PropertyInfo
-        /// - Type resolution: Uses provided dataType parameter, or resolves from data.typeName if not specified
-        /// - Validation: Performs the same extensive validation as Populate (null checks, type compatibility, casting)
-        /// - Error handling: Returns detailed error messages with proper indentation based on depth level
-        /// - Populator chain: Delegates to registered populators for the actual property assignment logic
-        /// - Hierarchical support: Supports nested property population with depth tracking for error formatting
-        /// - Property metadata: Leverages PropertyInfo for property-specific operations and validation
-        /// - Type safety: Ensures the target object and property are compatible with the expected data type
-        ///
-        /// This method is particularly useful in scenarios where you need fine-grained control over which
-        /// properties get populated, or when building custom deserialization logic that operates on a
-        /// property-by-property basis. It maintains the same error accumulation pattern as the main Populate method.
-        /// </summary>
-        /// <param name="obj">The object containing the property to populate. Must not be null and must be compatible with the expected type.</param>
-        /// <param name="propertyInfo">The PropertyInfo metadata for the specific property to populate.</param>
-        /// <param name="data">The SerializedMember containing the data to populate the property with.</param>
-        /// <param name="dataType">Optional explicit type for validation. If null, type is resolved from data.typeName.</param>
-        /// <param name="depth">The current depth level in the object hierarchy, used for error message indentation. Default is 0.</param>
-        /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
-        /// <param name="flags">BindingFlags controlling property access and visibility. Default includes public and non-public instance members.</param>
-        /// <param name="logger">Optional logger for tracing property population operations and debugging.</param>
-        /// <returns>The StringBuilder containing any error messages or status information encountered during property population.</returns>
-        public StringBuilder PopulateAsProperty(ref object? obj, PropertyInfo propertyInfo, SerializedMember data, Type? dataType = null, int depth = 0, StringBuilder? stringBuilder = null,
-            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            ILogger? logger = null)
-        {
-            stringBuilder ??= new StringBuilder();
-            var padding = StringUtils.GetPadding(depth);
-
-            var type = dataType;
-            if (type == null)
-            {
-                if (string.IsNullOrEmpty(data?.typeName))
-                    return stringBuilder.AppendLine($"{padding}{Error.DataTypeIsEmpty()}");
-
-                type = TypeUtils.GetType(data!.typeName);
-                if (type == null)
-                    return stringBuilder.AppendLine($"{padding}{Error.NotFoundType(data.typeName)}");
-            }
-
-            if (obj == null)
-                return stringBuilder.AppendLine($"{padding}{Error.TargetObjectIsNull()}");
-
-            TypeUtils.CastTo(obj, type, out var error);
-            if (error != null)
-                return stringBuilder.AppendLine($"{padding}{error}");
-
-            if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false) ?? string.Empty)}");
-
-            foreach (var convertor in Convertors.BuildPopulatorsChain(type))
-                convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
+            convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
 
             return stringBuilder;
         }
