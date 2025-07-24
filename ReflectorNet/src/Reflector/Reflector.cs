@@ -89,7 +89,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             foreach (var serializer in Convertors.BuildSerializersChain(type))
             {
-                logger?.LogTrace("[Serializer] {0} for type {1}", serializer.GetType().Name, type?.GetTypeName(pretty: true));
+                logger?.LogTrace("[Serializer] {0} for type {1}", serializer.GetType().GetTypeId(), type?.GetTypeName(pretty: true));
 
                 var serializedMember = serializer.Serialize(this, obj, type: type, name: name, recursive, flags, logger);
                 if (serializedMember != null)

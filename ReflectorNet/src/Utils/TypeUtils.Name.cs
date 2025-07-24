@@ -70,9 +70,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (type.IsGenericType)
             {
                 var genericTypeName = type.GetGenericTypeDefinition().GetTypeName(pretty: true);
-                if (genericTypeName == null)
+                if (StringUtils.IsNullOrEmpty(genericTypeName))
                     throw new InvalidOperationException($"Generic type '{type}' does not have a full name.");
-                return $"{genericTypeName}<{string.Join(",", type.GetGenericArguments().Select(t => t.GetTypeName(pretty: true)))}>";
+                // Recursively get the type ID for each generic argument
+                var genericArgs = type.GetGenericArguments().Select(GetTypeIdRecursive);
+                return $"{genericTypeName}<{string.Join(",", genericArgs)}";
             }
 
             return type.GetTypeName(pretty: true);
