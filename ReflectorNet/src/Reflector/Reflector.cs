@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -79,24 +80,20 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            type ??= obj?.GetType();
-
+            type = TypeUtils.GetTypeWithObjectPriority(obj, type, out var error);
             if (type == null)
-                throw new ArgumentException($"No type provided for serialization.");
+                throw new ArgumentException(error);
 
-            if (obj == null)
-                return SerializedMember.FromJson(type, json: null, name: name);
+            var convertor = Convertors.BuildSerializersChain(type).FirstOrDefault();
+            if (convertor == null)
+                throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
 
-            foreach (var serializer in Convertors.BuildSerializersChain(type))
-            {
-                if (logger != null && logger.IsEnabled(LogLevel.Trace))
-                    logger.LogTrace("[Reflector] Serialize. {0} used for type {1}", serializer.GetType().GetTypeShortName(), type?.GetTypeShortName());
+            if (logger != null && logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("[Reflector] Serialize. {0} used for type {1}", convertor.GetType().GetTypeShortName(), type?.GetTypeShortName());
 
-                var serializedMember = serializer.Serialize(this, obj, type: type, name: name, recursive, flags, logger);
-                if (serializedMember != null)
-                    return serializedMember;
-            }
-            throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
+            return convertor.Serialize(this, obj, type: type, name: name, recursive, flags, logger);
+
+            // return SerializedMember.FromJson(type!, json: null, name: name);
         }
 
         /// <summary>
@@ -165,14 +162,14 @@ namespace com.IvanMurzak.ReflectorNet
                 }
             }
 
-            var deserializer = Convertors.BuildDeserializersChain(type);
-            if (deserializer == null)
+            var convertor = Convertors.BuildDeserializersChain(type);
+            if (convertor == null)
                 throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
 
             if (logger != null && logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("[Reflector] Deserialize. {0} used for type {1}", deserializer.GetType().GetTypeShortName(), type?.GetTypeShortName());
+                logger.LogTrace("[Reflector] Deserialize. {0} used for type {1}", convertor.GetType().GetTypeShortName(), type?.GetTypeShortName());
 
-            return deserializer.Deserialize(this, data, logger);
+            return convertor.Deserialize(this, data, logger);
         }
 
         /// <summary>
@@ -277,15 +274,16 @@ namespace com.IvanMurzak.ReflectorNet
                 return stringBuilder.AppendLine($"{padding}{error}");
 
             if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false) ?? string.Empty)}");
+                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
 
-            foreach (var convertor in Convertors.BuildPopulatorsChain(type))
-            {
-                if (logger != null && logger.IsEnabled(LogLevel.Trace))
-                    logger.LogTrace("[Reflector] Populate. {0} used for type {1}", convertor.GetType().GetTypeShortName(), type?.GetTypeShortName());
+            var convertor = Convertors.BuildPopulatorsChain(type).FirstOrDefault();
+            if (convertor == null)
+                return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {type.GetTypeName(pretty: false)}");
 
-                convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
-            }
+            if (logger != null && logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("[Reflector] Populate. {0} used for type {1}", convertor.GetType().GetTypeShortName(), type?.GetTypeShortName());
+
+            convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
 
             return stringBuilder;
         }

@@ -243,6 +243,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             return null;
         }
+        public static Type? GetTypeWithObjectPriority(object? obj, Type? fallbackType, out string? error)
+        {
+            var type = obj?.GetType() ?? fallbackType;
+            if (type == null)
+            {
+                error = $"Object is null and type is unknown. Provide proper {nameof(SerializedMember.typeName)}.";
+                return null;
+            }
+
+            error = null;
+            return type;
+        }
         public static Type? GetTypeWithNamePriority(SerializedMember? member, Type? fallbackType, out string? error)
         {
             if (StringUtils.IsNullOrEmpty(member?.typeName) && fallbackType == null)

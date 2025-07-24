@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using com.IvanMurzak.ReflectorNet;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
 namespace ReflectorNet.Tests.SchemaTests
@@ -18,7 +19,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32Array", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int[] -> {result}");
         }
 
@@ -32,7 +33,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32ArrayArray", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int[][] -> {result}");
         }
 
@@ -46,7 +47,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32ArrayArrayArray", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int[][][] -> {result}");
         }
 
@@ -60,7 +61,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.StringArray", result);
+            Assert.Equal($"System.String{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"string[] -> {result}");
         }
 
@@ -74,7 +75,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32Array", result);
+            Assert.Equal($"System.Collections.Generic.List<System.Int32>", result);
             _output.WriteLine($"List<int> -> {result}");
         }
 
@@ -88,7 +89,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32ArrayArray", result);
+            Assert.Equal($"System.Collections.Generic.List<System.Int32{TypeUtils.ArraySuffix}>", result);
             _output.WriteLine($"List<int[]> -> {result}");
         }
 
@@ -102,7 +103,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32ArrayArray", result);
+            Assert.Equal("System.Collections.Generic.List<System.Collections.Generic.List<System.Int32>>", result);
             _output.WriteLine($"List<List<int>> -> {result}");
         }
 
@@ -116,7 +117,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32ArrayArrayArray", result);
+            Assert.Equal($"System.Collections.Generic.List<System.Int32{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}>", result);
             _output.WriteLine($"List<int[][]> -> {result}");
         }
 
@@ -130,7 +131,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.StringArrayArray", result);
+            Assert.Equal($"System.Collections.Generic.List<System.String{TypeUtils.ArraySuffix}>", result);
             _output.WriteLine($"List<string[]> -> {result}");
         }
 
@@ -144,7 +145,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.StringArrayArrayArrayArray", result);
+            Assert.Equal($"System.Collections.Generic.List<System.Collections.Generic.List<System.String{TypeUtils.ArraySuffix}>{TypeUtils.ArraySuffix}>", result);
             _output.WriteLine($"List<List<string[]>[]> -> {result}");
         }
 
@@ -186,7 +187,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var result = type.GetTypeId();
 
             // Assert
-            Assert.Equal("System.Int32Array", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int?[] -> {result}");
         }
 
