@@ -9,6 +9,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class JsonUtils
     {
+        public const string Null = "null";
+        public const string EmptyJsonObject = "{}";
+
         static JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore null fields
@@ -73,16 +76,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         public static string ToJson(this object? data, JsonSerializerOptions? options = null)
-        {
-            if (data == null)
-                return "null";
-            return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
-        }
+            => ToJson(data, Null, options ?? jsonSerializerOptions);
 
         public static string ToJsonOrEmptyJsonObject(this object? data, JsonSerializerOptions? options = null)
+            => ToJson(data, EmptyJsonObject, options);
+
+        public static string ToJson(this object? data, string defaultValue, JsonSerializerOptions? options = null)
         {
             if (data == null)
-                return "{}";
+                return defaultValue;
             return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
         }
     }
