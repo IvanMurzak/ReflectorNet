@@ -85,11 +85,5 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return "{}";
             return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
         }
-
-        public static class Resource
-        {
-            public static string ToJson(object data)
-                => JsonSerializer.Serialize(data, jsonSerializerOptions);
-        }
     }
 }
