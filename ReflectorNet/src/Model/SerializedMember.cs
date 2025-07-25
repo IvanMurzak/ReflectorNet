@@ -97,7 +97,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         }
         public SerializedMember SetValue(object? value)
         {
-            var json = JsonUtils.Serialize(value);
+            var json = JsonUtils.ToJson(value);
             return SetJsonValue(json);
         }
         public SerializedMember SetJsonValue(string? json)

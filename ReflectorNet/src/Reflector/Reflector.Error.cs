@@ -44,7 +44,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             public static string MoreThanOneMethodFound(List<MethodInfo> methods)
             {
-                var methodsString = JsonUtils.Serialize(methods.Select(method => new MethodDataRef(method, justRef: false)));
+                var methodsString = JsonUtils.ToJson(methods.Select(method => new MethodDataRef(method, justRef: false)));
                 return @$"[Error] Found more than one method. Only single method should be targeted. Please specify the method name more precisely.
 Found {methods.Count} method(s):
 ```json

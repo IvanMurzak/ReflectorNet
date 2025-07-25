@@ -126,7 +126,7 @@ namespace ReflectorNet.Tests.SchemaTests
             };
 
             // Act - Test JsonUtils functionality
-            var serializedJson = JsonUtils.Serialize(testObject);
+            var serializedJson = JsonUtils.ToJson(testObject);
             var deserializedObject = JsonUtils.Deserialize<GameObjectRefList>(serializedJson);
 
             var schema = JsonUtils.Schema.GetSchema(typeof(GameObjectRefList), justRef: false);
