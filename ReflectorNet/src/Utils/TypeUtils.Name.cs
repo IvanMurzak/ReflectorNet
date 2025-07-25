@@ -57,6 +57,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (type.IsArray)
             {
                 var elementType = type.GetElementType();
+                if (elementType == null)
+                    throw new InvalidOperationException($"Array type '{type}' has no element type.");
                 return $"{GetTypeId(elementType)}{ArraySuffix}";
             }
 
