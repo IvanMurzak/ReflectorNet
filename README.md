@@ -61,7 +61,6 @@ This project is used in [Unity-MCP](https://github.com/IvanMurzak/Unity-MCP).
 - `Reflector.GetSerializableFields(...)`
 - `Reflector.GetSerializableProperties(...)`
 - `Reflector.Populate(...)`
-- `Reflector.PopulateAsProperty(...)`
 
 ### Override ReflectionConvertor for a custom type
 
