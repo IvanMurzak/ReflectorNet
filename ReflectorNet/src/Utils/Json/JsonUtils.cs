@@ -1,14 +1,17 @@
-using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet.Json;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Nodes;
+using com.IvanMurzak.ReflectorNet.Json;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class JsonUtils
     {
+        public const string Null = "null";
+        public const string EmptyJsonObject = "{}";
+
         static JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore null fields
@@ -56,50 +59,33 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static TValue? Deserialize<TValue>(ref Utf8JsonReader reader, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize<TValue>(ref reader, options ?? jsonSerializerOptions);
 
-        public static JsonElement SerializeToElement(object data, JsonSerializerOptions? options = null)
+        public static JsonElement ToJsonElement(this object data, JsonSerializerOptions? options = null)
             => JsonSerializer.SerializeToElement(data, options ?? jsonSerializerOptions);
 
-        public static string Serialize(object? data, JsonSerializerOptions? options = null)
-            => JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
-
-        public static string ToJson(this IRequestCallTool? data, JsonSerializerOptions? options = null)
+        public static JsonElement? ToJsonElement(this JsonNode? node)
         {
-            if (data == null)
-                return "{}";
-            return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
+            if (node == null)
+                return null;
+
+            // Convert JsonNode to JsonElement
+            var jsonString = node.ToJsonString();
+
+            // Parse the JSON string into a JsonElement
+            using var document = JsonDocument.Parse(jsonString);
+            return document.RootElement.Clone();
         }
 
-        public static string ToJson(this IResponseListTool? data, JsonSerializerOptions? options = null)
+        public static string ToJson(this object? data, JsonSerializerOptions? options = null)
+            => ToJson(data, Null, options ?? jsonSerializerOptions);
+
+        public static string ToJsonOrEmptyJsonObject(this object? data, JsonSerializerOptions? options = null)
+            => ToJson(data, EmptyJsonObject, options);
+
+        public static string ToJson(this object? data, string defaultValue, JsonSerializerOptions? options = null)
         {
             if (data == null)
-                return "{}";
+                return defaultValue;
             return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
-        }
-
-        public static string ToJson<T>(this IResponseData<T>? data, JsonSerializerOptions? options = null)
-        {
-            if (data == null)
-                return "{}";
-            return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
-        }
-
-        public static string JsonSerialize(this object? data, JsonSerializerOptions? options = null)
-        {
-            if (data == null)
-                return "null";
-            return JsonSerializer.Serialize(data, options ?? jsonSerializerOptions);
-        }
-
-        public static IRequestCallTool? ParseRequestData(this string json, JsonSerializerOptions? options = null)
-            => JsonSerializer.Deserialize<IRequestCallTool>(json, options ?? jsonSerializerOptions);
-
-        public static IResponseData<T>? ParseResponseData<T>(this string json, JsonSerializerOptions? options = null)
-            => JsonSerializer.Deserialize<ResponseData<T>>(json, options ?? jsonSerializerOptions);
-
-        public static class Resource
-        {
-            public static string ToJson(object data)
-                => JsonSerializer.Serialize(data, jsonSerializerOptions);
         }
     }
 }

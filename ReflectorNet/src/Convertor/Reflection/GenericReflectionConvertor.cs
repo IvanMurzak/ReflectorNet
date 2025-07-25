@@ -29,7 +29,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         props = SerializeProperties(reflector, obj, flags, logger: logger),
                         valueJsonElement = new JsonObject().ToJsonElement()
                     }
-                    : SerializedMember.FromJson(type, JsonUtils.Serialize(obj), name: name);
+                    : SerializedMember.FromJson(type, JsonUtils.ToJson(obj), name: name);
             }
             throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}'");
         }

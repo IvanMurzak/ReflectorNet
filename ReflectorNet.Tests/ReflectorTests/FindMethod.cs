@@ -30,7 +30,7 @@ namespace ReflectorNet.Tests.ReflectorTests
                 methodNameMatchLevel: 6
             ).ToList();
 
-            _output.WriteLine(JsonUtils.Serialize(foundMethods));
+            _output.WriteLine(JsonUtils.ToJson(foundMethods));
 
             // Assert
             Assert.Single(foundMethods);
@@ -58,7 +58,7 @@ namespace ReflectorNet.Tests.ReflectorTests
                 methodNameMatchLevel: 2 // Lower level to match partial names
             ).ToList();
 
-            _output.WriteLine(JsonUtils.Serialize(foundMethods));
+            _output.WriteLine(JsonUtils.ToJson(foundMethods));
 
             // Assert
             Assert.Contains(foundMethods, m => m.Name == nameof(TestClass.NoParameters_ReturnBool));
