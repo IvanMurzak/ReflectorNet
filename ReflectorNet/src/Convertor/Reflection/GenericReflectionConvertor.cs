@@ -15,6 +15,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
     {
         protected override SerializedMember InternalSerialize(Reflector reflector, object obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
             var isStruct = type.IsValueType && !type.IsPrimitive && !type.IsEnum;
@@ -25,8 +26,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     {
                         name = name,
                         typeName = type.GetTypeName(pretty: false) ?? string.Empty,
-                        fields = SerializeFields(reflector, obj, flags, logger: logger),
-                        props = SerializeProperties(reflector, obj, flags, logger: logger),
+                        fields = SerializeFields(reflector, obj, flags, depth: depth, stringBuilder: stringBuilder, logger: logger),
+                        props = SerializeProperties(reflector, obj, flags, depth: depth, stringBuilder: stringBuilder, logger: logger),
                         valueJsonElement = new JsonObject().ToJsonElement()
                     }
                     : SerializedMember.FromJson(type, JsonUtils.ToJson(obj), name: name);
@@ -54,13 +55,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetAsField(Reflector reflector, ref object? obj, Type fallbackType, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            if (!value.TryDeserializeValue(reflector, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
@@ -71,13 +72,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type fallbackType, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            if (!value.TryDeserializeValue(reflector, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;
@@ -87,13 +88,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetField(Reflector reflector, ref object? obj, Type fallbackType, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            if (!value.TryDeserializeValue(reflector, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
@@ -103,13 +104,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetProperty(Reflector reflector, ref object? obj, Type fallbackType, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            if (!value.TryDeserializeValue(reflector, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;

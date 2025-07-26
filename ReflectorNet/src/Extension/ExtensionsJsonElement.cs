@@ -11,19 +11,27 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsJsonElement
     {
-        public static T? Deserialize<T>(this JsonElement? jsonElement)
-        {
-            return jsonElement != null && jsonElement.HasValue
-                ? JsonUtils.Deserialize<T>(jsonElement.Value)
-                : TypeUtils.GetDefaultValue<T>();
-        }
+        public static T? Deserialize<T>(this JsonElement? jsonElement) => (T?)Deserialize(jsonElement, typeof(T));
         public static object? Deserialize(this JsonElement? jsonElement, Type type)
         {
-            return jsonElement != null && jsonElement.HasValue
+            return jsonElement.HasValue
                 ? JsonUtils.Deserialize(jsonElement.Value, type)
                 : TypeUtils.GetDefaultValue(type);
         }
-        public static bool TryDeserializeEnumerable(this JsonElement? jsonElement, Type type, out IEnumerable<object?>? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public static T? DeserializeSerializedMember<T>(this JsonElement? jsonElement, Reflector reflector, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+            => (T?)DeserializeSerializedMember(jsonElement, reflector, typeof(T), depth, stringBuilder, logger);
+        public static object? DeserializeSerializedMember(this JsonElement? jsonElement, Reflector reflector, Type type, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        {
+            if (!jsonElement.HasValue)
+                return TypeUtils.GetDefaultValue(type);
+
+            var serializedMember = jsonElement.Deserialize<SerializedMember>();
+            if (serializedMember == null)
+                return TypeUtils.GetDefaultValue(type);
+
+            return reflector.Deserialize(serializedMember, type, depth: depth, stringBuilder: stringBuilder, logger: logger);
+        }
+        public static bool TryDeserializeSerializedMemberList(this JsonElement? jsonElement, Reflector reflector, Type type, out IEnumerable<object?>? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
             var paddingNext = StringUtils.GetPadding(depth + 1);
@@ -41,7 +49,7 @@ namespace com.IvanMurzak.ReflectorNet
                 var enumerable = parsedList
                     ?.Select((element, i) =>
                     {
-                        if (!element.TryDeserialize(out var parsedValue, out var errorMessage, logger: logger))
+                        if (!element.TryDeserializeValue(reflector, out var parsedValue, out var errorMessage, depth: depth, stringBuilder: stringBuilder, logger: logger))
                         {
                             success = false;
                             if (stringBuilder != null)

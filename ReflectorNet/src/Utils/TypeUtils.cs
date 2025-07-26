@@ -10,12 +10,26 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
-        public static Type? GetType(string? typeName) => string.IsNullOrEmpty(typeName)
-            ? null
-            : Type.GetType(typeName) ??
-                AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeName || t.AssemblyQualifiedName == typeName);
+        public static IEnumerable<Type> AllTypes => AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes());
+
+        public static Type? GetType(string? typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName))
+                return null;
+
+            // First try built-in Type.GetType() which handles many formats
+            var type = Type.GetType(typeName, throwOnError: false);
+            if (type != null)
+                return type;
+
+            // If Type.GetType() fails, try to find the type in all loaded assemblies
+            type = AllTypes.FirstOrDefault(t =>
+                typeName == t.FullName ||
+                typeName == t.AssemblyQualifiedName);
+
+            return type;
+        }
 
         public static T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));
         public static object? GetDefaultValue(Type type)
@@ -117,10 +131,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         public static object? CastTo(object obj, string typeFullName, out string? error)
         {
-            var type = GetType(typeFullName) ??
-                AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeFullName);
+            var type = GetType(typeFullName);
             if (type == null)
             {
                 error = $"[Error] Type '{typeFullName.ValueOrNull()}' not found during casting.";
@@ -207,6 +218,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             foreach (var baseGenericType in GetGenericTypes(type.BaseType, visited))
                 yield return baseGenericType;
+        }
+        public static bool IsIEnumerable(Type type)
+        {
+            if (type.IsArray)
+                return true; // Arrays are IEnumerable
+
+            return type.GetInterfaces()
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         }
         public static Type? GetEnumerableItemType(Type type)
         {

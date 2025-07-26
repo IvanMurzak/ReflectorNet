@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {
-        static IEnumerable<Type> AllTypes => AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(assembly => assembly.GetTypes());
-
-        static IEnumerable<MethodInfo> AllMethods => AllTypes
+        public static IEnumerable<MethodInfo> AllMethods => TypeUtils.AllTypes
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
             .Where(method => method.DeclaringType != null && !method.DeclaringType.IsAbstract);
 
@@ -120,7 +118,7 @@ namespace com.IvanMurzak.ReflectorNet
             // Prepare Namespace
             filter.Namespace = filter.Namespace?.Trim()?.Replace("null", string.Empty);
 
-            var typesEnumerable = AllTypes
+            var typesEnumerable = TypeUtils.AllTypes
                 .Where(type => type.IsVisible)
                 .Where(type => !type.IsInterface)
                 .Where(type => !type.IsAbstract || type.IsSealed)

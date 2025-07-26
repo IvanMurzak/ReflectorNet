@@ -218,7 +218,7 @@ namespace com.IvanMurzak.ReflectorNet
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: methodParameters[i].ParameterType, logger: _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, fallbackType: methodParameters[i].ParameterType, logger: _logger);
                         }
                     }
                     else
@@ -281,7 +281,7 @@ namespace com.IvanMurzak.ReflectorNet
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: parameter.ParameterType, logger: _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, fallbackType: parameter.ParameterType, logger: _logger);
                         }
                     }
                     else

@@ -1,0 +1,44 @@
+
+namespace ReflectorNet.Tests.Utils.Model
+{
+    // Non static class with nested classes and static members
+    public class ParentClass
+    {
+        public class NestedClass
+        {
+            public static string NestedStaticField = "I am static field";
+            public static string NestedStaticProperty { get; set; } = "I am static property";
+
+            public string NestedField = "I am field";
+            public string NestedProperty { get; set; } = "I am property";
+        }
+        public static class NestedStaticClass
+        {
+            public static string NestedStaticField = "I am static field";
+            public static string NestedStaticProperty { get; set; } = "I am static property";
+        }
+    }
+    // Static class with nested classes and static members
+    public static class StaticParentClass
+    {
+        public class NestedClass
+        {
+            public static string NestedStaticField = "I am static field";
+            public static string NestedStaticProperty { get; set; } = "I am static property";
+
+            public string NestedField = "I am field";
+            public string NestedProperty { get; set; } = "I am property";
+        }
+        public static class NestedStaticClass
+        {
+            public static string NestedStaticField = "I am static field";
+            public static string NestedStaticProperty { get; set; } = "I am static property";
+        }
+    }
+    // Wrapper class
+    public class WrapperClass<T>
+    {
+        public T? ValueField;
+        public T? ValueProperty { get; set; }
+    }
+}

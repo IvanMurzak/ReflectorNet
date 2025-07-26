@@ -12,7 +12,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public partial class ArrayReflectionConvertor : BaseReflectionConvertor<Array>
     {
-        bool IsGenericList(Type type, out Type? elementType)
+        protected virtual bool IsGenericList(Type type, out Type? elementType)
         {
             var iList = type.GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
@@ -43,35 +43,20 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected override SerializedMember InternalSerialize(Reflector reflector, object obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
             int index = 0;
-            var serializedList = new List<SerializedMember>();
             var enumerable = (System.Collections.IEnumerable)obj;
+            var serializedList = new SerializedMemberList();
 
             // Determine the element type for handling null elements
-            Type? elementType = null;
-            if (type.IsArray)
-            {
-                elementType = type.GetElementType();
-            }
-            else if (type.IsGenericType)
-            {
-                var genericArgs = type.GetGenericArguments();
-                if (genericArgs.Length > 0)
-                    elementType = genericArgs[0];
-            }
-            else if (type.BaseType != null && type.BaseType.IsGenericType)
-            {
-                var genericArgs = type.BaseType.GetGenericArguments();
-                if (genericArgs.Length > 0)
-                    elementType = genericArgs[0];
-            }
+            var elementType = TypeUtils.GetEnumerableItemType(type);
 
             foreach (var element in enumerable)
             {
                 var elementTypeToUse = element?.GetType() ?? elementType;
-                serializedList.Add(reflector.Serialize(element, type: elementTypeToUse, name: $"[{index++}]", recursive: recursive, flags: flags, logger: logger));
+                serializedList.Add(reflector.Serialize(element, type: elementTypeToUse, name: $"[{index++}]", recursive: recursive, flags: flags, depth: depth, stringBuilder: stringBuilder, logger: logger));
             }
 
             return SerializedMember.FromValue(type, serializedList, name: name);
@@ -89,7 +74,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
+            if (!value.TryDeserializeSerializedMemberList(reflector, type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
             {
                 Print.FailedToSetNewValue(ref obj, type, depth, stringBuilder);
                 return false;
@@ -100,13 +85,16 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override object? Deserialize(Reflector reflector, SerializedMember data, ILogger? logger = null)
+        public override object? Deserialize(Reflector reflector, SerializedMember data, Type? fallbackType = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+
             // For arrays and lists, we need special handling since the value is a IList<SerializedMember>
-            var type = TypeUtils.GetType(data.typeName);
+            var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
             if (type == null)
             {
-                logger?.LogError("Type '{TypeName}' not found", data.typeName);
+                logger?.LogError(error);
+                stringBuilder?.AppendLine($"{padding}[Warning] {error}");
                 return null;
             }
 
@@ -115,6 +103,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (serializedMemberList == null)
             {
                 logger?.LogError("Failed to deserialize as SerializedMemberList");
+                stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize as SerializedMemberList.");
                 return null;
             }
 
@@ -137,7 +126,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 for (int i = 0; i < serializedMemberList.Count; i++)
                 {
                     var element = serializedMemberList[i];
-                    var deserializedElement = reflector.Deserialize(element);
+                    var deserializedElement = reflector.Deserialize(element, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
                     if (deserializedElement != null)
                     {
                         array.SetValue(deserializedElement, i);
@@ -192,7 +181,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserializeEnumerable(type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
+            if (!value.TryDeserializeValueSerializedMemberList(reflector, type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to set field '{value?.name.ValueOrNull()}'");
                 return false;
@@ -212,7 +201,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserializeEnumerable(type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
+            if (!value.TryDeserializeValueSerializedMemberList(reflector, type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to set property '{value?.name.ValueOrNull()}'");
                 return false;
@@ -224,11 +213,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetField(Reflector reflector, ref object? obj, Type fallbackType, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            if (!value.TryDeserializeValue(reflector, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
                 return false;
 
             // TODO: Print previous and new value in stringBuilder
@@ -236,11 +225,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetProperty(Reflector reflector, ref object? obj, Type fallbackType, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!value.TryDeserialize(type, out var parsedValue, logger: logger))
+            if (!value.TryDeserializeValue(reflector, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
                 return false;
 
             // TODO: Print previous and new value in stringBuilder

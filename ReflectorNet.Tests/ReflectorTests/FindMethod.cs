@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using Xunit.Abstractions;
 using com.IvanMurzak.ReflectorNet.Utils;
+using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests.ReflectorTests
+namespace ReflectorNet.Tests.Utils
 {
     public class FindMethod : BaseTest
     {

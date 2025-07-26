@@ -4,6 +4,7 @@ using System.Linq;
 using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
+using ReflectorNet.Tests.Utils;
 using Xunit.Abstractions;
 
 namespace ReflectorNet.Tests.SchemaTests
@@ -56,6 +57,29 @@ namespace ReflectorNet.Tests.SchemaTests
             Assert.Contains(typeof(SerializedMember), genericTypes);
 
             Assert.Equal(1, genericTypes.Count(x => x == typeof(SerializedMember)));
+        }
+
+        void TestTypeName(Type type)
+        {
+            var typeName = TypeUtils.GetTypeName(type, pretty: false);
+            Assert.Equal(type, TypeUtils.GetType(typeName));
+
+            typeName = TypeUtils.GetTypeName(type, pretty: true);
+            Assert.Equal(type, TypeUtils.GetType(typeName));
+        }
+
+        [Fact]
+        public void GetTypeName_CurrentAssembly()
+        {
+            TestTypeName(typeof(Utils.Model.ParentClass));
+            TestTypeName(typeof(Utils.Model.ParentClass.NestedClass));
+        }
+
+        [Fact]
+        public void GetTypeName_OuterAssembly()
+        {
+            TestTypeName(typeof(OuterAssembly.Model.ParentClass));
+            TestTypeName(typeof(OuterAssembly.Model.ParentClass.NestedClass));
         }
     }
 }

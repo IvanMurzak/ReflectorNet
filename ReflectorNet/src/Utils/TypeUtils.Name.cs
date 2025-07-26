@@ -104,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return $"{GetTypeShortName(elementType)}[]";
             }
 
-            return type.Name;
+            return string.IsNullOrEmpty(type.Name) ? Null : type.Name;
         }
     }
 }

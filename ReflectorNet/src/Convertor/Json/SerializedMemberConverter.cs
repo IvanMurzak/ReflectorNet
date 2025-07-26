@@ -92,10 +92,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
                             member.valueJsonElement = JsonElement.ParseValue(ref reader);
                             break;
                         case nameof(SerializedMember.fields):
-                            member.fields = JsonUtils.Deserialize<List<SerializedMember>>(ref reader, options);
+                            member.fields = JsonUtils.Deserialize<SerializedMemberList>(ref reader, options);
                             break;
                         case nameof(SerializedMember.props):
-                            member.props = JsonUtils.Deserialize<List<SerializedMember>>(ref reader, options);
+                            member.props = JsonUtils.Deserialize<SerializedMemberList>(ref reader, options);
                             break;
                         default:
                             throw new JsonException($"Unexpected property name: '{propertyName}'. "

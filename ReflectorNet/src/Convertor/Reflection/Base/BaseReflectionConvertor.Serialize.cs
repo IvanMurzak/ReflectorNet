@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +15,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         public virtual SerializedMember Serialize(Reflector reflector, object? obj, Type? type = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
             type ??= obj?.GetType() ?? typeof(T);
@@ -21,12 +23,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);
 
-            return InternalSerialize(reflector, obj, type, name, recursive, flags, logger);
+            return InternalSerialize(reflector, obj, type, name, recursive, flags, depth: depth, stringBuilder: stringBuilder, logger);
         }
 
-        protected virtual List<SerializedMember>? SerializeFields(Reflector reflector, object obj, BindingFlags flags, ILogger? logger = null)
+        protected virtual SerializedMemberList? SerializeFields(Reflector reflector, object obj, BindingFlags flags,
+            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            var serializedFields = default(List<SerializedMember>);
+            var serializedFields = default(SerializedMemberList);
             var objType = obj.GetType();
 
             var fields = GetSerializableFields(reflector, objType, flags, logger);
@@ -41,16 +44,17 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 var value = field.GetValue(obj);
                 var fieldType = field.FieldType;
 
-                serializedFields ??= new List<SerializedMember>();
-                serializedFields.Add(reflector.Serialize(value, fieldType, name: field.Name, recursive: false, flags: flags, logger: logger));
+                serializedFields ??= new SerializedMemberList();
+                serializedFields.Add(reflector.Serialize(value, fieldType, name: field.Name, recursive: AllowCascadeFieldsConversion, flags: flags, depth: depth + 1, stringBuilder: stringBuilder, logger: logger));
             }
             return serializedFields;
         }
         public abstract IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null);
 
-        protected virtual List<SerializedMember>? SerializeProperties(Reflector reflector, object obj, BindingFlags flags, ILogger? logger = null)
+        protected virtual SerializedMemberList? SerializeProperties(Reflector reflector, object obj, BindingFlags flags,
+            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            var serializedProperties = default(List<SerializedMember>);
+            var serializedProperties = default(SerializedMemberList);
             var objType = obj.GetType();
 
             var properties = GetSerializableProperties(reflector, objType, flags, logger);
@@ -66,8 +70,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     var value = prop.GetValue(obj);
                     var propType = prop.PropertyType;
 
-                    serializedProperties ??= new List<SerializedMember>();
-                    serializedProperties.Add(reflector.Serialize(value, propType, name: prop.Name, recursive: false, flags: flags, logger: logger));
+                    serializedProperties ??= new SerializedMemberList();
+                    serializedProperties.Add(reflector.Serialize(value, propType, name: prop.Name, recursive: AllowCascadePropertiesConversion, flags: flags, depth: depth + 1, stringBuilder: stringBuilder, logger: logger));
                 }
                 catch { /* skip inaccessible properties */ }
             }
@@ -77,6 +81,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected abstract SerializedMember InternalSerialize(Reflector reflector, object obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null);
     }
 }

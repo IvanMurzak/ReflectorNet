@@ -14,10 +14,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         int SerializationPriority(Type type, ILogger? logger = null);
 
-        object? Deserialize(Reflector reflector, SerializedMember data, ILogger? logger = null);
+        object? Deserialize(Reflector reflector, SerializedMember data, Type? fallbackType = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null);
 
         SerializedMember Serialize(Reflector reflector, object? obj, Type? type = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null);
 
         StringBuilder? Populate(Reflector reflector, ref object? obj, SerializedMember data, Type? dataType = null, int depth = 0, StringBuilder? stringBuilder = null,

@@ -11,6 +11,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         public virtual bool AllowCascadeSerialize => false;
         public virtual bool AllowCascadePopulate => false;
 
+        public virtual bool AllowCascadeFieldsConversion => true;
+        public virtual bool AllowCascadePropertiesConversion => true;
+
         public virtual int SerializationPriority(Type type, ILogger? logger = null)
         {
             if (type == typeof(T))
