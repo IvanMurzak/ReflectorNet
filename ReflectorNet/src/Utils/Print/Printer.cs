@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Spectre.Console;
 using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Text;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
