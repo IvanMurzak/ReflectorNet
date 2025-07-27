@@ -42,8 +42,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             };
 
             var message = string.IsNullOrEmpty(_categoryName)
-                ? $"{Consts.Log.Tag} {Consts.Log.Color.LevelStart}[{logLevelLabel}]{Consts.Log.Color.LevelEnd} {formatter(state, exception)}"
-                : $"{Consts.Log.Tag} {Consts.Log.Color.CategoryStart}{_categoryName}{Consts.Log.Color.CategoryEnd} {Consts.Log.Color.LevelStart}[{logLevelLabel}]{Consts.Log.Color.LevelEnd} {formatter(state, exception)}";
+                ? $"{Consts.Log.Tag} {Consts.Log.Color.LevelStart}{logLevelLabel}{Consts.Log.Color.LevelEnd} {formatter(state, exception)}"
+                : $"{Consts.Log.Tag} {Consts.Log.Color.CategoryStart}{_categoryName}{Consts.Log.Color.CategoryEnd} {Consts.Log.Color.LevelStart}{logLevelLabel}{Consts.Log.Color.LevelEnd} {formatter(state, exception)}";
 
             _stringBuilder.AppendLine(message);
         }

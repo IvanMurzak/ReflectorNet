@@ -37,7 +37,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             // Act
             var stringBuilder = new StringBuilder();
-            var serialized = reflector.Serialize(wrapperInstance, stringBuilder: stringBuilder);
+            var serialized = reflector.Serialize(wrapperInstance, name: nameof(wrapperInstance), stringBuilder: stringBuilder);
             _output.WriteLine($"Serialized WrapperClass<ParentClass.NestedClass[]>: {JsonUtils.ToJson(serialized)}");
             _output.WriteLine(stringBuilder.ToString());
 
