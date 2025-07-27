@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize Value type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}'.");
+                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}'.");
 
             try
             {
@@ -44,7 +44,7 @@ namespace com.IvanMurzak.ReflectorNet
                     {
                         result = enumerableResult;
                         if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialize Value type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}' as an enumerable.");
+                            logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as an enumerable.");
                         return true;
                     }
                 }
@@ -53,19 +53,19 @@ namespace com.IvanMurzak.ReflectorNet
                     // If that fails, try to deserialize as a single SerializedMember object
                     result = serializedMember.valueJsonElement.DeserializeSerializedMember(reflector, type, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialize Value type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}' as {nameof(SerializedMember)}.");
+                        logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as {nameof(SerializedMember)}.");
                     return true;
                 }
             }
             catch (JsonException ex)
             {
                 stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
-                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize Value type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
             }
             catch (NotSupportedException ex)
             {
                 stringBuilder?.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: true)}' for member '{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}");
-                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize Value type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
             }
 
             // If we reach here, it means deserialization failed, try to deserialize as a simple json
@@ -73,14 +73,14 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 result = serializedMember.valueJsonElement.Deserialize(type);
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialize Value type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}' as json. From the JSON: {serializedMember.valueJsonElement}");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as json: {serializedMember.valueJsonElement}");
 
                 return true;
             }
             catch (Exception ex)
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value'{serializedMember.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
-                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize Value type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
                 result = null;
                 return false;
             }

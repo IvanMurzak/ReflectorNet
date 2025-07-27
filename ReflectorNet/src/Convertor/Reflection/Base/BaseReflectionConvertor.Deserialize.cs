@@ -1,6 +1,6 @@
 using System;
-using System.Reflection;
 using System.Text;
+using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
@@ -19,7 +19,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (data.fields != null)
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize Fields type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
 
                 foreach (var field in data.fields)
                 {
@@ -40,7 +40,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (data.props != null)
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize Properties type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
 
                 foreach (var property in data.props)
                 {
