@@ -1,5 +1,5 @@
 
-namespace ReflectorNet.Tests.Utils.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Utils.Model
 {
     // Non static class with nested classes and static members
     public class ParentClass

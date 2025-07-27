@@ -1,5 +1,5 @@
 using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Schema.Model;
 using Xunit.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using com.IvanMurzak.ReflectorNet.Utils;
 using com.IvanMurzak.ReflectorNet.Model;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class PerformanceTests : BaseTest
     {
@@ -88,7 +88,7 @@ namespace ReflectorNet.Tests.SchemaTests
             // Assert
             Assert.NotNull(schema);
             Assert.NotNull(typeId);
-            Assert.Equal("ReflectorNet.Tests.Schema.Model.GameObjectRef", typeId);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.Schema.Model.GameObjectRef", typeId);
 
             _output.WriteLine($"Type: {testType.GetTypeName(pretty: false)}");
             _output.WriteLine($"Schema: {schema}");

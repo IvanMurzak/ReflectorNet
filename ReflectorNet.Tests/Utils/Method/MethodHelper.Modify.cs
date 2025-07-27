@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using com.IvanMurzak.ReflectorNet.Model;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Schema.Model;
 
-namespace ReflectorNet.Tests
+namespace com.IvanMurzak.ReflectorNet.Tests
 {
     public static partial class MethodHelper
     {

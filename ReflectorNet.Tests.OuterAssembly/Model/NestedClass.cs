@@ -1,5 +1,5 @@
 
-namespace ReflectorNet.OuterAssembly.Model
+namespace com.IvanMurzak.ReflectorNet.OuterAssembly.Model
 {
     // Non static class with nested classes and static members
     public class ParentClass

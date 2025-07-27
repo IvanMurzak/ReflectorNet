@@ -4,10 +4,10 @@ using System.Linq;
 using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
-using ReflectorNet.Tests.Utils;
+using com.IvanMurzak.ReflectorNet.Tests.Utils;
 using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public partial class TestType : BaseTest
     {

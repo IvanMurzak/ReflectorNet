@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel;
 
-namespace ReflectorNet.Tests.Schema.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Schema.Model
 {
     /// <summary>
     /// Test struct with Description attributes for testing schema generation.

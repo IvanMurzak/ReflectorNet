@@ -1,4 +1,4 @@
-namespace ReflectorNet.Tests
+namespace com.IvanMurzak.ReflectorNet.Tests
 {
     public static partial class MethodHelper
     {

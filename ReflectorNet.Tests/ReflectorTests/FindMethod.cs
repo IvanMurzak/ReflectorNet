@@ -4,7 +4,7 @@ using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests.Utils
+namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 {
     public class FindMethod : BaseTest
     {

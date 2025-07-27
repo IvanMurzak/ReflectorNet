@@ -1,12 +1,12 @@
 ﻿using System.Linq;
+using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Utils;
+using com.IvanMurzak.ReflectorNet.Tests.Utils.Model;
 using Xunit.Abstractions;
-using ReflectorNet.Tests.Utils.Model;
-using System.Text;
 
-namespace ReflectorNet.Tests.Utils
+namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 {
     public class SerializationTests : BaseTest
     {

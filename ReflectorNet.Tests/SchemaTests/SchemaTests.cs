@@ -1,8 +1,8 @@
 using com.IvanMurzak.ReflectorNet.Model;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Schema.Model;
 using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class SchemaTests : SchemaTestBase
     {
