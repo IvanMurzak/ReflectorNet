@@ -47,17 +47,17 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             _systemLogger?.IsEnabled(level) == false;
 
             // Remove lazy lines that are deeper than the current depth
-            while (_lazyLines.Count > 0 && _lazyLines.Last.Value.Depth > depth)
+            while (_lazyLines.Count > 0 && _lazyLines.Last!.Value.Depth > depth)
                 _lazyLines.RemoveLast();
 
             if (isEnabled)
             {
                 // Print lazy lines that are less deep than the current depth
-                while (_lazyLines.Count > 0 && _lazyLines.First.Value.Depth < depth)
+                while (_lazyLines.Count > 0 && _lazyLines.First!.Value.Depth < depth)
                     PrintAndRemove(_lazyLines.First, level);
 
                 // Remove lazy lines at the same depth as the current one
-                while (_lazyLines.Count > 0 && _lazyLines.First.Value.Depth == depth)
+                while (_lazyLines.Count > 0 && _lazyLines.First!.Value.Depth == depth)
                     _lazyLines.RemoveFirst();
 
                 if (_lazyLines.Count == 0)
