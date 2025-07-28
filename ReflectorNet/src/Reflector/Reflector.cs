@@ -143,13 +143,15 @@ namespace com.IvanMurzak.ReflectorNet
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
         public object? Deserialize(SerializedMember data, Type? fallbackType = null, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            // If data is null and type is provided, return default value of the type
-            if (data == null && fallbackType != null)
-                return TypeUtils.GetDefaultValue(fallbackType);
-
-            // If data is null and no type provided, throw exception
             if (data == null)
+            {
+                // If data is null and type is provided, return default value of the type
+                if (fallbackType != null)
+                    return TypeUtils.GetDefaultValue(fallbackType);
+
+                // If data is null and no type provided, throw exception
                 throw new ArgumentException(Error.DataTypeIsEmpty());
+            }
 
             var padding = StringUtils.GetPadding(depth);
             var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);

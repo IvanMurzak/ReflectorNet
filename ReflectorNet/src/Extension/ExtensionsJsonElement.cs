@@ -34,7 +34,7 @@ namespace com.IvanMurzak.ReflectorNet
             var paddingNext = StringUtils.GetPadding(depth + 1);
             try
             {
-                name ??= "null";
+                name ??= JsonUtils.Null;
                 var parsedList = jsonElement.Deserialize<SerializedMemberList>();
 
                 if (stringBuilder != null)
@@ -77,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet
                         {
                             typedArray.SetValue(item, index++);
                         }
-                        result = typedArray.Cast<object?>();
+                        result = typedArray?.Cast<object?>();
                     }
                     else
                     {
