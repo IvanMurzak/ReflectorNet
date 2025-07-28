@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +29,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             return reflector.Deserialize(serializedMember, type, fallbackName: name, depth: depth, stringBuilder: stringBuilder, logger: logger);
         }
-        public static bool TryDeserializeSerializedMemberList(this JsonElement? jsonElement, Reflector reflector, Type type, out IEnumerable<object?>? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public static bool TryDeserializeSerializedMemberList(this JsonElement? jsonElement, Reflector reflector, Type type, out IEnumerable? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
             var paddingNext = StringUtils.GetPadding(depth + 1);
@@ -66,31 +67,49 @@ namespace com.IvanMurzak.ReflectorNet
                     return false;
                 }
 
+                var elementType = TypeUtils.GetEnumerableItemType(type);
+                if (elementType == null)
+                {
+                    result = null;
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Error] Failed to determine element type for '{name}'.");
+                    return false;
+                }
+
                 if (type.IsArray)
                 {
-                    var elementType = type.GetElementType();
-                    if (elementType != null && enumerable != null)
+                    if (enumerable != null)
                     {
-                        var typedArray = Array.CreateInstance(elementType, enumerable.Count());
+                        var typedArray = Array.CreateInstance(elementType, parsedList!.Count);
                         var index = 0;
                         foreach (var item in enumerable)
                         {
                             typedArray.SetValue(item, index++);
                         }
-                        result = typedArray?.Cast<object?>();
+                        result = typedArray;
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {typedArray.Length} items.");
                     }
                     else
                     {
-                        result = enumerable?.ToArray();
+                        var tempResult = enumerable?.ToArray();
+                        result = tempResult;
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine(tempResult == null
+                                ? $"{padding}[Success] Deserialized '{name}' as 'null' array."
+                                : $"{padding}[Success] Deserialized '{name}' as an array with {tempResult!.Length} items.");
                     }
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {result?.Count() ?? 0} items.");
                 }
-                else // if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+                else
                 {
-                    result = enumerable?.ToList();
+                    var tempResult = enumerable?.ToList();
+                    result = tempResult;
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as a list with {result?.Count() ?? 0} items.");
+                        stringBuilder.AppendLine(tempResult == null
+                            ? $"{padding}[Success] Deserialized '{name}' as 'null' list."
+                            : $"{padding}[Success] Deserialized '{name}' as a list with {tempResult.Count} items.");
                 }
 
                 return true;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
@@ -94,7 +95,7 @@ namespace com.IvanMurzak.ReflectorNet
             }
         }
 
-        public static bool TryDeserializeValueSerializedMemberList(this SerializedMember? serializedMember, Reflector reflector, Type type, out IEnumerable<object?>? result, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public static bool TryDeserializeValueSerializedMemberList(this SerializedMember? serializedMember, Reflector reflector, Type type, out IEnumerable? result, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             if (serializedMember == null)
             {
