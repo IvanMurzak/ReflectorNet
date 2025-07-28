@@ -34,13 +34,30 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));
         public static object? GetDefaultValue(Type type)
         {
+            // Handle nullable types first
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return null;
+
+            // For value types (structs, primitives, enums), use Activator.CreateInstance
             if (type.IsValueType)
                 return Activator.CreateInstance(type);
 
-            if (type.GetConstructor(Type.EmptyTypes) != null)
-                return Activator.CreateInstance(type);
-
+            // For reference types (classes, interfaces, delegates), return null
             return null;
+
+
+            // Older version ---------------------------------------
+            // if (type.IsValueType)
+            //     return Activator.CreateInstance(type);
+
+            // if (type.IsPrimitive)
+            //     return Activator.CreateInstance(type);
+
+            // if (type.GetConstructor(Type.EmptyTypes) != null)
+            //     return Activator.CreateInstance(type);
+
+            // return null;
+            // -----------------------------------------------------
         }
 
         public static string? GetDescription(Type type)

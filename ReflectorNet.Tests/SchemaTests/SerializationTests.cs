@@ -120,7 +120,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Create a SerializedMember with null value
-            var serialized = new com.IvanMurzak.ReflectorNet.Model.SerializedMember
+            var serialized = new SerializedMember
             {
                 typeName = typeof(GameObjectRef).GetTypeName(pretty: false)!,
                 valueJsonElement = null
@@ -129,9 +129,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Act
             var deserialized = reflector.Deserialize(serialized);
 
-            // Assert - For reference types with null value, should return default instance
-            // The actual behavior might be to return a default instance rather than null
-            Assert.NotNull(deserialized);
+            // Assert - For null values, we expect the deserialized object to be null
+            Assert.Null(deserialized);
             _output.WriteLine($"Deserialized null value result: {deserialized}");
         }
 
