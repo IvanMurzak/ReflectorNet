@@ -44,11 +44,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static T? Deserialize<T>(string json, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize<T>(json, options ?? jsonSerializerOptions);
 
-        public static T? Deserialize<T>(JsonElement jsonElement, JsonSerializerOptions? options = null)
-            => JsonSerializer.Deserialize<T>(jsonElement, options ?? jsonSerializerOptions);
+        public static T? Deserialize<T>(JsonElement? jsonElement, JsonSerializerOptions? options = null)
+            => jsonElement.HasValue
+                ? JsonSerializer.Deserialize<T>(jsonElement.Value, options ?? jsonSerializerOptions)
+                : TypeUtils.GetDefaultValue<T>();
 
-        public static object? Deserialize(JsonElement jsonElement, Type type, JsonSerializerOptions? options = null)
-            => JsonSerializer.Deserialize(jsonElement, type, options ?? jsonSerializerOptions);
+        public static object? Deserialize(JsonElement? jsonElement, Type type, JsonSerializerOptions? options = null)
+            => jsonElement.HasValue
+                ? JsonSerializer.Deserialize(jsonElement.Value, type, options ?? jsonSerializerOptions)
+                : TypeUtils.GetDefaultValue(type);
 
         public static object? Deserialize(string json, Type type, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize(json, type, options ?? jsonSerializerOptions);

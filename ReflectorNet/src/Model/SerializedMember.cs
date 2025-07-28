@@ -82,19 +82,8 @@ namespace com.IvanMurzak.ReflectorNet.Model
             return this;
         }
 
-        public T? GetValue<T>()
-        {
-            if (valueJsonElement == null)
-                return default;
-            try
-            {
-                return JsonUtils.Deserialize<T>(valueJsonElement.Value);
-            }
-            catch
-            {
-                return default;
-            }
-        }
+        public T? GetValue<T>() => valueJsonElement.Deserialize<T>();
+
         public SerializedMember SetValue(object? value)
         {
             var json = JsonUtils.ToJson(value);

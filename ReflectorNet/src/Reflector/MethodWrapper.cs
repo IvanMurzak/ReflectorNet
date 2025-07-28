@@ -209,12 +209,12 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, methodParameters[i].ParameterType);
+                            finalParameters[i] = jsonElement.Deserialize(methodParameters[i].ParameterType);
                         }
                         catch
                         {
                             // Try #2: Parsing as SerializedMember
-                            var serializedParameter = JsonUtils.Deserialize<SerializedMember>(jsonElement);
+                            var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
 
@@ -272,12 +272,12 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, parameter.ParameterType);
+                            finalParameters[i] = jsonElement.Deserialize(parameter.ParameterType);
                         }
                         catch
                         {
                             // Try #2: Parsing as SerializedMember
-                            var serializedParameter = JsonUtils.Deserialize<SerializedMember>(jsonElement);
+                            var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
 

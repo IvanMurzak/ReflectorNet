@@ -11,13 +11,10 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsJsonElement
     {
-        public static T? Deserialize<T>(this JsonElement? jsonElement) => (T?)Deserialize(jsonElement, typeof(T));
+        public static T? Deserialize<T>(this JsonElement? jsonElement)
+            => JsonUtils.Deserialize<T>(jsonElement);
         public static object? Deserialize(this JsonElement? jsonElement, Type type)
-        {
-            return jsonElement.HasValue
-                ? JsonUtils.Deserialize(jsonElement.Value, type)
-                : TypeUtils.GetDefaultValue(type);
-        }
+            => JsonUtils.Deserialize(jsonElement, type);
         public static T? DeserializeSerializedMember<T>(this JsonElement? jsonElement, Reflector reflector, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
             => (T?)DeserializeSerializedMember(jsonElement, reflector, typeof(T), name, depth, stringBuilder, logger);
         public static object? DeserializeSerializedMember(this JsonElement? jsonElement, Reflector reflector, Type type, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)

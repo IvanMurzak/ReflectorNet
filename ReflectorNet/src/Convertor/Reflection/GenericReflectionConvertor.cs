@@ -49,9 +49,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            var parsedValue = value == null
-                ? TypeUtils.GetDefaultValue(type)
-                : JsonUtils.Deserialize(value.Value, type);
+            var parsedValue = value.Deserialize(type);
 
             Print.SetNewValue(ref obj, ref parsedValue, type, depth, stringBuilder);
             obj = parsedValue;
