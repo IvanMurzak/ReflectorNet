@@ -31,6 +31,21 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return type;
         }
 
+        public static T? GetDefaultNonNullValue<T>() => (T?)GetDefaultNonNullValue(typeof(T));
+        public static object? GetDefaultNonNullValue(Type type)
+        {
+            if (type.IsValueType)
+                return Activator.CreateInstance(type);
+
+            if (type.IsPrimitive)
+                return Activator.CreateInstance(type);
+
+            if (type.GetConstructor(Type.EmptyTypes) != null)
+                return Activator.CreateInstance(type);
+
+            return null;
+        }
+
         public static T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));
         public static object? GetDefaultValue(Type type)
         {

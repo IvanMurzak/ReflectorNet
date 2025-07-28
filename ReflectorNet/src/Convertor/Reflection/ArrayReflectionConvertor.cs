@@ -77,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
-            if (!value.TryDeserializeSerializedMemberList(reflector, type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
+            if (!value.TryDeserializeValueSerializedMemberList(reflector, type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder))
             {
                 Print.FailedToSetNewValue(ref obj, type, depth, stringBuilder);
                 return false;

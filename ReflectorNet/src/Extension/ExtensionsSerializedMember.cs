@@ -41,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (isArray)
                 {
                     // Try to deserialize is as an SerializedMemberList first
-                    if (serializedMember.valueJsonElement.TryDeserializeSerializedMemberList(reflector, type, out var enumerableResult,
+                    if (serializedMember.valueJsonElement.TryDeserializeValueSerializedMemberList(reflector, type, out var enumerableResult,
                         name: serializedMember.name,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
@@ -56,7 +56,7 @@ namespace com.IvanMurzak.ReflectorNet
                 else if (serializedMember.valueJsonElement?.ValueKind == JsonValueKind.Object)
                 {
                     // If that fails, try to deserialize as a single SerializedMember object
-                    result = serializedMember.valueJsonElement.DeserializeSerializedMember(reflector, type,
+                    result = serializedMember.valueJsonElement.DeserializeValueSerializedMember(reflector, type,
                         name: serializedMember.name,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
@@ -104,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
             }
 
-            return serializedMember.valueJsonElement.TryDeserializeSerializedMemberList(reflector, type, out result, serializedMember.name, depth: depth, stringBuilder: stringBuilder, logger: logger);
+            return serializedMember.valueJsonElement.TryDeserializeValueSerializedMemberList(reflector, type, out result, serializedMember.name, depth: depth, stringBuilder: stringBuilder, logger: logger);
         }
     }
 }
