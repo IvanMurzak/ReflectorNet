@@ -13,11 +13,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public partial class GenericReflectionConvertor<T> : NotArrayReflectionConvertor<T>
     {
-        protected override SerializedMember InternalSerialize(Reflector reflector, object obj, Type type, string? name = null, bool recursive = true,
+        protected override SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
+            if (obj == null)
+                return SerializedMember.FromJson(type, json: null, name: name);
+
             var isStruct = type.IsValueType && !type.IsPrimitive && !type.IsEnum;
             if (type.IsClass || isStruct)
             {

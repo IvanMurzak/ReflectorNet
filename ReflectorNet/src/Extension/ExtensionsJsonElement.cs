@@ -18,9 +18,9 @@ namespace com.IvanMurzak.ReflectorNet
                 ? JsonUtils.Deserialize(jsonElement.Value, type)
                 : TypeUtils.GetDefaultValue(type);
         }
-        public static T? DeserializeSerializedMember<T>(this JsonElement? jsonElement, Reflector reflector, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
-            => (T?)DeserializeSerializedMember(jsonElement, reflector, typeof(T), depth, stringBuilder, logger);
-        public static object? DeserializeSerializedMember(this JsonElement? jsonElement, Reflector reflector, Type type, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public static T? DeserializeSerializedMember<T>(this JsonElement? jsonElement, Reflector reflector, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+            => (T?)DeserializeSerializedMember(jsonElement, reflector, typeof(T), name, depth, stringBuilder, logger);
+        public static object? DeserializeSerializedMember(this JsonElement? jsonElement, Reflector reflector, Type type, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             if (!jsonElement.HasValue)
                 return TypeUtils.GetDefaultValue(type);
@@ -29,7 +29,7 @@ namespace com.IvanMurzak.ReflectorNet
             if (serializedMember == null)
                 return TypeUtils.GetDefaultValue(type);
 
-            return reflector.Deserialize(serializedMember, type, depth: depth, stringBuilder: stringBuilder, logger: logger);
+            return reflector.Deserialize(serializedMember, type, fallbackName: name, depth: depth, stringBuilder: stringBuilder, logger: logger);
         }
         public static bool TryDeserializeSerializedMemberList(this JsonElement? jsonElement, Reflector reflector, Type type, out IEnumerable<object?>? result, string? name = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {

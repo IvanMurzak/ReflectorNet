@@ -117,8 +117,8 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
-        public T? Deserialize<T>(SerializedMember data, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null) where T : class
-            => Deserialize(data, fallbackType: typeof(T), depth: depth, stringBuilder: stringBuilder, logger: logger) as T;
+        public T? Deserialize<T>(SerializedMember data, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null) where T : class
+            => Deserialize(data, fallbackType: typeof(T), fallbackName: fallbackName, depth: depth, stringBuilder: stringBuilder, logger: logger) as T;
 
         /// <summary>
         /// Deserializes a SerializedMember to an object.
@@ -141,7 +141,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
-        public object? Deserialize(SerializedMember data, Type? fallbackType = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public object? Deserialize(SerializedMember data, Type? fallbackType = null, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             // If data is null and type is provided, return default value of the type
             if (data == null && fallbackType != null)
@@ -167,9 +167,9 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}' convertor='{convertor.GetType().GetTypeShortName()}'");
+                logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}' convertor='{convertor.GetType().GetTypeShortName()}'");
 
-            return convertor.Deserialize(this, data, type, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
+            return convertor.Deserialize(this, data, type, fallbackName, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
         }
 
         /// <summary>

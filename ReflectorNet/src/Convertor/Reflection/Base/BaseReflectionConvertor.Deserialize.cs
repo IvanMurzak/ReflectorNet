@@ -9,7 +9,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
-        public virtual object? Deserialize(Reflector reflector, SerializedMember data, Type? fallbackType = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public virtual object? Deserialize(Reflector reflector, SerializedMember data, Type? fallbackType = null, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
             if (!data.TryDeserializeValue(reflector, out var result, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
                 return null;
@@ -19,18 +19,18 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (data.fields != null)
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
 
                 foreach (var field in data.fields)
                 {
                     if (string.IsNullOrEmpty(field.name))
                     {
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Field name is null or empty in serialized data: '{data.name.ValueOrNull()}'. Skipping.");
+                            stringBuilder.AppendLine($"{padding}[Warning] Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
                         continue;
                     }
 
-                    var fieldValue = Deserialize(reflector, field, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
+                    var fieldValue = reflector.Deserialize(field, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
 
                     var fieldInfo = type!.GetField(field.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (fieldInfo != null)
@@ -40,18 +40,18 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (data.props != null)
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
 
                 foreach (var property in data.props)
                 {
                     if (string.IsNullOrEmpty(property.name))
                     {
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Property name is null or empty in serialized data: '{data.name.ValueOrNull()}'. Skipping.");
+                            stringBuilder.AppendLine($"{padding}[Warning] Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
                         continue;
                     }
 
-                    var propertyValue = Deserialize(reflector, property, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
+                    var propertyValue = reflector.Deserialize(property, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
 
                     var propertyInfo = type!.GetProperty(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (propertyInfo != null && propertyInfo.CanWrite)

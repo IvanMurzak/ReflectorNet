@@ -18,26 +18,26 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             // Arrange
             var reflector = new Reflector();
 
-            var wrapperInstance = new WrapperClass<ParentClass.NestedClass[]>
+            var sourceInstance = new WrapperClass<ParentClass.NestedClass[]>
             {
                 ValueField = new[]
                 {
-                    // new ParentClass.NestedClass { NestedField = "First Field", NestedProperty = "First Property" },
+                //     new ParentClass.NestedClass { NestedField = "First Field", NestedProperty = "First Property" },
                     new ParentClass.NestedClass { NestedField = "Second Field", NestedProperty = "Second Property" }
-                },
+                }
                 // ValueProperty = new[]
-                // {
-                //     new ParentClass.NestedClass { NestedField = "Third Field", NestedProperty = "Third Property" },
-                //     new ParentClass.NestedClass { NestedField = "Fourth Field", NestedProperty = "Fourth Property" }
-                // }
+                //  {
+                // // //     new ParentClass.NestedClass { NestedField = "Third Field", NestedProperty = "Third Property" },
+                //      new ParentClass.NestedClass { NestedField = "Fourth Field", NestedProperty = "Fourth Property" }
+                //  }
             };
 
-            _output.WriteLine($"Source WrapperClass<ParentClass.NestedClass[]>: {JsonUtils.ToJson(wrapperInstance)}");
+            _output.WriteLine($"Source WrapperClass<ParentClass.NestedClass[]>: {JsonUtils.ToJson(sourceInstance)}");
             _output.WriteLine("------------------------------------------------------");
 
             // Act
             var stringBuilder = new StringBuilder();
-            var serialized = reflector.Serialize(wrapperInstance, name: nameof(wrapperInstance), stringBuilder: stringBuilder);
+            var serialized = reflector.Serialize(sourceInstance, name: nameof(sourceInstance), stringBuilder: stringBuilder);
             _output.WriteLine($"Serialized WrapperClass<ParentClass.NestedClass[]>: {JsonUtils.ToJson(serialized)}");
             _output.WriteLine(stringBuilder.ToString());
 
@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             Assert.NotNull(serialized.valueJsonElement);
 
             Assert.NotNull(deserializedInstance);
-            Assert.Equal(JsonUtils.ToJson(wrapperInstance), JsonUtils.ToJson(deserializedInstance));
+            Assert.Equal(JsonUtils.ToJson(sourceInstance), JsonUtils.ToJson(deserializedInstance));
 
             // Assert.Equal(wrapperInstance.ValueField!.Length, deserializedInstance.ValueField!.Length);
             // Assert.Equal(wrapperInstance.ValueProperty!.Length, deserializedInstance.ValueProperty!.Length);
@@ -71,7 +71,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             Assert.Equal(typeof(WrapperClass<ParentClass.NestedClass[]>).GetTypeName(pretty: false), serialized.typeName);
 
-            Assert.Equal(JsonUtils.ToJson(wrapperInstance), JsonUtils.ToJson(deserializedInstance));
+            Assert.Equal(JsonUtils.ToJson(sourceInstance), JsonUtils.ToJson(deserializedInstance));
 
             // Assert.NotNull(wrapperField_Fields_0.valueJsonElement);
             // Assert.Equal("First Field", wrapperField_Fields_0.GetProperty(nameof(ParentClass.NestedClass.NestedField)).GetString());

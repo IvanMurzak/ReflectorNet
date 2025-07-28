@@ -18,12 +18,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            type ??= obj?.GetType() ?? typeof(T);
-
-            if (obj == null)
-                return SerializedMember.FromJson(type, json: null, name: name);
-
-            return InternalSerialize(reflector, obj, type, name, recursive, flags, depth: depth, stringBuilder: stringBuilder, logger);
+            return InternalSerialize(reflector, obj,
+                type: type ?? obj?.GetType() ?? typeof(T),
+                name: name,
+                recursive: recursive,
+                flags: flags,
+                depth: depth,
+                stringBuilder: stringBuilder,
+                logger: logger);
         }
 
         protected virtual SerializedMemberList? SerializeFields(Reflector reflector, object obj, BindingFlags flags,
@@ -79,7 +81,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         }
         public abstract IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null);
 
-        protected abstract SerializedMember InternalSerialize(Reflector reflector, object obj, Type type, string? name = null, bool recursive = true,
+        protected abstract SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null);

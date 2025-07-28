@@ -19,12 +19,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 ? MAX_DEPTH + 1
                 : 0;
         }
-        protected override SerializedMember InternalSerialize(Reflector reflector, object? obj, Type? type, string? name = null, bool recursive = true,
+        protected override SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            type ??= obj?.GetType() ?? typeof(object);
+            if (obj == null)
+                return SerializedMember.FromJson(type, json: null, name: name);
+
             return SerializedMember.FromValue(type, obj, name: name);
         }
 
