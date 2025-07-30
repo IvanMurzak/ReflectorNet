@@ -49,6 +49,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
         {
+            // TODO: This place ignores possibility to parse json as SerializedMember or SerializedMemberList.
+            // Need to be sure it won't make any issues.
             var parsedValue = value.Deserialize(type);
 
             Print.SetNewValue(ref obj, ref parsedValue, type, depth, stringBuilder);

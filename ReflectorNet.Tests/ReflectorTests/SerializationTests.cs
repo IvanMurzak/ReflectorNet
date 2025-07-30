@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.Text;
-using System.Text.Json;
-using com.IvanMurzak.ReflectorNet;
+﻿using System.Text;
 using com.IvanMurzak.ReflectorNet.Utils;
 using com.IvanMurzak.ReflectorNet.Tests.Utils.Model;
 using Xunit.Abstractions;
@@ -12,80 +9,166 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
     {
         public SerializationTests(ITestOutputHelper output) : base(output) { }
 
-        [Fact]
-        public void Serialize_ParentClass_NestedClass_Array_Instance()
+        void SerializationDeserializationTest<T>(T? sourceInstance)
         {
             // Arrange
             var reflector = new Reflector();
-
-            var sourceInstance = new WrapperClass<ParentClass.NestedClass[]>
-            {
-                ValueField = new[]
-                {
-                //     new ParentClass.NestedClass { NestedField = "First Field", NestedProperty = "First Property" },
-                    new ParentClass.NestedClass { NestedField = "Second Field", NestedProperty = "Second Property" }
-                }
-                // ValueProperty = new[]
-                //  {
-                // // //     new ParentClass.NestedClass { NestedField = "Third Field", NestedProperty = "Third Property" },
-                //      new ParentClass.NestedClass { NestedField = "Fourth Field", NestedProperty = "Fourth Property" }
-                //  }
-            };
-
-            _output.WriteLine($"Source WrapperClass<ParentClass.NestedClass[]>: {JsonUtils.ToJson(sourceInstance)}");
-            _output.WriteLine("------------------------------------------------------");
+            var sourceType = sourceInstance?.GetType() ?? typeof(T);
 
             // Act
-            var stringBuilder = new StringBuilder();
-            var serialized = reflector.Serialize(sourceInstance, name: nameof(sourceInstance), stringBuilder: stringBuilder);
-            _output.WriteLine($"Serialized WrapperClass<ParentClass.NestedClass[]>: {JsonUtils.ToJson(serialized)}");
-            _output.WriteLine(stringBuilder.ToString());
+            var sourceInstanceJson = JsonUtils.ToJson(sourceInstance);
+            _output.WriteLine($"Source {sourceType.GetTypeShortName()}: {sourceInstanceJson}");
+            _output.WriteLine(string.Empty);
 
+            var serializeLogger = new StringBuilderLogger();
+            var stringBuilder = new StringBuilder();
+            var serialized = reflector.Serialize(sourceInstance,
+                fallbackType: sourceType,
+                name: nameof(sourceInstance),
+                stringBuilder: stringBuilder,
+                logger: serializeLogger);
+
+            var serializedJson = JsonUtils.ToJson(serialized);
+            _output.WriteLine($"Serialize - Result {sourceType.GetTypeShortName()}: {serializedJson}");
+            _output.WriteLine(string.Empty);
+
+            _output.WriteLine("Serialize - System output:");
+            _output.WriteLine(serializeLogger.ToString());
+            _output.WriteLine(string.Empty);
+
+            _output.WriteLine("Serialize - AI output:");
+            _output.WriteLine(stringBuilder.ToString());
+            _output.WriteLine(string.Empty);
+
+            _output.WriteLine("------------------------------------------------------");
+            _output.WriteLine(string.Empty);
             stringBuilder.Clear();
 
-            var stringBuilderLogger = new StringBuilderLogger("T");
-            var deserializedInstance = reflector.Deserialize<WrapperClass<ParentClass.NestedClass[]>>(serialized, stringBuilder: stringBuilder, logger: stringBuilderLogger);
-            _output.WriteLine($"Deserialized WrapperClass<ParentClass.NestedClass[]>: {JsonUtils.ToJson(deserializedInstance)}");
-            _output.WriteLine(stringBuilderLogger.ToString());
+            var deserializeLogger = new StringBuilderLogger();
+            var deserializedInstance = reflector.Deserialize(serialized,
+                fallbackType: sourceType,
+                stringBuilder: stringBuilder,
+                logger: deserializeLogger);
+
+            var deserializedInstanceJson = JsonUtils.ToJson(deserializedInstance);
+            _output.WriteLine($"Deserialize - Result {sourceType.GetTypeShortName()}: {deserializedInstanceJson}");
+            _output.WriteLine(string.Empty);
+
+            _output.WriteLine("Deserialize - System output:");
+            _output.WriteLine(deserializeLogger.ToString());
+            _output.WriteLine(string.Empty);
+
+            _output.WriteLine("Deserialize - AI output:");
+            _output.WriteLine(stringBuilder.ToString());
 
             // Assert
             Assert.NotNull(serialized);
-            Assert.NotNull(serialized.valueJsonElement);
 
-            Assert.NotNull(deserializedInstance);
-            Assert.Equal(JsonUtils.ToJson(sourceInstance), JsonUtils.ToJson(deserializedInstance));
+            if (sourceInstance == null)
+            {
+                Assert.Null(serialized.valueJsonElement);
+                Assert.Null(deserializedInstance);
+            }
+            else
+            {
+                Assert.NotNull(serialized.valueJsonElement);
+                Assert.NotNull(deserializedInstance);
+            }
 
-            // Assert.Equal(wrapperInstance.ValueField!.Length, deserializedInstance.ValueField!.Length);
-            // Assert.Equal(wrapperInstance.ValueProperty!.Length, deserializedInstance.ValueProperty!.Length);
-            // Assert.Equal(typeof(WrapperClass<ParentClass.NestedClass[]>).GetTypeName(pretty: false), serialized.typeName);
+            Assert.Equal(sourceInstanceJson, deserializedInstanceJson);
+        }
 
-            // Assert.Equal(wrapperInstance.ValueField![0].NestedField, deserializedInstance.ValueField![0].NestedField);
-            // Assert.Equal(wrapperInstance.ValueField![0].NestedProperty, deserializedInstance.ValueField![0].NestedProperty);
-            // Assert.Equal(wrapperInstance.ValueProperty![0].NestedField, deserializedInstance.ValueProperty![0].NestedField);
-            // Assert.Equal(wrapperInstance.ValueProperty![0].NestedProperty, deserializedInstance.ValueProperty![0].NestedProperty);
 
-            // Assert.Equal(wrapperInstance.ValueField![1].NestedField, deserializedInstance.ValueField![1].NestedField);
-            // Assert.Equal(wrapperInstance.ValueField![1].NestedProperty, deserializedInstance.ValueField![1].NestedProperty);
-            // Assert.Equal(wrapperInstance.ValueProperty![1].NestedField, deserializedInstance.ValueProperty![1].NestedField);
-            // Assert.Equal(wrapperInstance.ValueProperty![1].NestedProperty, deserializedInstance.ValueProperty![1].NestedProperty);
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithNullValue()
+        {
+            SerializationDeserializationTest<WrapperClass<ParentClass.NestedClass[]>>(null);
+        }
 
-            Assert.Equal(typeof(WrapperClass<ParentClass.NestedClass[]>).GetTypeName(pretty: false), serialized.typeName);
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithValueField()
+        {
+            SerializationDeserializationTest(new WrapperClass<ParentClass.NestedClass[]>
+            {
+                ValueField = new[]
+                {
+                    new ParentClass.NestedClass { NestedField = "Second Field", NestedProperty = "Second Property" }
+                }
+            });
+        }
 
-            Assert.Equal(JsonUtils.ToJson(sourceInstance), JsonUtils.ToJson(deserializedInstance));
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithValueProperty()
+        {
+            SerializationDeserializationTest(new WrapperClass<ParentClass.NestedClass[]>
+            {
+                ValueProperty = new[]
+                {
+                    new ParentClass.NestedClass { NestedField = "Fourth Field", NestedProperty = "Fourth Property" }
+                }
+            });
+        }
 
-            // Assert.NotNull(wrapperField_Fields_0.valueJsonElement);
-            // Assert.Equal("First Field", wrapperField_Fields_0.GetProperty(nameof(ParentClass.NestedClass.NestedField)).GetString());
-            // Assert.Equal("First Property", wrapperField_Fields_0.GetProperty(nameof(ParentClass.NestedClass.NestedProperty)).GetString());
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithBothFieldAndProperty()
+        {
+            SerializationDeserializationTest(new WrapperClass<ParentClass.NestedClass[]>
+            {
+                ValueField = new[]
+                {
+                    new ParentClass.NestedClass { NestedField = "Second Field", NestedProperty = "Second Property" }
+                },
+                ValueProperty = new[]
+                {
+                    new ParentClass.NestedClass { NestedField = "Fourth Field", NestedProperty = "Fourth Property" }
+                }
+            });
+        }
 
-            // ------------------------------------------------------
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithEmptyArrays()
+        {
+            SerializationDeserializationTest(new WrapperClass<ParentClass.NestedClass[]>
+            {
+                ValueField = new ParentClass.NestedClass[0],
+                ValueProperty = new ParentClass.NestedClass[0]
+            });
+        }
 
-            // Assert.NotNull(serialized.props);
-            // Assert.NotNull(serialized.props.FirstOrDefault(p => p.name == nameof(WrapperClass<object>.ValueProperty)));
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithEmptyArrayField()
+        {
+            SerializationDeserializationTest(new WrapperClass<ParentClass.NestedClass[]>
+            {
+                ValueField = new ParentClass.NestedClass[0]
+            });
+        }
 
-            // Assert.NotNull(serialized.fields);
-            // Assert.NotNull(serialized.fields.FirstOrDefault(p => p.name == nameof(ParentClass.NestedClass.NestedField)));
-            // Assert.NotNull(serialized.props);
-            // Assert.NotNull(serialized.props.FirstOrDefault(p => p.name == nameof(ParentClass.NestedClass.NestedProperty)));
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithEmptyArrayProperty()
+        {
+            SerializationDeserializationTest(new WrapperClass<ParentClass.NestedClass[]>
+            {
+                ValueProperty = new ParentClass.NestedClass[0]
+            });
+        }
+
+        [Fact]
+        public void Serialize_ParentClass_NestedClass_Array_WithMultipleElements()
+        {
+            SerializationDeserializationTest(new WrapperClass<ParentClass.NestedClass[]>
+            {
+                ValueField = new[]
+                {
+                    new ParentClass.NestedClass { NestedField = "First Field", NestedProperty = "First Property" },
+                    new ParentClass.NestedClass { NestedField = "Second Field", NestedProperty = "Second Property" }
+                },
+                ValueProperty = new[]
+                {
+                    new ParentClass.NestedClass { NestedField = "Third Field", NestedProperty = "Third Property" },
+                    new ParentClass.NestedClass { NestedField = "Fourth Field", NestedProperty = "Fourth Property" }
+                }
+            });
         }
 
         [Fact]

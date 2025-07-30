@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -69,12 +68,12 @@ namespace com.IvanMurzak.ReflectorNet
             catch (JsonException ex)
             {
                 stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
-                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
             }
             catch (NotSupportedException ex)
             {
                 stringBuilder?.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: true)}' for member '{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}");
-                logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                logger?.LogCritical($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
             }
 
             // If we reach here, it means deserialization failed, try to deserialize as a simple json

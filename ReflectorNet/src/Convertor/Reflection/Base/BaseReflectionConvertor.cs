@@ -11,6 +11,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         public virtual bool AllowCascadeSerialize => false;
         public virtual bool AllowCascadePopulate => false;
 
+        public virtual bool AllowSetValue => true;
+
         public virtual bool AllowCascadeFieldsConversion => true;
         public virtual bool AllowCascadePropertiesConversion => true;
 

@@ -59,7 +59,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             foreach (var element in enumerable)
             {
                 var elementTypeToUse = element?.GetType() ?? elementType;
-                serializedList.Add(reflector.Serialize(element, type: elementTypeToUse, name: $"[{index++}]", recursive: recursive, flags: flags, depth: depth, stringBuilder: stringBuilder, logger: logger));
+                serializedList.Add(reflector.Serialize(element, fallbackType: elementTypeToUse, name: $"[{index++}]", recursive: recursive, flags: flags, depth: depth, stringBuilder: stringBuilder, logger: logger));
             }
 
             return SerializedMember.FromValue(type, serializedList, name: name);
@@ -232,13 +232,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return null;
         }
 
-        public override bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetAsField(Reflector reflector, ref object? obj, Type fallbackType, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserializeValueSerializedMemberList(reflector, type, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
+            if (!value.TryDeserializeValueSerializedMemberList(reflector, fallbackType, out var enumerable, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to set field '{value?.name.ValueOrNull()}'");
                 return false;
@@ -252,13 +252,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return true;
         }
 
-        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public override bool SetAsProperty(Reflector reflector, ref object? obj, Type fallbackType, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (!value.TryDeserializeValueSerializedMemberList(reflector, type, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
+            if (!value.TryDeserializeValueSerializedMemberList(reflector, fallbackType, out var parsedValue, depth: depth + 1, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to set property '{value?.name.ValueOrNull()}'");
                 return false;

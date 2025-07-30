@@ -69,7 +69,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// serialization support for different object types and custom serialization logic.
         /// </summary>
         /// <param name="obj">The object to serialize. Can be null, in which case type information is preserved.</param>
-        /// <param name="type">Optional explicit type to use for serialization. If null, type is inferred from obj.</param>
+        /// <param name="fallbackType">Optional explicit type to use for serialization. If null, type is inferred from obj.</param>
         /// <param name="name">Optional name to assign to the serialized member for identification purposes.</param>
         /// <param name="recursive">Whether to recursively serialize nested objects and collections. Default is true.</param>
         /// <param name="flags">BindingFlags controlling which fields and properties are included in serialization. Default includes public and non-public instance members.</param>
@@ -78,12 +78,12 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing serialization operations and troubleshooting.</param>
         /// <returns>A SerializedMember containing the serialized representation of the object.</returns>
         /// <exception cref="ArgumentException">Thrown when no type can be determined or when no registered serializer supports the type.</exception>
-        public SerializedMember Serialize(object? obj, Type? type = null, string? name = null, bool recursive = true,
+        public SerializedMember Serialize(object? obj, Type? fallbackType = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            type = TypeUtils.GetTypeWithObjectPriority(obj, type, out var error);
+            var type = TypeUtils.GetTypeWithObjectPriority(obj, fallbackType, out var error);
             if (type == null)
                 throw new ArgumentException(error);
 

@@ -30,7 +30,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (!type.IsAssignableFrom(obj.GetType()))
                 return stringBuilder?.AppendLine($"{padding}[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.");
 
-            if (data.valueJsonElement != null)
+            if (AllowSetValue)
             {
                 try
                 {
@@ -140,11 +140,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
         }
 
-        public abstract bool SetAsField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public abstract bool SetAsField(Reflector reflector, ref object? obj, Type fallbackType, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 
-        public abstract bool SetAsProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public abstract bool SetAsProperty(Reflector reflector, ref object? obj, Type fallbackType, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 

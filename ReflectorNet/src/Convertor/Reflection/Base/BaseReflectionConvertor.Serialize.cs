@@ -47,7 +47,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 var fieldType = field.FieldType;
 
                 serializedFields ??= new SerializedMemberList();
-                serializedFields.Add(reflector.Serialize(value, fieldType, name: field.Name, recursive: AllowCascadeFieldsConversion, flags: flags, depth: depth + 1, stringBuilder: stringBuilder, logger: logger));
+                serializedFields.Add(reflector.Serialize(value, fieldType,
+                    name: field.Name,
+                    recursive: AllowCascadeFieldsConversion,
+                    flags: flags,
+                    depth: depth + 1,
+                    stringBuilder: stringBuilder,
+                    logger: logger)
+                );
             }
             return serializedFields;
         }
@@ -73,7 +80,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     var propType = prop.PropertyType;
 
                     serializedProperties ??= new SerializedMemberList();
-                    serializedProperties.Add(reflector.Serialize(value, propType, name: prop.Name, recursive: AllowCascadePropertiesConversion, flags: flags, depth: depth + 1, stringBuilder: stringBuilder, logger: logger));
+                    serializedProperties.Add(reflector.Serialize(value, propType,
+                        name: prop.Name,
+                        recursive: AllowCascadePropertiesConversion,
+                        flags: flags,
+                        depth: depth + 1,
+                        stringBuilder: stringBuilder,
+                        logger: logger)
+                    );
                 }
                 catch { /* skip inaccessible properties */ }
             }
