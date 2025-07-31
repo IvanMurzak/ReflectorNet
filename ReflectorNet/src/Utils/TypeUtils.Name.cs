@@ -74,6 +74,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                    type.GetTypeName(pretty: false) == typeName;
         }
 
+
+        /// <summary>
+        /// Returns the type name without namespace or assembly, but includes generic arguments if any.
+        /// For example: List<int>, Dictionary<string, List<double?>>
+        /// </summary>
+        public static string GetTypeShortName<T>() => GetTypeShortName(typeof(T));
+
         /// <summary>
         /// Returns the type name without namespace or assembly, but includes generic arguments if any.
         /// For example: List<int>, Dictionary<string, List<double?>>

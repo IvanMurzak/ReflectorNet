@@ -4,15 +4,31 @@ using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
-        public virtual object? Deserialize(Reflector reflector, SerializedMember data, Type? fallbackType = null, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public virtual object? Deserialize(Reflector reflector,
+            SerializedMember data,
+            Type? fallbackType = null,
+            string? fallbackName = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null)
         {
-            if (!data.TryDeserializeValue(reflector, out var result, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
-                return null;
+            if (!TryDeserializeValue(reflector,
+                serializedMember: data,
+                result: out var result,
+                type: out var type,
+                fallbackType: fallbackType,
+                depth: depth,
+                stringBuilder: stringBuilder,
+                logger: logger))
+            {
+                return result;
+            }
 
             var padding = StringUtils.GetPadding(depth);
 
@@ -66,6 +82,121 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
 
             return result;
+        }
+
+        protected virtual bool TryDeserializeValue(Reflector reflector,
+            SerializedMember? serializedMember,
+            out object? result,
+            out Type? type,
+            Type? fallbackType = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null)
+        {
+            if (serializedMember == null)
+            {
+                result = null;
+                type = null;
+                return false;
+            }
+
+            var padding = StringUtils.GetPadding(depth);
+
+            // Get the most appropriate type for deserialization
+            type = TypeUtils.GetTypeWithNamePriority(serializedMember, fallbackType, out var error);
+            if (type == null)
+            {
+                result = null;
+                stringBuilder?.AppendLine($"{padding}[Error] {error}");
+                logger?.LogError($"{padding}{error}");
+                return false;
+            }
+
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}'.");
+
+            var success = TryDeserializeValueInternal(reflector,
+                serializedMember: serializedMember,
+                result: out result,
+                type: type,
+                depth: depth,
+                stringBuilder: stringBuilder,
+                logger: logger);
+
+            if (success)
+            {
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized.");
+            }
+            else
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization failed.");
+            }
+
+            return success;
+        }
+        protected virtual bool TryDeserializeValueInternal(Reflector reflector,
+            SerializedMember serializedMember,
+            out object? result,
+            Type type,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null)
+        {
+            var padding = StringUtils.GetPadding(depth);
+
+            if (AllowCascadeSerialize)
+            {
+                try
+                {
+                    if (serializedMember.valueJsonElement?.ValueKind == JsonValueKind.Object)
+                    {
+                        // If that fails, try to deserialize as a single SerializedMember object
+                        result = serializedMember.valueJsonElement.DeserializeValueSerializedMember(reflector,
+                            type: type,
+                            name: serializedMember.name,
+                            depth: depth + 1,
+                            stringBuilder: stringBuilder,
+                            logger: logger);
+
+                        if (logger?.IsEnabled(LogLevel.Trace) == true)
+                            logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as {nameof(SerializedMember)}.");
+
+                        return true;
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize member '{serializedMember.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
+                    logger?.LogCritical($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                }
+                catch (NotSupportedException ex)
+                {
+                    stringBuilder?.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: true)}' for member '{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}");
+                    logger?.LogCritical($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                }
+                result = TypeUtils.GetDefaultValue(type);
+                return false;
+            }
+            else
+            {
+                try
+                {
+                    result = serializedMember.valueJsonElement.Deserialize(type);
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as json: {serializedMember.valueJsonElement}");
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value'{serializedMember.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
+                    logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    result = TypeUtils.GetDefaultValue(type);
+                    return false;
+                }
+            }
         }
     }
 }

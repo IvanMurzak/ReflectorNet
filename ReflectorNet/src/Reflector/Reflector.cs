@@ -78,7 +78,11 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing serialization operations and troubleshooting.</param>
         /// <returns>A SerializedMember containing the serialized representation of the object.</returns>
         /// <exception cref="ArgumentException">Thrown when no type can be determined or when no registered serializer supports the type.</exception>
-        public SerializedMember Serialize(object? obj, Type? fallbackType = null, string? name = null, bool recursive = true,
+        public SerializedMember Serialize(
+            object? obj,
+            Type? fallbackType = null,
+            string? name = null,
+            bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null)
@@ -94,7 +98,16 @@ namespace com.IvanMurzak.ReflectorNet
             if (logger?.IsEnabled(LogLevel.Trace) == true)
                 logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type {type.GetTypeShortName()}");
 
-            return convertor.Serialize(this, obj, type: type, name: name, recursive, flags, depth: depth, stringBuilder: stringBuilder, logger: logger);
+            return convertor.Serialize(
+                this,
+                obj,
+                type: type,
+                name: name,
+                recursive,
+                flags,
+                depth: depth,
+                stringBuilder: stringBuilder,
+                logger: logger);
         }
 
         /// <summary>
@@ -117,8 +130,21 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
-        public T? Deserialize<T>(SerializedMember data, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null) where T : class
-            => Deserialize(data, fallbackType: typeof(T), fallbackName: fallbackName, depth: depth, stringBuilder: stringBuilder, logger: logger) as T;
+        public T? Deserialize<T>(
+            SerializedMember data,
+            string? fallbackName = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null) where T : class
+        {
+            return Deserialize(
+                data,
+                fallbackType: typeof(T),
+                fallbackName: fallbackName,
+                depth: depth,
+                stringBuilder: stringBuilder,
+                logger: logger) as T;
+        }
 
         /// <summary>
         /// Deserializes a SerializedMember to an object.
@@ -141,7 +167,13 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
-        public object? Deserialize(SerializedMember data, Type? fallbackType = null, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+        public object? Deserialize(
+            SerializedMember data,
+            Type? fallbackType = null,
+            string? fallbackName = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null)
         {
             if (data == null)
             {
@@ -171,7 +203,15 @@ namespace com.IvanMurzak.ReflectorNet
             if (logger?.IsEnabled(LogLevel.Trace) == true)
                 logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}' convertor='{convertor.GetType().GetTypeShortName()}'");
 
-            return convertor.Deserialize(this, data, type, fallbackName, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
+            return convertor.Deserialize(
+                this,
+                data,
+                type,
+                fallbackName,
+                depth: depth + 1,
+                stringBuilder: stringBuilder,
+                logger: logger
+            );
         }
 
         /// <summary>
@@ -196,11 +236,13 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
         /// <param name="logger">Optional logger for tracing field discovery operations.</param>
         /// <returns>An enumerable of FieldInfo objects representing serializable fields, or null if no deserializer supports the type.</returns>
-        public IEnumerable<FieldInfo>? GetSerializableFields(Type type,
+        public IEnumerable<FieldInfo>? GetSerializableFields(
+            Type type,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return Convertors.BuildDeserializersChain(type)?.GetSerializableFields(this, type, flags, logger);
+            return Convertors.BuildDeserializersChain(type)
+                ?.GetSerializableFields(this, type, flags, logger);
         }
 
         /// <summary>
@@ -225,10 +267,14 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
         /// <param name="logger">Optional logger for tracing property discovery operations.</param>
         /// <returns>An enumerable of PropertyInfo objects representing serializable properties, or null if no deserializer supports the type.</returns>
-        public IEnumerable<PropertyInfo>? GetSerializableProperties(Type type,
+        public IEnumerable<PropertyInfo>? GetSerializableProperties(
+            Type type,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
-            => Convertors.BuildDeserializersChain(type)?.GetSerializableProperties(this, type, flags, logger);
+        {
+            return Convertors.BuildDeserializersChain(type)
+                ?.GetSerializableProperties(this, type, flags, logger);
+        }
 
         /// <summary>
         /// Populates an existing object with data from a SerializedMember using the registered populator chain.
@@ -256,7 +302,12 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="flags">BindingFlags controlling which fields and properties are populated. Default includes public and non-public instance members.</param>
         /// <param name="logger">Optional logger for tracing population operations and debugging.</param>
         /// <returns>The StringBuilder containing any error messages or status information encountered during population.</returns>
-        public StringBuilder Populate(ref object? obj, SerializedMember data, Type? dataType = null, int depth = 0, StringBuilder? stringBuilder = null,
+        public StringBuilder Populate(
+            ref object? obj,
+            SerializedMember data,
+            Type? dataType = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -291,7 +342,14 @@ namespace com.IvanMurzak.ReflectorNet
             if (logger?.IsEnabled(LogLevel.Trace) == true)
                 logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type {type?.GetTypeShortName()}");
 
-            convertor.Populate(this, ref obj, data, depth: depth, stringBuilder: stringBuilder, flags: flags, logger: logger);
+            convertor.Populate(
+                this,
+                ref obj,
+                data,
+                depth: depth,
+                stringBuilder: stringBuilder,
+                flags: flags,
+                logger: logger);
 
             return stringBuilder;
         }
