@@ -236,7 +236,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var paddingNext = StringUtils.GetPadding(depth + 1);
             try
             {
-                name ??= JsonUtils.Null;
+                name = name.ValueOrNull();
                 var parsedList = jsonElement.Deserialize<SerializedMemberList>();
 
                 if (stringBuilder != null)

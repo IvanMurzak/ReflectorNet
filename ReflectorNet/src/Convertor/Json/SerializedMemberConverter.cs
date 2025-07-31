@@ -37,7 +37,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
                         [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
-                        [JsonUtils.Schema.Description] = "Field's value, nested fields and properties."
+                        [JsonUtils.Schema.Description] = "Nested field value."
                     },
                     [JsonUtils.Schema.Description] = "List of fields of the member. Can be null or empty.",
                 },
@@ -47,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
                         [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
-                        [JsonUtils.Schema.Description] = "Property's value, nested fields and properties."
+                        [JsonUtils.Schema.Description] = "Nested property value."
                     },
                     [JsonUtils.Schema.Description] = "List of properties of the member. Can be null or empty.",
                 }

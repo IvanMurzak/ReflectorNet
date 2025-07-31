@@ -51,9 +51,21 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 foreach (var field in data.fields)
                     ModifyField(reflector, ref obj, field, depth: nextDepth, stringBuilder: stringBuilder, flags: flags, logger: logger);
 
+            if ((data.fields?.Count ?? 0) == 0)
+            {
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Info] No fields modified.");
+            }
+
             if (data.props != null)
                 foreach (var property in data.props)
                     ModifyProperty(reflector, ref obj, property, depth: nextDepth, stringBuilder: stringBuilder, flags: flags, logger: logger);
+
+            if ((data.props?.Count ?? 0) == 0)
+            {
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Info] No properties modified.");
+            }
 
             return stringBuilder;
         }
