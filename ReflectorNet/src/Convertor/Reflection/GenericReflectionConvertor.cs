@@ -64,6 +64,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
+
             if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
@@ -80,6 +83,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
+
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
 
             if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {

@@ -64,8 +64,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             foreach (var element in enumerable)
             {
-                var elementTypeToUse = element?.GetType() ?? elementType;
-                serializedList.Add(reflector.Serialize(element, fallbackType: elementTypeToUse, name: $"[{index++}]", recursive: recursive, flags: flags, depth: depth, stringBuilder: stringBuilder, logger: logger));
+                serializedList.Add(reflector.Serialize(
+                    element,
+                    fallbackType: element?.GetType() ?? elementType,
+                    name: $"[{index++}]",
+                    recursive: recursive,
+                    flags: flags,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    logger: logger));
             }
 
             return SerializedMember.FromValue(type, serializedList, name: name);
@@ -133,6 +140,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
+
             if (value == null)
             {
                 stringBuilder?.AppendLine($"{padding}[Error] SerializedMember is null for field '{fieldInfo.Name}'.");
@@ -180,6 +190,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
+
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
 
             if (value == null)
             {
