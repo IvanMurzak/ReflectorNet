@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -13,7 +12,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public partial class ArrayReflectionConvertor : BaseReflectionConvertor<Array>
     {
-        public override object? Deserialize(Reflector reflector,
+        public override object? Deserialize(
+            Reflector reflector,
             SerializedMember data,
             Type? fallbackType = null,
             string? fallbackName = null,
@@ -95,7 +95,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 for (int i = 0; i < serializedMemberList.Count; i++)
                 {
                     var element = serializedMemberList[i];
-                    var deserializedElement = reflector.Deserialize(element,
+                    var deserializedElement = reflector.Deserialize(
+                        data: element,
                         fallbackType: elementType,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
@@ -141,23 +142,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 foreach (var element in serializedMemberList)
                 {
                     // logger?.LogTrace("{padding}Deserializing element: {ElementName}, typeName: {TypeName}", padding, element.name, element.typeName);
-                    var deserializedElement = reflector.Deserialize(element,
+                    var deserializedElement = reflector.Deserialize(
+                        element,
                         fallbackType: elementType,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
                         logger: logger);
 
                     addMethod.Invoke(list, new[] { deserializedElement });
-
-                    // if (deserializedElement != null)
-                    // {
-                    //     logger?.LogTrace("{padding}Element deserialized successfully: {Element}", padding, deserializedElement);
-                    //     addMethod.Invoke(list, new[] { deserializedElement });
-                    // }
-                    // else
-                    // {
-                    //     logger?.LogWarning("{padding}Failed to deserialize element: {ElementName}", padding, element.name.ValueOrNull());
-                    // }
                 }
 
                 logger?.LogInformation("{padding}Successfully created list of type='{typeName}'", padding, list.GetType().GetTypeName(pretty: true));
@@ -168,7 +160,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return null;
         }
 
-        protected override bool TryDeserializeValueInternal(Reflector reflector,
+        protected override bool TryDeserializeValueInternal(
+            Reflector reflector,
             SerializedMember serializedMember,
             out object? result,
             Type type,
@@ -178,48 +171,71 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (serializedMember.valueJsonElement == null ||
-                serializedMember.valueJsonElement.Value.ValueKind == JsonValueKind.Null)
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
             {
-                result = TypeUtils.GetDefaultValue(type);
-                if (logger?.IsEnabled(LogLevel.Warning) == true)
+                logger.LogTrace("{padding}TryDeserializeValueInternal type='{typeName}', name='{name}'",
+                    padding,
+                    type.GetTypeName(pretty: true),
+                    serializedMember.name.ValueOrNull());
+            }
+
+            if (AllowCascadeSerialize)
+            {
+                if (serializedMember.valueJsonElement == null ||
+                    serializedMember.valueJsonElement.Value.ValueKind == JsonValueKind.Null)
                 {
-                    logger.LogWarning("{padding}{icon} 'value' is null for type '{typeName}'",
-                        padding,
-                        Consts.Emoji.Warn,
-                        type.GetTypeName(pretty: false));
+                    result = TypeUtils.GetDefaultValue(type);
+                    if (logger?.IsEnabled(LogLevel.Warning) == true)
+                    {
+                        logger.LogWarning("{padding}{icon} 'value' is null for type '{typeName}'",
+                            padding,
+                            Consts.Emoji.Warn,
+                            type.GetTypeName(pretty: false));
+                    }
+                    return true;
                 }
-                return true;
-            }
 
-            var isArray = serializedMember.valueJsonElement.Value.ValueKind == JsonValueKind.Array;
-            if (!isArray)
+                var isArray = serializedMember.valueJsonElement.Value.ValueKind == JsonValueKind.Array;
+                if (!isArray)
+                {
+                    result = TypeUtils.GetDefaultValue(type);
+                    stringBuilder?.AppendLine($"{padding}[Error] Only array deserialization is supported in this Convertor ({GetType().Name}).");
+                    logger?.LogError($"{padding}{Consts.Emoji.Fail} Only array deserialization is supported in this Convertor ({GetType().Name}).");
+                    return false;
+                }
+
+                if (TryDeserializeValueListInternal(
+                    reflector,
+                    jsonElement: serializedMember.valueJsonElement,
+                    type: type,
+                    result: out var enumerableResult,
+                    name: serializedMember.name,
+                    depth: depth + 1,
+                    stringBuilder: stringBuilder,
+                    logger: logger))
+                {
+                    result = enumerableResult;
+
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as an enumerable.");
+
+                    return true;
+                }
+
+                result = TypeUtils.GetDefaultNonNullValue(type);
+                return false;
+            }
+            else
             {
-                result = TypeUtils.GetDefaultValue(type);
-                throw new NotSupportedException("Array deserialization is not supported in this Convertor. Use the ArrayReflectionConvertor for array types.");
+                return base.TryDeserializeValueInternal(
+                    reflector,
+                    serializedMember: serializedMember,
+                    result: out result,
+                    type: type,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    logger: logger);
             }
-
-            if (TryDeserializeValueListInternal(
-                reflector,
-                jsonElement: serializedMember.valueJsonElement,
-                type: type,
-                result: out var enumerableResult,
-                name: serializedMember.name,
-                depth: depth + 1,
-                stringBuilder: stringBuilder,
-                logger: logger))
-            {
-
-                result = enumerableResult;
-
-                if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as an enumerable.");
-
-                return true;
-            }
-
-            result = TypeUtils.GetDefaultNonNullValue(type);
-            return false;
         }
 
         protected virtual bool TryDeserializeValueListInternal(
@@ -234,6 +250,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             var paddingNext = StringUtils.GetPadding(depth + 1);
+
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+            {
+                logger.LogTrace("{padding}TryDeserializeValueListInternal type='{typeName}', name='{name}'",
+                    padding,
+                    type.GetTypeName(pretty: true),
+                    name.ValueOrNull());
+            }
+
             try
             {
                 name = name.ValueOrNull();

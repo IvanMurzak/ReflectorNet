@@ -18,10 +18,10 @@ namespace com.IvanMurzak.ReflectorNet
                 => $"[Error] Type '{typeFullName.ValueOrNull()}' not found.";
 
             public static string TargetObjectIsNull()
-                => "[Error] Target object is null.";
+                => "Target object is null.";
 
             public static string TypeMismatch(string? expectedType, string? objType)
-                => $"[Error] Type mismatch between '{expectedType.ValueOrNull()}' (expected) and '{objType.ValueOrNull()}'.";
+                => $"Type mismatch between '{expectedType.ValueOrNull()}' (expected) and '{objType.ValueOrNull()}'.";
 
             public static string FieldNameIsEmpty()
                 => "[Error] Field name is empty.";

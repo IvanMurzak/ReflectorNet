@@ -10,7 +10,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
-        public virtual object? Deserialize(Reflector reflector,
+        public virtual object? Deserialize(
+            Reflector reflector,
             SerializedMember data,
             Type? fallbackType = null,
             string? fallbackName = null,
@@ -84,7 +85,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return result;
         }
 
-        protected virtual bool TryDeserializeValue(Reflector reflector,
+        protected virtual bool TryDeserializeValue(
+            Reflector reflector,
             SerializedMember? serializedMember,
             out object? result,
             out Type? type,
@@ -136,7 +138,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             return success;
         }
-        protected virtual bool TryDeserializeValueInternal(Reflector reflector,
+        protected virtual bool TryDeserializeValueInternal(
+            Reflector reflector,
             SerializedMember serializedMember,
             out object? result,
             Type type,

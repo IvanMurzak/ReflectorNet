@@ -161,36 +161,36 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return fieldInfo != null ? GetFieldDescription(fieldInfo) : null;
         }
 
-        public static object? CastTo(object obj, string typeFullName, out string? error)
+        public static bool IsCastable(Type type, Type to)
         {
-            var type = GetType(typeFullName);
-            if (type == null)
-            {
-                error = $"[Error] Type '{typeFullName.ValueOrNull()}' not found during casting.";
-                return default;
-            }
-            return CastTo(obj, type, out error);
+            if (type == null || to == null)
+                return false;
+
+            // Handle nullable types
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null)
+                type = underlyingType;
+
+            // Handle nullable types
+            var underlyingType2 = Nullable.GetUnderlyingType(to);
+            if (underlyingType2 != null)
+                to = underlyingType2;
+
+            // Check if the type is assignable to the target type
+            if (to.IsAssignableFrom(type))
+                return true;
+
+            // Check for primitive types
+            if (type.IsPrimitive && to.IsPrimitive)
+                return true;
+
+            // Check for string conversion
+            if (type == typeof(string) && to == typeof(object))
+                return true;
+
+            return false;
         }
 
-        public static T? CastTo<T>(object obj, out string? error)
-            => CastTo(obj, typeof(T), out error) is T typedObj ? typedObj : default;
-
-        public static object? CastTo(object obj, Type type, out string? error)
-        {
-            if (obj == null)
-            {
-                error = $"[Error] Object is null.";
-                return default;
-            }
-            if (!type.IsAssignableFrom(obj.GetType()))
-            {
-                error = $"[Error] Type mismatch between '{type.GetTypeName(pretty: false)}' and '{obj.GetType().GetTypeName(pretty: false)}'.";
-                return default;
-            }
-
-            error = null;
-            return obj;
-        }
         public static int GetInheritanceDistance(Type baseType, Type targetType)
         {
             if (!baseType.IsAssignableFrom(targetType))

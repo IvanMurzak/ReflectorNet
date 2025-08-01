@@ -314,26 +314,22 @@ namespace com.IvanMurzak.ReflectorNet
             stringBuilder ??= new StringBuilder();
             var padding = StringUtils.GetPadding(depth);
 
-            var type = dataType;
+            var type = TypeUtils.GetTypeWithNamePriority(data, dataType, out var error);
             if (type == null)
             {
-                if (string.IsNullOrEmpty(data?.typeName))
-                    return stringBuilder.AppendLine($"{padding}{Error.DataTypeIsEmpty()}");
-
-                type = TypeUtils.GetType(data!.typeName);
-                if (type == null)
-                    return stringBuilder.AppendLine($"{padding}{Error.NotFoundType(data.typeName)}");
+                stringBuilder.AppendLine($"{padding}[Error] {error}");
+                logger?.LogError($"{padding}{error}");
+                return stringBuilder;
             }
 
             if (obj == null)
-                return stringBuilder.AppendLine($"{padding}{Error.TargetObjectIsNull()}");
+                return stringBuilder.AppendLine($"{padding}[Error] {Error.TargetObjectIsNull()}");
 
-            TypeUtils.CastTo(obj, type, out var error);
-            if (error != null)
-                return stringBuilder.AppendLine($"{padding}{error}");
-
-            if (!type.IsAssignableFrom(obj.GetType()))
-                return stringBuilder.AppendLine($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+            if (!TypeUtils.IsCastable(obj.GetType(), type))
+            {
+                logger?.LogError($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+                return stringBuilder.AppendLine($"{padding}[Error] {Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+            }
 
             var convertor = Convertors.BuildPopulatorsChain(type).FirstOrDefault();
             if (convertor == null)
@@ -345,7 +341,8 @@ namespace com.IvanMurzak.ReflectorNet
             convertor.Populate(
                 this,
                 ref obj,
-                data,
+                data: data,
+                dataType: type,
                 depth: depth,
                 stringBuilder: stringBuilder,
                 flags: flags,

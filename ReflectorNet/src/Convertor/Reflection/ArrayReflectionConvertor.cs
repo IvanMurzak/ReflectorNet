@@ -93,7 +93,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 .Where(prop => prop.CanRead);
         }
 
-        protected override bool SetValue(Reflector reflector,
+        protected override bool SetValue(
+            Reflector reflector,
             ref object? obj,
             Type type,
             JsonElement? value,
@@ -148,6 +149,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (!TryDeserializeValueListInternal(
                 reflector,
                 jsonElement: value.valueJsonElement,
+                name: fieldInfo.Name,
                 type: fallbackType,
                 result: out var enumerable,
                 depth: depth + 1,
@@ -196,6 +198,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 reflector,
                 jsonElement: value.valueJsonElement,
                 type: type,
+                name: propertyInfo.Name,
                 result: out var enumerable,
                 depth: depth + 1,
                 stringBuilder: stringBuilder,
