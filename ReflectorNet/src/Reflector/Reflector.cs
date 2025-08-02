@@ -295,7 +295,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// </summary>
         /// <param name="obj">The existing object to populate with data. Must not be null and must be compatible with the expected type.</param>
         /// <param name="data">The SerializedMember containing the data to populate the object with.</param>
-        /// <param name="dataType">Optional explicit type for validation. If null, type is resolved from data.typeName.</param>
+        /// <param name="fallbackType">Optional explicit type for validation. If null, type is resolved from data.typeName.</param>
         /// <param name="depth">The current depth level in the object hierarchy, used for error message indentation. Default is 0.</param>
         /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
         /// <param name="flags">BindingFlags controlling which fields and properties are populated. Default includes public and non-public instance members.</param>
@@ -304,7 +304,7 @@ namespace com.IvanMurzak.ReflectorNet
         public StringBuilder Populate(
             ref object? obj,
             SerializedMember data,
-            Type? dataType = null,
+            Type? fallbackType = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -313,7 +313,7 @@ namespace com.IvanMurzak.ReflectorNet
             stringBuilder ??= new StringBuilder();
             var padding = StringUtils.GetPadding(depth);
 
-            var type = TypeUtils.GetTypeWithNamePriority(data, dataType, out var error);
+            var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
             if (type == null)
             {
                 stringBuilder.AppendLine($"{padding}[Error] {error}");

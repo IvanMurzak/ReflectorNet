@@ -158,7 +158,6 @@ namespace com.IvanMurzak.ReflectorNet
                     .Where(entry => entry.MatchLevel >= methodNameMatchLevel)
                     .OrderByDescending(entry => entry.MatchLevel)
                     .Select(entry => entry.Method);
-
             if (parametersMatchLevel > 0)
                 methodEnumerable = methodEnumerable
                     .Select(method => new

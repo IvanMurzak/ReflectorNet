@@ -31,8 +31,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return type;
         }
 
-        public static T? GetDefaultNonNullValue<T>() => (T?)GetDefaultNonNullValue(typeof(T));
-        public static object? GetDefaultNonNullValue(Type type)
+        public static T? CreateInstance<T>() => (T?)CreateInstance(typeof(T));
+        public static object? CreateInstance(Type type)
         {
             if (type.IsValueType)
                 return Activator.CreateInstance(type);
@@ -43,7 +43,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (type.GetConstructor(Type.EmptyTypes) != null)
                 return Activator.CreateInstance(type);
 
-            return null;
+            // Make empty string for string types
+            if (type == typeof(string))
+                return string.Empty;
+
+            throw new ArgumentException($"Type '{type.FullName}' does not have a parameterless constructor or is not a value type or primitive type.");
+            // return null;
         }
 
         public static T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));

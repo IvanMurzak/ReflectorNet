@@ -41,8 +41,11 @@ namespace com.IvanMurzak.ReflectorNet
                 return null;
 
             var serializedMember = jsonElement.Deserialize<SerializedMember>();
-            if (serializedMember?.valueJsonElement == null)
-                return TypeUtils.GetDefaultNonNullValue(type);
+            if (serializedMember == null)
+                return TypeUtils.GetDefaultValue(type);
+
+            if (serializedMember.valueJsonElement == null)
+                return TypeUtils.CreateInstance(type);
 
             return reflector.Deserialize(serializedMember,
                 fallbackType: type,

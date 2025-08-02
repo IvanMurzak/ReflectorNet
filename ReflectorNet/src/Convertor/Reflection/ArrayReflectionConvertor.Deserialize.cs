@@ -226,7 +226,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return true;
                 }
 
-                result = TypeUtils.GetDefaultNonNullValue(type);
+                result = TypeUtils.CreateInstance(type);
                 return false;
             }
             else
@@ -273,25 +273,34 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         ? $"{padding}Deserializing '{name}' enumerable with 'null' value."
                         : $"{padding}Deserializing '{name}' enumerable with {parsedList.Count} items.");
 
+                var itemType = TypeUtils.GetEnumerableItemType(type);
+
                 var success = true;
                 var enumerable = parsedList
                     ?.Select((element, i) =>
                     {
-                        // TODO: need to use reflector.Deserialize here
-                        if (!TryDeserializeValue(
-                            reflector,
-                            element,
-                            out var parsedValue,
-                            out var errorMessage,
-                            depth: depth,
+                        // TODO: need to use reflector.TryDeserialize
+                        var parsedValue = reflector.Deserialize(
+                            data: element,
+                            fallbackType: itemType,
+                            depth: depth + 1,
                             stringBuilder: stringBuilder,
-                            logger: logger))
-                        {
-                            success = false;
-                            if (stringBuilder != null)
-                                stringBuilder.AppendLine($"{paddingNext}[Error] Enumerable[{i}] deserialization failed: {errorMessage}");
-                            return null;
-                        }
+                            logger: logger
+                        );
+                        // if (!TryDeserializeValue(
+                        //     reflector,
+                        //     element,
+                        //     out var parsedValue,
+                        //     out var errorMessage,
+                        //     depth: depth,
+                        //     stringBuilder: stringBuilder,
+                        //     logger: logger))
+                        // {
+                        //     success = false;
+                        //     if (stringBuilder != null)
+                        //         stringBuilder.AppendLine($"{paddingNext}[Error] Enumerable[{i}] deserialization failed: {errorMessage}");
+                        //     return null;
+                        // }
                         if (stringBuilder != null)
                             stringBuilder.AppendLine($"{paddingNext}Enumerable[{i}] deserialized successfully.");
                         return parsedValue;

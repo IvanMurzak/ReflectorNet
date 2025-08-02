@@ -118,7 +118,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{StringUtils.GetPadding(depth)}Set value type='{type.GetTypeName(pretty: true)}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{StringUtils.GetPadding(depth)}Set value type='{type.GetTypeName(pretty: true)}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValueListInternal(
                 reflector,
@@ -152,7 +152,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var padding = StringUtils.GetPadding(depth);
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
@@ -170,7 +170,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             // var padding = StringUtils.GetPadding(depth);
 
             // if (logger?.IsEnabled(LogLevel.Trace) == true)
-            //     logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
+            //     logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             // if (value == null)
             // {
@@ -222,7 +222,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var padding = StringUtils.GetPadding(depth);
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
@@ -238,7 +238,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             // var padding = StringUtils.GetPadding(depth);
 
             // if (logger?.IsEnabled(LogLevel.Trace) == true)
-            //     logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
+            //     logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             // if (value == null)
             // {
@@ -286,7 +286,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValue(reflector,
                     serializedMember: value,
@@ -317,7 +317,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValue(reflector,
                 serializedMember: value,

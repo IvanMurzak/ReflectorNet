@@ -84,7 +84,10 @@ namespace com.IvanMurzak.ReflectorNet
                 else if (targetObject != null && !string.IsNullOrEmpty(targetObject.typeName))
                 {
                     // Instance method with target object provided
-                    var obj = reflector.Deserialize(targetObject, logger: logger);
+                    var obj = reflector.Deserialize(
+                        targetObject,
+                        fallbackType: method.DeclaringType,
+                        logger: logger);
                     if (obj == null)
                         return $"[Error] '{nameof(targetObject)}' deserialized instance is null. Please specify the '{nameof(targetObject)}' properly.";
 

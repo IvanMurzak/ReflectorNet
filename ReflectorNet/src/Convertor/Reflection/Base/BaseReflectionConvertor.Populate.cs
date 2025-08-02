@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using static com.IvanMurzak.ReflectorNet.Reflector;
-using System.Linq;
 
 namespace com.IvanMurzak.ReflectorNet.Convertor
 {
@@ -25,17 +24,29 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var padding = StringUtils.GetPadding(depth);
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Populate type='{data.typeName.ValueOrNull()}', name='{data.name.ValueOrNull()}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{padding}Populate type='{data.typeName.ValueOrNull()}', name='{data.name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             var type = TypeUtils.GetTypeWithValuePriority(dataType, fallbackMember: data, out var typeError);
             if (type == null)
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] {typeError}");
                 return stringBuilder?.AppendLine($"{padding}[Error] {typeError}");
+            }
 
             if (obj == null)
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
                 return stringBuilder?.AppendLine($"{padding}[Error] Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
+            }
 
             if (!TypeUtils.IsCastable(obj.GetType(), type))
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.");
                 return stringBuilder?.AppendLine($"{padding}[Error] Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.");
+            }
 
             if (AllowSetValue)
             {
@@ -48,6 +59,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 }
                 catch (Exception ex)
                 {
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}[Error] Object '{obj}' modification failed: {ex.Message}");
+
                     stringBuilder?.AppendLine($"{padding}[Error] Object '{obj}' modification failed: {ex.Message}");
                 }
             }
@@ -55,32 +69,71 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var nextDepth = depth + 1;
 
             if (data.fields != null)
+            {
                 foreach (var field in data.fields)
-                    ModifyField(reflector, ref obj, field, depth: nextDepth, stringBuilder: stringBuilder, flags: flags, logger: logger);
+                {
+                    ModifyField(
+                        reflector,
+                        obj: ref obj,
+                        objType: type,
+                        fieldValue: field,
+                        depth: nextDepth,
+                        stringBuilder: stringBuilder,
+                        flags: flags,
+                        logger: logger);
+                }
+            }
 
             if ((data.fields?.Count ?? 0) == 0)
             {
+                if (logger?.IsEnabled(LogLevel.Information) == true)
+                    logger.LogInformation($"{padding}[Info] No fields modified.");
+
                 if (stringBuilder != null)
                     stringBuilder.AppendLine($"{padding}[Info] No fields modified.");
             }
 
             if (data.props != null)
+            {
                 foreach (var property in data.props)
-                    ModifyProperty(reflector, ref obj, property, depth: nextDepth, stringBuilder: stringBuilder, flags: flags, logger: logger);
+                {
+                    ModifyProperty(
+                        reflector,
+                        obj: ref obj,
+                        objType: type,
+                        propertyValue: property,
+                        depth: nextDepth,
+                        stringBuilder: stringBuilder,
+                        flags: flags,
+                        logger: logger);
+                }
+            }
 
             if ((data.props?.Count ?? 0) == 0)
             {
+                if (logger?.IsEnabled(LogLevel.Information) == true)
+                    logger.LogInformation($"{padding}[Info] No properties modified.");
+
                 if (stringBuilder != null)
                     stringBuilder.AppendLine($"{padding}[Info] No properties modified.");
             }
 
             return stringBuilder;
         }
-        protected abstract bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null);
+
+        protected abstract bool SetValue(
+            Reflector reflector,
+            ref object? obj,
+            Type type,
+            JsonElement? value,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null);
 
         protected virtual StringBuilder? ModifyField(
             Reflector reflector,
             ref object? obj,
+            Type objType,
             SerializedMember fieldValue,
             int depth = 0,
             StringBuilder? stringBuilder = null,
@@ -90,48 +143,65 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var padding = StringUtils.GetPadding(depth);
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Modify field type='{fieldValue.typeName.ValueOrNull()}', name='{fieldValue.name.ValueOrNull()}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{padding}Modify field type='{fieldValue.typeName.ValueOrNull()}', name='{fieldValue.name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (string.IsNullOrEmpty(fieldValue.name))
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Field name is null or empty in serialized data: '{fieldValue.name.ValueOrNull()}'. Skipping.");
                 return stringBuilder?.AppendLine($"{padding}{Error.FieldNameIsEmpty()}");
+            }
 
             if (obj == null)
-                return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed: Object is null.");
+            {
+                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                if (obj == null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed: Object is null.");
 
+                    return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed: Object is null.");
+                }
+            }
             var fieldInfo = obj.GetType().GetField(fieldValue.name, flags);
             if (fieldInfo == null)
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?");
+
                 return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?.");
+            }
 
             var targetType = TypeUtils.GetTypeWithNamePriority(fieldValue, fieldInfo.FieldType, out var error);
             if (targetType == null)
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}'. {error}");
+
                 return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}'. {error}");
+            }
 
             try
             {
-                var convertor = reflector.Convertors.GetConvertor(targetType);
-                if (convertor == null)
-                {
-                    stringBuilder?.AppendLine($"{padding}[Error] No convertor found for field '{fieldValue.name.ValueOrNull()}' with type '{targetType.GetTypeName(pretty: false).ValueOrNull()}'.");
-                    return stringBuilder;
-                }
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{padding}[Info] Populate field type='{fieldInfo.FieldType.GetTypeName(pretty: false).ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'.");
 
-                stringBuilder?.AppendLine($"{padding}[Info] Using convertor '{convertor.GetType().Name}' for field '{fieldValue.name.ValueOrNull()}'.");
-                logger?.LogTrace($"{padding}Using convertor '{convertor.GetType().Name}' for field '{fieldValue.name.ValueOrNull()}'.");
+                stringBuilder?.AppendLine($"{padding}[Info] Populate field type='{fieldInfo.FieldType.GetTypeName(pretty: false).ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'.");
 
-                var success = convertor.SetAsField(
-                    reflector,
-                    obj: ref obj,
+                var currentValue = fieldInfo.GetValue(obj);
+
+                return reflector.Populate(
+                    ref currentValue,
+                    data: fieldValue,
                     fallbackType: targetType,
-                    fieldInfo: fieldInfo,
-                    value: fieldValue,
                     depth: depth,
                     stringBuilder: stringBuilder,
                     flags: flags,
                     logger: logger);
 
-                return stringBuilder?.AppendLine(success
-                        ? $"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified to value '{fieldValue.valueJsonElement}'."
-                        : $"{padding}[Error] Failed to modify field '{fieldValue.name.ValueOrNull()}' to value '{fieldValue.valueJsonElement}'. Read error above for more details.");
+                // return stringBuilder?.AppendLine(success
+                //     ? $"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified to value '{fieldValue.valueJsonElement}'."
+                //     : $"{padding}[Error] Failed to modify field '{fieldValue.name.ValueOrNull()}' to value '{fieldValue.valueJsonElement}'. Read error above for more details.");
             }
             catch (Exception ex)
             {
@@ -142,6 +212,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         protected virtual StringBuilder? ModifyProperty(
             Reflector reflector,
             ref object? obj,
+            Type objType,
             SerializedMember propertyValue,
             int depth = 0,
             StringBuilder? stringBuilder = null,
@@ -151,53 +222,65 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var padding = StringUtils.GetPadding(depth);
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Modify property type='{propertyValue.typeName.ValueOrNull()}', name='{propertyValue.name.ValueOrNull()}'. Convertor='{GetType().Name}'.");
+                logger.LogTrace($"{padding}Modify property type='{propertyValue.typeName.ValueOrNull()}', name='{propertyValue.name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (string.IsNullOrEmpty(propertyValue.name))
-                return stringBuilder?.AppendLine($"{padding}{Error.PropertyNameIsEmpty()}");
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Property name is null or empty in serialized data: '{propertyValue.name.ValueOrNull()}'. Skipping.");
+                return stringBuilder?.AppendLine($"{padding}{Error.FieldNameIsEmpty()}");
+            }
 
             if (obj == null)
-                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed: Object is null.");
+            {
+                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                if (obj == null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed: Object is null.");
 
+                    return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed: Object is null.");
+                }
+            }
             var propInfo = obj.GetType().GetProperty(propertyValue.name, flags);
             if (propInfo == null)
             {
-                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?.");
-            }
-            if (!propInfo.CanWrite)
-            {
-                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' is not writable. Can't modify property '{propertyValue.name}'.");
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?");
+
+                return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?");
             }
 
             var targetType = TypeUtils.GetTypeWithNamePriority(propertyValue, propInfo.PropertyType, out var error);
             if (targetType == null)
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}'. {error}");
+
                 return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}'. {error}");
+            }
 
             try
             {
-                var convertor = reflector.Convertors.GetConvertor(targetType);
-                if (convertor == null)
-                {
-                    stringBuilder?.AppendLine($"{padding}[Error] No convertor found for property '{propertyValue.name.ValueOrNull()}' with type '{targetType.GetTypeName(pretty: false).ValueOrNull()}'.");
-                    return stringBuilder;
-                }
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{padding}[Info] Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'.");
 
-                stringBuilder?.AppendLine($"{padding}[Info] Using convertor '{convertor.GetType().Name}' for field '{propertyValue.name.ValueOrNull()}'.");
-                logger?.LogTrace($"{padding}Using convertor '{convertor.GetType().Name}' for field '{propertyValue.name.ValueOrNull()}'.");
+                stringBuilder?.AppendLine($"{padding}[Info] Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'.");
 
-                var success = convertor.SetAsProperty(reflector,
-                    ref obj,
-                    targetType,
-                    propInfo,
-                    value: propertyValue,
+                var currentValue = propInfo.GetValue(obj);
+
+                return reflector.Populate(
+                    ref currentValue,
+                    data: propertyValue,
+                    fallbackType: targetType,
                     depth: depth,
                     stringBuilder: stringBuilder,
                     flags: flags,
                     logger: logger);
 
-                return stringBuilder?.AppendLine(success
-                    ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to value '{propertyValue.valueJsonElement}'."
-                    : $"{padding}[Error] Failed to modify property '{propertyValue.name.ValueOrNull()}' to value '{propertyValue.valueJsonElement}'. Read error above for more details.");
+                // return stringBuilder?.AppendLine(success
+                //     ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to value '{propertyValue.valueJsonElement}'."
+                //     : $"{padding}[Error] Failed to modify property '{propertyValue.name.ValueOrNull()}' to value '{propertyValue.valueJsonElement}'. Read error above for more details.");
             }
             catch (Exception ex)
             {
@@ -205,19 +288,47 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
         }
 
-        public abstract bool SetAsField(Reflector reflector, ref object? obj, Type fallbackType, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public abstract bool SetAsField(
+            Reflector reflector,
+            ref object? obj,
+            Type fallbackType,
+            FieldInfo fieldInfo,
+            SerializedMember? value,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 
-        public abstract bool SetAsProperty(Reflector reflector, ref object? obj, Type fallbackType, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public abstract bool SetAsProperty(
+            Reflector reflector,
+            ref object? obj,
+            Type fallbackType,
+            PropertyInfo propertyInfo,
+            SerializedMember? value,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 
-        public abstract bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public abstract bool SetField(
+            Reflector reflector,
+            ref object? obj,
+            Type fallbackType,
+            FieldInfo fieldInfo,
+            SerializedMember? value,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
 
-        public abstract bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        public abstract bool SetProperty(
+            Reflector reflector,
+            ref object? obj,
+            Type fallbackType,
+            PropertyInfo propertyInfo,
+            SerializedMember? value,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null);
     }
