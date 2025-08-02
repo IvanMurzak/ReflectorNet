@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using com.IvanMurzak.ReflectorNet.Utils;
-using com.IvanMurzak.ReflectorNet.Tests.Utils.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using com.IvanMurzak.ReflectorNet.Model;
 using System.Collections.Generic;
@@ -62,6 +62,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
         [Fact]
         public void Deserialize_NullValue_ReturnsDefault()
+        {
+            foreach (var type in _typesToTest)
+            {
+                DeserializeNullValue(type);
+            }
+        }
+
+        [Fact]
+        public void Serialize_Deserialize()
         {
             foreach (var type in _typesToTest)
             {

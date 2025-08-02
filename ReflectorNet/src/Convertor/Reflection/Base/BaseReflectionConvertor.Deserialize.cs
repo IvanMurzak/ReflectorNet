@@ -74,7 +74,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         continue;
                     }
 
-                    var propertyValue = reflector.Deserialize(property, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
+                    var propertyValue = reflector.Deserialize(
+                        property,
+                        depth: depth + 1,
+                        stringBuilder: stringBuilder,
+                        logger: logger);
 
                     var propertyInfo = type!.GetProperty(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (propertyInfo != null && propertyInfo.CanWrite)
@@ -149,7 +153,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            if (AllowCascadeSerialize)
+            if (AllowCascadeSerialization)
             {
                 try
                 {

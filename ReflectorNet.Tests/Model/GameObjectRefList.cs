@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace com.IvanMurzak.ReflectorNet.Tests.Schema.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
     [Description(@"Array of GameObjects in opened Prefab or in a Scene. Used for finding GameObjects.
 Use one of the following properties:

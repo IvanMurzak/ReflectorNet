@@ -173,13 +173,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
             {
-                logger.LogTrace("{padding}TryDeserializeValueInternal type='{typeName}', name='{name}'",
+                logger.LogTrace("{padding}TryDeserializeValueInternal type='{typeName}', name='{name}', AllowCascadeSerialize={AllowCascadeSerialize}, Convertor='{ConvertorName}'",
                     padding,
                     type.GetTypeName(pretty: true),
-                    serializedMember.name.ValueOrNull());
+                    serializedMember.name.ValueOrNull(),
+                    AllowCascadeSerialization,
+                    GetType().Name);
             }
 
-            if (AllowCascadeSerialize)
+            if (AllowCascadeSerialization)
             {
                 if (serializedMember.valueJsonElement == null ||
                     serializedMember.valueJsonElement.Value.ValueKind == JsonValueKind.Null)
@@ -187,10 +189,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     result = TypeUtils.GetDefaultValue(type);
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                     {
-                        logger.LogWarning("{padding}{icon} 'value' is null for type '{typeName}'",
+                        logger.LogWarning("{padding}{icon} 'value' is null for type='{typeName}', name='{name}'. Convertor='{ConvertorName}'",
                             padding,
                             Consts.Emoji.Warn,
-                            type.GetTypeName(pretty: false));
+                            type.GetTypeName(pretty: false),
+                            serializedMember.name.ValueOrNull(),
+                            GetType().Name);
                     }
                     return true;
                 }
@@ -273,6 +277,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 var enumerable = parsedList
                     ?.Select((element, i) =>
                     {
+                        // TODO: need to use reflector.Deserialize here
                         if (!TryDeserializeValue(
                             reflector,
                             element,

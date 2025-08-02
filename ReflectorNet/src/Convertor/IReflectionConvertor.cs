@@ -9,8 +9,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public interface IReflectionConvertor
     {
-        bool AllowCascadeSerialize { get; }
-        bool AllowCascadePopulate { get; }
+        bool AllowCascadeSerialization { get; }
 
         int SerializationPriority(Type type, ILogger? logger = null);
 

@@ -1,11 +1,8 @@
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet;
-using com.IvanMurzak.ReflectorNet.Tests.Schema.Model;
 using Xunit.Abstractions;
-using System;
-using System.Text.Json;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Utils;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
@@ -47,10 +44,16 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 path = "/Test/Deserialize"
             };
 
-            var serialized = reflector.Serialize(original);
-
             // Act
-            var deserialized = reflector.Deserialize(serialized) as GameObjectRef;
+            var serializeLogger = new StringBuilderLogger();
+            var serialized = reflector.Serialize(original, name: nameof(original), logger: serializeLogger);
+            _output.WriteLine($"Serialize result:\n{serializeLogger}");
+
+            var deserializeLogger = new StringBuilderLogger();
+            var deserialized = reflector.Deserialize(serialized, logger: deserializeLogger) as GameObjectRef;
+            _output.WriteLine($"Deserialize result:\n{deserializeLogger}");
+
+            _output.WriteLine($"Json:\n{JsonUtils.ToJson(serialized)}");
 
             // Assert
             Assert.NotNull(deserialized);

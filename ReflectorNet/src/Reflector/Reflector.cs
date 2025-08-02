@@ -91,7 +91,7 @@ namespace com.IvanMurzak.ReflectorNet
             if (type == null)
                 throw new ArgumentException(error);
 
-            var convertor = Convertors.BuildSerializersChain(type).FirstOrDefault();
+            var convertor = Convertors.GetConvertor(type);
             if (convertor == null)
                 throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
 
@@ -189,14 +189,13 @@ namespace com.IvanMurzak.ReflectorNet
             var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
             if (type == null)
             {
-
                 logger?.LogError($"{padding}{error}");
                 stringBuilder?.AppendLine($"{padding}[Error] {error}");
 
                 throw new ArgumentException(error);
             }
 
-            var convertor = Convertors.BuildDeserializersChain(type);
+            var convertor = Convertors.GetConvertor(type);
             if (convertor == null)
                 throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
 
@@ -241,7 +240,7 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return Convertors.BuildDeserializersChain(type)
+            return Convertors.GetConvertor(type)
                 ?.GetSerializableFields(this, type, flags, logger);
         }
 
@@ -272,7 +271,7 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return Convertors.BuildDeserializersChain(type)
+            return Convertors.GetConvertor(type)
                 ?.GetSerializableProperties(this, type, flags, logger);
         }
 
@@ -331,7 +330,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return stringBuilder.AppendLine($"{padding}[Error] {Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
             }
 
-            var convertor = Convertors.BuildPopulatorsChain(type).FirstOrDefault();
+            var convertor = Convertors.GetConvertor(type);
             if (convertor == null)
                 return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {type.GetTypeName(pretty: false)}");
 

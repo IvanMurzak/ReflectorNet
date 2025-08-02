@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Tests
 {

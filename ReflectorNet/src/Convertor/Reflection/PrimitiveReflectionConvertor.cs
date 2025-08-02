@@ -11,6 +11,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public partial class PrimitiveReflectionConvertor : NotArrayReflectionConvertor<object>
     {
+        public override bool AllowCascadeSerialization => false;
+
         public override int SerializationPriority(Type type, ILogger? logger = null)
         {
             var isPrimitive = TypeUtils.IsPrimitive(type);

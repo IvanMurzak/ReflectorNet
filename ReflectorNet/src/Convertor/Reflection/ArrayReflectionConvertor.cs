@@ -55,27 +55,35 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);
 
-            int index = 0;
-            var enumerable = (System.Collections.IEnumerable)obj;
-            var serializedList = new SerializedMemberList();
-
-            // Determine the element type for handling null elements
-            var elementType = TypeUtils.GetEnumerableItemType(type);
-
-            foreach (var element in enumerable)
+            if (recursive)
             {
-                serializedList.Add(reflector.Serialize(
-                    element,
-                    fallbackType: element?.GetType() ?? elementType,
-                    name: $"[{index++}]",
-                    recursive: recursive,
-                    flags: flags,
-                    depth: depth,
-                    stringBuilder: stringBuilder,
-                    logger: logger));
-            }
+                int index = 0;
+                var enumerable = (System.Collections.IEnumerable)obj;
+                var serializedList = new SerializedMemberList();
 
-            return SerializedMember.FromValue(type, serializedList, name: name);
+                // Determine the element type for handling null elements
+                var elementType = TypeUtils.GetEnumerableItemType(type);
+
+                foreach (var element in enumerable)
+                {
+                    serializedList.Add(reflector.Serialize(
+                        element,
+                        fallbackType: element?.GetType() ?? elementType,
+                        name: $"[{index++}]",
+                        recursive: recursive,
+                        flags: flags,
+                        depth: depth,
+                        stringBuilder: stringBuilder,
+                        logger: logger));
+                }
+
+                return SerializedMember.FromValue(type, serializedList, name: name);
+            }
+            else
+            {
+                // Handle non-recursive serialization
+                return SerializedMember.FromJson(type, JsonUtils.ToJson(obj), name: name);
+            }
         }
 
         public override IEnumerable<FieldInfo>? GetSerializableFields(
@@ -109,6 +117,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{StringUtils.GetPadding(depth)}Set value type='{type.GetTypeName(pretty: true)}'. Convertor='{GetType().Name}'.");
+
             if (!TryDeserializeValueListInternal(
                 reflector,
                 jsonElement: value,
@@ -143,39 +154,57 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (logger?.IsEnabled(LogLevel.Trace) == true)
                 logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
 
-            if (value == null)
+            if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] SerializedMember is null for field '{fieldInfo.Name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
             }
 
-            var type = TypeUtils.GetTypeWithNamePriority(value, fallbackType, out var error);
-            if (type == null)
-            {
-                stringBuilder?.AppendLine($"{padding}[Error] {error}");
-                return false;
-            }
-
-            if (!TryDeserializeValueListInternal(
-                reflector,
-                jsonElement: value.valueJsonElement,
-                name: fieldInfo.Name,
-                type: fallbackType,
-                result: out var enumerable,
-                depth: depth + 1,
-                stringBuilder: stringBuilder,
-                logger: logger))
-            {
-                Print.FailedToSetField(ref obj, type, fieldInfo, depth, stringBuilder);
-                return false;
-            }
-
-            fieldInfo.SetValue(obj, enumerable);
-
-            stringBuilder?.AppendLine(enumerable == null
-                ? $"{padding}[Success] Field '{value?.name.ValueOrNull()}' modified to 'null'."
-                : $"{padding}[Success] Field '{value?.name.ValueOrNull()}' modified to '[{string.Join(", ", enumerable)}]'.");
+            fieldInfo.SetValue(obj, parsedValue);
+            stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
             return true;
+
+
+            // ------------------------------
+
+            // var padding = StringUtils.GetPadding(depth);
+
+            // if (logger?.IsEnabled(LogLevel.Trace) == true)
+            //     logger.LogTrace($"{padding}Set as field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
+
+            // if (value == null)
+            // {
+            //     stringBuilder?.AppendLine($"{padding}[Error] SerializedMember is null for field '{fieldInfo.Name}'.");
+            //     return false;
+            // }
+
+            // var type = TypeUtils.GetTypeWithNamePriority(value, fallbackType, out var error);
+            // if (type == null)
+            // {
+            //     stringBuilder?.AppendLine($"{padding}[Error] {error}");
+            //     return false;
+            // }
+
+            // if (!TryDeserializeValueListInternal(
+            //     reflector,
+            //     jsonElement: value.valueJsonElement,
+            //     name: fieldInfo.Name,
+            //     type: fallbackType,
+            //     result: out var enumerable,
+            //     depth: depth + 1,
+            //     stringBuilder: stringBuilder,
+            //     logger: logger))
+            // {
+            //     Print.FailedToSetField(ref obj, type, fieldInfo, depth, stringBuilder);
+            //     return false;
+            // }
+
+            // fieldInfo.SetValue(obj, enumerable);
+
+            // stringBuilder?.AppendLine(enumerable == null
+            //     ? $"{padding}[Success] Field '{value?.name.ValueOrNull()}' modified to 'null'."
+            //     : $"{padding}[Success] Field '{value?.name.ValueOrNull()}' modified to '[{string.Join(", ", enumerable)}]'.");
+            // return true;
         }
 
         public override bool SetAsProperty(
@@ -189,42 +218,59 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+
             var padding = StringUtils.GetPadding(depth);
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
                 logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
 
-            if (value == null)
+            if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] SerializedMember is null for property '{propertyInfo.Name}'.");
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;
             }
-
-            var type = TypeUtils.GetTypeWithNamePriority(value, fallbackType, out var error);
-            if (type == null)
-            {
-                stringBuilder?.AppendLine($"{padding}[Error] {error}");
-                return false;
-            }
-
-            if (!TryDeserializeValueListInternal(
-                reflector,
-                jsonElement: value.valueJsonElement,
-                type: type,
-                name: propertyInfo.Name,
-                result: out var enumerable,
-                depth: depth + 1,
-                stringBuilder: stringBuilder,
-                logger: logger))
-            {
-                Print.FailedToSetProperty(ref obj, type, propertyInfo, depth, stringBuilder);
-                return false;
-            }
-
-            propertyInfo.SetValue(obj, enumerable);
-
-            stringBuilder?.AppendLine($"{padding}[Success] Property '{value?.name.ValueOrNull()}' modified to '{enumerable}'.");
+            propertyInfo.SetValue(obj, parsedValue);
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
             return true;
+
+            // ------------------------------------------------
+
+            // var padding = StringUtils.GetPadding(depth);
+
+            // if (logger?.IsEnabled(LogLevel.Trace) == true)
+            //     logger.LogTrace($"{padding}Set as property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
+
+            // if (value == null)
+            // {
+            //     stringBuilder?.AppendLine($"{padding}[Error] SerializedMember is null for property '{propertyInfo.Name}'.");
+            //     return false;
+            // }
+
+            // var type = TypeUtils.GetTypeWithNamePriority(value, fallbackType, out var error);
+            // if (type == null)
+            // {
+            //     stringBuilder?.AppendLine($"{padding}[Error] {error}");
+            //     return false;
+            // }
+
+            // if (!TryDeserializeValueListInternal(
+            //     reflector,
+            //     jsonElement: value.valueJsonElement,
+            //     type: type,
+            //     name: propertyInfo.Name,
+            //     result: out var enumerable,
+            //     depth: depth + 1,
+            //     stringBuilder: stringBuilder,
+            //     logger: logger))
+            // {
+            //     Print.FailedToSetProperty(ref obj, type, propertyInfo, depth, stringBuilder);
+            //     return false;
+            // }
+
+            // propertyInfo.SetValue(obj, enumerable);
+
+            // stringBuilder?.AppendLine($"{padding}[Success] Property '{value?.name.ValueOrNull()}' modified to '{enumerable}'.");
+            // return true;
         }
 
         public override bool SetField(
@@ -238,14 +284,18 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().Name}'.");
+
             if (!TryDeserializeValue(reflector,
-                serializedMember: value,
-                type: out var parsedValue,
-                result: out var type,
-                fallbackType: fallbackType,
-                depth: depth,
-                stringBuilder: stringBuilder,
-                logger: logger))
+                    serializedMember: value,
+                    type: out var parsedValue,
+                    result: out var type,
+                    fallbackType: fallbackType,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    logger: logger))
             {
                 return false;
             }
@@ -265,6 +315,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
+            var padding = StringUtils.GetPadding(depth);
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().Name}'.");
+
             if (!TryDeserializeValue(reflector,
                 serializedMember: value,
                 type: out var parsedValue,

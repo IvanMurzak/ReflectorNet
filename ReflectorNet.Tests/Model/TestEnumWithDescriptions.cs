@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace com.IvanMurzak.ReflectorNet.Tests.Schema.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
     [Description("A test enum with descriptions for each value.")]
     public enum TestEnumWithDescriptions

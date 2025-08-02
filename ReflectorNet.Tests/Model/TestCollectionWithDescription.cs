@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace com.IvanMurzak.ReflectorNet.Tests.Schema.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
     [Description("A collection class that inherits from List for description testing.")]
     public class TestCollectionWithDescription : List<string>

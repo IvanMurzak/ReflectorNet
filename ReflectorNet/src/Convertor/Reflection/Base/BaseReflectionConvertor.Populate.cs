@@ -23,6 +23,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
+
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Populate type='{data.typeName.ValueOrNull()}', name='{data.name.ValueOrNull()}'. Convertor='{GetType().Name}'.");
+
             var type = TypeUtils.GetTypeWithValuePriority(dataType, fallbackMember: data, out var typeError);
             if (type == null)
                 return stringBuilder?.AppendLine($"{padding}[Error] {typeError}");
@@ -84,6 +88,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
+
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Modify field type='{fieldValue.typeName.ValueOrNull()}', name='{fieldValue.name.ValueOrNull()}'. Convertor='{GetType().Name}'.");
+
             if (string.IsNullOrEmpty(fieldValue.name))
                 return stringBuilder?.AppendLine($"{padding}{Error.FieldNameIsEmpty()}");
 
@@ -100,7 +108,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             try
             {
-                var convertor = reflector.Convertors.BuildPopulatorsChain(targetType).FirstOrDefault();
+                var convertor = reflector.Convertors.GetConvertor(targetType);
                 if (convertor == null)
                 {
                     stringBuilder?.AppendLine($"{padding}[Error] No convertor found for field '{fieldValue.name.ValueOrNull()}' with type '{targetType.GetTypeName(pretty: false).ValueOrNull()}'.");
@@ -142,6 +150,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace($"{padding}Modify property type='{propertyValue.typeName.ValueOrNull()}', name='{propertyValue.name.ValueOrNull()}'. Convertor='{GetType().Name}'.");
+
             if (string.IsNullOrEmpty(propertyValue.name))
                 return stringBuilder?.AppendLine($"{padding}{Error.PropertyNameIsEmpty()}");
 
@@ -164,11 +175,25 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             try
             {
-                var success = false;
-                foreach (var convertor in reflector.Convertors.BuildPopulatorsChain(targetType))
-                    success |= convertor.SetAsProperty(reflector, ref obj, targetType, propInfo, value: propertyValue,
-                        depth: depth, stringBuilder: stringBuilder,
-                        flags: flags, logger: logger);
+                var convertor = reflector.Convertors.GetConvertor(targetType);
+                if (convertor == null)
+                {
+                    stringBuilder?.AppendLine($"{padding}[Error] No convertor found for property '{propertyValue.name.ValueOrNull()}' with type '{targetType.GetTypeName(pretty: false).ValueOrNull()}'.");
+                    return stringBuilder;
+                }
+
+                stringBuilder?.AppendLine($"{padding}[Info] Using convertor '{convertor.GetType().Name}' for field '{propertyValue.name.ValueOrNull()}'.");
+                logger?.LogTrace($"{padding}Using convertor '{convertor.GetType().Name}' for field '{propertyValue.name.ValueOrNull()}'.");
+
+                var success = convertor.SetAsProperty(reflector,
+                    ref obj,
+                    targetType,
+                    propInfo,
+                    value: propertyValue,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    flags: flags,
+                    logger: logger);
 
                 return stringBuilder?.AppendLine(success
                     ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to value '{propertyValue.valueJsonElement}'."

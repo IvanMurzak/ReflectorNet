@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using com.IvanMurzak.ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using com.IvanMurzak.ReflectorNet.Utils;
-using com.IvanMurzak.ReflectorNet.Tests.Utils.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Utils

@@ -1,7 +1,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace com.IvanMurzak.ReflectorNet.Tests.Utils.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
     // Non static class with nested classes and static members
     public class ParentClass
@@ -45,5 +45,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils.Model
         [JsonInclude]
         public T? ValueField;
         public T? ValueProperty { get; set; }
+
+        public WrapperClass() { }
+        public WrapperClass(T? valueField, T? valueProperty)
+        {
+            ValueField = valueField;
+            ValueProperty = valueProperty;
+        }
     }
 }

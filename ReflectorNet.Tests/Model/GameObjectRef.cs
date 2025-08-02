@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace com.IvanMurzak.ReflectorNet.Tests.Schema.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
     [Description(@"Find GameObject in opened Prefab or in a Scene.
 Use one of the following properties:

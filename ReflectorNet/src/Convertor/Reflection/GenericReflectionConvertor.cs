@@ -13,9 +13,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public partial class GenericReflectionConvertor<T> : NotArrayReflectionConvertor<T>
     {
-        protected override SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
+        protected override SerializedMember InternalSerialize(
+            Reflector reflector,
+            object? obj,
+            Type type,
+            string? name = null,
+            bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-            int depth = 0, StringBuilder? stringBuilder = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
             if (obj == null)
@@ -35,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     }
                     : SerializedMember.FromJson(type, JsonUtils.ToJson(obj), name: name);
             }
-            throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}'");
+            throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}' for convertor '{GetType().Name}'.");
         }
         public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => objType.GetFields(flags)

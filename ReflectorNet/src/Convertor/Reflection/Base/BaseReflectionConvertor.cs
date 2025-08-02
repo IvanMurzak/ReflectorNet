@@ -8,10 +8,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
     {
         protected const int MAX_DEPTH = 10000;
 
-        public virtual bool AllowCascadeSerialize => false;
-        public virtual bool AllowCascadePopulate => false;
-
         public virtual bool AllowSetValue => true;
+        public virtual bool AllowCascadeSerialization => true;
 
         public virtual bool AllowCascadeFieldsConversion => true;
         public virtual bool AllowCascadePropertiesConversion => true;

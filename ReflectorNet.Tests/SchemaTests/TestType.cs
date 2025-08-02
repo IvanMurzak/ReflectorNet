@@ -71,8 +71,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void GetTypeName_CurrentAssembly()
         {
-            TestTypeName(typeof(Utils.Model.ParentClass));
-            TestTypeName(typeof(Utils.Model.ParentClass.NestedClass));
+            TestTypeName(typeof(Model.ParentClass));
+            TestTypeName(typeof(Model.ParentClass.NestedClass));
         }
 
         [Fact]
