@@ -57,12 +57,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             };
 
             // Act & Assert - Test error handling in population
-            object? testObject = new GameObjectRef();
+            object? testObject = default(GameObjectRef);
             var errorResult = reflector.Populate(ref testObject, invalidData, depth: 2);
 
             Assert.NotNull(errorResult);
             var errorString = errorResult.ToString();
-            Assert.Contains("Type 'NonExistent.Type.Name' not found", errorString);
+            Assert.Contains($"Type '{invalidData.typeName}' not found", errorString);
             // Check that indentation (depth) is applied
             Assert.StartsWith("    ", errorString); // 2 levels of depth = 4 spaces
 
