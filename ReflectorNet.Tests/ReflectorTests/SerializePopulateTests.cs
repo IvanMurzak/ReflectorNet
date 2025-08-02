@@ -31,7 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var populateOutput = reflector.Populate(
                 obj: ref targetObject,
                 data: serialized,
-                fallbackType: type,
+                fallbackObjType: type,
                 stringBuilder: new(),
                 logger: populateLogger);
 

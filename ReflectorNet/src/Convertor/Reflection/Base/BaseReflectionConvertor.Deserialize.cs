@@ -19,7 +19,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            if (!TryDeserializeValue(reflector,
+            if (!TryDeserializeValue(reflector, // error is here happens in the array of celestial bodies
                 serializedMember: data,
                 result: out var result,
                 type: out var type,
@@ -53,8 +53,17 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     var fieldValue = reflector.Deserialize(field, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
 
                     var fieldInfo = type!.GetField(field.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (fieldInfo != null)
-                        fieldInfo.SetValue(result, fieldValue);
+                    if (fieldInfo == null)
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field '{field.name}' not found on type '{type.GetTypeShortName()}'.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Warning] Field '{field.name}' not found on type '{type.GetTypeShortName()}'.");
+
+                        continue;
+                    }
+                    fieldInfo.SetValue(result, fieldValue);
                 }
             }
             if (data.props != null)
@@ -81,8 +90,27 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         logger: logger);
 
                     var propertyInfo = type!.GetProperty(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (propertyInfo != null && propertyInfo.CanWrite)
-                        propertyInfo.SetValue(result, propertyValue);
+                    if (propertyInfo == null)
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' not found on type '{type.GetTypeShortName()}'.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' not found on type '{type.GetTypeShortName()}'.");
+
+                        continue;
+                    }
+                    if (!propertyInfo.CanWrite)
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' on type '{type.GetTypeShortName()}' is read-only and cannot be set.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' on type '{type.GetTypeShortName()}' is read-only and cannot be set.");
+
+                        continue;
+                    }
+                    propertyInfo.SetValue(result, propertyValue);
                 }
             }
 
@@ -132,12 +160,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (success)
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized '{type.GetTypeShortName()}'.");
             }
             else
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization failed.");
+                    logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization '{type.GetTypeShortName()}' failed.");
             }
 
             return success;
@@ -166,9 +194,6 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                             depth: depth + 1,
                             stringBuilder: stringBuilder,
                             logger: logger);
-
-                        if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as {nameof(SerializedMember)}.");
 
                         return true;
                     }

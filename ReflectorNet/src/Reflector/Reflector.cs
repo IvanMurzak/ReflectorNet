@@ -101,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet
             return convertor.Serialize(
                 this,
                 obj,
-                type: type,
+                fallbackType: type,
                 name: name,
                 recursive,
                 flags,
@@ -295,7 +295,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// </summary>
         /// <param name="obj">The existing object to populate with data. Must not be null and must be compatible with the expected type.</param>
         /// <param name="data">The SerializedMember containing the data to populate the object with.</param>
-        /// <param name="fallbackType">Optional explicit type for validation. If null, type is resolved from data.typeName.</param>
+        /// <param name="fallbackObjType">Optional explicit type for validation. If null, type is resolved from data.typeName.</param>
         /// <param name="depth">The current depth level in the object hierarchy, used for error message indentation. Default is 0.</param>
         /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
         /// <param name="flags">BindingFlags controlling which fields and properties are populated. Default includes public and non-public instance members.</param>
@@ -304,7 +304,7 @@ namespace com.IvanMurzak.ReflectorNet
         public StringBuilder Populate(
             ref object? obj,
             SerializedMember data,
-            Type? fallbackType = null,
+            Type? fallbackObjType = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -313,35 +313,44 @@ namespace com.IvanMurzak.ReflectorNet
             stringBuilder ??= new StringBuilder();
             var padding = StringUtils.GetPadding(depth);
 
-            var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
-            if (type == null)
+            var objType = TypeUtils.GetTypeWithNamePriority(data, fallbackObjType, out var typeError) ?? obj?.GetType();
+            if (objType == null)
             {
-                stringBuilder.AppendLine($"{padding}[Error] {error}");
-                logger?.LogError($"{padding}{error}");
+                stringBuilder.AppendLine($"{padding}[Error] {typeError}");
+                logger?.LogError($"{padding}{typeError}");
                 return stringBuilder;
             }
 
             if (obj == null)
-                return stringBuilder.AppendLine($"{padding}[Error] {Error.TargetObjectIsNull()}");
+            {
+                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                if (obj == null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
 
-            if (!TypeUtils.IsCastable(obj.GetType(), type))
+                    return stringBuilder.AppendLine($"{padding}[Error] Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+                }
+            }
+
+            if (!TypeUtils.IsCastable(obj.GetType(), objType))
             {
                 logger?.LogError($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
                 return stringBuilder.AppendLine($"{padding}[Error] {Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
             }
 
-            var convertor = Convertors.GetConvertor(type);
+            var convertor = Convertors.GetConvertor(objType);
             if (convertor == null)
-                return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {type.GetTypeName(pretty: false)}");
+                return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {objType.GetTypeName(pretty: false)}");
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type='{type?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
+                logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type='{objType?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
 
             convertor.Populate(
                 this,
                 ref obj,
                 data: data,
-                dataType: type,
+                fallbackType: objType,
                 depth: depth,
                 stringBuilder: stringBuilder,
                 flags: flags,

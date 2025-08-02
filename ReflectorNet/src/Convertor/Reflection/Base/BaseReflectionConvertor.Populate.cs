@@ -15,7 +15,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             Reflector reflector,
             ref object? obj,
             SerializedMember data,
-            Type? dataType = null,
+            Type? fallbackType = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -23,22 +23,27 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
-            var type = TypeUtils.GetTypeWithValuePriority(dataType, fallbackMember: data, out var typeError);
-            if (type == null)
+            var objType = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var typeError) ?? obj?.GetType();
+            if (objType == null)
             {
-                if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}{typeError}");
-                return stringBuilder?.AppendLine($"{padding}[Error] {typeError}");
+                stringBuilder?.AppendLine($"{padding}[Error] {typeError}");
+                logger?.LogError($"{padding}{typeError}");
+                return stringBuilder;
             }
 
             if (obj == null)
             {
-                if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
-                return stringBuilder?.AppendLine($"{padding}[Error] Object is null. Cannot populate {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} with value '{data.typeName}'.");
+                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                if (obj == null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+
+                    return stringBuilder?.AppendLine($"{padding}[Error] Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+                }
             }
 
-            if (!TypeUtils.IsCastable(obj.GetType(), type))
+            if (!TypeUtils.IsCastable(obj.GetType(), objType))
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.");
@@ -49,7 +54,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             {
                 try
                 {
-                    var success = SetValue(reflector, ref obj, type, data.valueJsonElement, depth: depth, stringBuilder: stringBuilder, logger: logger);
+                    var success = SetValue(reflector, ref obj, objType, data.valueJsonElement, depth: depth, stringBuilder: stringBuilder, logger: logger);
                     stringBuilder?.AppendLine(success
                         ? $"{padding}[Success] Object '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```"
                         : $"{padding}[Warning] Object '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
@@ -72,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     PopulateField(
                         reflector,
                         obj: ref obj,
-                        objType: type,
+                        objType: objType,
                         fieldValue: field,
                         depth: nextDepth,
                         stringBuilder: stringBuilder,
@@ -97,7 +102,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     PopulateProperty(
                         reflector,
                         obj: ref obj,
-                        objType: type,
+                        objType: objType,
                         propertyValue: property,
                         depth: nextDepth,
                         stringBuilder: stringBuilder,
@@ -184,14 +189,18 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
                 var currentValue = fieldInfo.GetValue(obj);
 
-                return reflector.Populate(
+                var result = reflector.Populate(
                     ref currentValue,
                     data: fieldValue,
-                    fallbackType: targetType,
+                    fallbackObjType: targetType,
                     depth: depth + 1,
                     stringBuilder: stringBuilder,
                     flags: flags,
                     logger: logger);
+
+                fieldInfo.SetValue(obj, currentValue);
+
+                return result;
 
                 // return stringBuilder?.AppendLine(success
                 //     ? $"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified to value '{fieldValue.valueJsonElement}'."
@@ -260,14 +269,18 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
                 var currentValue = propInfo.GetValue(obj);
 
-                return reflector.Populate(
+                var result = reflector.Populate(
                     ref currentValue,
                     data: propertyValue,
-                    fallbackType: targetType,
+                    fallbackObjType: targetType,
                     depth: depth + 1,
                     stringBuilder: stringBuilder,
                     flags: flags,
                     logger: logger);
+
+                propInfo.SetValue(obj, currentValue);
+
+                return result;
 
                 // return stringBuilder?.AppendLine(success
                 //     ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to value '{propertyValue.valueJsonElement}'."
