@@ -335,7 +335,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {type.GetTypeName(pretty: false)}");
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type {type?.GetTypeShortName()}");
+                logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type '{type?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
 
             convertor.Populate(
                 this,
