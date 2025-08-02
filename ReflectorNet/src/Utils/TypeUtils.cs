@@ -40,6 +40,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (type.IsPrimitive)
                 return Activator.CreateInstance(type);
 
+            // Handle arrays
+            if (type.IsArray)
+            {
+                var elementType = type.GetElementType();
+                if (elementType == null)
+                    throw new ArgumentException($"Array type '{type.FullName}' has no element type.");
+                return Array.CreateInstance(elementType, 0); // Create empty array
+            }
+
             if (type.GetConstructor(Type.EmptyTypes) != null)
                 return Activator.CreateInstance(type);
 
