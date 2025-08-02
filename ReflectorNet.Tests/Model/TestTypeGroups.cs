@@ -20,6 +20,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
             typeof(double),
             typeof(float),
             typeof(decimal),
+            typeof(System.Single),
 
             typeof(DateTime),
             typeof(Guid),
@@ -102,6 +103,5 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
             .Concat(GetCollectionTypes(GetWrapperTypes(typeof(WrapperClass<>), BaseNonStaticTypes)))
             .Concat(GetWrapperTypes(typeof(WrapperClass<>), GetCollectionTypes(BaseNonStaticTypes)))
             .ToArray();
-
     }
 }

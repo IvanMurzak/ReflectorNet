@@ -96,7 +96,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type {type.GetTypeShortName()}");
+                logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
 
             return convertor.Serialize(
                 this,
@@ -335,7 +335,7 @@ namespace com.IvanMurzak.ReflectorNet
                 return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {type.GetTypeName(pretty: false)}");
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type '{type?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
+                logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type='{type?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
 
             convertor.Populate(
                 this,
