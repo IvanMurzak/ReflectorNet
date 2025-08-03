@@ -19,7 +19,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            if (!TryDeserializeValue(reflector, // error is here happens in the array of celestial bodies
+            if (!TryDeserializeValue(reflector,
                 serializedMember: data,
                 result: out var result,
                 type: out var type,
