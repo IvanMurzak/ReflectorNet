@@ -4,6 +4,7 @@ using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Text.Json;
+using System.Text;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
@@ -50,7 +51,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var invalidData = new com.IvanMurzak.ReflectorNet.Model.SerializedMember
+            var invalidData = new SerializedMember
             {
                 typeName = "NonExistent.Type.Name",
                 valueJsonElement = JsonDocument.Parse("{}").RootElement
@@ -58,10 +59,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Act & Assert - Test error handling in population
             object? testObject = default(GameObjectRef);
-            var errorResult = reflector.Populate(ref testObject, invalidData, depth: 2);
+            var stringBuilder = new StringBuilder();
+            var success = reflector.TryPopulate(ref testObject, invalidData, depth: 2, stringBuilder: stringBuilder);
 
-            Assert.NotNull(errorResult);
-            var errorString = errorResult.ToString();
+            Assert.False(success);
+            var errorString = stringBuilder.ToString();
             Assert.Contains($"Type '{invalidData.typeName}' not found", errorString);
             // Check that indentation (depth) is applied
             Assert.StartsWith("    ", errorString); // 2 levels of depth = 4 spaces

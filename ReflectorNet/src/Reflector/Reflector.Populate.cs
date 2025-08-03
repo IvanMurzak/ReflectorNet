@@ -34,8 +34,8 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
         /// <param name="flags">BindingFlags controlling which fields and properties are populated. Default includes public and non-public instance members.</param>
         /// <param name="logger">Optional logger for tracing population operations and debugging.</param>
-        /// <returns>The StringBuilder containing any error messages or status information encountered during population.</returns>
-        public StringBuilder Populate(
+        /// <returns>True if population was successful, false if any errors occurred. If false, stringBuilder contains error messages.</returns>
+        public bool TryPopulate(
             ref object? obj,
             SerializedMember data,
             Type? fallbackObjType = null,
@@ -44,15 +44,18 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            stringBuilder ??= new StringBuilder();
             var padding = StringUtils.GetPadding(depth);
 
             var objType = TypeUtils.GetTypeWithNamePriority(data, fallbackObjType, out var typeError) ?? obj?.GetType();
             if (objType == null)
             {
-                stringBuilder.AppendLine($"{padding}[Error] {typeError}");
-                logger?.LogError($"{padding}{typeError}");
-                return stringBuilder;
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}Object population failed: {typeError}");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Error] Object population failed: {typeError}");
+
+                return false;
             }
 
             if (obj == null)
@@ -63,24 +66,40 @@ namespace com.IvanMurzak.ReflectorNet
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
 
-                    return stringBuilder.AppendLine($"{padding}[Error] Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Error] Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+
+                    return false;
                 }
             }
 
             if (!TypeUtils.IsCastable(obj.GetType(), objType))
             {
-                logger?.LogError($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
-                return stringBuilder.AppendLine($"{padding}[Error] {Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Error] {Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+
+                return false;
             }
 
             var convertor = Convertors.GetConvertor(objType);
             if (convertor == null)
-                return stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {objType.GetTypeName(pretty: false)}");
+            {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}No suitable convertor found for type {objType.GetTypeName(pretty: false)}");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {objType.GetTypeName(pretty: false)}");
+
+                return false;
+            }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
                 logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type='{objType?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
 
-            convertor.Populate(
+            var success = convertor.TryPopulate(
                 this,
                 ref obj,
                 data: data,
@@ -90,7 +109,7 @@ namespace com.IvanMurzak.ReflectorNet
                 flags: flags,
                 logger: logger);
 
-            return stringBuilder;
+            return success;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var targetObject = reflector.CreateInstance(type);
 
             var populateLogger = new StringBuilderLogger();
-            var populateOutput = reflector.Populate(
+            var populateOutput = reflector.TryPopulate(
                 obj: ref targetObject,
                 data: serialized,
                 fallbackObjType: type,

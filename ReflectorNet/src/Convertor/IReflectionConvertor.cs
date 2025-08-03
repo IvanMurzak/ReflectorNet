@@ -20,15 +20,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             int depth = 0, StringBuilder? stringBuilder = null,
             ILogger? logger = null);
 
-        StringBuilder? Populate(Reflector reflector, ref object? obj, SerializedMember data, Type? fallbackType = null, int depth = 0, StringBuilder? stringBuilder = null,
+        bool TryPopulate(Reflector reflector, ref object? obj, SerializedMember data, Type? fallbackType = null, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
-        bool SetAsField(Reflector reflector, ref object? obj, Type fallbackType, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
-            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            ILogger? logger = null);
-        bool SetAsProperty(Reflector reflector, ref object? obj, Type fallbackType, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
-            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            ILogger? logger = null);
+
         bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
