@@ -183,9 +183,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Modify field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name.ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}Populate field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
-                stringBuilder?.AppendLine($"{padding}[Info] Modify field type='{fieldInfo.FieldType.GetTypeName(pretty: false).ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'.");
+                stringBuilder?.AppendLine($"{padding}[Info] Populate field type='{fieldInfo.FieldType.GetTypeName(pretty: false).ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
                 var currentValue = fieldInfo.GetValue(obj);
 
@@ -266,9 +266,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Modify property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
-                stringBuilder?.AppendLine($"{padding}[Info] Modify property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'.");
+                stringBuilder?.AppendLine($"{padding}[Info] Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
                 var currentValue = propInfo.GetValue(obj);
 
