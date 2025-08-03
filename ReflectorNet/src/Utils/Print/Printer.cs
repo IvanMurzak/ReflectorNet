@@ -43,8 +43,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         public void LogLine(LogLevel level, Func<string> lazyLine, int depth = 0)
         {
-            var isEnabled = _aiLogger?.IsEnabled(level) == false ||
-                            _systemLogger?.IsEnabled(level) == false;
+            var isEnabled = _aiLogger?.IsEnabled(level) == true ||
+                            _systemLogger?.IsEnabled(level) == true;
 
             // Remove lazy lines that are deeper than the current depth
             while (_lazyLines.Count > 0 && _lazyLines.Last!.Value.Depth > depth)
