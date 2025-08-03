@@ -233,7 +233,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             {
                 return base.TryDeserializeValueInternal(
                     reflector,
-                    serializedMember: serializedMember,
+                    data: serializedMember,
                     result: out result,
                     type: type,
                     depth: depth,

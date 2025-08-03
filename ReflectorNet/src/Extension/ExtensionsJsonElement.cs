@@ -38,7 +38,17 @@ namespace com.IvanMurzak.ReflectorNet
             if (jsonElement == null)
                 return null;
 
-            var serializedMember = jsonElement.Deserialize<SerializedMember>(reflector);
+            SerializedMember? serializedMember = null;
+
+            try
+            {
+                serializedMember = jsonElement.Deserialize<SerializedMember>(reflector);
+            }
+            catch
+            {
+                // ignore
+            }
+
             if (serializedMember == null)
                 return reflector.GetDefaultValue(type);
 
