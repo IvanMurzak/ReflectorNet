@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,12 +12,20 @@ namespace com.IvanMurzak.ReflectorNet.Model
     {
         public const string ValueName = "value";
 
+        [Description($"Object name, usually it is a field name, property name or a variable name.")]
         [JsonInclude] public string? name = string.Empty; // needed for Unity's JsonUtility serialization
+
+        [Description($"Type of the object, usually it is a field type, property type or a variable type.")]
         [JsonInclude] public string typeName = string.Empty; // needed for Unity's JsonUtility serialization
+
+        [Description($"Fields of the object, serialized as a list of {nameof(SerializedMember)}.")]
         [JsonInclude] public SerializedMemberList? fields; // needed for Unity's JsonUtility serialization
+
+        [Description($"Properties of the object, serialized as a list of {nameof(SerializedMember)}.")]
         [JsonInclude] public SerializedMemberList? props; // needed for Unity's JsonUtility serialization
 
         [JsonInclude, JsonPropertyName(ValueName)]
+        [Description($"Value of the object, serialized as a non stringified JSON element. Can be null if the value is not set. Can be default value if the value is an empty object or array json.")]
         public JsonElement? valueJsonElement = null; // System.Text.Json serialization
 
         public SerializedMember() { }
