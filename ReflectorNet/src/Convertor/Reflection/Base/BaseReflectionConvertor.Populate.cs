@@ -203,7 +203,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (obj == null)
             {
-                obj = reflector.CreateInstance(objType); // Requires empty constructor or value type
+                // obj = CreateInstance(reflector, objType);
+                obj = reflector.Deserialize(
+                    data: fieldValue,
+                    fallbackType: objType,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    logger: logger);
+
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
@@ -304,7 +311,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (obj == null)
             {
-                obj = reflector.CreateInstance(objType); // Requires empty constructor or value type
+                // obj = CreateInstance(reflector, objType);
+                obj = reflector.Deserialize(
+                    data: propertyValue,
+                    fallbackType: objType,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    logger: logger);
+
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
