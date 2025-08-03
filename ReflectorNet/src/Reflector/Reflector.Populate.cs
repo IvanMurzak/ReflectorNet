@@ -58,31 +58,31 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
             }
 
-            if (obj == null)
-            {
-                obj = CreateInstance(objType); // Requires empty constructor or value type
-                if (obj == null)
-                {
-                    if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+            // if (obj == null)
+            // {
+            //     obj = CreateInstance(objType); // Requires empty constructor or value type
+            //     if (obj == null)
+            //     {
+            //         if (logger?.IsEnabled(LogLevel.Error) == true)
+            //             logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Error] Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+            //         if (stringBuilder != null)
+            //             stringBuilder.AppendLine($"{padding}[Error] Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
 
-                    return false;
-                }
-            }
+            //         return false;
+            //     }
+            // }
 
-            if (!TypeUtils.IsCastable(obj.GetType(), objType))
-            {
-                if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+            // if (!TypeUtils.IsCastable(obj.GetType(), objType))
+            // {
+            //     if (logger?.IsEnabled(LogLevel.Error) == true)
+            //         logger.LogError($"{padding}{Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
 
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Error] {Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
+            //     if (stringBuilder != null)
+            //         stringBuilder.AppendLine($"{padding}[Error] {Error.TypeMismatch(data.typeName, obj.GetType().GetTypeName(pretty: false))}");
 
-                return false;
-            }
+            //     return false;
+            // }
 
             var convertor = Convertors.GetConvertor(objType);
             if (convertor == null)

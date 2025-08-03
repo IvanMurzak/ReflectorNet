@@ -36,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (data.fields != null)
             {
                 if (data.fields.Count > 0)
-                    result ??= Activator.CreateInstance(type!);
+                    result ??= CreateInstance(reflector, type!);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
                     logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
@@ -69,7 +69,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (data.props != null)
             {
                 if (data.props.Count > 0)
-                    result ??= Activator.CreateInstance(type!);
+                    result ??= CreateInstance(reflector, type!);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
                     logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");

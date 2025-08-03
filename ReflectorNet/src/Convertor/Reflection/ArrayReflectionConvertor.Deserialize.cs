@@ -113,7 +113,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             else if (IsGenericList(type, out var elementType))
             {
                 // Handle generic IList<T>
-                var list = Activator.CreateInstance(type);
+                var list = reflector.CreateInstance(type);
                 if (list == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
