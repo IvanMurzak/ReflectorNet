@@ -215,7 +215,17 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             {
                 try
                 {
-                    result = serializedMember.valueJsonElement.Deserialize(type, reflector);
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{padding} Deserialize as json. Converter: {GetType().GetTypeShortName()}");
+
+                    result = DeserializeValueAsJsonElement(
+                        reflector: reflector,
+                        data: serializedMember,
+                        type: type,
+                        depth: depth,
+                        stringBuilder: stringBuilder,
+                        logger: logger);
+
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as json: {serializedMember.valueJsonElement}");
 
@@ -229,6 +239,17 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return false;
                 }
             }
+        }
+
+        protected virtual object? DeserializeValueAsJsonElement(
+            Reflector reflector,
+            SerializedMember data,
+            Type type,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null)
+        {
+            return JsonUtils.Deserialize(reflector, data.valueJsonElement, type);
         }
     }
 }
