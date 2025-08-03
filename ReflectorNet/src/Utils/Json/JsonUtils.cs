@@ -14,7 +14,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         static JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore null fields
+            // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore 'null' field and properties
+            DefaultIgnoreCondition = JsonIgnoreCondition.Never, // Include 'null' fields and properties
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             //ReferenceHandler = ReferenceHandler.Preserve,
             WriteIndented = true,

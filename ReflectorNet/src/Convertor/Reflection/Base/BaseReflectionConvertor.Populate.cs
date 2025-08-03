@@ -62,7 +62,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 catch (Exception ex)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Object '{obj}' modification failed: {ex.Message}");
+                        logger.LogError(ex, $"{padding}Object '{obj}' modification failed: {ex.Message}");
 
                     stringBuilder?.AppendLine($"{padding}[Error] Object '{obj}' modification failed: {ex.Message}");
                 }
@@ -208,6 +208,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
             catch (Exception ex)
             {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError(ex, $"{padding}Field '{fieldValue.name.ValueOrNull()}' modification failed: {ex.Message}");
+
                 return stringBuilder?.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}' modification failed: {ex.Message}");
             }
         }
@@ -288,6 +291,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
             catch (Exception ex)
             {
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError(ex, $"{padding}Property '{propertyValue.name.ValueOrNull()}' modification failed: {ex.Message}");
+
                 return stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}' modification failed: {ex.Message}");
             }
         }
