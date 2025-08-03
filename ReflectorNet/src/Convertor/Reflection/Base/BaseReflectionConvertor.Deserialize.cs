@@ -206,7 +206,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         return false;
                     }
 
-                    result = data.valueJsonElement.DeserializeValueSerializedMember(reflector,
+                    result = data.valueJsonElement.DeserializeValueSerializedMember(
+                        reflector,
                         type: type,
                         name: data.name,
                         depth: depth + 1,
