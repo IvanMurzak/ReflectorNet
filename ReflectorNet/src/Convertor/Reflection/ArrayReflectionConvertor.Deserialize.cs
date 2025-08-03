@@ -46,7 +46,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
 
             // Try to deserialize the value as a SerializedMemberList
-            var serializedMemberList = data.valueJsonElement.Deserialize<SerializedMemberList>();
+            var serializedMemberList = data.valueJsonElement.Deserialize<SerializedMemberList>(reflector);
             // TODO: Need to support 'null' value. For the case when LLM needs to set exactly 'null' value for an array or list.
             if (serializedMemberList == null)
             {
@@ -186,7 +186,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 if (serializedMember.valueJsonElement == null ||
                     serializedMember.valueJsonElement.Value.ValueKind == JsonValueKind.Null)
                 {
-                    result = TypeUtils.GetDefaultValue(type);
+                    result = reflector.GetDefaultValue(type);
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                     {
                         logger.LogWarning("{padding}{icon} 'value' is null for type='{typeName}', name='{name}'. Convertor='{ConvertorName}'",
@@ -202,7 +202,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 var isArray = serializedMember.valueJsonElement.Value.ValueKind == JsonValueKind.Array;
                 if (!isArray)
                 {
-                    result = TypeUtils.GetDefaultValue(type);
+                    result = reflector.GetDefaultValue(type);
                     stringBuilder?.AppendLine($"{padding}[Error] Only array deserialization is supported in this Convertor ({GetType().Name}).");
                     logger?.LogError($"{padding}{Consts.Emoji.Fail} Only array deserialization is supported in this Convertor ({GetType().Name}).");
                     return false;
@@ -226,7 +226,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return true;
                 }
 
-                result = TypeUtils.CreateInstance(type);
+                result = reflector.CreateInstance(type);
                 return false;
             }
             else
@@ -266,7 +266,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 name = name.ValueOrNull();
-                var parsedList = jsonElement.Deserialize<SerializedMemberList>();
+                var parsedList = jsonElement.Deserialize<SerializedMemberList>(reflector);
 
                 if (stringBuilder != null)
                     stringBuilder.AppendLine(parsedList == null

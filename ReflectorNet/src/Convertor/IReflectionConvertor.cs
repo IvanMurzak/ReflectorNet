@@ -42,5 +42,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
+
+        object? CreateInstance(Reflector reflector, Type type);
+        object? GetDefaultValue(Reflector reflector, Type type);
     }
 }

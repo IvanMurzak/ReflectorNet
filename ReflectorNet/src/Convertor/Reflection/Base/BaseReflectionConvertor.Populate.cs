@@ -33,7 +33,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (obj == null)
             {
-                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                obj = reflector.CreateInstance(objType); // Requires empty constructor or value type
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
@@ -153,7 +153,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (obj == null)
             {
-                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                obj = reflector.CreateInstance(objType); // Requires empty constructor or value type
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
@@ -236,7 +236,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (obj == null)
             {
-                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                obj = reflector.CreateInstance(objType); // Requires empty constructor or value type
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)

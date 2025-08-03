@@ -64,7 +64,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             // TODO: This place ignores possibility to parse json as SerializedMember or SerializedMemberList.
             // Need to be sure it won't make any issues.
-            var parsedValue = value.Deserialize(type);
+            var parsedValue = value.Deserialize(type, reflector);
 
             Print.SetNewValue(ref obj, ref parsedValue, type, depth, stringBuilder);
             obj = parsedValue;

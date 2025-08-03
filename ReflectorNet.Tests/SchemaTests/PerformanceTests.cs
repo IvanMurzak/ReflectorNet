@@ -98,6 +98,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void TypeUtils_Integration_Tests()
         {
+            var reflector = new Reflector();
+
             // Test type resolution
             var stringType = TypeUtils.GetType("System.String");
             Assert.Equal(typeof(string), stringType);
@@ -106,10 +108,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(typeof(GameObjectRef), gameObjectRefType);
 
             // Test default value generation
-            var defaultInt = TypeUtils.GetDefaultValue(typeof(int));
+            var defaultInt = reflector.GetDefaultValue(typeof(int));
             Assert.Equal(0, defaultInt);
 
-            var defaultString = TypeUtils.GetDefaultValue(typeof(string));
+            var defaultString = reflector.GetDefaultValue(typeof(string));
             Assert.Null(defaultString);
 
             _output.WriteLine("TypeUtils integration tests passed");

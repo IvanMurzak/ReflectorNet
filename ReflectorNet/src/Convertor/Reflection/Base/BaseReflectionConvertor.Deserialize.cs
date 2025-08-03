@@ -208,14 +208,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     stringBuilder?.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: true)}' for member '{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}");
                     logger?.LogCritical($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
                 }
-                result = TypeUtils.GetDefaultValue(type);
+                result = reflector.GetDefaultValue(type);
                 return false;
             }
             else
             {
                 try
                 {
-                    result = serializedMember.valueJsonElement.Deserialize(type);
+                    result = serializedMember.valueJsonElement.Deserialize(type, reflector);
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized as json: {serializedMember.valueJsonElement}");
 
@@ -225,7 +225,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 {
                     stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value'{serializedMember.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
                     logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
-                    result = TypeUtils.GetDefaultValue(type);
+                    result = reflector.GetDefaultValue(type);
                     return false;
                 }
             }

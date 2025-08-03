@@ -50,15 +50,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [Fact]
         public void DefaultNonNullValues()
         {
+            var reflector = new Reflector();
+
             foreach (var type in TestTypeGroups.AllNonStaticTypes)
-                ActAssert(TypeUtils.CreateInstance(type), fallbackType: type);
+                ActAssert(reflector.CreateInstance(type), fallbackType: type);
         }
 
         [Fact]
         public void DefaultValues()
         {
+            var reflector = new Reflector();
+
             foreach (var type in TestTypeGroups.AllNonStaticTypes)
-                ActAssert(TypeUtils.GetDefaultValue(type), fallbackType: type);
+                ActAssert(reflector.GetDefaultValue(type), fallbackType: type);
         }
 
         [Fact]

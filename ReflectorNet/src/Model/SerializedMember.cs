@@ -82,7 +82,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             return this;
         }
 
-        public T? GetValue<T>() => valueJsonElement.Deserialize<T>();
+        public T? GetValue<T>(Reflector reflector) => valueJsonElement.Deserialize<T>(reflector);
 
         public SerializedMember SetValue(object? value)
         {

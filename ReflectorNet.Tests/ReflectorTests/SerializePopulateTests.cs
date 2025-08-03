@@ -25,7 +25,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             _output.WriteLine($"Serialization:\n{serializeLogger}");
 
             var type = original?.GetType() ?? fallbackType ?? throw new ArgumentNullException(nameof(original));
-            var targetObject = TypeUtils.CreateInstance(type);
+            var targetObject = reflector.CreateInstance(type);
 
             var populateLogger = new StringBuilderLogger();
             var populateOutput = reflector.Populate(
@@ -56,15 +56,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [Fact]
         public void DefaultNonNullValues()
         {
+            var reflector = new Reflector();
+
             foreach (var type in TestTypeGroups.AllNonStaticTypes)
-                ActAssertPopulate(TypeUtils.CreateInstance(type), fallbackType: type);
+                ActAssertPopulate(reflector.CreateInstance(type), fallbackType: type);
         }
 
         [Fact]
         public void DefaultValues()
         {
+            var reflector = new Reflector();
+
             foreach (var type in TestTypeGroups.AllNonStaticTypes)
-                ActAssertPopulate(TypeUtils.GetDefaultValue(type), fallbackType: type);
+                ActAssertPopulate(reflector.GetDefaultValue(type), fallbackType: type);
         }
 
         [Fact]

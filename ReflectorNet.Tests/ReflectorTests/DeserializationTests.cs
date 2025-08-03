@@ -41,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var result = reflector.Deserialize<T>(serializedMember);
 
             // Assert
-            Assert.Equal(TypeUtils.GetDefaultValue<T>(), result);
+            Assert.Equal(reflector.GetDefaultValue<T>(), result);
         }
         void DeserializeNullValue(Type type)
         {
@@ -57,7 +57,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var result = reflector.Deserialize(serializedMember);
 
             // Assert
-            Assert.Equal(TypeUtils.GetDefaultValue(type), result);
+            Assert.Equal(reflector.GetDefaultValue(type), result);
         }
 
         [Fact]

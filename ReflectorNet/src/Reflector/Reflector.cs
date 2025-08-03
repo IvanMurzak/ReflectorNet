@@ -179,7 +179,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 // If data is null and type is provided, return default value of the type
                 if (fallbackType != null)
-                    return TypeUtils.GetDefaultValue(fallbackType);
+                    return GetDefaultValue(fallbackType);
 
                 // If data is null and no type provided, throw exception
                 throw new ArgumentException(Error.DataTypeIsEmpty());
@@ -323,7 +323,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             if (obj == null)
             {
-                obj = TypeUtils.CreateInstance(objType); // Requires empty constructor or value type
+                obj = CreateInstance(objType); // Requires empty constructor or value type
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)

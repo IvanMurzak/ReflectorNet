@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -11,10 +9,10 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsJsonElement
     {
-        public static T? Deserialize<T>(this JsonElement? jsonElement)
-            => JsonUtils.Deserialize<T>(jsonElement);
-        public static object? Deserialize(this JsonElement? jsonElement, Type type)
-            => JsonUtils.Deserialize(jsonElement, type);
+        public static T? Deserialize<T>(this JsonElement? jsonElement, Reflector reflector)
+            => JsonUtils.Deserialize<T>(reflector, jsonElement);
+        public static object? Deserialize(this JsonElement? jsonElement, Type type, Reflector reflector)
+            => JsonUtils.Deserialize(reflector, jsonElement, type);
         public static T? DeserializeValueSerializedMember<T>(this JsonElement? jsonElement,
             Reflector reflector,
             string? name = null,
@@ -40,12 +38,12 @@ namespace com.IvanMurzak.ReflectorNet
             if (jsonElement == null)
                 return null;
 
-            var serializedMember = jsonElement.Deserialize<SerializedMember>();
+            var serializedMember = jsonElement.Deserialize<SerializedMember>(reflector);
             if (serializedMember == null)
-                return TypeUtils.GetDefaultValue(type);
+                return reflector.GetDefaultValue(type);
 
             if (serializedMember.valueJsonElement == null)
-                return TypeUtils.CreateInstance(type);
+                return reflector.CreateInstance(type);
 
             return reflector.Deserialize(serializedMember,
                 fallbackType: type,
