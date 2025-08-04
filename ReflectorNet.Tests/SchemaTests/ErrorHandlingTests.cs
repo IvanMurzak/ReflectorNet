@@ -1,11 +1,12 @@
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Text.Json;
+using System.Text;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class ErrorHandlingTests : BaseTest
     {
@@ -50,19 +51,20 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var invalidData = new com.IvanMurzak.ReflectorNet.Model.SerializedMember
+            var invalidData = new SerializedMember
             {
                 typeName = "NonExistent.Type.Name",
                 valueJsonElement = JsonDocument.Parse("{}").RootElement
             };
 
             // Act & Assert - Test error handling in population
-            object? testObject = new GameObjectRef();
-            var errorResult = reflector.Populate(ref testObject, invalidData, depth: 2);
+            object? testObject = default(GameObjectRef);
+            var stringBuilder = new StringBuilder();
+            var success = reflector.TryPopulate(ref testObject, invalidData, depth: 2, stringBuilder: stringBuilder);
 
-            Assert.NotNull(errorResult);
-            var errorString = errorResult.ToString();
-            Assert.Contains("Type 'NonExistent.Type.Name' not found", errorString);
+            Assert.False(success);
+            var errorString = stringBuilder.ToString();
+            Assert.Contains($"Type '{invalidData.typeName}' not found", errorString);
             // Check that indentation (depth) is applied
             Assert.StartsWith("    ", errorString); // 2 levels of depth = 4 spaces
 
@@ -122,7 +124,7 @@ namespace ReflectorNet.Tests.SchemaTests
         public void MethodPointerRef_ToString_Formatting()
         {
             // Test without namespace
-            var methodRef1 = new MethodPointerRef
+            var methodRef1 = new MethodRef
             {
                 TypeName = "TestClass",
                 MethodName = "TestMethod"
@@ -131,7 +133,7 @@ namespace ReflectorNet.Tests.SchemaTests
             Assert.Equal("TestClass.TestMethod()", toString1);
 
             // Test with namespace
-            var methodRef2 = new MethodPointerRef
+            var methodRef2 = new MethodRef
             {
                 Namespace = "TestNamespace",
                 TypeName = "TestClass",
@@ -141,12 +143,12 @@ namespace ReflectorNet.Tests.SchemaTests
             Assert.Equal("TestNamespace.TestClass.TestMethod()", toString2);
 
             // Test with parameters
-            var methodRef3 = new MethodPointerRef
+            var methodRef3 = new MethodRef
             {
                 Namespace = "TestNamespace",
                 TypeName = "TestClass",
                 MethodName = "TestMethod",
-                InputParameters = new System.Collections.Generic.List<MethodPointerRef.Parameter>
+                InputParameters = new System.Collections.Generic.List<MethodRef.Parameter>
                 {
                     new() { TypeName = "System.String", Name = "param1" },
                     new() { TypeName = "System.Int32", Name = "param2" }

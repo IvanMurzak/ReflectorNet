@@ -1,12 +1,12 @@
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class ReflectorMethodCallTests : BaseTest
     {
@@ -20,7 +20,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var testInstance = new TestClass();
             var targetObject = reflector.Serialize(testInstance);
 
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -52,7 +52,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var testInstance = new TestClass();
             var targetObject = reflector.Serialize(testInstance);
 
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -86,7 +86,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -113,7 +113,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(MethodHelper).Namespace,
                 TypeName = nameof(MethodHelper),
@@ -156,7 +156,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(MethodHelper).Namespace,
                 TypeName = nameof(MethodHelper),
@@ -190,7 +190,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(MethodHelper).Namespace,
                 TypeName = nameof(MethodHelper),
@@ -225,7 +225,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -256,7 +256,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var testInstance = new TestClass();
             var targetObjectSerialized = reflector.Serialize(testInstance);
 
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -285,7 +285,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),

@@ -10,24 +10,28 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
-        public static Type? GetType(string? typeName) => string.IsNullOrEmpty(typeName)
-            ? null
-            : Type.GetType(typeName) ??
-                AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeName || t.AssemblyQualifiedName == typeName);
+        public static IEnumerable<Type> AllTypes => AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes());
 
-        public static T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));
-        public static object? GetDefaultValue(Type type)
+        public static Type? GetType(string? typeName)
         {
-            if (type.IsValueType)
-                return Activator.CreateInstance(type);
+            if (string.IsNullOrWhiteSpace(typeName))
+                return null;
 
-            if (type.GetConstructor(Type.EmptyTypes) != null)
-                return Activator.CreateInstance(type);
+            // First try built-in Type.GetType() which handles many formats
+            var type = Type.GetType(typeName, throwOnError: false);
+            if (type != null)
+                return type;
 
-            return null;
+            // If Type.GetType() fails, try to find the type in all loaded assemblies
+            type = AllTypes.FirstOrDefault(t =>
+                typeName == t.FullName ||
+                typeName == t.AssemblyQualifiedName);
+
+            return type;
         }
+
+
 
         public static string? GetDescription(Type type)
         {
@@ -115,39 +119,36 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return fieldInfo != null ? GetFieldDescription(fieldInfo) : null;
         }
 
-        public static object? CastTo(object obj, string typeFullName, out string? error)
+        public static bool IsCastable(Type type, Type to)
         {
-            var type = GetType(typeFullName) ??
-                AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeFullName);
-            if (type == null)
-            {
-                error = $"[Error] Type '{typeFullName.ValueOrNull()}' not found during casting.";
-                return default;
-            }
-            return CastTo(obj, type, out error);
+            if (type == null || to == null)
+                return false;
+
+            // Handle nullable types
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null)
+                type = underlyingType;
+
+            // Handle nullable types
+            var underlyingType2 = Nullable.GetUnderlyingType(to);
+            if (underlyingType2 != null)
+                to = underlyingType2;
+
+            // Check if the type is assignable to the target type
+            if (to.IsAssignableFrom(type))
+                return true;
+
+            // Check for primitive types
+            if (type.IsPrimitive && to.IsPrimitive)
+                return true;
+
+            // Check for string conversion
+            if (type == typeof(string) && to == typeof(object))
+                return true;
+
+            return false;
         }
 
-        public static T? CastTo<T>(object obj, out string? error)
-            => CastTo(obj, typeof(T), out error) is T typedObj ? typedObj : default;
-
-        public static object? CastTo(object obj, Type type, out string? error)
-        {
-            if (obj == null)
-            {
-                error = $"[Error] Object is null.";
-                return default;
-            }
-            if (!type.IsAssignableFrom(obj.GetType()))
-            {
-                error = $"[Error] Type mismatch between '{type.GetTypeName(pretty: false)}' and '{obj.GetType().GetTypeName(pretty: false)}'.";
-                return default;
-            }
-
-            error = null;
-            return obj;
-        }
         public static int GetInheritanceDistance(Type baseType, Type targetType)
         {
             if (!baseType.IsAssignableFrom(targetType))
@@ -207,6 +208,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             foreach (var baseGenericType in GetGenericTypes(type.BaseType, visited))
                 yield return baseGenericType;
+        }
+        public static bool IsIEnumerable(Type type)
+        {
+            if (type.IsArray)
+                return true; // Arrays are IEnumerable
+
+            return type.GetInterfaces()
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         }
         public static Type? GetEnumerableItemType(Type type)
         {

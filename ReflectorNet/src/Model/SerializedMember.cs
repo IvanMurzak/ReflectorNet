@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,12 +12,24 @@ namespace com.IvanMurzak.ReflectorNet.Model
     {
         public const string ValueName = "value";
 
-        [JsonInclude] public string? name = string.Empty; // needed for Unity's JsonUtility serialization
-        [JsonInclude] public string typeName = string.Empty; // needed for Unity's JsonUtility serialization
-        [JsonInclude] public List<SerializedMember>? fields; // needed for Unity's JsonUtility serialization
-        [JsonInclude] public List<SerializedMember>? props; // needed for Unity's JsonUtility serialization
+        [JsonInclude]
+        [Description($"Object name, usually it is a field name, property name or a variable name.")]
+        public string? name = string.Empty;
+
+        [JsonInclude]
+        [Description($"Type of the object, usually it is a field type, property type or a variable type.")]
+        public string typeName = string.Empty;
+
+        [JsonInclude]
+        [Description($"Fields of the object, serialized as a list of {nameof(SerializedMember)}.")]
+        public SerializedMemberList? fields;
+
+        [JsonInclude]
+        [Description($"Properties of the object, serialized as a list of {nameof(SerializedMember)}.")]
+        public SerializedMemberList? props;
 
         [JsonInclude, JsonPropertyName(ValueName)]
+        [Description($"Value of the object, serialized as a non stringified JSON element. Can be null if the value is not set. Can be default value if the value is an empty object or array json.")]
         public JsonElement? valueJsonElement = null; // System.Text.Json serialization
 
         public SerializedMember() { }
@@ -43,7 +55,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             if (field == null)
             {
                 field = SerializedMember.FromValue(typeof(T), value, name: name);
-                fields ??= new List<SerializedMember>();
+                fields ??= new SerializedMemberList();
                 fields.Add(field);
                 return this;
             }
@@ -53,7 +65,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
 
         public SerializedMember AddField(SerializedMember field)
         {
-            fields ??= new List<SerializedMember>();
+            fields ??= new SerializedMemberList();
             fields.Add(field);
             return this;
         }
@@ -67,7 +79,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             if (property == null)
             {
                 property = SerializedMember.FromValue(typeof(T), value, name: name);
-                props ??= new List<SerializedMember>();
+                props ??= new SerializedMemberList();
                 props.Add(property);
                 return this;
             }
@@ -77,24 +89,13 @@ namespace com.IvanMurzak.ReflectorNet.Model
 
         public SerializedMember AddProperty(SerializedMember property)
         {
-            props ??= new List<SerializedMember>();
+            props ??= new SerializedMemberList();
             props.Add(property);
             return this;
         }
 
-        public T? GetValue<T>()
-        {
-            if (valueJsonElement == null)
-                return default;
-            try
-            {
-                return JsonUtils.Deserialize<T>(valueJsonElement.Value);
-            }
-            catch
-            {
-                return default;
-            }
-        }
+        public T? GetValue<T>(Reflector reflector) => valueJsonElement.Deserialize<T>(reflector);
+
         public SerializedMember SetValue(object? value)
         {
             var json = JsonUtils.ToJson(value);

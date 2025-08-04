@@ -14,7 +14,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         static JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore null fields
+            // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore 'null' field and properties
+            DefaultIgnoreCondition = JsonIgnoreCondition.Never, // Include 'null' fields and properties
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             //ReferenceHandler = ReferenceHandler.Preserve,
             WriteIndented = true,
@@ -42,13 +43,24 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         public static T? Deserialize<T>(string json, JsonSerializerOptions? options = null)
-            => JsonSerializer.Deserialize<T>(json, options ?? jsonSerializerOptions);
+            => JsonSerializer.Deserialize<T>(
+                json: json,
+                options: options ?? jsonSerializerOptions);
 
-        public static T? Deserialize<T>(JsonElement jsonElement, JsonSerializerOptions? options = null)
-            => JsonSerializer.Deserialize<T>(jsonElement, options ?? jsonSerializerOptions);
+        public static T? Deserialize<T>(Reflector reflector, JsonElement? jsonElement, JsonSerializerOptions? options = null)
+            => jsonElement.HasValue
+                ? JsonSerializer.Deserialize<T>(
+                    element: jsonElement.Value,
+                    options: options ?? jsonSerializerOptions)
+                : reflector.GetDefaultValue<T>();
 
-        public static object? Deserialize(JsonElement jsonElement, Type type, JsonSerializerOptions? options = null)
-            => JsonSerializer.Deserialize(jsonElement, type, options ?? jsonSerializerOptions);
+        public static object? Deserialize(Reflector reflector, JsonElement? jsonElement, Type type, JsonSerializerOptions? options = null)
+            => jsonElement.HasValue
+                ? JsonSerializer.Deserialize(
+                    element: jsonElement.Value,
+                    returnType: type,
+                    options: options ?? jsonSerializerOptions)
+                : reflector.GetDefaultValue(type);
 
         public static object? Deserialize(string json, Type type, JsonSerializerOptions? options = null)
             => JsonSerializer.Deserialize(json, type, options ?? jsonSerializerOptions);

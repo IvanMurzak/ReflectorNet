@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ReflectorNet.Tests.Schema.Model
+namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
     [Description("Test class with various member types for description testing.")]
     public class TestClassWithDescriptions

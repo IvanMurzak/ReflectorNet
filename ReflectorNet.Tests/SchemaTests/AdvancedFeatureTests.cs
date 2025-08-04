@@ -1,12 +1,11 @@
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Reflection;
 using System.Linq;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class AdvancedFeatureTests : BaseTest
     {
@@ -47,7 +46,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Find all methods with same name but different signatures
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),

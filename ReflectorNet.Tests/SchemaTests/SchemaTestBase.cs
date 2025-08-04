@@ -5,7 +5,7 @@ using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public abstract class SchemaTestBase : BaseTest
     {

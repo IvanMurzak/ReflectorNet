@@ -1,13 +1,10 @@
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
 using Xunit.Abstractions;
-using System;
-using System.Text.Json;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Utils;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class SerializationTests : BaseTest
     {
@@ -47,10 +44,16 @@ namespace ReflectorNet.Tests.SchemaTests
                 path = "/Test/Deserialize"
             };
 
-            var serialized = reflector.Serialize(original);
-
             // Act
-            var deserialized = reflector.Deserialize(serialized) as GameObjectRef;
+            var serializeLogger = new StringBuilderLogger();
+            var serialized = reflector.Serialize(original, name: nameof(original), logger: serializeLogger);
+            _output.WriteLine($"Serialize result:\n{serializeLogger}");
+
+            var deserializeLogger = new StringBuilderLogger();
+            var deserialized = reflector.Deserialize(serialized, logger: deserializeLogger) as GameObjectRef;
+            _output.WriteLine($"Deserialize result:\n{deserializeLogger}");
+
+            _output.WriteLine($"Json:\n{JsonUtils.ToJson(serialized)}");
 
             // Assert
             Assert.NotNull(deserialized);
@@ -120,7 +123,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Create a SerializedMember with null value
-            var serialized = new com.IvanMurzak.ReflectorNet.Model.SerializedMember
+            var serialized = new SerializedMember
             {
                 typeName = typeof(GameObjectRef).GetTypeName(pretty: false)!,
                 valueJsonElement = null
@@ -129,9 +132,8 @@ namespace ReflectorNet.Tests.SchemaTests
             // Act
             var deserialized = reflector.Deserialize(serialized);
 
-            // Assert - For reference types with null value, should return default instance
-            // The actual behavior might be to return a default instance rather than null
-            Assert.NotNull(deserialized);
+            // Assert - For null values, we expect the deserialized object to be null
+            Assert.Null(deserialized);
             _output.WriteLine($"Deserialized null value result: {deserialized}");
         }
 

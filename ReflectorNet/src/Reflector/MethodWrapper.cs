@@ -85,7 +85,7 @@ namespace com.IvanMurzak.ReflectorNet
         public virtual async Task<object?> Invoke(params object?[] parameters)
         {
             // If _targetInstance is null and _targetType is set, create an instance of the target type
-            var instance = _targetInstance ?? (_classType != null ? Activator.CreateInstance(_classType) : null);
+            var instance = _targetInstance ?? (_classType != null ? Activator.CreateInstance(_classType) : null); // TODO: replace with Reflector.CreateInstance
 
             // Build the final parameters array, filling in default values where necessary
             var finalParameters = BuildParameters(_reflector, parameters);
@@ -116,7 +116,7 @@ namespace com.IvanMurzak.ReflectorNet
         public virtual async Task<object?> InvokeDict(IReadOnlyDictionary<string, object?>? namedParameters)
         {
             // If _targetInstance is null and _targetType is set, create an instance of the target type
-            var instance = _targetInstance ?? (_classType != null ? Activator.CreateInstance(_classType) : null);
+            var instance = _targetInstance ?? (_classType != null ? Activator.CreateInstance(_classType) : null); // TODO: replace with Reflector.CreateInstance
 
             // Build the final parameters array, filling in default values where necessary
             var finalParameters = BuildParameters(_reflector, namedParameters);
@@ -209,16 +209,16 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, methodParameters[i].ParameterType);
+                            finalParameters[i] = jsonElement.Deserialize(methodParameters[i].ParameterType);
                         }
                         catch
                         {
                             // Try #2: Parsing as SerializedMember
-                            var serializedParameter = JsonUtils.Deserialize<SerializedMember>(jsonElement);
+                            var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: methodParameters[i].ParameterType, logger: _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, fallbackType: methodParameters[i].ParameterType, logger: _logger);
                         }
                     }
                     else
@@ -272,16 +272,16 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = JsonUtils.Deserialize(jsonElement, parameter.ParameterType);
+                            finalParameters[i] = jsonElement.Deserialize(parameter.ParameterType);
                         }
                         catch
                         {
                             // Try #2: Parsing as SerializedMember
-                            var serializedParameter = JsonUtils.Deserialize<SerializedMember>(jsonElement);
+                            var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, type: parameter.ParameterType, logger: _logger);
+                            finalParameters[i] = reflector.Deserialize(serializedParameter, fallbackType: parameter.ParameterType, logger: _logger);
                         }
                     }
                     else
@@ -299,7 +299,7 @@ namespace com.IvanMurzak.ReflectorNet
                 {
                     // Use the type's default value if no value is provided
                     finalParameters[i] = parameter.ParameterType.IsValueType
-                        ? Activator.CreateInstance(parameter.ParameterType)
+                        ? Activator.CreateInstance(parameter.ParameterType) // TODO: replace with Reflector.CreateInstance
                         : null;
                 }
             }

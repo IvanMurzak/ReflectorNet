@@ -18,10 +18,10 @@ namespace com.IvanMurzak.ReflectorNet
                 => $"[Error] Type '{typeFullName.ValueOrNull()}' not found.";
 
             public static string TargetObjectIsNull()
-                => "[Error] Target object is null.";
+                => "Target object is null.";
 
             public static string TypeMismatch(string? expectedType, string? objType)
-                => $"[Error] Type mismatch between '{expectedType.ValueOrNull()}' (expected) and '{objType.ValueOrNull()}'.";
+                => $"Type mismatch between '{expectedType.ValueOrNull()}' (expected) and '{objType.ValueOrNull()}'.";
 
             public static string FieldNameIsEmpty()
                 => "[Error] Field name is empty.";
@@ -44,7 +44,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             public static string MoreThanOneMethodFound(List<MethodInfo> methods)
             {
-                var methodsString = JsonUtils.ToJson(methods.Select(method => new MethodDataRef(method, justRef: false)));
+                var methodsString = JsonUtils.ToJson(methods.Select(method => new MethodData(method, justRef: false)));
                 return @$"[Error] Found more than one method. Only single method should be targeted. Please specify the method name more precisely.
 Found {methods.Count} method(s):
 ```json

@@ -1,13 +1,13 @@
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class MethodFindingTests : BaseTest
     {
@@ -18,7 +18,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -45,7 +45,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -72,12 +72,12 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
                 MethodName = nameof(TestClass.SerializedMemberList_ReturnString),
-                InputParameters = new List<MethodPointerRef.Parameter>
+                InputParameters = new List<MethodRef.Parameter>
                 {
                     new() { TypeName = typeof(SerializedMemberList).GetTypeName(pretty: false), Name = "gameObjectDiffs" }
                 }
@@ -104,7 +104,7 @@ namespace ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -170,8 +170,8 @@ namespace ReflectorNet.Tests.SchemaTests
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.ListObject_ListObject))!;
 
             // Act - Create method reference from MethodInfo
-            var methodRef = new com.IvanMurzak.ReflectorNet.Model.MethodPointerRef(methodInfo);
-            var methodDataRef = new MethodDataRef(methodInfo);
+            var methodRef = new com.IvanMurzak.ReflectorNet.Model.MethodRef(methodInfo);
+            var methodDataRef = new MethodData(methodInfo);
 
             // Assert
             Assert.True(methodRef.IsValid);

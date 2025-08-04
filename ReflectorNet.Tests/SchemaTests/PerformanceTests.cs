@@ -1,5 +1,5 @@
 using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using com.IvanMurzak.ReflectorNet.Utils;
 using com.IvanMurzak.ReflectorNet.Model;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class PerformanceTests : BaseTest
     {
@@ -88,7 +88,7 @@ namespace ReflectorNet.Tests.SchemaTests
             // Assert
             Assert.NotNull(schema);
             Assert.NotNull(typeId);
-            Assert.Equal("ReflectorNet.Tests.Schema.Model.GameObjectRef", typeId);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.Model.GameObjectRef", typeId);
 
             _output.WriteLine($"Type: {testType.GetTypeName(pretty: false)}");
             _output.WriteLine($"Schema: {schema}");
@@ -98,6 +98,8 @@ namespace ReflectorNet.Tests.SchemaTests
         [Fact]
         public void TypeUtils_Integration_Tests()
         {
+            var reflector = new Reflector();
+
             // Test type resolution
             var stringType = TypeUtils.GetType("System.String");
             Assert.Equal(typeof(string), stringType);
@@ -106,10 +108,10 @@ namespace ReflectorNet.Tests.SchemaTests
             Assert.Equal(typeof(GameObjectRef), gameObjectRefType);
 
             // Test default value generation
-            var defaultInt = TypeUtils.GetDefaultValue(typeof(int));
+            var defaultInt = reflector.GetDefaultValue(typeof(int));
             Assert.Equal(0, defaultInt);
 
-            var defaultString = TypeUtils.GetDefaultValue(typeof(string));
+            var defaultString = reflector.GetDefaultValue(typeof(string));
             Assert.Null(defaultString);
 
             _output.WriteLine("TypeUtils integration tests passed");
@@ -152,7 +154,7 @@ namespace ReflectorNet.Tests.SchemaTests
             var methodInfo = typeof(TestClass).GetMethod(nameof(TestClass.SerializedMemberList_ReturnString))!;
 
             // Act
-            var methodDataRef = new MethodDataRef(methodInfo);
+            var methodDataRef = new MethodData(methodInfo);
 
             // Assert
             Assert.Equal(typeof(TestClass).Namespace, methodDataRef.Namespace);

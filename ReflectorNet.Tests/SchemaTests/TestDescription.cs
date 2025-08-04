@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public partial class TestDescription : BaseTest
     {
@@ -43,8 +43,8 @@ namespace ReflectorNet.Tests.SchemaTests
         public void PropertyDescriptionOfReflectorNetModels()
         {
             // Test MethodPointerRef and MethodDataRef which have Description attributes
-            TestClassMembersDescription(typeof(MethodPointerRef));
-            TestClassMembersDescription(typeof(MethodDataRef));
+            TestClassMembersDescription(typeof(MethodRef));
+            TestClassMembersDescription(typeof(MethodData));
 
             // SerializedMember and SerializedMemberList use custom converters with descriptions
             // Let's test their schema generation separately
@@ -265,7 +265,7 @@ namespace ReflectorNet.Tests.SchemaTests
         public void DescriptionInheritanceFromBaseType()
         {
             // Test that descriptions work with inheritance
-            TestClassMembersDescription(typeof(MethodDataRef)); // inherits from MethodPointerRef
+            TestClassMembersDescription(typeof(MethodData)); // inherits from MethodPointerRef
         }
 
         [Fact]

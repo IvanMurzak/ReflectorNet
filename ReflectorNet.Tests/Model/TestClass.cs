@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using com.IvanMurzak.ReflectorNet.Model;
 
-namespace ReflectorNet.Tests
+namespace com.IvanMurzak.ReflectorNet.Tests
 {
     public class TestClass
     {

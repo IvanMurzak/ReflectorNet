@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using Xunit.Abstractions;
 using com.IvanMurzak.ReflectorNet.Utils;
+using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests.ReflectorTests
+namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 {
     public class FindMethod : BaseTest
     {
@@ -15,7 +15,7 @@ namespace ReflectorNet.Tests.ReflectorTests
         {
             // Arrange
             var reflector = new Reflector();
-            var methodPointer = new MethodPointerRef
+            var methodPointer = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -43,7 +43,7 @@ namespace ReflectorNet.Tests.ReflectorTests
         {
             // Arrange
             var reflector = new Reflector();
-            var methodPointer = new MethodPointerRef
+            var methodPointer = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),

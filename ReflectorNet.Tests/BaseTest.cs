@@ -1,6 +1,6 @@
 ﻿using Xunit.Abstractions;
 
-namespace ReflectorNet.Tests
+namespace com.IvanMurzak.ReflectorNet.Tests
 {
     public class BaseTest
     {

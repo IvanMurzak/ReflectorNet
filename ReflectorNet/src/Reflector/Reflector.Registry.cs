@@ -38,39 +38,16 @@ namespace com.IvanMurzak.ReflectorNet
 
             public IReadOnlyList<IReflectionConvertor> GetAllSerializers() => _serializers.ToList();
 
-            IEnumerable<IReflectionConvertor> FindRelevantSerializers(Type type) => _serializers
+            IEnumerable<IReflectionConvertor> FindRelevantConvertors(Type type) => _serializers
                 .Select(s => (s, s.SerializationPriority(type)))
                 .Where(s => s.Item2 > 0)
                 .OrderByDescending(s => s.Item2)
                 .Select(s => s.s);
 
-            public IEnumerable<IReflectionConvertor> BuildSerializersChain(Type type)
+            public IReflectionConvertor? GetConvertor(Type type)
             {
-                var serializers = FindRelevantSerializers(type);
-                foreach (var serializer in serializers)
-                {
-                    yield return serializer;
-                    if (!serializer.AllowCascadeSerialize)
-                        break;
-                }
-            }
-            public IReflectionConvertor? BuildDeserializersChain(Type type)
-            {
-                var serializers = FindRelevantSerializers(type);
-                foreach (var serializer in serializers)
-                    return serializer;
-
-                return null;
-            }
-            public IEnumerable<IReflectionConvertor> BuildPopulatorsChain(Type type)
-            {
-                var serializers = FindRelevantSerializers(type);
-                foreach (var serializer in serializers)
-                {
-                    yield return serializer;
-                    if (!serializer.AllowCascadePopulate)
-                        break;
-                }
+                return FindRelevantConvertors(type)
+                    .FirstOrDefault();
             }
         }
     }

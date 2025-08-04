@@ -12,7 +12,13 @@ namespace com.IvanMurzak.ReflectorNet
             if (a.GetType() != b.GetType()) return false;
 
             var type = a.GetType();
-            var convertor = Convertors.BuildSerializersChain(a.GetType()).First();
+            var convertor = Convertors.GetConvertor(a.GetType());
+
+            if (convertor == null)
+            {
+                // No convertor found, use default equality check
+                return a.Equals(b);
+            }
 
             var fields = convertor.GetSerializableFields(this, type);
             if (fields != null)

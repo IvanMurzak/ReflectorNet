@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -37,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
                         [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
-                        [JsonUtils.Schema.Description] = "Field's value, nested fields and properties."
+                        [JsonUtils.Schema.Description] = "Nested field value."
                     },
                     [JsonUtils.Schema.Description] = "List of fields of the member. Can be null or empty.",
                 },
@@ -47,7 +46,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonUtils.Schema.Items] = new JsonObject
                     {
                         [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
-                        [JsonUtils.Schema.Description] = "Property's value, nested fields and properties."
+                        [JsonUtils.Schema.Description] = "Nested property value."
                     },
                     [JsonUtils.Schema.Description] = "List of properties of the member. Can be null or empty.",
                 }
@@ -89,13 +88,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
                             member.typeName = reader.GetString() ?? "[FAILED TO READ]";
                             break;
                         case SerializedMember.ValueName:
-                            member.valueJsonElement = JsonElement.ParseValue(ref reader);
+                            if (!JsonElement.TryParseValue(ref reader, out member.valueJsonElement))
+                                throw new JsonException($"Failed to parse value for property '{SerializedMember.ValueName}'.");
                             break;
                         case nameof(SerializedMember.fields):
-                            member.fields = JsonUtils.Deserialize<List<SerializedMember>>(ref reader, options);
+                            member.fields = JsonUtils.Deserialize<SerializedMemberList>(ref reader, options);
                             break;
                         case nameof(SerializedMember.props):
-                            member.props = JsonUtils.Deserialize<List<SerializedMember>>(ref reader, options);
+                            member.props = JsonUtils.Deserialize<SerializedMemberList>(ref reader, options);
                             break;
                         default:
                             throw new JsonException($"Unexpected property name: '{propertyName}'. "

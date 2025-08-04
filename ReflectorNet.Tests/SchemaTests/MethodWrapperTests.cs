@@ -1,6 +1,6 @@
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet;
-using ReflectorNet.Tests.Schema.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Reflection;
 
-namespace ReflectorNet.Tests.SchemaTests
+namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public class MethodWrapperTests : BaseTest
     {

@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {
-        static IEnumerable<Type> AllTypes => AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(assembly => assembly.GetTypes());
-
-        static IEnumerable<MethodInfo> AllMethods => AllTypes
+        public static IEnumerable<MethodInfo> AllMethods => TypeUtils.AllTypes
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
             .Where(method => method.DeclaringType != null && !method.DeclaringType.IsAbstract);
 
@@ -64,7 +62,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// 1 for partial match (name or type mismatch),
         /// 0 for no match or incompatible parameters.
         /// </returns>
-        static int Compare(ParameterInfo[] original, List<MethodPointerRef.Parameter>? value)
+        static int Compare(ParameterInfo[] original, List<MethodRef.Parameter>? value)
         {
             if (original == null && value == null)
                 return 2;
@@ -110,7 +108,7 @@ namespace com.IvanMurzak.ReflectorNet
         }
 
         public IEnumerable<MethodInfo> FindMethod(
-            MethodPointerRef filter,
+            MethodRef filter,
             bool knownNamespace = false,
             int typeNameMatchLevel = 1,
             int methodNameMatchLevel = 1,
@@ -120,7 +118,7 @@ namespace com.IvanMurzak.ReflectorNet
             // Prepare Namespace
             filter.Namespace = filter.Namespace?.Trim()?.Replace("null", string.Empty);
 
-            var typesEnumerable = AllTypes
+            var typesEnumerable = TypeUtils.AllTypes
                 .Where(type => type.IsVisible)
                 .Where(type => !type.IsInterface)
                 .Where(type => !type.IsAbstract || type.IsSealed)
@@ -160,7 +158,6 @@ namespace com.IvanMurzak.ReflectorNet
                     .Where(entry => entry.MatchLevel >= methodNameMatchLevel)
                     .OrderByDescending(entry => entry.MatchLevel)
                     .Select(entry => entry.Method);
-
             if (parametersMatchLevel > 0)
                 methodEnumerable = methodEnumerable
                     .Select(method => new
