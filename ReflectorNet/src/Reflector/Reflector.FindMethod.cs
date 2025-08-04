@@ -62,7 +62,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// 1 for partial match (name or type mismatch),
         /// 0 for no match or incompatible parameters.
         /// </returns>
-        static int Compare(ParameterInfo[] original, List<MethodPointerRef.Parameter>? value)
+        static int Compare(ParameterInfo[] original, List<MethodRef.Parameter>? value)
         {
             if (original == null && value == null)
                 return 2;
@@ -108,7 +108,7 @@ namespace com.IvanMurzak.ReflectorNet
         }
 
         public IEnumerable<MethodInfo> FindMethod(
-            MethodPointerRef filter,
+            MethodRef filter,
             bool knownNamespace = false,
             int typeNameMatchLevel = 1,
             int methodNameMatchLevel = 1,

@@ -124,7 +124,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void MethodPointerRef_ToString_Formatting()
         {
             // Test without namespace
-            var methodRef1 = new MethodPointerRef
+            var methodRef1 = new MethodRef
             {
                 TypeName = "TestClass",
                 MethodName = "TestMethod"
@@ -133,7 +133,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal("TestClass.TestMethod()", toString1);
 
             // Test with namespace
-            var methodRef2 = new MethodPointerRef
+            var methodRef2 = new MethodRef
             {
                 Namespace = "TestNamespace",
                 TypeName = "TestClass",
@@ -143,12 +143,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal("TestNamespace.TestClass.TestMethod()", toString2);
 
             // Test with parameters
-            var methodRef3 = new MethodPointerRef
+            var methodRef3 = new MethodRef
             {
                 Namespace = "TestNamespace",
                 TypeName = "TestClass",
                 MethodName = "TestMethod",
-                InputParameters = new System.Collections.Generic.List<MethodPointerRef.Parameter>
+                InputParameters = new System.Collections.Generic.List<MethodRef.Parameter>
                 {
                     new() { TypeName = "System.String", Name = "param1" },
                     new() { TypeName = "System.Int32", Name = "param2" }

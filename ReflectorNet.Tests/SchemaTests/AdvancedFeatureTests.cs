@@ -46,7 +46,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Find all methods with same name but different signatures
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),

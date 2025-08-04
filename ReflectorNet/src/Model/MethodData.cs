@@ -9,7 +9,7 @@ using com.IvanMurzak.ReflectorNet.Utils;
 namespace com.IvanMurzak.ReflectorNet.Model
 {
     [Description(@"Method data. Used for providing detailed readonly information about a method in codebase of the project.")]
-    public class MethodData : MethodPointerRef
+    public class MethodData : MethodRef
     {
         [JsonInclude, JsonPropertyName("isPublic")]
         [Description("Indicates if the method is public.")]

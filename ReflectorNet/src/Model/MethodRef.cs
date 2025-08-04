@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 namespace com.IvanMurzak.ReflectorNet.Model
 {
     [Description(@"Method reference. Used to find method in codebase of the project.")]
-    public class MethodPointerRef
+    public class MethodRef
     {
         [JsonInclude, JsonPropertyName("namespace")]
         [Description("Namespace of the class. It may be empty if the class is in the global namespace or the namespace is unknown.")]
@@ -51,8 +51,8 @@ namespace com.IvanMurzak.ReflectorNet.Model
             }
         }
 
-        public MethodPointerRef() { }
-        public MethodPointerRef(MethodInfo methodInfo)
+        public MethodRef() { }
+        public MethodRef(MethodInfo methodInfo)
         {
             Namespace = methodInfo.DeclaringType?.Namespace;
             TypeName = methodInfo.DeclaringType?.Name ?? string.Empty;
@@ -61,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
                 ?.Select(parameter => new Parameter(parameter))
                 ?.ToList();
         }
-        public MethodPointerRef(PropertyInfo methodInfo)
+        public MethodRef(PropertyInfo methodInfo)
         {
             Namespace = methodInfo.DeclaringType?.Namespace;
             TypeName = methodInfo.DeclaringType?.Name ?? string.Empty;
@@ -77,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
                 ? $"{TypeName}.{MethodName}({string.Join(", ", InputParameters)})"
                 : $"{Namespace}.{TypeName}.{MethodName}({string.Join(", ", InputParameters)})";
 
-        [Description("Parameter of the method. Contains type and name of the parameter.")]
+        [Description("Parameter of a method. Contains type and name of the parameter.")]
         public class Parameter
         {
             [JsonInclude, JsonPropertyName("typeName")]

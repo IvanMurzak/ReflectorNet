@@ -18,7 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -45,7 +45,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -72,12 +72,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
                 MethodName = nameof(TestClass.SerializedMemberList_ReturnString),
-                InputParameters = new List<MethodPointerRef.Parameter>
+                InputParameters = new List<MethodRef.Parameter>
                 {
                     new() { TypeName = typeof(SerializedMemberList).GetTypeName(pretty: false), Name = "gameObjectDiffs" }
                 }
@@ -104,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var filter = new MethodPointerRef
+            var filter = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -170,7 +170,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.ListObject_ListObject))!;
 
             // Act - Create method reference from MethodInfo
-            var methodRef = new com.IvanMurzak.ReflectorNet.Model.MethodPointerRef(methodInfo);
+            var methodRef = new com.IvanMurzak.ReflectorNet.Model.MethodRef(methodInfo);
             var methodDataRef = new MethodData(methodInfo);
 
             // Assert

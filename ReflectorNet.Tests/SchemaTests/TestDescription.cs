@@ -43,7 +43,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void PropertyDescriptionOfReflectorNetModels()
         {
             // Test MethodPointerRef and MethodDataRef which have Description attributes
-            TestClassMembersDescription(typeof(MethodPointerRef));
+            TestClassMembersDescription(typeof(MethodRef));
             TestClassMembersDescription(typeof(MethodData));
 
             // SerializedMember and SerializedMemberList use custom converters with descriptions

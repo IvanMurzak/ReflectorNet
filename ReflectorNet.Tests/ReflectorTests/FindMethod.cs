@@ -15,7 +15,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             // Arrange
             var reflector = new Reflector();
-            var methodPointer = new MethodPointerRef
+            var methodPointer = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),
@@ -43,7 +43,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             // Arrange
             var reflector = new Reflector();
-            var methodPointer = new MethodPointerRef
+            var methodPointer = new MethodRef
             {
                 Namespace = typeof(TestClass).Namespace,
                 TypeName = nameof(TestClass),

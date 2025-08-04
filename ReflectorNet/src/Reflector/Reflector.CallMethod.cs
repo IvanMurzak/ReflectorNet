@@ -12,7 +12,7 @@ namespace com.IvanMurzak.ReflectorNet
         public string MethodCall
         (
             Reflector reflector,
-            MethodPointerRef filter,
+            MethodRef filter,
             bool knownNamespace = false,
             int typeNameMatchLevel = 1,
             int methodNameMatchLevel = 1,
