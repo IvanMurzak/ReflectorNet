@@ -6,20 +6,23 @@ using System.Text.Json.Serialization;
 
 namespace com.IvanMurzak.ReflectorNet.Model
 {
-    [Description(@"Method reference. Used to find method in codebase of the project.
-'namespace' (string) - namespace of the class. It may be empty if the class is in the global namespace or the namespace is unknown.
-'typeName' (string) - class name. Or substring of the class name.
-'methodName' (string) - method name. Or substring of the method name.
-'inputParameters' (List<Parameter>) - list of parameters. Each parameter is represented by a 'Parameter' object.
-
-'Parameter' object contains two fields:
-'typeName' (string) - type of the parameter including namespace. Sample: 'System.String', 'System.Int32', 'UnityEngine.GameObject', etc.
-'name' (string) - name of the parameter. It may be empty if the name is unknown.")]
+    [Description(@"Method reference. Used to find method in codebase of the project.")]
     public class MethodPointerRef
     {
+        [JsonInclude, JsonPropertyName("namespace")]
+        [Description("Namespace of the class. It may be empty if the class is in the global namespace or the namespace is unknown.")]
         public string? Namespace { get; set; }
+
+        [JsonInclude, JsonPropertyName("typeName")]
+        [Description("Class name, or substring a class name. It may be empty if the class is unknown.")]
         public string TypeName { get; set; } = string.Empty;
+
+        [JsonInclude, JsonPropertyName("methodName")]
+        [Description("Method name, or substring of the method name. It may be empty if the method is unknown.")]
         public string MethodName { get; set; } = string.Empty;
+
+        [JsonInclude, JsonPropertyName("inputParameters")]
+        [Description("List of input parameters. Can be null if the method has no parameters or the parameters are unknown.")]
         public List<Parameter>? InputParameters { get; set; }
 
         [JsonIgnore]
@@ -74,9 +77,15 @@ namespace com.IvanMurzak.ReflectorNet.Model
                 ? $"{TypeName}.{MethodName}({string.Join(", ", InputParameters)})"
                 : $"{Namespace}.{TypeName}.{MethodName}({string.Join(", ", InputParameters)})";
 
+        [Description("Parameter of the method. Contains type and name of the parameter.")]
         public class Parameter
         {
+            [JsonInclude, JsonPropertyName("typeName")]
+            [Description("Type of the parameter including namespace. Sample: 'System.String', 'System.Int32', 'UnityEngine.GameObject', etc.")]
             public string? TypeName { get; set; }
+
+            [JsonInclude, JsonPropertyName("name")]
+            [Description("Name of the parameter. It may be empty if the name is unknown.")]
             public string? Name { get; set; }
 
             public Parameter() { }

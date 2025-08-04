@@ -154,7 +154,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var methodInfo = typeof(TestClass).GetMethod(nameof(TestClass.SerializedMemberList_ReturnString))!;
 
             // Act
-            var methodDataRef = new MethodDataRef(methodInfo);
+            var methodDataRef = new MethodData(methodInfo);
 
             // Assert
             Assert.Equal(typeof(TestClass).Namespace, methodDataRef.Namespace);

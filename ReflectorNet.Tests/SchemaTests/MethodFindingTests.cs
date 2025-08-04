@@ -171,7 +171,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Act - Create method reference from MethodInfo
             var methodRef = new com.IvanMurzak.ReflectorNet.Model.MethodPointerRef(methodInfo);
-            var methodDataRef = new MethodDataRef(methodInfo);
+            var methodDataRef = new MethodData(methodInfo);
 
             // Assert
             Assert.True(methodRef.IsValid);
