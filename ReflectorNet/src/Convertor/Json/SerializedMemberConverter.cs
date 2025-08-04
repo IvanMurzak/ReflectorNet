@@ -89,7 +89,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
                             member.typeName = reader.GetString() ?? "[FAILED TO READ]";
                             break;
                         case SerializedMember.ValueName:
-                            JsonElement.TryParseValue(ref reader, out member.valueJsonElement);
+                            if (!JsonElement.TryParseValue(ref reader, out member.valueJsonElement))
+                                throw new JsonException($"Failed to parse value for property '{SerializedMember.ValueName}'.");
                             break;
                         case nameof(SerializedMember.fields):
                             member.fields = JsonUtils.Deserialize<SerializedMemberList>(ref reader, options);

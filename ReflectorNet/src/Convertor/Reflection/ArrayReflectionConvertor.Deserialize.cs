@@ -287,16 +287,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                             stringBuilder: stringBuilder,
                             logger: logger
                         );
-                        // if (!TryDeserializeValue(
-                        //     reflector,
-                        //     element,
-                        //     out var parsedValue,
-                        //     out var errorMessage,
-                        //     depth: depth,
-                        //     stringBuilder: stringBuilder,
-                        //     logger: logger))
+                        // if (!success)
                         // {
-                        //     success = false;
                         //     if (stringBuilder != null)
                         //         stringBuilder.AppendLine($"{paddingNext}[Error] Enumerable[{i}] deserialization failed: {errorMessage}");
                         //     return null;
