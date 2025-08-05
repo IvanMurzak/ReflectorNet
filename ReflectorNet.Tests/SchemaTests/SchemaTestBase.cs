@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
@@ -11,6 +11,21 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
     {
         protected SchemaTestBase(ITestOutputHelper output) : base(output)
         {
+        }
+
+        protected void JsonSchemaValidation(Type type)
+        {
+            var schema = JsonUtils.Schema.GetSchema(type, justRef: false);
+
+            _output.WriteLine($"Schema for {type.GetTypeShortName()}");
+            _output.WriteLine($"{schema}");
+
+            Assert.NotNull(schema);
+            if (schema.AsObject().TryGetPropertyValue(JsonUtils.Schema.Error, out var errorValue))
+            {
+                Assert.Fail(errorValue!.ToString());
+            }
+            Assert.NotNull(schema.AsObject());
         }
 
         protected void TestMethodInputs_PropertyRefs(MethodInfo methodInfo, params string[] parameterNames)

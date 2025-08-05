@@ -9,9 +9,7 @@ namespace com.IvanMurzak.ReflectorNet
         public T? CreateInstance<T>() => (T?)CreateInstance(typeof(T));
         public object? CreateInstance(Type type)
         {
-            var underlyingNullableType = Nullable.GetUnderlyingType(type);
-            if (underlyingNullableType != null)
-                type = underlyingNullableType;
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             var convertor = Convertors.GetConvertor(type);
             if (convertor == null)
@@ -23,9 +21,7 @@ namespace com.IvanMurzak.ReflectorNet
         public T? GetDefaultValue<T>() => (T?)GetDefaultValue(typeof(T));
         public object? GetDefaultValue(Type type)
         {
-            var underlyingNullableType = Nullable.GetUnderlyingType(type);
-            if (underlyingNullableType != null)
-                type = underlyingNullableType;
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             var convertor = Convertors.GetConvertor(type);
             if (convertor == null)

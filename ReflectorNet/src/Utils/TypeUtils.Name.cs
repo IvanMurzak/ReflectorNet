@@ -15,9 +15,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return Null;
 
             // Handle nullable types
-            var underlyingNullableType = Nullable.GetUnderlyingType(type);
-            if (underlyingNullableType != null)
-                type = underlyingNullableType;
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             return pretty
                 ? type.FullName ?? Null
@@ -30,9 +28,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 throw new ArgumentNullException(nameof(type));
 
             // Handle nullable types
-            var underlyingNullableType = Nullable.GetUnderlyingType(type);
-            if (underlyingNullableType != null)
-                type = underlyingNullableType;
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             // Special case: string is technically IEnumerable<char> but shouldn't be treated as an array
             if (type == typeof(string))

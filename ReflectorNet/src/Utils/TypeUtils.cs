@@ -35,24 +35,27 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         public static string? GetDescription(Type type)
         {
-            var descriptionAttribute = type.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
+            return type
+                .GetCustomAttributes<DescriptionAttribute>(true)
+                .FirstOrDefault()?.Description;
         }
-        public static string? GetDescription(MemberInfo memberInfo)
+        public static string? GetDescription(MemberInfo? memberInfo)
         {
-            var descriptionAttribute = memberInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
+            if (memberInfo == null)
+                return null;
+
+            return memberInfo
+                .GetCustomAttributes<DescriptionAttribute>(true)
+                .FirstOrDefault()?.Description;
         }
-        public static string? GetPropertyDescription(PropertyInfo propertyInfo)
+        public static string? GetPropertyDescription(PropertyInfo? propertyInfo)
         {
             if (propertyInfo == null)
                 return null;
 
-            var descriptionAttribute = propertyInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
+            return propertyInfo
+                .GetCustomAttributes<DescriptionAttribute>(true)
+                .FirstOrDefault()?.Description;
         }
         public static string? GetPropertyDescription(Type type, string propertyName)
         {
@@ -125,14 +128,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return false;
 
             // Handle nullable types
-            var underlyingType = Nullable.GetUnderlyingType(type);
-            if (underlyingType != null)
-                type = underlyingType;
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             // Handle nullable types
-            var underlyingType2 = Nullable.GetUnderlyingType(to);
-            if (underlyingType2 != null)
-                to = underlyingType2;
+            to = Nullable.GetUnderlyingType(to) ?? to;
 
             // Check if the type is assignable to the target type
             if (to.IsAssignableFrom(type))

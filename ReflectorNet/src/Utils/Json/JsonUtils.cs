@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Nodes;
 using com.IvanMurzak.ReflectorNet.Json;
+using System.Linq;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
@@ -40,6 +41,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (converter == null)
                 throw new ArgumentNullException(nameof(converter));
             jsonSerializerOptions.Converters.Add(converter);
+        }
+        public static bool RemoveConverter<T>() where T : JsonConverter
+        {
+            var converter = jsonSerializerOptions.Converters.FirstOrDefault(c => c.GetType() == typeof(T));
+            if (converter != null)
+                return jsonSerializerOptions.Converters.Remove(converter);
+            return false;
         }
 
         public static T? Deserialize<T>(string json, JsonSerializerOptions? options = null)

@@ -13,7 +13,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
     {
         void TestClassMembersDescription(Type type, BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
-            _output.WriteLine($"Testing members description for type: '{type.GetTypeName(pretty: false)}'");
+            _output.WriteLine($"Testing members description for type: '{type.GetTypeShortName()}'");
 
             var schema = JsonUtils.Schema.GetSchema(type, justRef: false);
             Assert.NotNull(schema);
@@ -61,11 +61,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Some schemas (like arrays without item properties or enums) may not have properties
             if (properties == null)
             {
-                _output.WriteLine("No properties found in schema - skipping property validation");
+                _output.WriteLine("No properties found in schema - skipping property validation.\n");
                 return;
             }
 
-            _output.WriteLine($"Properties[{members.Count}]: {properties}");
+            _output.WriteLine($"Properties[{members.Count}]: {properties}\n");
 
             foreach (var kvp in properties.AsObject())
             {
@@ -77,9 +77,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
                 // Handle camelCase to PascalCase conversion for member lookup
                 var member = members.FirstOrDefault(m => m.Name == name) ??
-                            members.FirstOrDefault(m => m.Name == ToPascalCase(name)) ??
-                            members.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.OrdinalIgnoreCase));
-                Assert.NotNull(member);
+                             members.FirstOrDefault(m => m.Name == ToPascalCase(name)) ??
+                             members.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.OrdinalIgnoreCase));
+
+                Assert.False(member == null, $"Schema property '{name}' not found in members of type '{type.GetTypeShortName()}'");
 
                 var description = TypeUtils.GetDescription(member);
                 var schemaDescription = propertySchema[JsonUtils.Schema.Description]?.ToString();

@@ -1,5 +1,7 @@
+using System;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Tests.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
@@ -46,6 +48,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             TestMethodInputs_PropertyRefs(methodInfo,
                 "stringArray");
+        }
+
+        [Fact]
+        void GameObjectRef()
+        {
+            JsonSchemaValidation(typeof(GameObjectRef));
         }
     }
 }

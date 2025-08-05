@@ -1,8 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
@@ -12,7 +9,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class JsonUtils
     {
-        public static class Schema
+        public static partial class Schema
         {
             public const string Type = "type";
             public const string Object = "object";
@@ -21,6 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             public const string Items = "items";
             public const string Array = "array";
             public const string Required = "required";
+            public const string Error = "error";
 
             public const string Null = "null";
             public const string String = "string";
@@ -36,13 +34,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             public const string SchemaDraft = "$schema";
             public const string SchemaDraftValue = "https://json-schema.org/draft/2020-12/schema";
 
-            public static JsonNode? GetSchema<T>() => GetSchema(typeof(T));
-            public static JsonNode? GetSchema(Type type, bool justRef = false)
+            public static JsonNode GetSchema<T>() => GetSchema(typeof(T));
+            public static JsonNode GetSchema(Type type, bool justRef = false)
             {
                 // Handle nullable types
-                var underlyingNullableType = Nullable.GetUnderlyingType(type);
-                if (underlyingNullableType != null)
-                    type = underlyingNullableType;
+                type = Nullable.GetUnderlyingType(type) ?? type;
 
                 var schema = default(JsonNode);
 
@@ -66,62 +62,93 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             };
 
                             // Get description from the type if available
-                            var description = type.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                            var description = TypeUtils.GetDescription(type);
                             if (!string.IsNullOrEmpty(description))
                                 schema[Description] = JsonValue.Create(description);
                         }
                         else
                         {
-                            // For non-nullable types, get the schema directly
-                            schema = jsonSerializerOptions.GetJsonSchemaAsNode(
-                                type: type,
-                                exporterOptions: new JsonSchemaExporterOptions
-                                {
-                                    TreatNullObliviousAsNonNullable = false,
-                                    TransformSchemaNode = (context, node) =>
+                            // Try to use built-in JsonSchemaExporter first
+                            JsonNode? builtInSchema = null;
+                            try
+                            {
+                                builtInSchema = jsonSerializerOptions.GetJsonSchemaAsNode(
+                                    type: type,
+                                    exporterOptions: new JsonSchemaExporterOptions
                                     {
-                                        if (context.PropertyInfo == null)
-                                            return node;
-
-                                        var description = TypeUtils.GetPropertyDescription(context);
-
-                                        // If the type is primitive, we can return the schema directly
-                                        if (TypeUtils.IsPrimitive(context.PropertyInfo.PropertyType))
+                                        TreatNullObliviousAsNonNullable = false,
+                                        TransformSchemaNode = (context, node) =>
                                         {
+                                            if (context.PropertyInfo == null)
+                                                return node;
+
+                                            var description = TypeUtils.GetPropertyDescription(context);
+
+                                            // If the type is primitive, we can return the schema directly
+                                            if (TypeUtils.IsPrimitive(context.PropertyInfo.PropertyType))
+                                            {
+                                                if (!string.IsNullOrEmpty(description))
+                                                    node[Description] = JsonValue.Create(description);
+
+                                                return node;
+                                            }
+
+                                            if (node == null)
+                                            {
+                                                node = new JsonObject
+                                                {
+                                                    [Type] = Object,
+                                                    [Properties] = node
+                                                };
+                                            }
+                                            else if (node is JsonObject jsonObject)
+                                            {
+                                                jsonObject[Type] = Object;
+                                            }
+                                            else
+                                            {
+                                                node = new JsonObject
+                                                {
+                                                    [Type] = Object,
+                                                    [Properties] = node
+                                                };
+                                            }
+
                                             if (!string.IsNullOrEmpty(description))
                                                 node[Description] = JsonValue.Create(description);
 
+                                            // Remove nested schema version if it exists
+                                            node.AsObject().Remove(SchemaDraft);
+
                                             return node;
                                         }
+                                    });
+                            }
+                            catch
+                            {
+                                // Ignore errors from built-in schema exporter
+                                builtInSchema = null;
+                            }
 
-                                        // Otherwise, we need to ensure the schema is an object
-                                        if (node is JsonObject jsonObject)
-                                        {
-                                            jsonObject[Type] = Object;
-                                        }
-                                        else
-                                        {
-                                            node = new JsonObject
-                                            {
-                                                [Type] = Object,
-                                                [Properties] = node
-                                            };
-                                        }
+                            // Check if the built-in schema is valid (not just 'true' or empty)
+                            var isValidBuiltInSchema = builtInSchema != null &&
+                                builtInSchema is JsonObject builtInObj &&
+                                builtInObj.ContainsKey(Type);
 
-                                        if (!string.IsNullOrEmpty(description))
-                                            node[Description] = JsonValue.Create(description);
-
-                                        // Remove nested schema version if it exists
-                                        node.AsObject().Remove(SchemaDraft);
-
-                                        return node;
-                                    }
-                                });
+                            if (isValidBuiltInSchema)
+                            {
+                                schema = builtInSchema;
+                            }
+                            else
+                            {
+                                // Fallback: generate schema using ReflectorNet's introspection capabilities
+                                schema = GenerateSchemaFromType(type);
+                            }
 
                             // Get description from the type if available
                             var description = type.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                            if (!string.IsNullOrEmpty(description))
-                                schema[Description] = JsonValue.Create(description);
+                            if (!string.IsNullOrEmpty(description) && schema is JsonObject schemaObj)
+                                schemaObj[Description] = JsonValue.Create(description);
                         }
                     }
                 }
@@ -130,12 +157,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     // Handle exceptions and return null or an error message
                     return new JsonObject()
                     {
-                        ["error"] = $"Failed to get schema for '{type.GetTypeName(pretty: false)}': {ex.Message}"
+                        [Error] = $"Failed to get schema for '{type.GetTypeName(pretty: false)}':\n{ex.Message}\n{ex.StackTrace}\n"
                     };
                 }
 
                 if (schema == null)
-                    return null;
+                    throw new InvalidOperationException($"Failed to get schema for type '{type.GetTypeName(pretty: false)}'.");
 
                 PostprocessFields(schema);
 
@@ -149,7 +176,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 {
                     return new JsonObject()
                     {
-                        ["error"] = $"Unexpected schema type for '{type.GetTypeName(pretty: false)}'. Json Schema type: {schema.GetType()}"
+                        [Error] = $"Unexpected schema type for '{type.GetTypeName(pretty: false)}'. Json Schema type: {schema.GetType().GetTypeName()}"
                     };
                 }
                 return schema;
@@ -240,79 +267,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 if (defines.Count == 0)
                     schema.Remove(Defs);
                 return schema;
-            }
-
-            public static List<JsonNode> FindAllProperties(JsonNode node, string fieldName)
-            {
-                var result = new List<JsonNode>();
-                if (node is JsonObject obj)
-                {
-                    foreach (var kvp in obj)
-                    {
-                        if (kvp.Value != null)
-                        {
-                            if (kvp.Key == fieldName)
-                                result.Add(kvp.Value);
-
-                            result.AddRange(FindAllProperties(kvp.Value, fieldName));
-                        }
-                    }
-                }
-                else if (node is JsonArray arr)
-                {
-                    foreach (var item in arr)
-                    {
-                        if (item != null)
-                            result.AddRange(FindAllProperties(item, fieldName));
-                    }
-                }
-                return result;
-            }
-            public static void PostprocessFields(JsonNode? node)
-            {
-                if (node == null)
-                    return;
-
-                if (node is JsonObject obj)
-                {
-                    // Fixing "type" field. It should be not nullable, because current LLM models doesn't support nullable types
-                    if (obj.TryGetPropertyValue(Type, out var typeNode))
-                    {
-                        if (typeNode is JsonValue typeValue)
-                        {
-                            if (typeNode.ToString() == Array)
-                                if (obj.TryGetPropertyValue(Items, out var itemsNode))
-                                    PostprocessFields(itemsNode);
-                        }
-                        else
-                        {
-                            if (typeNode is JsonArray typeArray)
-                            {
-                                var correctTypeValue = typeArray
-                                    .FirstOrDefault(x => x is JsonValue value && value.ToString() != Null)
-                                    ?.ToString();
-
-                                if (correctTypeValue != null)
-                                    obj[Type] = JsonValue.Create(correctTypeValue.ToString());
-                            }
-                        }
-                    }
-
-                    foreach (var kvp in obj)
-                    {
-                        if (kvp.Key == Type)
-                            continue;
-
-                        if (kvp.Value != null)
-                            PostprocessFields(kvp.Value);
-                    }
-                }
-                if (node is JsonArray arr)
-                {
-                    foreach (var item in arr)
-                        if (item != null)
-                            PostprocessFields(item);
-                }
             }
         }
     }
