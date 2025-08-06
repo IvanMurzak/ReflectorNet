@@ -20,8 +20,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             // Add custom converters if needed
             jsonSerializerOptions = new JsonSerializerOptions
             {
-                // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore 'null' field and properties
-                DefaultIgnoreCondition = JsonIgnoreCondition.Never, // Include 'null' fields and properties
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore 'null' field and properties
+                // DefaultIgnoreCondition = JsonIgnoreCondition.Never, // Include 'null' fields and properties
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 //ReferenceHandler = ReferenceHandler.Preserve,
                 WriteIndented = true,
