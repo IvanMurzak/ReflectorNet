@@ -99,7 +99,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return new JsonObject
                 {
                     [Type] = Array,
-                    [Items] = elementType != null ? GetSchema(reflector, elementType, justRef: false) : new JsonObject()
+                    [Items] = elementType != null ? GetSchema(reflector, elementType, justRef: !TypeUtils.IsPrimitive(elementType)) : new JsonObject()
                 };
             }
 
@@ -112,7 +112,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     return new JsonObject
                     {
                         [Type] = Array,
-                        [Items] = GetSchema(reflector, itemType, justRef: false)
+                        [Items] = GetSchema(reflector, itemType, justRef: !TypeUtils.IsPrimitive(itemType))
                     };
                 }
             }
@@ -133,7 +133,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 foreach (var field in fields)
                 {
-                    var fieldSchema = GetSchema(reflector, field.FieldType, justRef: false);
+                    var fieldSchema = GetSchema(reflector, field.FieldType, justRef: !TypeUtils.IsPrimitive(field.FieldType));
 
                     // Add description if available
                     var description = TypeUtils.GetFieldDescription(field);
@@ -155,7 +155,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 foreach (var prop in props)
                 {
-                    var propSchema = GetSchema(reflector, prop.PropertyType, justRef: false);
+                    var propSchema = GetSchema(reflector, prop.PropertyType, justRef: !TypeUtils.IsPrimitive(prop.PropertyType));
 
                     // Add description if available
                     var description = TypeUtils.GetPropertyDescription(prop);
