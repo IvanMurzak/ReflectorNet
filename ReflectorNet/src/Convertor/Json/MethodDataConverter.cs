@@ -57,15 +57,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonSchema.Type] = JsonSchema.Array,
                     [JsonSchema.Items] = new JsonObject
                     {
-                        [JsonSchema.AnyOf] = new JsonArray
-                        {
-                            new JsonObject { [JsonSchema.Type] = JsonSchema.Object },
-                            new JsonObject { [JsonSchema.Type] = JsonSchema.String },
-                            new JsonObject { [JsonSchema.Type] = JsonSchema.Number },
-                            new JsonObject { [JsonSchema.Type] = JsonSchema.Integer },
-                            new JsonObject { [JsonSchema.Type] = JsonSchema.Boolean },
-                            new JsonObject { [JsonSchema.Type] = JsonSchema.Null }
-                        },
+                        [JsonSchema.Type] = JsonSchema.Object,
                         [JsonSchema.AdditionalProperties] = true
                     },
                     [JsonSchema.Description] = TypeUtils.GetDescription(
