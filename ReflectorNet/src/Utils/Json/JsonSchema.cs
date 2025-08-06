@@ -47,65 +47,65 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     {
                         // Try to use built-in JsonSchemaExporter first
                         JsonNode? builtInSchema = null;
-                        try
-                        {
-                            builtInSchema = reflector.JsonSerializerOptions.GetJsonSchemaAsNode(
-                                type: type,
-                                exporterOptions: new JsonSchemaExporterOptions
-                                {
-                                    TreatNullObliviousAsNonNullable = false,
-                                    TransformSchemaNode = (context, node) =>
-                                    {
-                                        if (context.PropertyInfo == null)
-                                            return node;
+                        // try
+                        // {
+                        //     builtInSchema = reflector.JsonSerializerOptions.GetJsonSchemaAsNode(
+                        //         type: type,
+                        //         exporterOptions: new JsonSchemaExporterOptions
+                        //         {
+                        //             TreatNullObliviousAsNonNullable = false,
+                        //             TransformSchemaNode = (context, node) =>
+                        //             {
+                        //                 if (context.PropertyInfo == null)
+                        //                     return node;
 
-                                        var description = TypeUtils.GetPropertyDescription(context);
+                        //                 var description = TypeUtils.GetPropertyDescription(context);
 
-                                        // If the type is primitive, we can return the schema directly
-                                        if (TypeUtils.IsPrimitive(context.PropertyInfo.PropertyType))
-                                        {
-                                            if (!string.IsNullOrEmpty(description))
-                                                node[Description] = JsonValue.Create(description);
+                        //                 // If the type is primitive, we can return the schema directly
+                        //                 if (TypeUtils.IsPrimitive(context.PropertyInfo.PropertyType))
+                        //                 {
+                        //                     if (!string.IsNullOrEmpty(description))
+                        //                         node[Description] = JsonValue.Create(description);
 
-                                            return node;
-                                        }
+                        //                     return node;
+                        //                 }
 
-                                        if (node == null)
-                                        {
-                                            node = new JsonObject
-                                            {
-                                                [Type] = Object,
-                                                [Properties] = node
-                                            };
-                                        }
-                                        else if (node is JsonObject jsonObject)
-                                        {
-                                            jsonObject[Type] = Object;
-                                        }
-                                        else
-                                        {
-                                            node = new JsonObject
-                                            {
-                                                [Type] = Object,
-                                                [Properties] = node
-                                            };
-                                        }
+                        //                 if (node == null)
+                        //                 {
+                        //                     node = new JsonObject
+                        //                     {
+                        //                         [Type] = Object,
+                        //                         [Properties] = node
+                        //                     };
+                        //                 }
+                        //                 else if (node is JsonObject jsonObject)
+                        //                 {
+                        //                     jsonObject[Type] = Object;
+                        //                 }
+                        //                 else
+                        //                 {
+                        //                     node = new JsonObject
+                        //                     {
+                        //                         [Type] = Object,
+                        //                         [Properties] = node
+                        //                     };
+                        //                 }
 
-                                        if (!string.IsNullOrEmpty(description))
-                                            node[Description] = JsonValue.Create(description);
+                        //                 if (!string.IsNullOrEmpty(description))
+                        //                     node[Description] = JsonValue.Create(description);
 
-                                        // Remove nested schema version if it exists
-                                        node.AsObject().Remove(SchemaDraft);
+                        //                 // Remove nested schema version if it exists
+                        //                 node.AsObject().Remove(SchemaDraft);
 
-                                        return node;
-                                    }
-                                });
-                        }
-                        catch
-                        {
-                            // Ignore errors from built-in schema exporter
-                            builtInSchema = null;
-                        }
+                        //                 return node;
+                        //             }
+                        //         });
+                        // }
+                        // catch
+                        // {
+                        //     // Ignore errors from built-in schema exporter
+                        //     builtInSchema = null;
+                        // }
 
                         // Check if the built-in schema is valid (not just 'true' or empty)
                         var isValidBuiltInSchema = builtInSchema != null &&

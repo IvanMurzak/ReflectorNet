@@ -12,7 +12,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
         public string Id => typeof(ObjectRef).GetTypeId();
         public JsonNode GetScheme() => new JsonObject
         {
-            [JsonSchema.Id] = Id,
             [JsonSchema.Type] = JsonSchema.Object,
             [JsonSchema.Properties] = new JsonObject
             {
