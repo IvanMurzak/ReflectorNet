@@ -46,6 +46,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             jsonSerializerOptions.Converters.Add(converter);
         }
 
+        public void ClearConverters()
+        {
+            jsonSerializerOptions.Converters.Clear();
+        }
+
         public string Serialize(object? data, JsonSerializerOptions? options = null)
             => System.Text.Json.JsonSerializer.Serialize(
                 value: data,

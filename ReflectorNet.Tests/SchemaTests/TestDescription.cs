@@ -314,7 +314,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void CustomConverterDescriptions()
         {
             var reflector = new Reflector();
-            reflector.JsonSerializer.AddConverter(new SerializedMemberConverter(reflector));
+            reflector.JsonSerializer.ClearConverters();
+            reflector.JsonSerializer.AddConverter(new SerializedMemberCustomDescriptionConverter(reflector));
 
             // Test that custom JSON converters provide proper descriptions in schema
             var serializedMemberSchema = reflector.GetSchema(typeof(SerializedMember), justRef: false);
@@ -323,22 +324,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var properties = serializedMemberSchema[JsonSchema.Properties]?.AsObject();
             Assert.NotNull(properties);
 
-            // Check that typeName property has the expected description from the converter
-            var typeNameProperty = properties["typeName"];
-            Assert.NotNull(typeNameProperty);
-            var typeNameDescription = typeNameProperty[JsonSchema.Description]?.ToString();
-            Assert.NotNull(typeNameDescription);
-            Assert.Contains("Full type name", typeNameDescription);
-
-            // Check that name property has the expected description from the converter
-            var nameProperty = properties["name"];
-            Assert.NotNull(nameProperty);
-            var nameDescription = nameProperty[JsonSchema.Description]?.ToString();
-            Assert.NotNull(nameDescription);
-            Assert.Contains("Name of the member", nameDescription);
-
-            _output.WriteLine($"SerializedMember typeName description: {typeNameDescription}");
-            _output.WriteLine($"SerializedMember name description: {nameDescription}");
+            foreach (var property in properties)
+            {
+                _output.WriteLine($"Property: {property.Key}, Description: {property.Value![JsonSchema.Description]}");
+                Assert.Equal(SerializedMemberCustomDescriptionConverter.CustomDescription, property.Value[JsonSchema.Description]?.ToString());
+            }
         }
     }
 }
