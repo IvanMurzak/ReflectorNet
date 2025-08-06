@@ -9,59 +9,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SimpleTests
     {
         public StringTests(ITestOutputHelper output) : base(output) { }
 
-        //         [Fact]
-        //         public void TryUnstringify_JsonString_Stringified()
-        //         {
-        //             // Arrange
-        //             var instanceID = 123;
-        //             var stringifiedJson = $@"
-        // {{
-        //     ""gameObjectRef"": ""{{ \""instanceID\"": {instanceID} }}"",
-        //     ""briefData"": false
-        // }}";
-
-        //             if (JsonUtils.TryUnstringifyJson(stringifiedJson, out var fixedJsonElement))
-        //             {
-        //                 _output.WriteLine($"Unstringified JSON: {fixedJsonElement}");
-
-        //                 Assert.NotNull(fixedJsonElement);
-        //                 Assert.NotNull(fixedJsonElement?.GetProperty("gameObjectRef"));
-        //                 Assert.NotNull(fixedJsonElement?.GetProperty("gameObjectRef").GetProperty("instanceID"));
-
-        //                 Assert.Equal(instanceID, fixedJsonElement!.Value.GetProperty("gameObjectRef").GetProperty("instanceID").GetInt32());
-        //             }
-        //             else
-        //             {
-        //                 Assert.Fail($"Failed to unstringify {nameof(stringifiedJson)}.");
-        //                 Assert.Null(fixedJsonElement);
-        //             }
-        //         }
-
-        //         [Fact]
-        //         public void TryUnstringify_JsonString_Normal()
-        //         {
-        //             // Arrange
-        //             var instanceID = 123;
-        //             var normalJson = $@"
-        // {{
-        //     ""gameObjectRef"": {{ ""instanceID"": {instanceID} }},
-        //     ""briefData"": false
-        // }}";
-        //             if (JsonUtils.TryUnstringifyJson(normalJson, out var fixedJsonElement))
-        //             {
-        //                 Assert.Fail($"Expected to fail unstringify of {nameof(normalJson)}.");
-        //             }
-        //             else
-        //             {
-        //                 Assert.Null(fixedJsonElement);
-
-        //                 using var document = JsonDocument.Parse(normalJson);
-        //                 var rootElement = document.RootElement;
-
-        //                 Assert.Equal(instanceID, rootElement.GetProperty("gameObjectRef").GetProperty("instanceID").GetInt32());
-        //             }
-        //         }
-
         [Fact]
         public void TryUnstringify_JsonElement_Object_Stringified()
         {
@@ -180,7 +127,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SimpleTests
                 Assert.NotNull(fixedJsonElement);
                 Assert.Equal(instanceID, fixedJsonElement.Value
                     .EnumerateArray().First()
-                    // .GetProperty("gameObjectDiffs").EnumerateArray().First()
                     .GetProperty("fields").EnumerateArray().First()
                     .GetProperty("value")
                     .GetProperty("instanceID").GetInt32());
