@@ -39,22 +39,22 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (reader.TokenType == JsonTokenType.Null)
                 return null;
 
-            var member = new SerializedMemberList();
-
             if (reader.TokenType != JsonTokenType.StartArray)
                 throw new JsonException($"Expected start of array, but got {reader.TokenType}");
+
+            var member = new SerializedMemberList();
 
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndArray)
-                    break;
+                    return member;
 
                 var item = System.Text.Json.JsonSerializer.Deserialize<SerializedMember>(ref reader, options);
                 if (item != null)
                     member.Add(item);
             }
 
-            return member;
+            throw new JsonException("Unexpected end of array.");
         }
 
         public override void Write(Utf8JsonWriter writer, SerializedMemberList value, JsonSerializerOptions options)

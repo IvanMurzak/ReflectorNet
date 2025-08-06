@@ -76,12 +76,15 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (reader.TokenType == JsonTokenType.Null)
                 return null;
 
+            if (reader.TokenType != JsonTokenType.StartObject)
+                throw new JsonException($"Expected start of object, but got {reader.TokenType}");
+
             var member = new SerializedMember();
 
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndObject)
-                    break;
+                    return member;
 
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
@@ -91,7 +94,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     switch (propertyName)
                     {
                         case nameof(SerializedMember.name):
-                            member.name = reader.GetString() ?? "[FAILED TO READ]";
+                            member.name = reader.GetString();
                             break;
                         case nameof(SerializedMember.typeName):
                             member.typeName = reader.GetString() ?? "[FAILED TO READ]";
@@ -108,12 +111,12 @@ namespace com.IvanMurzak.ReflectorNet.Json
                             break;
                         default:
                             throw new JsonException($"Unexpected property name: '{propertyName}'. "
-                                + $"Did you want to use '{SerializedMember.ValueName}', '{nameof(SerializedMember.fields)}' or '{nameof(SerializedMember.props)}'?");
+                                + $"Did you want to use '{nameof(SerializedMember.name)}', '{nameof(SerializedMember.typeName)}', '{SerializedMember.ValueName}', '{nameof(SerializedMember.fields)}' or '{nameof(SerializedMember.props)}'?");
                     }
                 }
             }
 
-            return member;
+            throw new JsonException("Unexpected end of JSON while reading SerializedMember.");
         }
 
         public override void Write(Utf8JsonWriter writer, SerializedMember value, JsonSerializerOptions options)

@@ -1,4 +1,6 @@
 using System;
+using System.Reflection;
+using com.IvanMurzak.ReflectorNet.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -65,7 +67,46 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         void GameObjectRef()
         {
-            JsonSchemaValidation(typeof(GameObjectRef));
+            var reflector = new Reflector();
+            JsonSchemaValidation(typeof(GameObjectRef), reflector);
+
+            reflector.JsonSerializer.AddConverter(new GameObjectRefConverter());
+            JsonSchemaValidation(typeof(GameObjectRef), reflector);
+
+            reflector.JsonSerializer.AddConverter(new ObjectRefConverter());
+            JsonSchemaValidation(typeof(GameObjectRef), reflector);
+        }
+
+        [Fact]
+        void MethodData()
+        {
+            var reflector = new Reflector();
+
+            // it fails without MethodDataConverter
+            // JsonSchemaValidation(typeof(MethodData), reflector);
+
+            reflector.JsonSerializer.AddConverter(new MethodDataConverter());
+            JsonSchemaValidation(typeof(MethodData), reflector);
+        }
+
+        [Fact]
+        void ObjectRef()
+        {
+            var reflector = new Reflector();
+            JsonSchemaValidation(typeof(ObjectRef), reflector);
+
+            reflector.JsonSerializer.AddConverter(new ObjectRefConverter());
+            JsonSchemaValidation(typeof(ObjectRef), reflector);
+        }
+
+        [Fact]
+        void MethodInfo()
+        {
+            var reflector = new Reflector();
+            JsonSchemaValidation(typeof(MethodInfo), reflector);
+
+            reflector.JsonSerializer.AddConverter(new MethodInfoConverter());
+            JsonSchemaValidation(typeof(MethodInfo), reflector);
         }
     }
 }

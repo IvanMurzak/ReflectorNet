@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 

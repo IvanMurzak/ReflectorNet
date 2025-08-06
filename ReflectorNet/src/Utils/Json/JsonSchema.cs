@@ -2,7 +2,6 @@ using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json.Nodes;
-using System.Text.Json.Schema;
 using com.IvanMurzak.ReflectorNet.Json;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
