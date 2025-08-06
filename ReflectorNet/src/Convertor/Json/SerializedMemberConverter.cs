@@ -12,53 +12,61 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public static string StaticId => TypeUtils.GetTypeId<SerializedMember>();
         public static JsonNode Schema => new JsonObject
         {
-            [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
-            [JsonUtils.Schema.Properties] = new JsonObject
+            [JsonSchema.Type] = JsonSchema.Object,
+            [JsonSchema.Properties] = new JsonObject
             {
                 [nameof(SerializedMember.typeName)] = new JsonObject
                 {
-                    [JsonUtils.Schema.Type] = JsonUtils.Schema.String,
-                    [JsonUtils.Schema.Description] = "Full type name. Eg: 'System.String', 'System.Int32', 'UnityEngine.Vector3', etc."
+                    [JsonSchema.Type] = JsonSchema.String,
+                    [JsonSchema.Description] = "Full type name. Eg: 'System.String', 'System.Int32', 'UnityEngine.Vector3', etc."
                 },
                 [nameof(SerializedMember.name)] = new JsonObject
                 {
-                    [JsonUtils.Schema.Type] = JsonUtils.Schema.String,
-                    [JsonUtils.Schema.Description] = "Name of the member. Can be null or empty."
+                    [JsonSchema.Type] = JsonSchema.String,
+                    [JsonSchema.Description] = "Name of the member. Can be null or empty."
                 },
                 [SerializedMember.ValueName] = new JsonObject
                 {
-                    [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
-                    [JsonUtils.Schema.Description] = "Member's value. Can be null or empty.",
+                    [JsonSchema.Type] = JsonSchema.Object,
+                    [JsonSchema.Description] = "Member's value. Can be null or empty.",
                 },
                 [nameof(SerializedMember.fields)] = new JsonObject
                 {
-                    [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
-                    [JsonUtils.Schema.Items] = new JsonObject
+                    [JsonSchema.Type] = JsonSchema.Array,
+                    [JsonSchema.Items] = new JsonObject
                     {
-                        [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
-                        [JsonUtils.Schema.Description] = "Nested field value."
+                        [JsonSchema.Ref] = JsonSchema.RefValue + StaticId,
+                        [JsonSchema.Description] = "Nested field value."
                     },
-                    [JsonUtils.Schema.Description] = "List of fields of the member. Can be null or empty.",
+                    [JsonSchema.Description] = "List of fields of the member. Can be null or empty.",
                 },
                 [nameof(SerializedMember.props)] = new JsonObject
                 {
-                    [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
-                    [JsonUtils.Schema.Items] = new JsonObject
+                    [JsonSchema.Type] = JsonSchema.Array,
+                    [JsonSchema.Items] = new JsonObject
                     {
-                        [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId,
-                        [JsonUtils.Schema.Description] = "Nested property value."
+                        [JsonSchema.Ref] = JsonSchema.RefValue + StaticId,
+                        [JsonSchema.Description] = "Nested property value."
                     },
-                    [JsonUtils.Schema.Description] = "List of properties of the member. Can be null or empty.",
+                    [JsonSchema.Description] = "List of properties of the member. Can be null or empty.",
                 }
             },
-            [JsonUtils.Schema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName }
+            [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName }
         };
         public static JsonNode SchemaRef => new JsonObject
         {
-            [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + StaticId
+            [JsonSchema.Ref] = JsonSchema.RefValue + StaticId
         };
 
+        readonly Reflector _reflector;
+
         public string Id => StaticId;
+
+        public SerializedMemberConverter(Reflector reflector)
+        {
+            _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
+        }
+
         public JsonNode GetSchemeRef() => SchemaRef;
         public JsonNode GetScheme() => Schema;
 
@@ -92,10 +100,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
                                 throw new JsonException($"Failed to parse value for property '{SerializedMember.ValueName}'.");
                             break;
                         case nameof(SerializedMember.fields):
-                            member.fields = JsonUtils.Deserialize<SerializedMemberList>(ref reader, options);
+                            member.fields = _reflector.JsonSerializer.Deserialize<SerializedMemberList>(ref reader, options);
                             break;
                         case nameof(SerializedMember.props):
-                            member.props = JsonUtils.Deserialize<SerializedMemberList>(ref reader, options);
+                            member.props = _reflector.JsonSerializer.Deserialize<SerializedMemberList>(ref reader, options);
                             break;
                         default:
                             throw new JsonException($"Unexpected property name: '{propertyName}'. "
@@ -128,12 +136,12 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (value.fields != null && value.fields.Count > 0)
             {
                 writer.WritePropertyName(nameof(SerializedMember.fields));
-                JsonSerializer.Serialize(writer, value.fields, options);
+                System.Text.Json.JsonSerializer.Serialize(writer, value.fields, options);
             }
             if (value.props != null && value.props.Count > 0)
             {
                 writer.WritePropertyName(nameof(SerializedMember.props));
-                JsonSerializer.Serialize(writer, value.props, options);
+                System.Text.Json.JsonSerializer.Serialize(writer, value.props, options);
             }
 
             writer.WriteEndObject();

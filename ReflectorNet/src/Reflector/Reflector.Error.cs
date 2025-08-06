@@ -42,9 +42,11 @@ namespace com.IvanMurzak.ReflectorNet
             public static string NotSupportedInRuntime(Type type)
                 => $"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' is not supported in runtime for now.";
 
-            public static string MoreThanOneMethodFound(List<MethodInfo> methods)
+            public static string MoreThanOneMethodFound(Reflector reflector, List<MethodInfo> methods)
             {
-                var methodsString = JsonUtils.ToJson(methods.Select(method => new MethodData(method, justRef: false)));
+                var methodDataList = methods.Select(method => new MethodData(reflector, method, justRef: false));
+                var methodsString = methodDataList.ToJson(reflector, options: null);
+
                 return @$"[Error] Found more than one method. Only single method should be targeted. Please specify the method name more precisely.
 Found {methods.Count} method(s):
 ```json

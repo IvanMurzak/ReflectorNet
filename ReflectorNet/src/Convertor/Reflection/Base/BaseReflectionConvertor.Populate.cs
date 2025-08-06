@@ -160,10 +160,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if ((data.props?.Count ?? 0) == 0)
             {
                 if (logger?.IsEnabled(LogLevel.Information) == true)
-                    logger.LogInformation($"{padding}[Info] No properties modified.");
+                    logger.LogInformation($"{nextPadding}[Info] No properties modified.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Info] No properties modified.");
+                    stringBuilder.AppendLine($"{nextPadding}[Info] No properties modified.");
             }
 
             return overallSuccess;

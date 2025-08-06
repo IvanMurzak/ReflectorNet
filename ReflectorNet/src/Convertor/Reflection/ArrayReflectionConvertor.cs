@@ -77,12 +77,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         logger: logger));
                 }
 
-                return SerializedMember.FromValue(type, serializedList, name: name);
+                return SerializedMember.FromValue(reflector, type, serializedList, name: name);
             }
             else
             {
                 // Handle non-recursive serialization
-                return SerializedMember.FromJson(type, JsonUtils.ToJson(obj), name: name);
+                return SerializedMember.FromJson(type, obj.ToJson(reflector), name: name);
             }
         }
 

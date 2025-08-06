@@ -49,17 +49,17 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public SerializedMember? GetField(string name)
             => fields?.FirstOrDefault(x => x.name == name);
 
-        public SerializedMember SetFieldValue<T>(string name, T value)
+        public SerializedMember SetFieldValue<T>(Reflector reflector, string name, T value)
         {
             var field = GetField(name);
             if (field == null)
             {
-                field = SerializedMember.FromValue(typeof(T), value, name: name);
+                field = SerializedMember.FromValue(reflector, typeof(T), value, name: name);
                 fields ??= new SerializedMemberList();
                 fields.Add(field);
                 return this;
             }
-            field.SetValue(value);
+            field.SetValue(reflector, value);
             return this;
         }
 
@@ -73,17 +73,17 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public SerializedMember? GetProperty(string name)
             => props?.FirstOrDefault(x => x.name == name);
 
-        public SerializedMember SetPropertyValue<T>(string name, T value)
+        public SerializedMember SetPropertyValue<T>(Reflector reflector, string name, T value)
         {
             var property = GetProperty(name);
             if (property == null)
             {
-                property = SerializedMember.FromValue(typeof(T), value, name: name);
+                property = SerializedMember.FromValue(reflector, typeof(T), value, name: name);
                 props ??= new SerializedMemberList();
                 props.Add(property);
                 return this;
             }
-            property.SetValue(value);
+            property.SetValue(reflector, value);
             return this;
         }
 
@@ -96,14 +96,14 @@ namespace com.IvanMurzak.ReflectorNet.Model
 
         public T? GetValue<T>(Reflector reflector) => valueJsonElement.Deserialize<T>(reflector);
 
-        public SerializedMember SetValue(object? value)
+        public SerializedMember SetValue(Reflector reflector, object? value)
         {
-            var json = JsonUtils.ToJson(value);
+            var json = reflector.JsonSerializer.Serialize(value);
             return SetJsonValue(json);
         }
         public SerializedMember SetJsonValue(string? json)
         {
-            if (string.IsNullOrEmpty(json))
+            if (StringUtils.IsNullOrEmpty(json))
             {
                 valueJsonElement = null;
                 return this;
@@ -126,10 +126,10 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public static SerializedMember FromJson(Type type, string? json, string? name = null)
             => new SerializedMember(type, name).SetJsonValue(json);
 
-        public static SerializedMember FromValue(Type type, object? value, string? name = null)
-            => new SerializedMember(type, name).SetValue(value);
+        public static SerializedMember FromValue(Reflector reflector, Type type, object? value, string? name = null)
+            => new SerializedMember(type, name).SetValue(reflector, value);
 
-        public static SerializedMember FromValue<T>(T? value, string? name = null)
-            => new SerializedMember(typeof(T), name).SetValue(value);
+        public static SerializedMember FromValue<T>(Reflector reflector, T? value, string? name = null)
+            => new SerializedMember(typeof(T), name).SetValue(reflector, value);
     }
 }

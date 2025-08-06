@@ -18,6 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         public static bool IsNullOrEmpty(string? value) => string.IsNullOrEmpty(value) || value == Null;
+        public static bool IsNullOrWhiteSpace(string? value) => string.IsNullOrWhiteSpace(value) || value == Null;
 
         public static string? TrimPath(string? path)
         {

@@ -2,7 +2,6 @@ using System;
 using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet
@@ -11,12 +10,14 @@ namespace com.IvanMurzak.ReflectorNet
     {
         public static T? Deserialize<T>(this JsonElement? jsonElement, Reflector reflector)
         {
-            return JsonUtils.Deserialize<T>(reflector, jsonElement: jsonElement);
+            return reflector.JsonSerializer.Deserialize<T>(
+                reflector: reflector,
+                jsonElement: jsonElement);
         }
         public static object? Deserialize(this JsonElement? jsonElement, Type type, Reflector reflector)
         {
-            return JsonUtils.Deserialize(
-                reflector,
+            return reflector.JsonSerializer.Deserialize(
+                reflector: reflector,
                 jsonElement: jsonElement,
                 type: type);
         }

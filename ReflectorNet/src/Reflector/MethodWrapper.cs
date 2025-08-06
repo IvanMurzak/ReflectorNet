@@ -51,7 +51,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be static.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
+            _inputSchema = reflector.GetArgumentsSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, object targetInstance, MethodInfo methodInfo)
@@ -65,7 +65,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
+            _inputSchema = reflector.GetArgumentsSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, Type classType, MethodInfo methodInfo)
@@ -79,7 +79,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = JsonUtils.Schema.GetArgumentsSchema(methodInfo);
+            _inputSchema = reflector.GetArgumentsSchema(methodInfo);
         }
 
         public virtual async Task<object?> Invoke(params object?[] parameters)
@@ -206,6 +206,16 @@ namespace com.IvanMurzak.ReflectorNet
                     // Handle JsonElement conversion
                     if (parameters[i] is JsonElement jsonElement)
                     {
+                        var isPrimitive = TypeUtils.IsPrimitive(methodParameters[i].ParameterType);
+                        if (!isPrimitive)
+                        {
+                            // Handle stringified json
+                            if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
+                            {
+                                parameters[i] = unstringifiedJson;
+                                jsonElement = unstringifiedJson!.Value;
+                            }
+                        }
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
@@ -269,6 +279,16 @@ namespace com.IvanMurzak.ReflectorNet
                 {
                     if (value is JsonElement jsonElement)
                     {
+                        var isPrimitive = TypeUtils.IsPrimitive(methodParameters[i].ParameterType);
+                        if (!isPrimitive)
+                        {
+                            // Handle stringified json
+                            if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
+                            {
+                                value = unstringifiedJson;
+                                jsonElement = unstringifiedJson!.Value;
+                            }
+                        }
                         try
                         {
                             // Try #1: Parsing as the parameter type directly

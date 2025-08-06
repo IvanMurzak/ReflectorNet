@@ -32,16 +32,16 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public List<JsonNode>? InputParametersSchema { get; set; }
 
         public MethodData() : base() { }
-        public MethodData(MethodInfo methodInfo, bool justRef = false) : base(methodInfo)
+        public MethodData(Reflector reflector, MethodInfo methodInfo, bool justRef = false) : base(methodInfo)
         {
             IsStatic = methodInfo.IsStatic;
             IsPublic = methodInfo.IsPublic;
             ReturnType = methodInfo.ReturnType.GetTypeName(pretty: false);
             ReturnSchema = methodInfo.ReturnType == typeof(void)
                 ? null
-                : JsonUtils.Schema.GetSchema(methodInfo.ReturnType, justRef: justRef);
+                : reflector.GetSchema(methodInfo.ReturnType, justRef: justRef);
             InputParametersSchema = methodInfo.GetParameters()
-                ?.Select(parameter => JsonUtils.Schema.GetSchema(parameter.ParameterType, justRef: justRef)!)
+                ?.Select(parameter => reflector.GetSchema(parameter.ParameterType, justRef: justRef)!)
                 ?.ToList();
         }
     }

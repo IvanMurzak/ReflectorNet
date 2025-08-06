@@ -6,7 +6,7 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsType
     {
-        public static JsonNode? GetSchema(this Type type, bool justRef = false) => JsonUtils.Schema.GetSchema(type, justRef);
+        public static JsonNode? GetSchema(this Type type, Reflector reflector, bool justRef = false) => reflector.GetSchema(type, justRef);
         public static string GetTypeShortName(this Type? type) => TypeUtils.GetTypeShortName(type);
         public static string GetTypeName(this Type? type, bool pretty = false) => TypeUtils.GetTypeName(type, pretty);
         public static string GetTypeId(this Type type) => TypeUtils.GetTypeId(type);

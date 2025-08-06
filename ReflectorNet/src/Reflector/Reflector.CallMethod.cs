@@ -54,7 +54,7 @@ namespace com.IvanMurzak.ReflectorNet
                     : null;
 
                 if (method == null)
-                    return Error.MoreThanOneMethodFound(methods);
+                    return Error.MoreThanOneMethodFound(reflector, methods);
             }
             else
             {
@@ -107,7 +107,7 @@ namespace com.IvanMurzak.ReflectorNet
                     : methodWrapper.Invoke();
 
                 var result = task.Result;
-                return $"[Success] Execution result:\n```json\n{JsonUtils.ToJson(result)}\n```";
+                return $"[Success] Execution result:\n```json\n{result.ToJson(reflector)}\n```";
             };
 
             if (executeInMainThread)

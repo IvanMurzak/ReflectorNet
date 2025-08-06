@@ -12,17 +12,25 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public static string StaticId => TypeUtils.GetTypeId<SerializedMemberList>();
         public static JsonNode Schema => new JsonObject
         {
-            [JsonUtils.Schema.Type] = JsonUtils.Schema.Array,
-            [JsonUtils.Schema.Items] = new JsonObject
+            [JsonSchema.Type] = JsonSchema.Array,
+            [JsonSchema.Items] = new JsonObject
             {
-                [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + SerializedMemberConverter.StaticId
+                [JsonSchema.Ref] = JsonSchema.RefValue + SerializedMemberConverter.StaticId
             }
         };
+
         public string Id => StaticId;
+
+        public SerializedMemberListConverter(Reflector reflector)
+        {
+            if (reflector == null)
+                throw new ArgumentNullException(nameof(reflector));
+        }
+
         public JsonNode GetScheme() => Schema;
         public JsonNode GetSchemeRef() => new JsonObject
         {
-            [JsonUtils.Schema.Ref] = JsonUtils.Schema.RefValue + Id
+            [JsonSchema.Ref] = JsonSchema.RefValue + Id
         };
 
         public override SerializedMemberList? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -40,7 +48,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (reader.TokenType == JsonTokenType.EndArray)
                     break;
 
-                var item = JsonSerializer.Deserialize<SerializedMember>(ref reader, options);
+                var item = System.Text.Json.JsonSerializer.Deserialize<SerializedMember>(ref reader, options);
                 if (item != null)
                     member.Add(item);
             }
@@ -59,7 +67,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             writer.WriteStartArray();
             foreach (var item in value)
             {
-                JsonSerializer.Serialize(writer, item, options);
+                System.Text.Json.JsonSerializer.Serialize(writer, item, options);
             }
             writer.WriteEndArray();
         }

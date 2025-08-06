@@ -267,10 +267,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            return JsonUtils.Deserialize(
+            return reflector.JsonSerializer.Deserialize(
                 reflector,
-                jsonElement: data.valueJsonElement,
-                type: type);
+                data.valueJsonElement,
+                type);
         }
     }
 }
