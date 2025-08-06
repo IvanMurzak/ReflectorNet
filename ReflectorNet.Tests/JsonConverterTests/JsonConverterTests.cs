@@ -1,5 +1,4 @@
 ﻿using com.IvanMurzak.ReflectorNet.Tests.Model;
-using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Utils
@@ -11,15 +10,16 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         void BackAndForthTest(object sourceInstance)
         {
             // Arrange
+            var reflector = new Reflector();
             var sourceType = sourceInstance.GetType();
 
             // Act
-            var sourceJson = JsonUtils.ToJson(sourceInstance);
+            var sourceJson = reflector.JsonSerializer.Serialize(sourceInstance);
             _output.WriteLine($"Source {sourceType.GetTypeShortName()}: {sourceJson}");
             _output.WriteLine("------------------------------------------------------");
 
-            var parsedInstance = JsonUtils.Deserialize(sourceJson, sourceType);
-            var parsedJson = JsonUtils.ToJson(parsedInstance);
+            var parsedInstance = reflector.JsonSerializer.Deserialize(sourceJson, sourceType);
+            var parsedJson = reflector.JsonSerializer.Serialize(parsedInstance);
             _output.WriteLine($"Parsed {sourceType.GetTypeShortName()}: {parsedJson}");
 
             // Assert

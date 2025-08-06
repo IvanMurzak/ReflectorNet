@@ -12,19 +12,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
         public string Id => typeof(ObjectRef).GetTypeId();
         public JsonNode GetScheme() => new JsonObject
         {
-            [JsonUtils.Schema.Id] = Id,
-            [JsonUtils.Schema.Type] = JsonUtils.Schema.Object,
-            [JsonUtils.Schema.Properties] = new JsonObject
+            [JsonSchema.Id] = Id,
+            [JsonSchema.Type] = JsonSchema.Object,
+            [JsonSchema.Properties] = new JsonObject
             {
-                [nameof(ObjectRef.instanceID)] = new JsonObject { [JsonUtils.Schema.Type] = JsonUtils.Schema.Integer },
-                [nameof(ObjectRef.assetPath)] = new JsonObject { [JsonUtils.Schema.Type] = JsonUtils.Schema.String },
-                [nameof(ObjectRef.assetGuid)] = new JsonObject { [JsonUtils.Schema.Type] = JsonUtils.Schema.String }
+                [nameof(ObjectRef.instanceID)] = new JsonObject { [JsonSchema.Type] = JsonSchema.Integer },
+                [nameof(ObjectRef.assetPath)] = new JsonObject { [JsonSchema.Type] = JsonSchema.String },
+                [nameof(ObjectRef.assetGuid)] = new JsonObject { [JsonSchema.Type] = JsonSchema.String }
             },
-            [JsonUtils.Schema.Required] = new JsonArray { nameof(ObjectRef.instanceID) }
+            [JsonSchema.Required] = new JsonArray { nameof(ObjectRef.instanceID) }
         };
         public JsonNode GetSchemeRef() => new JsonObject
         {
-            [JsonUtils.Schema.Ref] = Id
+            [JsonSchema.Ref] = Id
         };
 
         public override ObjectRef? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

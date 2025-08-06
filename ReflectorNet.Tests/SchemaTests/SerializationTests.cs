@@ -29,7 +29,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(serialized);
             Assert.Equal(typeof(GameObjectRef).GetTypeName(pretty: false), serialized.typeName);
             Assert.NotNull(serialized.valueJsonElement);
-            _output.WriteLine($"Serialized GameObjectRef: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized GameObjectRef: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var deserialized = reflector.Deserialize(serialized, logger: deserializeLogger) as GameObjectRef;
             _output.WriteLine($"Deserialize result:\n{deserializeLogger}");
 
-            _output.WriteLine($"Json:\n{JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Json:\n{serialized.ToJson(reflector)}");
 
             // Assert
             Assert.NotNull(deserialized);
@@ -76,7 +76,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Assert
             Assert.NotNull(serialized);
             Assert.Equal(typeof(string[]).GetTypeName(pretty: false), serialized.typeName);
-            _output.WriteLine($"Serialized string array: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized string array: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -113,7 +113,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(serialized);
             Assert.Equal(typeof(GameObjectRef).GetTypeName(pretty: false), serialized.typeName);
             Assert.Null(serialized.valueJsonElement);
-            _output.WriteLine($"Serialized null value: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized null value: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -155,7 +155,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Assert
             Assert.NotNull(serialized);
             Assert.Equal(typeof(GameObjectRefList).GetTypeName(pretty: false), serialized.typeName);
-            _output.WriteLine($"Serialized GameObjectRefList: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized GameObjectRefList: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -170,7 +170,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             };
 
             var serialized = reflector.Serialize(original);
-            _output.WriteLine($"Serialized data: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized data: {serialized.ToJson(reflector)}");
 
             // Act
             var deserialized = reflector.Deserialize<GameObjectRefList>(serialized);
@@ -201,7 +201,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Assert
             Assert.NotNull(serialized);
             Assert.Equal(typeof(string[]).GetTypeName(pretty: false), serialized.typeName);
-            _output.WriteLine($"Serialized empty array: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized empty array: {serialized.ToJson(reflector)}");
         }
 
         [Fact]

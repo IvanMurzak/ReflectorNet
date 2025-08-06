@@ -15,11 +15,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.Object_Int_Bool))!;
 
-            TestMethodInputs_Defines(methodInfo,
-                typeof(GameObjectRef));
+            TestMethodInputs_Defines(
+                reflector: null,
+                methodInfo: methodInfo,
+                expectedTypes: typeof(GameObjectRef));
 
-            TestMethodInputs_PropertyRefs(methodInfo,
-                "obj");
+            TestMethodInputs_PropertyRefs(
+                reflector: null,
+                methodInfo: methodInfo,
+                parameterNames: "obj");
         }
 
         [Fact]
@@ -27,13 +31,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.ListObject_ListObject))!;
 
-            TestMethodInputs_Defines(methodInfo,
+            TestMethodInputs_Defines(
+                reflector: null,
+                methodInfo: methodInfo,
                 typeof(GameObjectRef),
                 typeof(GameObjectRefList),
                 typeof(SerializedMember),
                 typeof(SerializedMemberList));
 
-            TestMethodInputs_PropertyRefs(methodInfo,
+            TestMethodInputs_PropertyRefs(
+                reflector: null,
+                methodInfo: methodInfo,
                 "obj1",
                 "obj2");
         }
@@ -43,10 +51,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.StringArray))!;
 
-            TestMethodInputs_Defines(methodInfo,
+            TestMethodInputs_Defines(
+                reflector: null,
+                methodInfo: methodInfo,
                 typeof(string[]));
 
-            TestMethodInputs_PropertyRefs(methodInfo,
+            TestMethodInputs_PropertyRefs(
+                reflector: null,
+                methodInfo: methodInfo,
                 "stringArray");
         }
 

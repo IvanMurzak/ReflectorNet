@@ -15,10 +15,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         void GameObjectRef()
         {
-            JsonUtils.AddConverter(new GameObjectRefConverter());
-            JsonUtils.AddConverter(new ObjectRefConverter());
+            var reflector = new Reflector();
+            reflector.JsonSerializer.AddConverter(new GameObjectRefConverter());
+            reflector.JsonSerializer.AddConverter(new ObjectRefConverter());
 
-            JsonSchemaValidation(typeof(GameObjectRef));
+            JsonSchemaValidation(typeof(GameObjectRef), reflector);
 
             // JsonUtils.RemoveConverter<GameObjectRefConverter>();
             // JsonUtils.RemoveConverter<ObjectRefConverter>();

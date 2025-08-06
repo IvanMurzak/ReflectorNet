@@ -11,25 +11,27 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public partial class TestDescription : BaseTest
     {
-        void TestClassMembersDescription(Type type, BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
+        void TestClassMembersDescription(Type type, Reflector? reflector = null, BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
+            reflector ??= new Reflector();
+
             _output.WriteLine($"Testing members description for type: '{type.GetTypeShortName()}'");
 
-            var schema = JsonUtils.Schema.GetSchema(type, justRef: false);
+            var schema = reflector.GetSchema(type, justRef: false);
             Assert.NotNull(schema);
 
             var properties = default(JsonNode?);
             var members = default(List<MemberInfo>);
 
-            var isArray = schema[JsonUtils.Schema.Type]?.ToString() == JsonUtils.Schema.Array;
+            var isArray = schema[JsonSchema.Type]?.ToString() == JsonSchema.Array;
             if (isArray)
             {
                 _output.WriteLine($"Schema is an array");
 
-                var items = schema[JsonUtils.Schema.Items];
+                var items = schema[JsonSchema.Items];
                 Assert.NotNull(items);
 
-                properties = items[JsonUtils.Schema.Properties];
+                properties = items[JsonSchema.Properties];
 
                 var itemType = TypeUtils.GetEnumerableItemType(type);
                 Assert.NotNull(itemType);
@@ -46,7 +48,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             else
             {
                 _output.WriteLine($"Schema is an object");
-                properties = schema[JsonUtils.Schema.Properties];
+                properties = schema[JsonSchema.Properties];
 
                 members = Enumerable
                     .Concat(
@@ -83,7 +85,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.False(member == null, $"Schema property '{name}' not found in members of type '{type.GetTypeShortName()}'");
 
                 var description = TypeUtils.GetDescription(member);
-                var schemaDescription = propertySchema[JsonUtils.Schema.Description]?.ToString();
+                var schemaDescription = propertySchema[JsonSchema.Description]?.ToString();
                 Assert.Equal(description, schemaDescription);
             }
         }
