@@ -4,6 +4,7 @@ using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
+using com.IvanMurzak.ReflectorNet.Json;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
@@ -14,26 +15,30 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void PropertyDescriptionOfCustomType()
         {
-            TestClassMembersDescription(typeof(GameObjectRef));
-            TestClassMembersDescription(typeof(GameObjectRefList));
-            TestClassMembersDescription(typeof(List<GameObjectRef>));
-            TestClassMembersDescription(typeof(GameObjectRef[]));
+            var reflector = new Reflector();
+
+            TestClassMembersDescription(typeof(GameObjectRef), reflector);
+            TestClassMembersDescription(typeof(GameObjectRefList), reflector);
+            TestClassMembersDescription(typeof(List<GameObjectRef>), reflector);
+            TestClassMembersDescription(typeof(GameObjectRef[]), reflector);
         }
 
         [Fact]
         public void PropertyDescriptionOfTestClassWithDescriptions()
         {
+            var reflector = new Reflector();
+
             // Test a class with various types of members and descriptions
-            TestClassMembersDescription(typeof(TestClassWithDescriptions));
+            TestClassMembersDescription(typeof(TestClassWithDescriptions), reflector);
         }
 
         [Fact]
         public void PropertyDescriptionOfCollectionWithDescriptions()
         {
-            // Test collection classes with descriptions - but only for complex types
-            TestClassMembersDescription(typeof(TestCollectionWithDescription));
-
             var reflector = new Reflector();
+
+            // Test collection classes with descriptions - but only for complex types
+            TestClassMembersDescription(typeof(TestCollectionWithDescription), reflector);
 
             // For List<TestClassWithDescriptions>, just test schema generation
             var listComplexSchema = reflector.GetSchema(typeof(List<TestClassWithDescriptions>), justRef: false);
@@ -44,11 +49,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void PropertyDescriptionOfReflectorNetModels()
         {
-            // Test MethodPointerRef and MethodDataRef which have Description attributes
-            TestClassMembersDescription(typeof(MethodRef));
-            TestClassMembersDescription(typeof(MethodData));
-
             var reflector = new Reflector();
+            reflector.JsonSerializer.AddConverter(new MethodDataConverter());
+
+            // Test MethodPointerRef and MethodDataRef which have Description attributes
+            TestClassMembersDescription(typeof(MethodRef), reflector);
+            TestClassMembersDescription(typeof(MethodData), reflector);
 
             // SerializedMember and SerializedMemberList use custom converters with descriptions
             // Let's test their schema generation separately
@@ -64,11 +70,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void PropertyDescriptionOfArrayTypes()
         {
-            // Test complex array types that have members to inspect
-            TestClassMembersDescription(typeof(GameObjectRef[]));
-            TestClassMembersDescription(typeof(TestClassWithDescriptions[]));
-
             var reflector = new Reflector();
+
+            // Test complex array types that have members to inspect
+            TestClassMembersDescription(typeof(GameObjectRef[]), reflector);
+            TestClassMembersDescription(typeof(TestClassWithDescriptions[]), reflector);
 
             // For primitive arrays, just test schema generation
             var stringArraySchema = reflector.GetSchema(typeof(string[]), justRef: false);
@@ -83,11 +89,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void PropertyDescriptionOfGenericCollections()
         {
-            // Test generic collections - but only ones that contain complex types
-            TestClassMembersDescription(typeof(List<GameObjectRef>));
-            TestClassMembersDescription(typeof(List<TestClassWithDescriptions>));
-
             var reflector = new Reflector();
+
+            // Test generic collections - but only ones that contain complex types
+            TestClassMembersDescription(typeof(List<GameObjectRef>), reflector);
+            TestClassMembersDescription(typeof(List<TestClassWithDescriptions>), reflector);
 
             // For primitive collections, just test schema generation
             var listStringSchema = reflector.GetSchema(typeof(List<string>), justRef: false);
@@ -193,18 +199,22 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void PropertyDescriptionOfStructTypes()
         {
+            var reflector = new Reflector();
+
             // Test struct types with descriptions
-            TestClassMembersDescription(typeof(TestStructWithDescriptions));
-            TestClassMembersDescription(typeof(TestStructWithDescriptions[]));
-            TestClassMembersDescription(typeof(List<TestStructWithDescriptions>));
+            TestClassMembersDescription(typeof(TestStructWithDescriptions), reflector);
+            TestClassMembersDescription(typeof(TestStructWithDescriptions[]), reflector);
+            TestClassMembersDescription(typeof(List<TestStructWithDescriptions>), reflector);
         }
 
         [Fact]
         public void PropertyDescriptionOfEnumTypes()
         {
+            var reflector = new Reflector();
+
             // Test enum types with descriptions
-            TestClassMembersDescription(typeof(TestEnumWithDescriptions));
-            TestClassMembersDescription(typeof(TestEnumWithDescriptions[]));
+            TestClassMembersDescription(typeof(TestEnumWithDescriptions), reflector);
+            TestClassMembersDescription(typeof(TestEnumWithDescriptions[]), reflector);
         }
 
         [Fact]
@@ -239,18 +249,23 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void NestedTypesWithDescriptions()
         {
+            var reflector = new Reflector();
+
             // Test nested complex types
-            TestClassMembersDescription(typeof(List<List<GameObjectRef>>));
-            TestClassMembersDescription(typeof(Dictionary<string, GameObjectRef>));
-            TestClassMembersDescription(typeof(Dictionary<string, List<TestClassWithDescriptions>>));
+            TestClassMembersDescription(typeof(List<List<GameObjectRef>>), reflector);
+            TestClassMembersDescription(typeof(Dictionary<string, GameObjectRef>), reflector);
+            TestClassMembersDescription(typeof(Dictionary<string, List<TestClassWithDescriptions>>), reflector);
         }
 
         [Fact]
         public void PropertyDescriptionWithBindingFlags()
         {
+            var reflector = new Reflector();
+
             // Test with different binding flags to include non-public members
             TestClassMembersDescription(
                 type: typeof(TestClassWithDescriptions),
+                reflector: reflector,
                 bindingFlags: System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         }
 
@@ -289,14 +304,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void DescriptionInheritanceFromBaseType()
         {
+            var reflector = new Reflector();
+
             // Test that descriptions work with inheritance
-            TestClassMembersDescription(typeof(MethodData)); // inherits from MethodPointerRef
+            TestClassMembersDescription(typeof(MethodData), reflector); // inherits from MethodPointerRef
         }
 
         [Fact]
         public void CustomConverterDescriptions()
         {
             var reflector = new Reflector();
+            reflector.JsonSerializer.AddConverter(new SerializedMemberConverter(reflector));
 
             // Test that custom JSON converters provide proper descriptions in schema
             var serializedMemberSchema = reflector.GetSchema(typeof(SerializedMember), justRef: false);

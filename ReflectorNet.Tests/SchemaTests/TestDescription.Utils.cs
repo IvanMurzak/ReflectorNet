@@ -42,7 +42,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                         itemType!.GetProperties(bindingFlags) as IEnumerable<MemberInfo>
                     )
                     .Where(member => member.GetCustomAttribute<ObsoleteAttribute>() == null)
-                    .Where(member => member.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+                    //.Where(member => member.GetCustomAttribute<JsonIgnoreAttribute>() == null)
                     .ToList();
             }
             else
@@ -56,7 +56,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                         type.GetProperties(bindingFlags) as IEnumerable<MemberInfo>
                     )
                     .Where(member => member.GetCustomAttribute<ObsoleteAttribute>() == null)
-                    .Where(member => member.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+                    //.Where(member => member.GetCustomAttribute<JsonIgnoreAttribute>() == null)
                     .ToList();
             }
 
@@ -78,14 +78,35 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.NotNull(propertySchema);
 
                 // Handle camelCase to PascalCase conversion for member lookup
-                var member = members.FirstOrDefault(m => m.Name == name) ??
-                             members.FirstOrDefault(m => m.Name == ToPascalCase(name)) ??
-                             members.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.OrdinalIgnoreCase));
+                var memberInfo = members.FirstOrDefault(m => m.Name == name) ??
+                                 members.FirstOrDefault(m => m.Name == ToPascalCase(name)) ??
+                                 members.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.OrdinalIgnoreCase));
 
-                Assert.False(member == null, $"Schema property '{name}' not found in members of type '{type.GetTypeShortName()}'");
+                Assert.False(memberInfo == null, $"Schema property '{name}' not found in members of type '{type.GetTypeShortName()}'");
 
-                var description = TypeUtils.GetDescription(member);
+                var description = TypeUtils.GetDescription(memberInfo);
+
+                if (propertySchema is not JsonObject)
+                {
+                    _output.WriteLine($"{memberInfo.MemberType} '{name}' is not an object schema. It is {propertySchema.GetType().GetTypeShortName()}, kind={propertySchema.GetValueKind()}.\n");
+                    _output.WriteLine($"Description: {description}\n");
+                    _output.WriteLine($"Schema: {propertySchema}\n");
+                }
+
                 var schemaDescription = propertySchema[JsonSchema.Description]?.ToString();
+
+                var memberType = memberInfo.MemberType switch
+                {
+                    MemberTypes.Field => ((FieldInfo)memberInfo).FieldType.GetTypeShortName(),
+                    MemberTypes.Property => ((PropertyInfo)memberInfo).PropertyType.GetTypeShortName(),
+                    _ => "UNKNOWN"
+                };
+
+                _output.WriteLine($"{memberInfo.MemberType} '{type.GetTypeShortName()}.{name}', type='{memberType}' compare description\n---------");
+
+                _output.WriteLine($"Json Schema: {schemaDescription}");
+                _output.WriteLine($"Reflection:  {description}\n");
+
                 Assert.Equal(description, schemaDescription);
             }
         }

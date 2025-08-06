@@ -36,17 +36,42 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static string? GetDescription(Type type)
         {
             return type
-                .GetCustomAttributes<DescriptionAttribute>(true)
-                .FirstOrDefault()?.Description;
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (type.BaseType != null
+                    ? GetDescription(type.BaseType!)
+                    : null);
         }
         public static string? GetDescription(MemberInfo? memberInfo)
         {
             if (memberInfo == null)
                 return null;
 
-            return memberInfo
-                .GetCustomAttributes<DescriptionAttribute>(true)
-                .FirstOrDefault()?.Description;
+            var description = memberInfo
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description;
+
+            if (description != null)
+                return description;
+
+            return memberInfo.MemberType switch
+            {
+                MemberTypes.Field => GetFieldDescription((FieldInfo)memberInfo),
+                MemberTypes.Property => GetPropertyDescription((PropertyInfo)memberInfo),
+                _ => null
+            };
+        }
+        public static string? GetFieldDescription(FieldInfo? fieldInfo)
+        {
+            if (fieldInfo == null)
+                return null;
+
+            return fieldInfo
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (fieldInfo.FieldType != null
+                    ? GetDescription(fieldInfo.FieldType)
+                    : null);
         }
         public static string? GetPropertyDescription(PropertyInfo? propertyInfo)
         {
@@ -54,8 +79,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return null;
 
             return propertyInfo
-                .GetCustomAttributes<DescriptionAttribute>(true)
-                .FirstOrDefault()?.Description;
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (propertyInfo.PropertyType != null
+                    ? GetDescription(propertyInfo.PropertyType)
+                    : null);
         }
         public static string? GetPropertyDescription(Type type, string propertyName)
         {
@@ -106,15 +134,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return camelCase;
 
             return char.ToUpperInvariant(camelCase[0]) + camelCase.Substring(1);
-        }
-        public static string? GetFieldDescription(FieldInfo fieldInfo)
-        {
-            if (fieldInfo == null)
-                return null;
-
-            var descriptionAttribute = fieldInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
         }
         public static string? GetFieldDescription(Type type, string fieldName)
         {

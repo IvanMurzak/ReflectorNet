@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -12,21 +15,102 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
     public class MethodDataConverter : JsonConverter<MethodData>, IJsonSchemaConverter
     {
-        public static string StaticId => TypeUtils.GetTypeId<SerializedMember>();
+        public static string StaticId => TypeUtils.GetTypeId<MethodData>();
 
         public static JsonNode Schema => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Object,
             [JsonSchema.Properties] = new JsonObject
             {
-                [nameof(MethodData.IsPublic)] = JsonSchema.Boolean,
-                [nameof(MethodData.IsStatic)] = JsonSchema.Boolean,
-                [nameof(MethodData.ReturnType)] = JsonSchema.String,
-                [nameof(MethodData.ReturnSchema)] = JsonSchema.Object,
-                [nameof(MethodData.InputParametersSchema)] = JsonSchema.Array,
-                [nameof(MethodData.Namespace)] = JsonSchema.String,
-                [nameof(MethodData.TypeName)] = JsonSchema.String,
-                [nameof(MethodData.MethodName)] = JsonSchema.String
+                [nameof(MethodData.IsPublic)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.Boolean,
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.IsPublic))
+                        .First())
+                },
+                [nameof(MethodData.IsStatic)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.Boolean,
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.IsStatic))
+                        .First())
+                },
+                [nameof(MethodData.ReturnType)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.String,
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.ReturnType))
+                        .First())
+                },
+                [nameof(MethodData.ReturnSchema)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.Object,
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.ReturnSchema))
+                        .First())
+                },
+                [nameof(MethodData.InputParametersSchema)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.Array,
+                    [JsonSchema.Items] = new JsonObject
+                    {
+                        [JsonSchema.AnyOf] = new JsonArray
+                        {
+                            new JsonObject { [JsonSchema.Type] = JsonSchema.Object },
+                            new JsonObject { [JsonSchema.Type] = JsonSchema.String },
+                            new JsonObject { [JsonSchema.Type] = JsonSchema.Number },
+                            new JsonObject { [JsonSchema.Type] = JsonSchema.Integer },
+                            new JsonObject { [JsonSchema.Type] = JsonSchema.Boolean },
+                            new JsonObject { [JsonSchema.Type] = JsonSchema.Null }
+                        },
+                        [JsonSchema.AdditionalProperties] = true
+                    },
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.InputParametersSchema))
+                        .First())
+                },
+                [nameof(MethodData.Namespace)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.String,
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.Namespace))
+                        .First())
+                },
+                [nameof(MethodData.TypeName)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.String,
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.TypeName))
+                        .First())
+                },
+                [nameof(MethodData.MethodName)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.String,
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.MethodName))
+                        .First())
+                },
+                [nameof(MethodData.InputParameters)] = new JsonObject
+                {
+                    [JsonSchema.Type] = JsonSchema.Array,
+                    [JsonSchema.Items] = new JsonObject
+                    {
+                        [JsonSchema.Ref] = JsonSchema.RefValue + TypeUtils.GetTypeId<MethodData.Parameter>()
+                    },
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(MethodData)
+                        .GetMember(nameof(MethodData.InputParameters))
+                        .First())
+                }
             },
             [JsonSchema.AdditionalProperties] = false
         };

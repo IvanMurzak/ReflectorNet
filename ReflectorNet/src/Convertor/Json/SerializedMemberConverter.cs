@@ -1,4 +1,7 @@
 using System;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -18,17 +21,26 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 [nameof(SerializedMember.typeName)] = new JsonObject
                 {
                     [JsonSchema.Type] = JsonSchema.String,
-                    [JsonSchema.Description] = "Full type name. Eg: 'System.String', 'System.Int32', 'UnityEngine.Vector3', etc."
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(SerializedMember)
+                        .GetMember(nameof(SerializedMember.typeName))
+                        .First())
                 },
                 [nameof(SerializedMember.name)] = new JsonObject
                 {
                     [JsonSchema.Type] = JsonSchema.String,
-                    [JsonSchema.Description] = "Name of the member. Can be null or empty."
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(SerializedMember)
+                        .GetMember(nameof(SerializedMember.name))
+                        .First())
                 },
                 [SerializedMember.ValueName] = new JsonObject
                 {
                     [JsonSchema.Type] = JsonSchema.Object,
-                    [JsonSchema.Description] = "Member's value. Can be null or empty.",
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(SerializedMember)
+                        .GetMember(nameof(SerializedMember.ValueName))
+                        .First())
                 },
                 [nameof(SerializedMember.fields)] = new JsonObject
                 {
@@ -38,7 +50,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         [JsonSchema.Ref] = JsonSchema.RefValue + StaticId,
                         [JsonSchema.Description] = "Nested field value."
                     },
-                    [JsonSchema.Description] = "List of fields of the member. Can be null or empty.",
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(SerializedMember)
+                        .GetMember(nameof(SerializedMember.fields))
+                        .First())
                 },
                 [nameof(SerializedMember.props)] = new JsonObject
                 {
@@ -48,7 +63,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         [JsonSchema.Ref] = JsonSchema.RefValue + StaticId,
                         [JsonSchema.Description] = "Nested property value."
                     },
-                    [JsonSchema.Description] = "List of properties of the member. Can be null or empty.",
+                    [JsonSchema.Description] = TypeUtils.GetDescription(
+                        typeof(SerializedMember)
+                        .GetMember(nameof(SerializedMember.props))
+                        .First())
                 }
             },
             [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName },

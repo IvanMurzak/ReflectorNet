@@ -13,24 +13,24 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public const string ValueName = "value";
 
         [JsonInclude]
-        [Description($"Object name, usually it is a field name, property name or a variable name.")]
+        [Description($"Object name.")]
         public string? name = string.Empty;
 
         [JsonInclude]
-        [Description($"Type of the object, usually it is a field type, property type or a variable type.")]
+        [Description($"Full type name. Eg: 'System.String', 'System.Int32', 'UnityEngine.Vector3', etc.")]
         public string typeName = string.Empty;
 
         [JsonInclude]
-        [Description($"Fields of the object, serialized as a list of {nameof(SerializedMember)}.")]
+        [Description($"Fields of the object, serialized as a list of '{nameof(SerializedMember)}'.")]
         public SerializedMemberList? fields;
 
         [JsonInclude]
-        [Description($"Properties of the object, serialized as a list of {nameof(SerializedMember)}.")]
+        [Description($"Properties of the object, serialized as a list of '{nameof(SerializedMember)}'.")]
         public SerializedMemberList? props;
 
         [JsonInclude, JsonPropertyName(ValueName)]
         [Description($"Value of the object, serialized as a non stringified JSON element. Can be null if the value is not set. Can be default value if the value is an empty object or array json.")]
-        public JsonElement? valueJsonElement = null; // System.Text.Json serialization
+        public JsonElement? valueJsonElement = null;
 
         public SerializedMember() { }
 
