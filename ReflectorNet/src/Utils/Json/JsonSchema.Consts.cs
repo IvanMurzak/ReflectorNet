@@ -10,6 +10,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public const string Array = "array";
         public const string Required = "required";
         public const string Error = "error";
+        public const string AdditionalProperties = "additionalProperties";
 
         public const string Null = "null";
         public const string String = "string";

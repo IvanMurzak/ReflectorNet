@@ -51,7 +51,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonSchema.Description] = "List of properties of the member. Can be null or empty.",
                 }
             },
-            [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName }
+            [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName },
+            [JsonSchema.AdditionalProperties] = false
         };
         public static JsonNode SchemaRef => new JsonObject
         {
