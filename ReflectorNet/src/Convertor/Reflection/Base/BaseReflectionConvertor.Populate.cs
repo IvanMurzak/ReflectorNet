@@ -141,18 +141,18 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     if (success)
                     {
                         if (logger?.IsEnabled(LogLevel.Information) == true)
-                            logger.LogInformation($"{nextPadding}[Success] Field '{field.name}' modified.");
+                            logger.LogInformation($"{nextPadding}[Success] Field '{field.name}' populated.");
 
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{nextPadding}[Success] Field '{field.name}' modified.");
+                            stringBuilder.AppendLine($"{nextPadding}[Success] Field '{field.name}' populated.");
                     }
                     else
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{nextPadding}Field '{field.name}' was not modified.");
+                            logger.LogWarning($"{nextPadding}Field '{field.name}' was not populated.");
 
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{nextPadding}[Warning] Field '{field.name}' was not modified.");
+                            stringBuilder.AppendLine($"{nextPadding}[Warning] Field '{field.name}' was not populated.");
                     }
                 }
             }
@@ -160,10 +160,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if ((data.fields?.Count ?? 0) == 0)
             {
                 if (logger?.IsEnabled(LogLevel.Information) == true)
-                    logger.LogInformation($"{nextPadding}No fields modified.");
+                    logger.LogInformation($"{nextPadding}No fields populated.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{nextPadding}[Info] No fields modified.");
+                    stringBuilder.AppendLine($"{nextPadding}[Info] No fields populated.");
             }
 
             if (data.props != null)
@@ -185,18 +185,18 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     if (success)
                     {
                         if (logger?.IsEnabled(LogLevel.Information) == true)
-                            logger.LogInformation($"{nextPadding}[Success] Property '{property.name}' modified.");
+                            logger.LogInformation($"{nextPadding}[Success] Property '{property.name}' populated.");
 
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{nextPadding}[Success] Property '{property.name}' modified.");
+                            stringBuilder.AppendLine($"{nextPadding}[Success] Property '{property.name}' populated.");
                     }
                     else
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{nextPadding}Property '{property.name}' was not modified.");
+                            logger.LogWarning($"{nextPadding}Property '{property.name}' was not populated.");
 
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{nextPadding}[Warning] Property '{property.name}' was not modified.");
+                            stringBuilder.AppendLine($"{nextPadding}[Warning] Property '{property.name}' was not populated.");
                     }
                 }
             }
@@ -204,10 +204,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if ((data.props?.Count ?? 0) == 0)
             {
                 if (logger?.IsEnabled(LogLevel.Information) == true)
-                    logger.LogInformation($"{nextPadding}No properties modified.");
+                    logger.LogInformation($"{nextPadding}No properties populated.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{nextPadding}[Info] No properties modified.");
+                    stringBuilder.AppendLine($"{nextPadding}[Info] No properties populated.");
             }
 
             return overallSuccess;
