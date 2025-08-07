@@ -330,5 +330,42 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.Equal(SerializedMemberCustomDescriptionConverter.CustomDescription, property.Value[JsonSchema.Description]?.ToString());
             }
         }
+
+        void NoEmptyOrNullDescriptions(Reflector reflector, IEnumerable<Type> types)
+        {
+            foreach (var type in types)
+            {
+                var schema = reflector.GetSchema(type, justRef: false);
+
+                var descriptions = JsonSchema.FindAllProperties(schema, JsonSchema.Description);
+
+                if (descriptions.Count == 0)
+                    continue;
+
+                _output.WriteLine($"Check type: {type.GetTypeShortName()}");
+                _output.WriteLine($"Found {descriptions.Count} description(s) in the schema:");
+
+                foreach (var property in descriptions)
+                {
+                    _output.WriteLine($"- Path: {property?.GetPath()}\n        {property}\n");
+                    Assert.NotNull(property);
+                    Assert.NotNull(property.ToString());
+                    Assert.NotEmpty(property.ToString());
+                }
+            }
+        }
+
+        [Fact]
+        public void NoEmptyOrNullDescriptions_AllNonStaticReflectorModelTypes()
+        {
+            var reflector = new Reflector();
+            NoEmptyOrNullDescriptions(reflector, TestUtils.Types.AllNonStaticReflectorModelTypes);
+        }
+        [Fact]
+        public void NoEmptyOrNullDescriptions_AllBaseNonStaticTypes()
+        {
+            var reflector = new Reflector();
+            NoEmptyOrNullDescriptions(reflector, TestUtils.Types.AllBaseNonStaticTypes);
+        }
     }
 }

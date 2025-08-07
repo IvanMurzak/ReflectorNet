@@ -37,7 +37,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonSchema.Type] = JsonSchema.Object,
                     [JsonSchema.Description] = TypeUtils.GetDescription(
                         typeof(SerializedMember)
-                        .GetMember(nameof(SerializedMember.ValueName))
+                        .GetMember(nameof(SerializedMember.valueJsonElement))
                         .First())
                 },
                 [nameof(SerializedMember.fields)] = new JsonObject

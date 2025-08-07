@@ -52,7 +52,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             var reflector = new Reflector();
 
-            foreach (var type in TestTypeGroups.AllNonStaticTypes)
+            foreach (var type in TestUtils.Types.AllBaseNonStaticTypes)
                 ActAssert(reflector.CreateInstance(type), fallbackType: type);
         }
 
@@ -61,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             var reflector = new Reflector();
 
-            foreach (var type in TestTypeGroups.AllNonStaticTypes)
+            foreach (var type in TestUtils.Types.AllBaseNonStaticTypes)
                 ActAssert(reflector.GetDefaultValue(type), fallbackType: type);
         }
 

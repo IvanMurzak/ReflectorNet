@@ -77,12 +77,19 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         logger: logger));
                 }
 
-                return SerializedMember.FromValue(reflector, type, serializedList, name: name);
+                return SerializedMember.FromValue(
+                    reflector: reflector,
+                    type: type,
+                    value: serializedList,
+                    name: name);
             }
             else
             {
                 // Handle non-recursive serialization
-                return SerializedMember.FromJson(type, obj.ToJson(reflector), name: name);
+                return SerializedMember.FromJson(
+                    type: type,
+                    json: obj.ToJson(reflector),
+                    name: name);
             }
         }
 
@@ -118,7 +125,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{StringUtils.GetPadding(depth)}Set value type='{type.GetTypeName(pretty: true)}'. Convertor='{GetType().GetTypeShortName()}'.");
+                logger.LogTrace($"{StringUtils.GetPadding(depth)}Set value type='{type.GetTypeShortName()}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValueListInternal(
                 reflector,
@@ -151,7 +158,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeName(pretty: true)}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
+                logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValue(reflector,
                     serializedMember: value,
@@ -182,7 +189,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeName(pretty: true)}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
+                logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeShortName()}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValue(reflector,
                 serializedMember: value,

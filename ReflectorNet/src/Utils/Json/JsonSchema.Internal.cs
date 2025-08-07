@@ -7,18 +7,22 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public partial class JsonSchema
     {
-        public static List<JsonNode> FindAllProperties(JsonNode node, string fieldName)
+        public static List<JsonNode?> FindAllProperties(JsonNode node, string fieldName)
         {
-            var result = new List<JsonNode>();
+            var result = new List<JsonNode?>();
             if (node is JsonObject obj)
             {
                 foreach (var kvp in obj)
                 {
-                    if (kvp.Value != null)
+                    if (kvp.Value == null)
+                    {
+                        if (kvp.Key == fieldName)
+                            result.Add(null);
+                    }
+                    else
                     {
                         if (kvp.Key == fieldName)
                             result.Add(kvp.Value);
-
                         result.AddRange(FindAllProperties(kvp.Value, fieldName));
                     }
                 }
@@ -92,19 +96,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return GeneratePrimitiveSchema(type);
             }
 
-            // Handle arrays and collections
-            if (type.IsArray)
-            {
-                var elementType = type.GetElementType();
-                return new JsonObject
-                {
-                    [Type] = Array,
-                    [Items] = elementType != null ? GetSchema(reflector, elementType, justRef: !TypeUtils.IsPrimitive(elementType)) : new JsonObject()
-                };
-            }
+            // // Handle arrays and collections
+            // if (type.IsArray)
+            // {
+            //     var elementType = type.GetElementType();
+            //     return new JsonObject
+            //     {
+            //         [Type] = Array,
+            //         [Items] = elementType != null ? GetSchema(reflector, elementType, justRef: !TypeUtils.IsPrimitive(elementType)) : new JsonObject()
+            //     };
+            // }
 
-            // Handle generic collections (List<T>, IEnumerable<T>, etc.)
-            if (type.IsGenericType && TypeUtils.IsIEnumerable(type))
+            // Handle generic collections, arrays and IEnumerable (T[], List<T>, IEnumerable<T>, etc.)
+            if (TypeUtils.IsIEnumerable(type))
             {
                 var itemType = TypeUtils.GetEnumerableItemType(type);
                 if (itemType != null)

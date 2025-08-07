@@ -113,7 +113,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
                         if (isValidBuiltInSchema)
                         {
-                            schema = builtInSchema;
+                            schema = builtInSchema!;
                         }
                         else
                         {
@@ -122,9 +122,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         }
 
                         // Get description from the type if available
-                        var description = type.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                        if (!string.IsNullOrEmpty(description) && schema is JsonObject schemaObj)
-                            schemaObj[Description] = JsonValue.Create(description);
+                        var description = TypeUtils.GetDescription(type);
+                        if (!string.IsNullOrEmpty(description))
+                            schema[Description] = JsonValue.Create(description);
                     }
                 }
             }
@@ -173,7 +173,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             // Create a schema object manually
             var schema = new JsonObject
             {
-                [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
+                // [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
                 [Type] = Object,
                 [Properties] = properties,
                 [Required] = required,
@@ -209,13 +209,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (parameterSchema == null)
                         continue;
                 }
-                // Use JsonSchemaExporter to get the schema for each parameter type
 
                 properties[parameter.Name!] = parameterSchema;
 
                 if (parameterSchema is JsonObject parameterSchemaObject)
                 {
-                    var propertyDescription = parameter.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                    var propertyDescription = TypeUtils.GetDescription(parameter);
                     if (!string.IsNullOrEmpty(propertyDescription))
                         parameterSchemaObject[Description] = JsonValue.Create(propertyDescription);
                 }

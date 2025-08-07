@@ -42,6 +42,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     ? GetDescription(type.BaseType!)
                     : null);
         }
+        public static string? GetDescription(ParameterInfo? parameterInfo)
+        {
+            return parameterInfo
+                ?.GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (parameterInfo != null
+                    ? GetDescription(parameterInfo.ParameterType)
+                    : null);
+        }
         public static string? GetDescription(MemberInfo? memberInfo)
         {
             if (memberInfo == null)
@@ -231,6 +240,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         {
             if (type.IsArray)
                 return true; // Arrays are IEnumerable
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                return true;
 
             return type.GetInterfaces()
                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
