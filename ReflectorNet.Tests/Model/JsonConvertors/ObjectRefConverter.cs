@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
         };
         public JsonNode GetSchemeRef() => new JsonObject
         {
-            [JsonSchema.Ref] = Id
+            [JsonSchema.Ref] = JsonSchema.RefValue + Id
         };
 
         public override ObjectRef? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
