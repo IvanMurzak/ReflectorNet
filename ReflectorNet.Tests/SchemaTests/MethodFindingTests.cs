@@ -170,8 +170,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var methodInfo = typeof(MethodHelper).GetMethod(nameof(MethodHelper.ListObject_ListObject))!;
 
             // Act - Create method reference from MethodInfo
-            var methodRef = new com.IvanMurzak.ReflectorNet.Model.MethodRef(methodInfo);
-            var methodDataRef = new MethodData(methodInfo);
+            var methodRef = new MethodRef(methodInfo);
+            var methodDataRef = new MethodData(reflector, methodInfo);
 
             // Assert
             Assert.True(methodRef.IsValid);

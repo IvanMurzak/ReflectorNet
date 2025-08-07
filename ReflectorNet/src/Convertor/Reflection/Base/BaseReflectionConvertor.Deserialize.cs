@@ -45,8 +45,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 {
                     if (string.IsNullOrEmpty(field.name))
                     {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
+
                         if (stringBuilder != null)
                             stringBuilder.AppendLine($"{padding}[Warning] Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
+
                         continue;
                     }
 
@@ -78,8 +82,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 {
                     if (string.IsNullOrEmpty(property.name))
                     {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
+
                         if (stringBuilder != null)
                             stringBuilder.AppendLine($"{padding}[Warning] Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
+
                         continue;
                     }
 
@@ -217,13 +225,19 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 }
                 catch (JsonException ex)
                 {
-                    stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
-                    logger?.LogCritical($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    if (logger?.IsEnabled(LogLevel.Warning) == true)
+                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Warning] Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
                 }
                 catch (NotSupportedException ex)
                 {
-                    stringBuilder?.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: true)}' for member '{data.name.ValueOrNull()}':\n{padding}{ex.Message}");
-                    logger?.LogCritical($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    if (logger?.IsEnabled(LogLevel.Warning) == true)
+                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: true)}' for member '{data.name.ValueOrNull()}':\n{padding}{ex.Message}");
                 }
 
                 result = reflector.GetDefaultValue(type);
@@ -267,10 +281,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            return JsonUtils.Deserialize(
+            return reflector.JsonSerializer.Deserialize(
                 reflector,
-                jsonElement: data.valueJsonElement,
-                type: type);
+                data.valueJsonElement,
+                type);
         }
     }
 }

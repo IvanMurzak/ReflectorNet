@@ -82,7 +82,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var testType = typeof(GameObjectRef);
 
             // Act - Test introspection capabilities
-            var schema = testType.GetSchema();
+            var schema = testType.GetSchema(reflector, justRef: false);
             var typeId = testType.GetTypeId();
 
             // Assert
@@ -120,6 +120,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void JsonUtils_Comprehensive_Tests()
         {
+            var reflector = new Reflector();
+
             // Arrange
             var testObject = new GameObjectRefList
             {
@@ -128,11 +130,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             };
 
             // Act - Test JsonUtils functionality
-            var serializedJson = JsonUtils.ToJson(testObject);
-            var deserializedObject = JsonUtils.Deserialize<GameObjectRefList>(serializedJson);
+            var serializedJson = reflector.JsonSerializer.Serialize(testObject);
+            var deserializedObject = reflector.JsonSerializer.Deserialize<GameObjectRefList>(serializedJson);
 
-            var schema = JsonUtils.Schema.GetSchema(typeof(GameObjectRefList), justRef: false);
-            var argumentsSchema = JsonUtils.Schema.GetArgumentsSchema(
+            var schema = reflector.GetSchema(typeof(GameObjectRefList), justRef: false);
+            var argumentsSchema = reflector.GetArgumentsSchema(
                 typeof(MethodHelper).GetMethod(nameof(MethodHelper.ListObject_ListObject))!);
 
             // Assert
@@ -150,11 +152,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void MethodDataRef_Construction_From_MethodInfo()
         {
+            var reflector = new Reflector();
+
             // Arrange
             var methodInfo = typeof(TestClass).GetMethod(nameof(TestClass.SerializedMemberList_ReturnString))!;
 
             // Act
-            var methodDataRef = new MethodData(methodInfo);
+            var methodDataRef = new MethodData(reflector, methodInfo);
 
             // Assert
             Assert.Equal(typeof(TestClass).Namespace, methodDataRef.Namespace);

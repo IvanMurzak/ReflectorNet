@@ -27,8 +27,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
             if (type == null)
             {
-                logger?.LogWarning($"{padding}{error}");
-                stringBuilder?.AppendLine($"{padding}[Warning] {error}");
+                if (logger?.IsEnabled(LogLevel.Warning) == true)
+                    logger.LogWarning($"{padding}{error}");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Warning] {error}");
+
                 return null;
             }
 
@@ -203,8 +207,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 if (!isArray)
                 {
                     result = reflector.GetDefaultValue(type);
-                    stringBuilder?.AppendLine($"{padding}[Error] Only array deserialization is supported in this Convertor ({GetType().Name}).");
-                    logger?.LogError($"{padding}{Consts.Emoji.Fail} Only array deserialization is supported in this Convertor ({GetType().Name}).");
+
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{Consts.Emoji.Fail} Only array deserialization is supported in this Convertor ({GetType().Name}).");
+
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Error] Only array deserialization is supported in this Convertor ({GetType().Name}).");
+
                     return false;
                 }
 
@@ -257,16 +266,21 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
             {
-                logger.LogTrace("{padding}TryDeserializeValueListInternal type='{typeName}', name='{name}'",
+                logger.LogTrace("{padding}TryDeserializeValueListInternal name='{name}', type='{typeName}'",
                     padding,
-                    type.GetTypeName(pretty: true),
-                    name.ValueOrNull());
+                    name.ValueOrNull(),
+                    type.GetTypeShortName());
             }
 
             try
             {
                 name = name.ValueOrNull();
                 var parsedList = jsonElement.Deserialize<SerializedMemberList>(reflector);
+
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace(parsedList == null
+                        ? $"{padding}Deserializing '{name}' enumerable with 'null' value."
+                        : $"{padding}Deserializing '{name}' enumerable with {parsedList.Count} items.");
 
                 if (stringBuilder != null)
                     stringBuilder.AppendLine(parsedList == null
@@ -293,16 +307,26 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         //         stringBuilder.AppendLine($"{paddingNext}[Error] Enumerable[{i}] deserialization failed: {errorMessage}");
                         //     return null;
                         // }
+
+                        if (logger?.IsEnabled(LogLevel.Trace) == true)
+                            logger.LogTrace($"{paddingNext}Enumerable[{i}] deserialized successfully: {parsedValue?.GetType().GetTypeShortName()}");
+
                         if (stringBuilder != null)
                             stringBuilder.AppendLine($"{paddingNext}Enumerable[{i}] deserialized successfully.");
+
                         return parsedValue;
                     });
 
                 if (!success)
                 {
                     result = null;
+
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}Failed to deserialize '{name}': Some elements could not be deserialized.");
+
                     if (stringBuilder != null)
                         stringBuilder.AppendLine($"{padding}[Error] Failed to deserialize '{name}': Some elements could not be deserialized.");
+
                     return false;
                 }
 
@@ -310,8 +334,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 if (elementType == null)
                 {
                     result = null;
+
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}Failed to determine element type for '{name}' of type '{type.GetTypeShortName()}'.");
+
                     if (stringBuilder != null)
                         stringBuilder.AppendLine($"{padding}[Error] Failed to determine element type for '{name}'.");
+
                     return false;
                 }
 
@@ -327,6 +356,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         }
                         result = typedArray;
 
+                        if (logger?.IsEnabled(LogLevel.Trace) == true)
+                            logger.LogTrace($"{padding}Deserialized '{name}' as an array with {typedArray.Length} items.");
+
                         if (stringBuilder != null)
                             stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {typedArray.Length} items.");
                     }
@@ -334,6 +366,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     {
                         var tempResult = enumerable?.ToArray();
                         result = tempResult;
+
+                        if (logger?.IsEnabled(LogLevel.Trace) == true)
+                            logger.LogTrace(tempResult == null
+                                ? $"{padding}Deserialized '{name}' as 'null' array."
+                                : $"{padding}Deserialized '{name}' as an array with {tempResult!.Length} items.");
 
                         if (stringBuilder != null)
                             stringBuilder.AppendLine(tempResult == null
@@ -345,6 +382,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 {
                     var tempResult = enumerable?.ToList();
                     result = tempResult;
+
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace(tempResult == null
+                            ? $"{padding}Deserialized '{name}' as 'null' list."
+                            : $"{padding}Deserialized '{name}' as a list with {tempResult.Count} items.");
+
                     if (stringBuilder != null)
                         stringBuilder.AppendLine(tempResult == null
                             ? $"{padding}[Success] Deserialized '{name}' as 'null' list."
@@ -356,9 +399,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             catch (Exception ex)
             {
                 result = null;
+
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}Failed to deserialize '{name}': {ex.Message}\n{ex.StackTrace}");
+
                 if (stringBuilder != null)
                     stringBuilder.AppendLine($"{padding}[Error] Failed to deserialize '{name}': {ex.Message}");
-                logger?.LogCritical($"[Error] Failed to deserialize '{name}': {ex.Message}\n{ex.StackTrace}");
+
                 return false;
             }
         }

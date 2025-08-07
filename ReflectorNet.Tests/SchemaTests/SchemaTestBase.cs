@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
@@ -13,19 +12,38 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
         }
 
-        protected void TestMethodInputs_PropertyRefs(MethodInfo methodInfo, params string[] parameterNames)
+        protected void JsonSchemaValidation(Type type, Reflector? reflector = null)
         {
-            var schema = JsonUtils.Schema.GetArgumentsSchema(methodInfo, justRef: false)!;
+            reflector ??= new Reflector();
+
+            var schema = reflector.GetSchema(type, justRef: false);
+
+            _output.WriteLine($"Schema for {type.GetTypeShortName()}");
+            _output.WriteLine($"{schema}");
+
+            Assert.NotNull(schema);
+            if (schema.AsObject().TryGetPropertyValue(JsonSchema.Error, out var errorValue))
+            {
+                Assert.Fail(errorValue!.ToString());
+            }
+            Assert.NotNull(schema.AsObject());
+        }
+
+        protected void TestMethodInputs_PropertyRefs(Reflector? reflector, MethodInfo methodInfo, params string[] parameterNames)
+        {
+            reflector ??= new Reflector();
+
+            var schema = reflector.GetArgumentsSchema(methodInfo, justRef: false)!;
 
             _output.WriteLine(schema.ToString());
 
             Assert.NotNull(schema);
-            Assert.NotNull(schema[JsonUtils.Schema.Defs]);
+            Assert.NotNull(schema[JsonSchema.Defs]);
 
-            var defines = schema[JsonUtils.Schema.Defs]?.AsObject();
+            var defines = schema[JsonSchema.Defs]?.AsObject();
             Assert.NotNull(defines);
 
-            var properties = schema[JsonUtils.Schema.Properties]?.AsObject();
+            var properties = schema[JsonSchema.Properties]?.AsObject();
             Assert.NotNull(properties);
 
             foreach (var parameterName in parameterNames)
@@ -34,13 +52,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.NotNull(methodParameter);
 
                 var typeId = methodParameter.ParameterType.GetTypeId();
-                var refString = $"{JsonUtils.Schema.RefValue}{typeId}";
+                var refString = $"{JsonSchema.RefValue}{typeId}";
 
                 var targetDefine = defines[typeId];
                 Assert.NotNull(targetDefine);
 
                 var refStringValue = properties.FirstOrDefault(kvp
-                        => kvp.Value!.AsObject().TryGetPropertyValue(JsonUtils.Schema.Ref, out var refValue)
+                        => kvp.Value!.AsObject().TryGetPropertyValue(JsonSchema.Ref, out var refValue)
                         && refString == refValue?.ToString())
                     .Value
                     ?.ToString();
@@ -49,19 +67,21 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             }
         }
 
-        protected void TestMethodInputs_Defines(MethodInfo methodInfo, params Type[] expectedTypes)
+        protected void TestMethodInputs_Defines(Reflector? reflector, MethodInfo methodInfo, params Type[] expectedTypes)
         {
-            var schema = JsonUtils.Schema.GetArgumentsSchema(methodInfo, justRef: false)!;
+            reflector ??= new Reflector();
+
+            var schema = reflector.GetArgumentsSchema(methodInfo, justRef: false)!;
 
             _output.WriteLine(schema.ToString());
 
             Assert.NotNull(schema);
-            Assert.NotNull(schema[JsonUtils.Schema.Defs]);
+            Assert.NotNull(schema[JsonSchema.Defs]);
 
-            var defines = schema[JsonUtils.Schema.Defs]?.AsObject();
+            var defines = schema[JsonSchema.Defs]?.AsObject();
             Assert.NotNull(defines);
 
-            var properties = schema[JsonUtils.Schema.Properties]?.AsObject();
+            var properties = schema[JsonSchema.Properties]?.AsObject();
             Assert.NotNull(properties);
 
             foreach (var expectedType in expectedTypes)

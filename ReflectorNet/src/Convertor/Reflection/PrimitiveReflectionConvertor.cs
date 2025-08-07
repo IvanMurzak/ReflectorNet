@@ -29,7 +29,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);
 
-            return SerializedMember.FromValue(type, obj, name: name);
+            return SerializedMember.FromValue(reflector, type, obj, name: name);
         }
 
         public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)

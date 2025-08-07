@@ -43,13 +43,12 @@ namespace com.IvanMurzak.ReflectorNet
     /// </summary>
     public partial class Reflector
     {
-        public static Reflector? Instance { get; private set; } = null;
         public Registry Convertors { get; }
 
         public Reflector()
         {
-            Instance ??= this;
             Convertors = new Registry();
+            jsonSerializer = new(this);
         }
 
         /// <summary>

@@ -16,7 +16,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var sourceType = sourceInstance?.GetType() ?? typeof(T);
 
             // Act
-            var sourceInstanceJson = JsonUtils.ToJson(sourceInstance);
+            var sourceInstanceJson = sourceInstance.ToJson(reflector);
             _output.WriteLine($"Source {sourceType.GetTypeShortName()}: {sourceInstanceJson}");
             _output.WriteLine(string.Empty);
 
@@ -28,7 +28,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
                 stringBuilder: stringBuilder,
                 logger: serializeLogger);
 
-            var serializedJson = JsonUtils.ToJson(serialized);
+            var serializedJson = serialized.ToJson(reflector);
             _output.WriteLine($"Serialize - Result {sourceType.GetTypeShortName()}: {serializedJson}");
             _output.WriteLine(string.Empty);
 
@@ -50,7 +50,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
                 stringBuilder: stringBuilder,
                 logger: deserializeLogger);
 
-            var deserializedInstanceJson = JsonUtils.ToJson(deserializedInstance);
+            var deserializedInstanceJson = deserializedInstance.ToJson(reflector);
             _output.WriteLine($"Deserialize - Result {sourceType.GetTypeShortName()}: {deserializedInstanceJson}");
             _output.WriteLine(string.Empty);
 
@@ -189,7 +189,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             Assert.NotNull(serialized);
             Assert.Equal(typeof(ParentClass.NestedClass).GetTypeName(pretty: false), serialized.typeName);
             Assert.NotNull(serialized.valueJsonElement);
-            _output.WriteLine($"Serialized ParentClass.NestedClass: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized ParentClass.NestedClass: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -233,7 +233,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             Assert.NotNull(serialized);
             Assert.Equal(typeof(StaticParentClass.NestedClass).GetTypeName(pretty: false), serialized.typeName);
             Assert.NotNull(serialized.valueJsonElement);
-            _output.WriteLine($"Serialized StaticParentClass.NestedClass: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized StaticParentClass.NestedClass: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -332,7 +332,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             // Assert
             Assert.NotNull(serialized);
             Assert.Equal(typeof(ParentClass.NestedClass).GetTypeName(pretty: false), serialized.typeName);
-            _output.WriteLine($"Serialized nested class with defaults: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized nested class with defaults: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -370,7 +370,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             // Assert
             Assert.NotNull(serialized);
             Assert.Equal(typeof(ParentClass.NestedClass).GetTypeName(pretty: false), serialized.typeName);
-            _output.WriteLine($"Serialized nested class with empty strings: {JsonUtils.ToJson(serialized)}");
+            _output.WriteLine($"Serialized nested class with empty strings: {serialized.ToJson(reflector)}");
         }
 
         [Fact]
@@ -417,8 +417,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedField.typeName);
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedProperty.typeName);
 
-            _output.WriteLine($"Serialized static field: {JsonUtils.ToJson(serializedField)}");
-            _output.WriteLine($"Serialized static property: {JsonUtils.ToJson(serializedProperty)}");
+            _output.WriteLine($"Serialized static field: {serializedField.ToJson(reflector)}");
+            _output.WriteLine($"Serialized static property: {serializedProperty.ToJson(reflector)}");
         }
 
         [Fact]
@@ -443,8 +443,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedField.typeName);
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedProperty.typeName);
 
-            _output.WriteLine($"Serialized ParentClass.NestedStaticClass static field: {JsonUtils.ToJson(serializedField)}");
-            _output.WriteLine($"Serialized ParentClass.NestedStaticClass static property: {JsonUtils.ToJson(serializedProperty)}");
+            _output.WriteLine($"Serialized ParentClass.NestedStaticClass static field: {serializedField.ToJson(reflector)}");
+            _output.WriteLine($"Serialized ParentClass.NestedStaticClass static property: {serializedProperty.ToJson(reflector)}");
         }
 
         [Fact]
@@ -469,8 +469,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedField.typeName);
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedProperty.typeName);
 
-            _output.WriteLine($"Serialized StaticParentClass.NestedClass static field: {JsonUtils.ToJson(serializedField)}");
-            _output.WriteLine($"Serialized StaticParentClass.NestedClass static property: {JsonUtils.ToJson(serializedProperty)}");
+            _output.WriteLine($"Serialized StaticParentClass.NestedClass static field: {serializedField.ToJson(reflector)}");
+            _output.WriteLine($"Serialized StaticParentClass.NestedClass static property: {serializedProperty.ToJson(reflector)}");
         }
 
         [Fact]
@@ -495,8 +495,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedField.typeName);
             Assert.Equal(typeof(string).GetTypeName(pretty: false), serializedProperty.typeName);
 
-            _output.WriteLine($"Serialized StaticParentClass.NestedStaticClass static field: {JsonUtils.ToJson(serializedField)}");
-            _output.WriteLine($"Serialized StaticParentClass.NestedStaticClass static property: {JsonUtils.ToJson(serializedProperty)}");
+            _output.WriteLine($"Serialized StaticParentClass.NestedStaticClass static field: {serializedField.ToJson(reflector)}");
+            _output.WriteLine($"Serialized StaticParentClass.NestedStaticClass static property: {serializedProperty.ToJson(reflector)}");
         }
 
         [Fact]

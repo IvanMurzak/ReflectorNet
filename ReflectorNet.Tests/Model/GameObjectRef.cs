@@ -14,6 +14,8 @@ Use one of the following properties:
         public int instanceID { get; set; } = 0;
         [Description("GameObject 'path'. Priority: 2.")]
         public string? path { get; set; } = null;
+
+        [JsonInclude, JsonPropertyName("name")]
         [Description("GameObject 'name'. Priority: 3.")]
         public string? name { get; set; } = null;
 

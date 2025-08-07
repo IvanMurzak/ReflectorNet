@@ -76,27 +76,51 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 return false;
             }
 
+            var overallSuccess = true;
             if (AllowSetValue)
             {
                 try
                 {
-                    var success = SetValue(reflector, ref obj, objType, data.valueJsonElement, depth: depth, stringBuilder: stringBuilder, logger: logger);
-                    stringBuilder?.AppendLine(success
-                        ? $"{padding}[Success] Object '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```"
-                        : $"{padding}[Warning] Object '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+                    var success = SetValue(
+                        reflector: reflector,
+                        obj: ref obj,
+                        type: objType,
+                        value: data.valueJsonElement,
+                        depth: depth,
+                        stringBuilder: stringBuilder,
+                        logger: logger);
+
+                    overallSuccess &= success;
+
+                    if (success)
+                    {
+                        if (logger?.IsEnabled(LogLevel.Information) == true)
+                            logger.LogInformation($"{padding}[Success] Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Success] Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+                    }
+                    else
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{padding}Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Warning] Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+                    }
                 }
                 catch (Exception ex)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError(ex, $"{padding}Object '{obj}' modification failed: {ex.Message}");
+                        logger.LogError(ex, $"{padding}Value '{obj}' modification failed: {ex.Message}");
 
-                    stringBuilder?.AppendLine($"{padding}[Error] Object '{obj}' modification failed: {ex.Message}");
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Error] Value '{obj}' modification failed: {ex.Message}");
                 }
             }
 
             var nextDepth = depth + 1;
             var nextPadding = StringUtils.GetPadding(nextDepth);
-            var overallSuccess = true;
 
             if (data.fields != null)
             {
@@ -112,13 +136,23 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         flags: flags,
                         logger: logger);
 
-                    overallSuccess |= success;
+                    overallSuccess &= success;
 
-                    if (stringBuilder != null)
+                    if (success)
                     {
-                        stringBuilder.AppendLine(success
-                            ? $"{nextPadding}[Success] Field '{field.name}' modified."
-                            : $"{nextPadding}[Warning] Field '{field.name}' was not modified.");
+                        if (logger?.IsEnabled(LogLevel.Information) == true)
+                            logger.LogInformation($"{nextPadding}[Success] Field '{field.name}' populated.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Success] Field '{field.name}' populated.");
+                    }
+                    else
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{nextPadding}Field '{field.name}' was not populated.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Warning] Field '{field.name}' was not populated.");
                     }
                 }
             }
@@ -126,10 +160,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if ((data.fields?.Count ?? 0) == 0)
             {
                 if (logger?.IsEnabled(LogLevel.Information) == true)
-                    logger.LogInformation($"{nextPadding}[Info] No fields modified.");
+                    logger.LogInformation($"{nextPadding}No fields populated.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{nextPadding}[Info] No fields modified.");
+                    stringBuilder.AppendLine($"{nextPadding}[Info] No fields populated.");
             }
 
             if (data.props != null)
@@ -146,13 +180,23 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         flags: flags,
                         logger: logger);
 
-                    overallSuccess |= success;
+                    overallSuccess &= success;
 
-                    if (stringBuilder != null)
+                    if (success)
                     {
-                        stringBuilder.AppendLine(success
-                            ? $"{nextPadding}[Success] Property '{property.name}' modified."
-                            : $"{nextPadding}[Warning] Property '{property.name}' was not modified.");
+                        if (logger?.IsEnabled(LogLevel.Information) == true)
+                            logger.LogInformation($"{nextPadding}[Success] Property '{property.name}' populated.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Success] Property '{property.name}' populated.");
+                    }
+                    else
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{nextPadding}Property '{property.name}' was not populated.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Warning] Property '{property.name}' was not populated.");
                     }
                 }
             }
@@ -160,10 +204,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if ((data.props?.Count ?? 0) == 0)
             {
                 if (logger?.IsEnabled(LogLevel.Information) == true)
-                    logger.LogInformation($"{padding}[Info] No properties modified.");
+                    logger.LogInformation($"{nextPadding}No properties populated.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Info] No properties modified.");
+                    stringBuilder.AppendLine($"{nextPadding}[Info] No properties populated.");
             }
 
             return overallSuccess;
@@ -269,10 +313,6 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     fieldInfo.SetValue(obj, currentValue);
 
                 return success;
-
-                // return stringBuilder?.AppendLine(success
-                //     ? $"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified to value '{fieldValue.valueJsonElement}'."
-                //     : $"{padding}[Error] Failed to modify field '{fieldValue.name.ValueOrNull()}' to value '{fieldValue.valueJsonElement}'. Read error above for more details.");
             }
             catch (Exception ex)
             {
@@ -377,10 +417,6 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     propInfo.SetValue(obj, currentValue);
 
                 return success;
-
-                // return stringBuilder?.AppendLine(success
-                //     ? $"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified to value '{propertyValue.valueJsonElement}'."
-                //     : $"{padding}[Error] Failed to modify property '{propertyValue.name.ValueOrNull()}' to value '{propertyValue.valueJsonElement}'. Read error above for more details.");
             }
             catch (Exception ex)
             {

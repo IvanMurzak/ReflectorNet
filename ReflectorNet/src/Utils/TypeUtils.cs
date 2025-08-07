@@ -35,24 +35,64 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         public static string? GetDescription(Type type)
         {
-            var descriptionAttribute = type.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
+            return type
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (type.BaseType != null
+                    ? GetDescription(type.BaseType!)
+                    : null);
         }
-        public static string? GetDescription(MemberInfo memberInfo)
+        public static string? GetDescription(ParameterInfo? parameterInfo)
         {
-            var descriptionAttribute = memberInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
+            return parameterInfo
+                ?.GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (parameterInfo != null
+                    ? GetDescription(parameterInfo.ParameterType)
+                    : null);
         }
-        public static string? GetPropertyDescription(PropertyInfo propertyInfo)
+        public static string? GetDescription(MemberInfo? memberInfo)
+        {
+            if (memberInfo == null)
+                return null;
+
+            var description = memberInfo
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description;
+
+            if (description != null)
+                return description;
+
+            return memberInfo.MemberType switch
+            {
+                MemberTypes.Field => GetFieldDescription((FieldInfo)memberInfo),
+                MemberTypes.Property => GetPropertyDescription((PropertyInfo)memberInfo),
+                _ => null
+            };
+        }
+        public static string? GetFieldDescription(FieldInfo? fieldInfo)
+        {
+            if (fieldInfo == null)
+                return null;
+
+            return fieldInfo
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (fieldInfo.FieldType != null
+                    ? GetDescription(fieldInfo.FieldType)
+                    : null);
+        }
+        public static string? GetPropertyDescription(PropertyInfo? propertyInfo)
         {
             if (propertyInfo == null)
                 return null;
 
-            var descriptionAttribute = propertyInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
+            return propertyInfo
+                .GetCustomAttribute<DescriptionAttribute>(true)
+                ?.Description
+                ?? (propertyInfo.PropertyType != null
+                    ? GetDescription(propertyInfo.PropertyType)
+                    : null);
         }
         public static string? GetPropertyDescription(Type type, string propertyName)
         {
@@ -104,15 +144,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             return char.ToUpperInvariant(camelCase[0]) + camelCase.Substring(1);
         }
-        public static string? GetFieldDescription(FieldInfo fieldInfo)
-        {
-            if (fieldInfo == null)
-                return null;
-
-            var descriptionAttribute = fieldInfo.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .FirstOrDefault() as DescriptionAttribute;
-            return descriptionAttribute?.Description;
-        }
         public static string? GetFieldDescription(Type type, string fieldName)
         {
             var fieldInfo = type.GetField(fieldName);
@@ -125,14 +156,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return false;
 
             // Handle nullable types
-            var underlyingType = Nullable.GetUnderlyingType(type);
-            if (underlyingType != null)
-                type = underlyingType;
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             // Handle nullable types
-            var underlyingType2 = Nullable.GetUnderlyingType(to);
-            if (underlyingType2 != null)
-                to = underlyingType2;
+            to = Nullable.GetUnderlyingType(to) ?? to;
 
             // Check if the type is assignable to the target type
             if (to.IsAssignableFrom(type))
@@ -213,6 +240,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         {
             if (type.IsArray)
                 return true; // Arrays are IEnumerable
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                return true;
 
             return type.GetInterfaces()
                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));

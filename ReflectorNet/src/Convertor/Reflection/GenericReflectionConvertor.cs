@@ -35,11 +35,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     {
                         name = name,
                         typeName = type.GetTypeName(pretty: false) ?? string.Empty,
-                        fields = SerializeFields(reflector, obj, flags, depth: depth, stringBuilder: stringBuilder, logger: logger),
-                        props = SerializeProperties(reflector, obj, flags, depth: depth, stringBuilder: stringBuilder, logger: logger),
+                        fields = base.SerializeFields(reflector, obj, flags, depth: depth, stringBuilder: stringBuilder, logger: logger),
+                        props = base.SerializeProperties(reflector, obj, flags, depth: depth, stringBuilder: stringBuilder, logger: logger),
                         valueJsonElement = new JsonObject().ToJsonElement()
                     }
-                    : SerializedMember.FromJson(type, JsonUtils.ToJson(obj), name: name);
+                    : SerializedMember.FromJson(type, obj.ToJson(reflector), name: name);
             }
             throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}' for convertor '{GetType().Name}'.");
         }

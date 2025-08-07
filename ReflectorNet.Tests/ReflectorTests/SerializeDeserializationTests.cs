@@ -32,8 +32,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             _output.WriteLine($"Deserialization:\n{deserializeLogger}");
 
             // Assert
-            var originalJson = JsonUtils.ToJson(original);
-            var deserializedJson = JsonUtils.ToJson(deserialized);
+            var originalJson = original.ToJson(reflector);
+            var deserializedJson = deserialized.ToJson(reflector);
 
             _output.WriteLine($"----------------------------\n");
 
@@ -42,7 +42,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             _output.WriteLine($"----------------------------\n");
 
-            _output.WriteLine($"Serialized JSON:\n{JsonUtils.ToJson(serialized)}\n");
+            _output.WriteLine($"Serialized JSON:\n{serialized.ToJson(reflector)}\n");
 
             Assert.Equal(originalJson, deserializedJson);
         }
@@ -52,7 +52,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             var reflector = new Reflector();
 
-            foreach (var type in TestTypeGroups.AllNonStaticTypes)
+            foreach (var type in TestUtils.Types.AllBaseNonStaticTypes)
                 ActAssert(reflector.CreateInstance(type), fallbackType: type);
         }
 
@@ -61,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             var reflector = new Reflector();
 
-            foreach (var type in TestTypeGroups.AllNonStaticTypes)
+            foreach (var type in TestUtils.Types.AllBaseNonStaticTypes)
                 ActAssert(reflector.GetDefaultValue(type), fallbackType: type);
         }
 

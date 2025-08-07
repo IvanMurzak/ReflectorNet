@@ -34,8 +34,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             // Arrange
             var reflector = new Reflector();
-            var jsonElement = JsonUtils.ToJsonElement(null);
-            var serializedMember = SerializedMember.FromValue(default(T), name: TypeUtils.GetTypeShortName<T>());
+            // var jsonElement = JsonSerializer.ToJsonElement(null, reflector);
+            var serializedMember = SerializedMember.FromValue(
+                reflector: reflector,
+                value: default(T),
+                name: TypeUtils.GetTypeShortName<T>());
 
             // Act
             var result = reflector.Deserialize<T>(serializedMember);
@@ -47,8 +50,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         {
             // Arrange
             var reflector = new Reflector();
-            var jsonElement = JsonUtils.ToJsonElement(null);
+            // var jsonElement = JsonSerializer.ToJsonElement(null);
             var serializedMember = SerializedMember.FromValue(
+                reflector: reflector,
                 type: type,
                 value: null,
                 name: TypeUtils.GetTypeShortName(type));

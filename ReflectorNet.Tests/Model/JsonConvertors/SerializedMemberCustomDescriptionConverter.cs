@@ -1,15 +1,17 @@
 using System;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using com.IvanMurzak.ReflectorNet.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 
-namespace com.IvanMurzak.ReflectorNet.Json
+namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
-    public class SerializedMemberConverter : JsonConverter<SerializedMember>, IJsonSchemaConverter
+    public class SerializedMemberCustomDescriptionConverter : JsonConverter<SerializedMember>, IJsonSchemaConverter
     {
+        public const string CustomDescription = "Custom description, used for testing purposes.";
+
         public static string StaticId => TypeUtils.GetTypeId<SerializedMember>();
         public static JsonNode Schema => new JsonObject
         {
@@ -19,26 +21,17 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 [nameof(SerializedMember.typeName)] = new JsonObject
                 {
                     [JsonSchema.Type] = JsonSchema.String,
-                    [JsonSchema.Description] = TypeUtils.GetDescription(
-                        typeof(SerializedMember)
-                        .GetMember(nameof(SerializedMember.typeName))
-                        .First())
+                    [JsonSchema.Description] = CustomDescription
                 },
                 [nameof(SerializedMember.name)] = new JsonObject
                 {
                     [JsonSchema.Type] = JsonSchema.String,
-                    [JsonSchema.Description] = TypeUtils.GetDescription(
-                        typeof(SerializedMember)
-                        .GetMember(nameof(SerializedMember.name))
-                        .First())
+                    [JsonSchema.Description] = CustomDescription
                 },
                 [SerializedMember.ValueName] = new JsonObject
                 {
                     [JsonSchema.Type] = JsonSchema.Object,
-                    [JsonSchema.Description] = TypeUtils.GetDescription(
-                        typeof(SerializedMember)
-                        .GetMember(nameof(SerializedMember.valueJsonElement))
-                        .First())
+                    [JsonSchema.Description] = CustomDescription
                 },
                 [nameof(SerializedMember.fields)] = new JsonObject
                 {
@@ -48,10 +41,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         [JsonSchema.Ref] = JsonSchema.RefValue + StaticId,
                         [JsonSchema.Description] = "Nested field value."
                     },
-                    [JsonSchema.Description] = TypeUtils.GetDescription(
-                        typeof(SerializedMember)
-                        .GetMember(nameof(SerializedMember.fields))
-                        .First())
+                    [JsonSchema.Description] = CustomDescription
                 },
                 [nameof(SerializedMember.props)] = new JsonObject
                 {
@@ -61,10 +51,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         [JsonSchema.Ref] = JsonSchema.RefValue + StaticId,
                         [JsonSchema.Description] = "Nested property value."
                     },
-                    [JsonSchema.Description] = TypeUtils.GetDescription(
-                        typeof(SerializedMember)
-                        .GetMember(nameof(SerializedMember.props))
-                        .First())
+                    [JsonSchema.Description] = CustomDescription
                 }
             },
             [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName },
@@ -79,7 +66,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public string Id => StaticId;
 
-        public SerializedMemberConverter(Reflector reflector)
+        public SerializedMemberCustomDescriptionConverter(Reflector reflector)
         {
             _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
         }
