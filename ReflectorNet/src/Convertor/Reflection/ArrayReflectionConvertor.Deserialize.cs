@@ -27,8 +27,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
             if (type == null)
             {
-                logger?.LogWarning($"{padding}{error}");
-                stringBuilder?.AppendLine($"{padding}[Warning] {error}");
+                if (logger?.IsEnabled(LogLevel.Warning) == true)
+                    logger.LogWarning($"{padding}{error}");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Warning] {error}");
+
                 return null;
             }
 

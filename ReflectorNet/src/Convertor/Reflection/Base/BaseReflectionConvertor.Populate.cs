@@ -76,6 +76,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 return false;
             }
 
+            var overallSuccess = true;
             if (AllowSetValue)
             {
                 try
@@ -89,15 +90,24 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         stringBuilder: stringBuilder,
                         logger: logger);
 
-                    if (logger?.IsEnabled(LogLevel.Information) == true)
-                        logger.LogInformation(success
-                            ? $"{padding}[Success] Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```"
-                            : $"{padding}[Warning] Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+                    overallSuccess &= success;
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine(success
-                            ? $"{padding}[Success] Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```"
-                            : $"{padding}[Warning] Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+                    if (success)
+                    {
+                        if (logger?.IsEnabled(LogLevel.Information) == true)
+                            logger.LogInformation($"{padding}[Success] Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Success] Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+                    }
+                    else
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{padding}Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{padding}[Warning] Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -111,7 +121,6 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             var nextDepth = depth + 1;
             var nextPadding = StringUtils.GetPadding(nextDepth);
-            var overallSuccess = true;
 
             if (data.fields != null)
             {
@@ -127,17 +136,24 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         flags: flags,
                         logger: logger);
 
-                    overallSuccess |= success;
+                    overallSuccess &= success;
 
-                    if (logger?.IsEnabled(LogLevel.Information) == true)
-                        logger.LogInformation(success
-                            ? $"{nextPadding}[Success] Field '{field.name}' modified."
-                            : $"{nextPadding}[Warning] Field '{field.name}' was not modified.");
+                    if (success)
+                    {
+                        if (logger?.IsEnabled(LogLevel.Information) == true)
+                            logger.LogInformation($"{nextPadding}[Success] Field '{field.name}' modified.");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine(success
-                            ? $"{nextPadding}[Success] Field '{field.name}' modified."
-                            : $"{nextPadding}[Warning] Field '{field.name}' was not modified.");
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Success] Field '{field.name}' modified.");
+                    }
+                    else
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{nextPadding}Field '{field.name}' was not modified.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Warning] Field '{field.name}' was not modified.");
+                    }
                 }
             }
 
@@ -164,17 +180,24 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         flags: flags,
                         logger: logger);
 
-                    overallSuccess |= success;
+                    overallSuccess &= success;
 
-                    if (logger?.IsEnabled(LogLevel.Information) == true)
-                        logger.LogInformation(success
-                            ? $"{nextPadding}[Success] Property '{property.name}' modified."
-                            : $"{nextPadding}[Warning] Property '{property.name}' was not modified.");
+                    if (success)
+                    {
+                        if (logger?.IsEnabled(LogLevel.Information) == true)
+                            logger.LogInformation($"{nextPadding}[Success] Property '{property.name}' modified.");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine(success
-                            ? $"{nextPadding}[Success] Property '{property.name}' modified."
-                            : $"{nextPadding}[Warning] Property '{property.name}' was not modified.");
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Success] Property '{property.name}' modified.");
+                    }
+                    else
+                    {
+                        if (logger?.IsEnabled(LogLevel.Warning) == true)
+                            logger.LogWarning($"{nextPadding}Property '{property.name}' was not modified.");
+
+                        if (stringBuilder != null)
+                            stringBuilder.AppendLine($"{nextPadding}[Warning] Property '{property.name}' was not modified.");
+                    }
                 }
             }
 
