@@ -43,8 +43,8 @@ namespace com.IvanMurzak.ReflectorNet
 
         public MethodWrapper(Reflector reflector, ILogger? logger, MethodInfo methodInfo)
         {
-            _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
             _logger = logger;
+            _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
             _methodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
 
             if (!methodInfo.IsStatic)
@@ -56,8 +56,8 @@ namespace com.IvanMurzak.ReflectorNet
 
         public MethodWrapper(Reflector reflector, ILogger? logger, object targetInstance, MethodInfo methodInfo)
         {
-            _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
             _logger = logger;
+            _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
             _targetInstance = targetInstance ?? throw new ArgumentNullException(nameof(targetInstance));
             _methodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
 
@@ -70,8 +70,8 @@ namespace com.IvanMurzak.ReflectorNet
 
         public MethodWrapper(Reflector reflector, ILogger? logger, Type classType, MethodInfo methodInfo)
         {
-            _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
             _logger = logger;
+            _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
             _classType = classType ?? throw new ArgumentNullException(nameof(classType));
             _methodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
 
