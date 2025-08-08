@@ -116,7 +116,7 @@ namespace com.IvanMurzak.ReflectorNet
         public virtual async Task<object?> InvokeDict(IReadOnlyDictionary<string, object?>? namedParameters)
         {
             // If _targetInstance is null and _targetType is set, create an instance of the target type
-            var instance = _targetInstance ?? (_classType != null ? Activator.CreateInstance(_classType) : null); // TODO: replace with Reflector.CreateInstance
+            var instance = _targetInstance ?? (_classType != null ? _reflector.CreateInstance(_classType) : null);
 
             // Build the final parameters array, filling in default values where necessary
             var finalParameters = BuildParameters(_reflector, namedParameters);
@@ -219,7 +219,9 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = jsonElement.Deserialize(methodParameters[i].ParameterType, _reflector.JsonSerializerOptions);
+                            finalParameters[i] = jsonElement.Deserialize(
+                                returnType: methodParameters[i].ParameterType,
+                                options: _reflector.JsonSerializerOptions);
                         }
                         catch
                         {
@@ -292,7 +294,9 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = jsonElement.Deserialize(parameter.ParameterType, _reflector.JsonSerializerOptions);
+                            finalParameters[i] = jsonElement.Deserialize(
+                                returnType: parameter.ParameterType,
+                                options: _reflector.JsonSerializerOptions);
                         }
                         catch
                         {
