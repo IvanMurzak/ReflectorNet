@@ -3,105 +3,448 @@
 
 [![nuget](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet) [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
-[![Tests](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml) ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue?logoColor=white) ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-blue?logoColor=white) ![.NET 6.0](https://img.shields.io/badge/.NET-6.0-blue?logoColor=white) ![netstandard2.0](https://img.shields.io/badge/.NET-netstandard2.0-blue?logoColor=white) ![netstandard2.1](https://img.shields.io/badge/.NET-netstandard2.1-blue?logoColor=white)
+[![Tests](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml) ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue?logoColor=white) ![netstandard2.0](https://img.shields.io/badge/.NET-netstandard2.0-blue?logoColor=white) ![netstandard2.1](https://img.shields.io/badge/.NET-netstandard2.1-blue?logoColor=white)
 
-ReflectorNet is a powerful .NET library designed to provide advanced reflection-based serialization, deserialization, and dynamic method invocation capabilities. It enables developers to inspect, manipulate, and interact with .NET objects, types, and methods at runtime, making it ideal for building tools, frameworks, and applications that require deep introspection or dynamic behavior.
+ReflectorNet is an advanced .NET reflection toolkit specifically designed for AI-driven scenarios. It provides sophisticated reflection-based serialization, deserialization, population, and method invocation capabilities that enable seamless integration between AI systems and .NET applications.
 
 ## Main Features
 
-- **Advanced Reflection-Based Serialization & Deserialization**
-  Seamlessly convert .NET objects—including complex types, collections, and custom structures—to and from a type-preserving, flexible serialized format (`SerializedMember`). Supports custom converters for specialized scenarios.
+### 🔍 **Intelligent Method Discovery & Invocation**
 
-- **Dynamic Method Discovery & Invocation**
-  Locate and invoke methods at runtime using powerful filters (namespace, type, method name, parameters). Supports both static and instance methods, including asynchronous (`Task`) methods, enabling dynamic scripting and automation.
+Discover and invoke methods at runtime using powerful fuzzy matching algorithms. Supports partial method names, parameter matching, and configurable similarity scoring (0-6 levels) for robust method resolution even with incomplete information.
 
-- **Automatic JSON Schema Generation**
-  Generate JSON Schema representations for method parameters and return types. This enables integration with code generation, documentation, validation tools, and OpenAPI workflows.
+```csharp
+var reflector = new Reflector();
+var methods = reflector.FindMethod(new MethodRef
+{
+    TypeName = "TestClass",
+    MethodName = "Process",  // Partial match supported
+    Namespace = "MyApp.Services"
+}, methodNameMatchLevel: 3); // Flexible matching
+```
 
-- **Extensible Converter & Populator Registry**
-  Register custom converters and populators using a flexible, chain-of-responsibility pattern. Easily extend serialization and deserialization logic for any .NET type.
+### 📊 **Advanced Reflection-Based Serialization**
 
-- **Comprehensive Type Introspection**
-  Analyze and discover serializable fields, properties, and type metadata. Perform advanced type matching, filtering, and metadata extraction for deep introspection.
+Convert complex .NET objects to type-preserving, AI-friendly serialized formats. Supports nested objects, collections, custom types, and maintains full type information for accurate reconstruction.
 
-- **Robust Error Handling & Logging**
-  Integrated error reporting and support for `Microsoft.Extensions.Logging` provide detailed traceability, diagnostics, and debugging.
+```csharp
+var reflector = new Reflector();
+var serialized = reflector.Serialize(complexObject, recursive: true);
+var restored = reflector.Deserialize<MyClass>(serialized);
+```
 
-- **Integration-Ready**
-  Designed for seamless integration with scripting engines, test frameworks, code analyzers, and documentation generators.
+### 🔧 **Smart Instance Creation & Population**
 
-## Project Goals
+Intelligently create instances with automatic constructor resolution, dependency handling, and in-place object population from serialized data.
 
-- **Maximum Flexibility:** Support a broad spectrum of .NET types and use cases, from simple primitives to deeply nested object graphs and custom types.
-- **Easy Extensibility:** Allow users to plug in custom converters, populators, and serialization strategies with minimal effort.
-- **Type Safety:** Ensure type information is preserved throughout all serialization, deserialization, and dynamic invocation processes.
-- **Dynamic Automation:** Empower dynamic code execution, scripting, and automation by exposing runtime method invocation and object manipulation.
-- **Seamless Integration:** Provide schema and metadata generation for use in code generation, documentation, validation, and interoperability workflows.
+```csharp
+var instance = reflector.CreateInstance<MyClass>();
+reflector.TryPopulate(ref instance, serializedData);
+```
 
-## Example Use Cases
+### 🔄 **Advanced Object Population System**
 
-- Building scripting engines or automation tools that need to invoke .NET methods dynamically.
-- Creating serialization frameworks that require deep type introspection and custom logic.
-- Generating OpenAPI/JSON Schema documentation for .NET APIs.
-- Developing test frameworks or code analyzers that operate on runtime metadata.
+ReflectorNet provides sophisticated in-place object population capabilities that enable seamless data transfer from serialized formats to existing object instances. The population system offers precise control over which members are populated and comprehensive error handling.
+
+#### **Key Population Features**
+
+##### **🎯 In-Place Population**
+
+```csharp
+// Populate existing objects without replacement
+var existingObject = new MyClass { Id = 1 };
+var serializedData = reflector.Serialize(sourceObject);
+var success = reflector.TryPopulate(ref existingObject, serializedData);
+```
+
+##### **🔍 Selective Member Population**
+
+```csharp
+// Control which fields and properties are populated
+reflector.TryPopulate(
+    ref targetObject,
+    serializedData,
+    flags: BindingFlags.Public | BindingFlags.Instance  // Only public members
+);
+```
+
+##### **📊 Hierarchical Population**
+
+```csharp
+// Population with nested object support and depth tracking
+var stringBuilder = new StringBuilder();
+var success = reflector.TryPopulate(
+    ref complexObject,
+    serializedData,
+    depth: 0,
+    stringBuilder: stringBuilder  // Collect detailed operation logs
+);
+```
+
+##### **🛡️ Type-Safe Population with Validation**
+
+```csharp
+// Explicit type validation during population
+reflector.TryPopulate(
+    ref targetObject,
+    serializedData,
+    fallbackObjType: typeof(MyExpectedType)  // Ensure type compatibility
+);
+```
+
+#### **Population Workflow**
+
+1. **Type Resolution**: Automatically resolves target type from serialized data or explicit parameters
+2. **Compatibility Validation**: Ensures object compatibility before attempting population
+3. **Converter Selection**: Uses the Chain of Responsibility pattern to select optimal converters
+4. **Member Population**: Populates fields and properties based on BindingFlags
+5. **Error Collection**: Accumulates detailed error messages with hierarchical indentation
+6. **Success Reporting**: Returns comprehensive success/failure status
+
+#### **Advanced Population Scenarios**
+
+##### **🔧 Partial Object Updates**
+
+```csharp
+// Update only specific fields of existing objects
+var partialData = new SerializedMember
+{
+    fields = new List<SerializedMember>
+    {
+        new SerializedMember { name = "Name", valueString = "Updated Name" },
+        new SerializedMember { name = "Status", valueString = "Active" }
+    }
+};
+
+reflector.TryPopulate(ref existingObject, partialData);
+```
+
+##### **📈 Batch Population with Error Tracking**
+
+```csharp
+// Populate multiple objects with consolidated error reporting
+var errorLog = new StringBuilder();
+var overallSuccess = true;
+
+foreach (var (target, data) in objectDataPairs)
+{
+    var success = reflector.TryPopulate(
+        ref target,
+        data,
+        stringBuilder: errorLog
+    );
+    overallSuccess &= success;
+}
+
+if (!overallSuccess)
+    Console.WriteLine($"Population errors:\n{errorLog}");
+```
+
+##### **🔄 State Synchronization**
+
+```csharp
+// Synchronize object state from external sources
+public void SynchronizeFromJson(ref MyClass target, string jsonData)
+{
+    var serialized = JsonSerializer.Deserialize<SerializedMember>(jsonData);
+    var success = reflector.TryPopulate(ref target, serialized);
+
+    if (!success)
+        throw new InvalidOperationException("Failed to synchronize object state");
+}
+```
+
+##### **🧪 Configuration Management**
+
+```csharp
+// Apply configuration updates to existing settings objects
+var configObject = LoadCurrentConfiguration();
+var updateData = reflector.Serialize(newConfigurationData);
+
+// Apply updates while preserving existing values for unspecified fields
+reflector.TryPopulate(ref configObject, updateData);
+SaveConfiguration(configObject);
+```
+
+### 📋 **Automatic JSON Schema Generation**
+
+Generate comprehensive JSON Schema documentation for methods and types, enabling seamless integration with OpenAPI, code generation tools, and AI systems.
+
+```csharp
+var methodSchema = reflector.GetArgumentsSchema(methodInfo);
+var typeSchema = reflector.GetSchema<MyClass>();
+```
+
+### 🔌 **Extensible Converter System**
+
+Register custom converters using a flexible chain-of-responsibility pattern. Easily extend serialization behavior for any .NET type with specialized logic.
+
+```csharp
+reflector.Convertors.Add(new MyCustomConverter<SpecialType>());
+```
+
+### 📈 **Comprehensive Type Introspection**
+
+Analyze and discover serializable fields, properties, and type metadata with advanced filtering and analysis capabilities.
+
+```csharp
+var fields = reflector.GetSerializableFields(typeof(MyClass));
+var properties = reflector.GetSerializableProperties(typeof(MyClass));
+```
+
+### 🛡️ **Robust Error Handling & Logging**
+
+Integrated Microsoft.Extensions.Logging support with hierarchical error reporting, detailed diagnostics, and comprehensive validation.
+
+### 🤖 **AI & Integration Ready**
+
+Optimized for AI scenarios with JSON Schema support, dynamic method binding, and cross-language serialization compatibility.
+
+## Architecture Overview
+
+ReflectorNet employs a sophisticated **Chain of Responsibility** pattern with multiple specialized converters:
+
+- **PrimitiveReflectionConvertor**: Handles built-in .NET types (int, string, DateTime, etc.)
+- **GenericReflectionConvertor**: Manages custom classes and structs
+- **ArrayReflectionConvertor**: Specialized handling for arrays and collections
+- **Custom Converters**: Extensible system for specialized type handling
+
+## Advanced Use Cases
+
+### 🔥 Dynamic Scripting & Automation
+
+```csharp
+// AI can discover and invoke methods dynamically
+var result = reflector.MethodCall(new MethodRef
+{
+    TypeName = "Calculator",
+    MethodName = "Add"
+}, inputParameters: parameters);
+```
+
+### 📚 API Documentation Generation
+
+```csharp
+// Generate comprehensive API documentation
+var schema = reflector.GetArgumentsSchema(methodInfo);
+// Use schema for OpenAPI/Swagger generation
+```
+
+### 🧪 Advanced Testing Frameworks
+
+```csharp
+// Dynamic test case generation and execution
+var testMethods = reflector.FindMethod(new MethodRef
+{
+    MethodName = "Test",
+    TypeName = "TestClass"
+}, methodNameMatchLevel: 2);
+```
+
+### 🔄 Configuration & State Management
+
+```csharp
+// Serialize complex application state
+var appState = reflector.Serialize(applicationState);
+// Later restore with exact type preservation
+var restored = reflector.Deserialize(appState);
+```
 
 ## Getting Started
 
-1. Add the ReflectorNet NuGet package to your project.
-2. Use the `Reflector` class to serialize, deserialize, or invoke methods dynamically.
-3. Register custom converters as needed for your types.
+### Installation
 
-See the `docs/` folder and code comments for more details and advanced usage examples.
-This project is used in [Unity-MCP](https://github.com/IvanMurzak/Unity-MCP).
-
-## Usage API
-
-- `Reflector.Serialize(...)`
-- `Reflector.Deserialize(...)`
-- `Reflector.GetSerializableFields(...)`
-- `Reflector.GetSerializableProperties(...)`
-- `Reflector.Populate(...)`
-
-### Override ReflectionConvertor for a custom type
-
-You may need to override convertor in the same way as JsonConvertor works if you have a custom type that should be handled differently.
-
-Here is custom class sample.
-
-```csharp
-public class MyClass
-{
-    public int health = 100;
-}
+```bash
+dotnet add package com.IvanMurzak.ReflectorNet
 ```
 
-Create custom convertor
+### Basic Usage
 
 ```csharp
+using com.IvanMurzak.ReflectorNet;
+
+var reflector = new Reflector();
+
+// Serialize any object
+var serialized = reflector.Serialize(myObject);
+
+// Deserialize with type safety
+var restored = reflector.Deserialize<MyClass>(serialized);
+
+// Discover methods dynamically
+var methods = reflector.FindMethod(new MethodRef
+{
+    TypeName = "MyClass",
+    MethodName = "MyMethod"
+});
+
+// Generate JSON Schema
+var schema = reflector.GetSchema<MyClass>();
+```
+
+## Core API Reference
+
+### Primary Methods
+
+#### Serialization & Deserialization
+
+- **`Serialize(...)`** - Convert objects to type-preserving serialized representations with support for complex nested structures
+- **`Deserialize<T>(...)`** - Reconstruct strongly-typed objects from serialized data with intelligent type resolution
+- **`Deserialize(...)`** - Deserialize to specific types with flexible fallback type support
+
+#### Object Management
+
+- **`CreateInstance<T>()`** - Intelligent instance creation with automatic constructor resolution and dependency handling
+- **`CreateInstance(Type)`** - Create instances of specific types with support for complex constructors
+- **`TryPopulate(...)`** - Advanced in-place object population from serialized data with comprehensive validation and error handling
+  - Supports selective member population with BindingFlags control
+  - Hierarchical population with depth tracking and detailed error reporting
+  - Type-safe validation and compatibility checking
+  - Non-destructive updates that preserve existing object structure
+  - Batch population capabilities with consolidated error logging
+- **`GetDefaultValue<T>()`** - Retrieve intelligent default values for types with custom converter logic
+- **`GetDefaultValue(Type)`** - Get default values for specific types with nullable type unwrapping
+
+#### Method Discovery & Invocation
+
+- **`FindMethod(...)`** - Discover methods with fuzzy matching algorithms and configurable similarity scoring (0-6 levels)
+- **`MethodCall(...)`** - Dynamically invoke discovered methods with parameter binding and execution control
+
+#### Type Introspection
+
+- **`GetSerializableFields(...)`** - Analyze type structure and discover serializable fields using converter chain
+- **`GetSerializableProperties(...)`** - Discover serializable properties with BindingFlags control and logging support
+
+#### JSON Schema Generation
+
+- **`GetSchema<T>()`** - Generate comprehensive JSON Schema for generic types with reference optimization
+- **`GetSchema(Type)`** - Create JSON Schema for specific types with primitive handling and documentation extraction
+- **`GetArgumentsSchema(...)`** - Generate method parameter schemas for dynamic invocation and API documentation
+
+#### JSON Serialization
+
+- **`JsonSerializer`** - Access to ReflectorNet-optimized JSON serializer with custom converters
+- **`JsonSerializerOptions`** - Access to configured JSON serialization options
+- **`JsonSchema`** - Access to JSON Schema generation utilities
+
+### Advanced Configuration
+
+#### Custom Converter Registration
+
+```csharp
+// Create a custom converter for specialized types
 public class MyReflectionConvertor : GenericReflectionConvertor<MyClass>
 {
+    // Override serialization behavior
+    protected override SerializedMember InternalSerialize(
+        Reflector reflector, object? obj, Type type,
+        string? name = null, bool recursive = true,
+        BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+        int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+    {
+        // Custom serialization logic
+        return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, stringBuilder, logger);
+    }
 
+    // Override priority scoring for better type matching
+    public override int SerializationPriority(Type type, ILogger? logger = null)
+    {
+        // Custom priority logic
+        return base.SerializationPriority(type, logger);
+    }
 }
+
+// Register the custom converter
+reflector.Convertors.Add(new MyReflectionConvertor());
 ```
 
-Register the convertor
+#### JSON Serialization Configuration
 
 ```csharp
-Reflector.Registry.Add(new MyReflectionConvertor());
+// Access to JSON serializer for additional configuration
+var jsonSerializer = reflector.JsonSerializer;
+jsonSerializer.AddConverter(new MyCustomJsonConverter());
+
+// Access to JSON schema generation
+var jsonSchema = reflector.JsonSchema;
+var schema = jsonSchema.GetSchema<MyClass>(reflector, justRef: false);
 ```
 
-## Contribution
+#### Converter System Architecture
 
-Contributions are welcome! If you would like to help improve ReflectorNet, please follow these steps:
+The ReflectorNet converter system uses a sophisticated priority-based selection:
 
-1. **Fork the repository** on [GitHub](https://github.com/IvanMurzak/ReflectorNet).
-2. **Create a new branch** for your feature or bugfix:
-   `git checkout -b my-feature`
-3. **Make your changes** and add tests if applicable.
-4. **Commit your changes** with a clear and descriptive message.
-5. **Push your branch** to your forked repository.
-6. **Open a Pull Request** to the `main` branch of the original repository. Please describe your changes and reference any related issues.
+- **Priority Scoring**: Each converter returns a score (0-10000+) indicating compatibility
+- **Automatic Selection**: Highest priority converter is automatically selected
+- **Type Inheritance**: Considers inheritance distance for optimal converter matching
+- **Extensibility**: Easy to add custom converters for specialized type handling
 
-Before submitting, ensure your code follows the project's style and passes all tests. For major changes, please open an issue first to discuss your proposal.
+## Integration Examples
 
-Thank you for contributing to ReflectorNet!
+### Unity Game Engine
+
+This project powers [Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) for AI-driven Unity development.
+
+### Web APIs
+
+```csharp
+// Generate OpenAPI documentation
+var methodSchemas = GetAllMethods()
+    .Select(m => reflector.GetArgumentsSchema(m))
+    .ToList();
+```
+
+### AI & Machine Learning
+
+```csharp
+// AI can discover and invoke methods based on natural language
+var candidates = reflector.FindMethod(new MethodRef
+{
+    MethodName = aiGeneratedMethodName,
+    TypeName = aiGeneratedTypeName
+}, methodNameMatchLevel: 3);
+```
+
+## Performance & Optimization
+
+- **Lazy Loading**: Types and methods are discovered on-demand
+- **Caching**: Reflection metadata is cached for optimal performance
+- **Memory Efficient**: Minimal memory footprint with intelligent object pooling
+- **Parallel Safe**: Thread-safe operations for concurrent environments
+
+## Contributing
+
+We welcome contributions! Here's how to get involved:
+
+1. **Fork** the repository on [GitHub](https://github.com/IvanMurzak/ReflectorNet)
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Implement** your changes with comprehensive tests
+4. **Document** your changes and update relevant documentation
+5. **Test** thoroughly across supported .NET versions
+6. **Submit** a Pull Request with detailed description
+
+### Development Guidelines
+
+- Follow existing code style and patterns
+- Add comprehensive unit tests for new features
+- Update documentation for API changes
+- Ensure compatibility across all supported .NET versions
+- Include performance benchmarks for significant changes
+
+### Bug Reports & Feature Requests
+
+Please use GitHub Issues with detailed descriptions, reproduction steps, and environment information.
+
+## License & Support
+
+ReflectorNet is released under the Apache-2.0 License.
+
+For questions, support, or discussions:
+
+- GitHub Issues for bug reports and feature requests
+- GitHub Discussions for general questions and community support
+- Check the `docs/` folder for detailed documentation and examples
+
+---
+
+Built with ❤️ for the .NET and AI communities

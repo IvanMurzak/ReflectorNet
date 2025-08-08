@@ -10,6 +10,39 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 {
     public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
     {
+        /// <summary>
+        /// Performs comprehensive deserialization of SerializedMember data into strongly-typed objects.
+        /// This method serves as the main entry point for converting serialized representations back into
+        /// live .NET objects with full type preservation and validation.
+        ///
+        /// Deserialization Process:
+        /// 1. Value Deserialization: Attempts to deserialize the core value using TryDeserializeValue
+        /// 2. Field Population: Iterates through serialized fields and applies them to the target object
+        /// 3. Property Population: Iterates through serialized properties and applies them to the target object
+        /// 4. Type Validation: Ensures field/property types are compatible with target object
+        /// 5. Instance Creation: Creates object instances as needed during the deserialization process
+        /// 6. Error Handling: Provides comprehensive error reporting with hierarchical formatting
+        ///
+        /// Field and Property Handling:
+        /// - Uses reflection to locate corresponding fields/properties on the target type
+        /// - Supports both public and non-public members based on BindingFlags
+        /// - Validates writability for properties before attempting to set values
+        /// - Provides detailed warnings for missing or incompatible members
+        /// - Recursive deserialization for complex nested objects
+        ///
+        /// Error Recovery:
+        /// - Continues processing remaining members even if individual members fail
+        /// - Provides detailed error messages with proper indentation for nested structures
+        /// - Logs warnings for non-critical issues while preserving overall deserialization
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for recursive deserialization operations.</param>
+        /// <param name="data">SerializedMember containing the data to deserialize.</param>
+        /// <param name="fallbackType">Optional type to use when type information is missing from data.</param>
+        /// <param name="fallbackName">Optional name to use for logging when name is missing from data.</param>
+        /// <param name="depth">Current depth in the object hierarchy for proper error message indentation.</param>
+        /// <param name="stringBuilder">Optional StringBuilder for accumulating detailed operation logs.</param>
+        /// <param name="logger">Optional logger for tracing deserialization operations.</param>
+        /// <returns>The deserialized object instance, or null if deserialization fails.</returns>
         public virtual object? Deserialize(
             Reflector reflector,
             SerializedMember data,
@@ -125,6 +158,38 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             return result;
         }
 
+        /// <summary>
+        /// Attempts to deserialize the value portion of a SerializedMember with comprehensive type resolution and validation.
+        /// This method orchestrates the value deserialization process including type resolution, converter selection,
+        /// and delegation to appropriate internal deserialization methods.
+        ///
+        /// Type Resolution Process:
+        /// 1. Prioritizes type information from SerializedMember.typeName
+        /// 2. Falls back to provided fallbackType parameter
+        /// 3. Validates type compatibility and existence
+        /// 4. Handles nullable type unwrapping automatically
+        ///
+        /// Deserialization Strategies:
+        /// - Cascade mode: Attempts to deserialize as SerializedMember structure for complex objects
+        /// - Direct mode: Deserializes directly from JSON for primitive and simple types
+        /// - Error recovery: Provides meaningful error messages and fallback values
+        /// - Logging integration: Comprehensive trace logging for debugging and monitoring
+        ///
+        /// Success/Failure Handling:
+        /// - Returns true for successful deserialization with valid result
+        /// - Returns false for failed deserialization with appropriate error logging
+        /// - Provides detailed error information in StringBuilder for analysis
+        /// - Maintains type safety throughout the deserialization process
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type resolution and recursive operations.</param>
+        /// <param name="serializedMember">The SerializedMember containing the data to deserialize.</param>
+        /// <param name="result">Output parameter containing the deserialized object on success.</param>
+        /// <param name="type">Output parameter containing the resolved target type.</param>
+        /// <param name="fallbackType">Optional fallback type when type resolution from data fails.</param>
+        /// <param name="depth">Current depth in object hierarchy for proper error message indentation.</param>
+        /// <param name="stringBuilder">Optional StringBuilder for accumulating detailed operation logs.</param>
+        /// <param name="logger">Optional logger for tracing deserialization operations.</param>
+        /// <returns>True if deserialization succeeded, false otherwise.</returns>
         protected virtual bool TryDeserializeValue(
             Reflector reflector,
             SerializedMember? serializedMember,

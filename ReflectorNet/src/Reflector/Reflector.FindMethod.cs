@@ -107,6 +107,40 @@ namespace com.IvanMurzak.ReflectorNet
             return 2;
         }
 
+        /// <summary>
+        /// Discovers methods at runtime using advanced filtering criteria and fuzzy matching capabilities.
+        /// This method provides powerful method discovery functionality with configurable matching levels,
+        /// enabling flexible method location based on partial information and similarity scoring.
+        ///
+        /// Behavior:
+        /// - Namespace filtering: Can restrict search to known namespaces or search globally across all types
+        /// - Fuzzy matching: Uses configurable match levels for type names, method names, and parameters
+        /// - Match scoring: Implements a 6-level scoring system (exact match = 6, case-insensitive = 5, etc.)
+        /// - Parameter matching: Supports optional parameter validation and signature comparison
+        /// - Visibility control: Uses BindingFlags to control which methods are discoverable
+        /// - Generic filtering: Automatically excludes generic type definitions and method definitions
+        /// - Inheritance support: Searches through class hierarchies while respecting abstract class rules
+        ///
+        /// Match Level Scoring (0-6):
+        /// - 6: Exact case-sensitive match
+        /// - 5: Case-insensitive match
+        /// - 4: Case-sensitive prefix match
+        /// - 3: Case-insensitive prefix match
+        /// - 2: Case-sensitive substring match
+        /// - 1: Case-insensitive substring match
+        /// - 0: No match
+        ///
+        /// This method is particularly useful for building dynamic method invocation systems,
+        /// code analysis tools, and scenarios where method discovery needs to be flexible
+        /// and tolerant of partial or approximate information.
+        /// </summary>
+        /// <param name="filter">MethodRef containing search criteria including namespace, type name, method name, and optional parameters.</param>
+        /// <param name="knownNamespace">Whether to restrict search to the exact namespace specified in filter. Default is false for global search.</param>
+        /// <param name="typeNameMatchLevel">Minimum match level required for type name matching (0-6). Default is 1.</param>
+        /// <param name="methodNameMatchLevel">Minimum match level required for method name matching (0-6). Default is 1.</param>
+        /// <param name="parametersMatchLevel">Minimum match level required for parameter signature matching (0-6). Default is 0 (no parameter matching).</param>
+        /// <param name="bindingFlags">BindingFlags controlling method visibility and type (public, private, static, instance, etc.). Default includes all.</param>
+        /// <returns>An enumerable of MethodInfo objects matching the search criteria, ordered by relevance score.</returns>
         public IEnumerable<MethodInfo> FindMethod(
             MethodRef filter,
             bool knownNamespace = false,

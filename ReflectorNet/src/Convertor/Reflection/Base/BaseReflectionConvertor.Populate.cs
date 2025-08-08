@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -269,11 +270,50 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var fieldInfo = obj.GetType().GetField(fieldValue.name, flags);
             if (fieldInfo == null)
             {
+                var fieldNames = GetSerializableFields(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger)
+                    ?.Select(f => f.Name)
+                    ?.Concat(GetAdditionalSerializableFields(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger))
+                    ?.ToList();
+
+                var propNames = GetSerializableProperties(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger)
+                    ?.Select(f => f.Name)
+                    ?.Concat(GetAdditionalSerializableProperties(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger))
+                    ?.ToList();
+
+                var fieldsCount = fieldNames?.Count ?? 0;
+                var propsCount = propNames?.Count ?? 0;
+
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}Field '{fieldValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?");
+                    logger.LogError($"{padding}Field '{fieldValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?"
+                        + $"\n{padding}"
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                        + $"\n{padding}"
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                    );
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?.");
+                    stringBuilder.AppendLine($"{padding}[Error] Field '{fieldValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?"
+                        + $"\n{padding}"
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                        + $"\n{padding}"
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                    );
 
                 return false;
             }
@@ -373,12 +413,50 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var propInfo = obj.GetType().GetProperty(propertyValue.name, flags);
             if (propInfo == null)
             {
+                var fieldNames = GetSerializableFields(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger)
+                    ?.Select(f => f.Name)
+                    ?.Concat(GetAdditionalSerializableFields(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger))
+                    ?.ToList();
+
+                var propNames = GetSerializableProperties(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger)
+                    ?.Select(f => f.Name)
+                    ?.Concat(GetAdditionalSerializableProperties(
+                        reflector: reflector,
+                        objType: obj.GetType(),
+                        flags: flags,
+                        logger: logger))
+                    ?.ToList();
+
+                var fieldsCount = fieldNames?.Count ?? 0;
+                var propsCount = propNames?.Count ?? 0;
+
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}Property '{propertyValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?");
+                    logger.LogError($"{padding}Property '{propertyValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?"
+                        + $"\n{padding}"
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                        + $"\n{padding}"
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                    );
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?");
-
+                    stringBuilder.AppendLine($"{padding}[Error] Property '{propertyValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?"
+                        + $"\n{padding}"
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                        + $"\n{padding}"
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                    );
                 return false;
             }
 

@@ -58,7 +58,6 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
             return serializedFields;
         }
-        public abstract IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null);
 
         protected virtual SerializedMemberList? SerializeProperties(Reflector reflector, object obj, BindingFlags flags,
             int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
@@ -93,7 +92,6 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
             return serializedProperties;
         }
-        public abstract IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null);
 
         protected abstract SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
