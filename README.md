@@ -448,3 +448,15 @@ For questions, support, or discussions:
 ---
 
 Built with ❤️ for the .NET and AI communities
+
+## Attribution & Citation
+
+If you use ReflectorNet, please attribute the project:
+
+"ReflectorNet (c) 2024-2025 Ivan Murzak, licensed under Apache-2.0"
+
+Formal citation (see `CITATION.cff`):
+
+Murzak, I. (2025). ReflectorNet: Advanced .NET Reflection Toolkit for AI. Version 0.2.1. <https://github.com/IvanMurzak/ReflectorNet>
+
+Third-party notices (if any) are listed in `NOTICE`.
