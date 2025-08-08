@@ -88,7 +88,7 @@ namespace com.IvanMurzak.ReflectorNet
             var instance = _targetInstance ?? (_classType != null ? Activator.CreateInstance(_classType) : null); // TODO: replace with Reflector.CreateInstance
 
             // Build the final parameters array, filling in default values where necessary
-            var finalParameters = BuildParameters(_reflector, parameters);
+            var finalParameters = BuildParameters(parameters);
 
             // _if (_logger?.IsEnabled(LogLevel.Debug) ?? false)
             //     ? $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}({string.Join(", ", namedParameters!.Select(x => $"{x.Value?.GetType()?.Name ?? "null"} {x.Key}"))})"
@@ -190,7 +190,7 @@ namespace com.IvanMurzak.ReflectorNet
             return true;
         }
 
-        protected object?[]? BuildParameters(Reflector reflector, object?[]? parameters)
+        protected object?[]? BuildParameters(object?[]? parameters)
         {
             if (parameters == null)
                 return null;
@@ -219,7 +219,7 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = jsonElement.Deserialize(methodParameters[i].ParameterType);
+                            finalParameters[i] = jsonElement.Deserialize(methodParameters[i].ParameterType, _reflector.JsonSerializerOptions);
                         }
                         catch
                         {
@@ -228,7 +228,7 @@ namespace com.IvanMurzak.ReflectorNet
                             if (serializedParameter == null)
                                 throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
 
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, fallbackType: methodParameters[i].ParameterType, logger: _logger);
+                            finalParameters[i] = _reflector.Deserialize(serializedParameter, fallbackType: methodParameters[i].ParameterType, logger: _logger);
                         }
                     }
                     else
@@ -292,7 +292,7 @@ namespace com.IvanMurzak.ReflectorNet
                         try
                         {
                             // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = jsonElement.Deserialize(parameter.ParameterType);
+                            finalParameters[i] = jsonElement.Deserialize(parameter.ParameterType, _reflector.JsonSerializerOptions);
                         }
                         catch
                         {

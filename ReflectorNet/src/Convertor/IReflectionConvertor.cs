@@ -13,6 +13,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         int SerializationPriority(Type type, ILogger? logger = null);
 
+
         object? Deserialize(Reflector reflector, SerializedMember data, Type? fallbackType = null, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null);
 
         SerializedMember Serialize(Reflector reflector, object? obj, Type? fallbackType = null, string? name = null, bool recursive = true,
@@ -31,10 +32,25 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 
-        IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType,
+        IEnumerable<FieldInfo>? GetSerializableFields(
+            Reflector reflector,
+            Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
-        IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType,
+        IEnumerable<PropertyInfo>? GetSerializableProperties(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null);
+
+        IEnumerable<string> GetAdditionalSerializableFields(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null);
+        IEnumerable<string> GetAdditionalSerializableProperties(
+            Reflector reflector,
+            Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 

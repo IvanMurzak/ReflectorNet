@@ -6,11 +6,88 @@ using com.IvanMurzak.ReflectorNet.Json;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
+    /// <summary>
+    /// Provides comprehensive JSON Schema generation capabilities for .NET types, method parameters,
+    /// and complex object structures. This class enables automatic schema creation for API documentation,
+    /// form generation, validation, and AI-driven development scenarios.
+    ///
+    /// Core Capabilities:
+    /// - Type-to-Schema Conversion: Generates JSON Schema Draft 2020-12 compliant schemas from .NET types
+    /// - Method Parameter Schemas: Creates schemas for method parameters to enable dynamic invocation
+    /// - Reference Optimization: Supports both full schema definitions and compact $ref references
+    /// - Documentation Integration: Extracts descriptions from DescriptionAttribute and XML documentation
+    /// - Primitive Handling: Optimized schema generation for built-in .NET types
+    /// - Complex Type Support: Handles nested objects, collections, generics, and inheritance
+    ///
+    /// Schema Generation Modes:
+    /// - Full Schema (justRef=false): Complete schema with all properties and type definitions
+    /// - Reference Schema (justRef=true): Compact $ref pointing to definitions in $defs section
+    /// - Hybrid Mode: Combines both approaches for optimal schema size and readability
+    ///
+    /// Integration Features:
+    /// - ReflectorNet Converter System: Leverages registered converters for custom schema logic
+    /// - Type Introspection: Uses Reflector's field and property discovery for accurate schemas
+    /// - Error Handling: Provides detailed error information for schema generation failures
+    /// - Extensibility: Supports custom schema converters through IJsonSchemaConverter interface
+    ///
+    /// This class is essential for scenarios involving dynamic method invocation, API documentation
+    /// generation, form creation, and AI systems that need to understand .NET type structures.
+    /// </summary>
     public partial class JsonSchema
     {
+        /// <summary>
+        /// Generates a comprehensive JSON Schema representation for the specified generic type.
+        /// This method provides flexible schema generation supporting both full schema definitions
+        /// and compact reference schemas, with intelligent handling of primitive vs complex types.
+        ///
+        /// Schema Generation Features:
+        /// - Type unwrapping: Automatically handles nullable types by unwrapping to underlying type
+        /// - Converter integration: Leverages registered JsonConverter implementations for custom schema logic
+        /// - Reference optimization: Generates compact $ref schemas for complex types when justRef=true
+        /// - Documentation extraction: Includes descriptions from DescriptionAttribute and type metadata
+        /// - Error handling: Provides detailed error information for schema generation failures
+        /// - Primitive handling: Optimizes schema generation for built-in types
+        ///
+        /// Schema Modes:
+        /// - Full schema (justRef=false): Complete schema definition with all properties and nested types
+        /// - Reference schema (justRef=true): Compact $ref pointing to type definition in $defs
+        /// - Primitive inline: Primitive types are always inlined regardless of justRef setting
+        ///
+        /// Generated schemas conform to JSON Schema Draft 2020-12 specification.
+        /// </summary>
+        /// <typeparam name="T">The type for which to generate the JSON Schema.</typeparam>
+        /// <param name="reflector">The Reflector instance used for type analysis and converter access.</param>
+        /// <param name="justRef">Whether to generate a compact reference schema for non-primitive types. Default is false.</param>
+        /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when schema generation fails for the specified type.</exception>
         public JsonNode GetSchema<T>(Reflector reflector, bool justRef = false)
             => GetSchema(reflector, typeof(T), justRef);
 
+        /// <summary>
+        /// Generates a comprehensive JSON Schema representation for the specified type.
+        /// This method provides flexible schema generation supporting both full schema definitions
+        /// and compact reference schemas, with intelligent handling of primitive vs complex types.
+        ///
+        /// Schema Generation Features:
+        /// - Type unwrapping: Automatically handles nullable types by unwrapping to underlying type
+        /// - Converter integration: Leverages registered JsonConverter implementations for custom schema logic
+        /// - Reference optimization: Generates compact $ref schemas for complex types when justRef=true
+        /// - Documentation extraction: Includes descriptions from DescriptionAttribute and type metadata
+        /// - Error handling: Provides detailed error information for schema generation failures
+        /// - Primitive handling: Optimizes schema generation for built-in types
+        ///
+        /// Schema Modes:
+        /// - Full schema (justRef=false): Complete schema definition with all properties and nested types
+        /// - Reference schema (justRef=true): Compact $ref pointing to type definition in $defs
+        /// - Primitive inline: Primitive types are always inlined regardless of justRef setting
+        ///
+        /// Generated schemas conform to JSON Schema Draft 2020-12 specification.
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type analysis and converter access.</param>
+        /// <param name="type">The Type for which to generate the JSON Schema.</param>
+        /// <param name="justRef">Whether to generate a compact reference schema for non-primitive types. Default is false.</param>
+        /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when schema generation fails for the specified type.</exception>
         public JsonNode GetSchema(Reflector reflector, Type type, bool justRef = false)
         {
             // Handle nullable types
@@ -83,6 +160,44 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             return schema;
         }
+        /// <summary>
+        /// Generates a comprehensive JSON Schema for method parameters, creating schemas suitable for
+        /// dynamic method invocation, API documentation, form generation, and parameter validation.
+        /// This method analyzes method signatures and produces schemas that enable type-safe parameter
+        /// binding in dynamic execution environments.
+        ///
+        /// Schema Structure:
+        /// - Root object schema with "properties" containing each parameter
+        /// - "required" array listing parameters without default values
+        /// - "$defs" section containing complex type definitions to avoid duplication
+        /// - Parameter descriptions extracted from DescriptionAttribute annotations
+        /// - Proper JSON Schema Draft 2020-12 compliance
+        ///
+        /// Parameter Analysis:
+        /// - Name extraction: Uses parameter names for schema property keys
+        /// - Type resolution: Generates appropriate schemas for each parameter type
+        /// - Default value detection: Automatically determines required vs optional parameters
+        /// - Documentation: Extracts descriptions from method parameter attributes
+        /// - Generic handling: Recursively processes generic type arguments
+        ///
+        /// Advanced Features:
+        /// - Primitive optimization: Inline primitive type schemas for better performance
+        /// - Complex type deduplication: Uses $defs to avoid schema repetition
+        /// - Recursive type support: Handles nested complex types and their dependencies
+        /// - Generic type expansion: Properly handles generic method parameters and constraints
+        ///
+        /// Use Cases:
+        /// - API documentation generation
+        /// - Dynamic form creation for method invocation
+        /// - Parameter validation in scripting scenarios
+        /// - IDE tooling and intellisense support
+        /// - Code generation and template systems
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type analysis and schema generation.</param>
+        /// <param name="method">The MethodInfo for which to generate the parameter schema.</param>
+        /// <param name="justRef">Whether to use compact references for complex types in parameter schemas. Default is false.</param>
+        /// <returns>A JsonNode containing the complete JSON Schema for the method's parameters.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when method parameter is null.</exception>
         public JsonNode GetArgumentsSchema(Reflector reflector, MethodInfo method, bool justRef = false)
         {
             if (method == null)
