@@ -1,6 +1,13 @@
+/*
+ * ReflectorNet
+ * Author: Ivan Murzak (https://github.com/IvanMurzak)
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 2024-2025 Ivan Murzak
+ * Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
+ */
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;

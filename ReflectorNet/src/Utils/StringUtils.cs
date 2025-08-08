@@ -3,6 +3,13 @@ using System.Collections.Concurrent;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
+    /*
+     * ReflectorNet
+     * Author: Ivan Murzak (https://github.com/IvanMurzak)
+     * Copyright (c) 2025 Ivan Murzak
+     * Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
+     */
+
     public static class StringUtils
     {
         public const string Null = "null";

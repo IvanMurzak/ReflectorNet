@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+title: "ReflectorNet: Advanced .NET Reflection Toolkit for AI"
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Murzak
+    given-names: Ivan
+    orcid: https://orcid.org/0009-0000-9293-8108
+repository-code: https://github.com/IvanMurzak/ReflectorNet
+license: Apache-2.0
+abstract: "ReflectorNet provides advanced reflection-based serialization, method discovery, and dynamic invocation features optimized for AI integration in .NET applications."
+version: 0.2.1
+doi: 10.0000/placeholder.doi
+ date-released: 2025-08-07
