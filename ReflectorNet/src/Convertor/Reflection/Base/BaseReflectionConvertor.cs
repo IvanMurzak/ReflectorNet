@@ -91,14 +91,32 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 : 0;
         }
 
-        public abstract IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null);
-        public abstract IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null);
+        public abstract IEnumerable<FieldInfo>? GetSerializableFields(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null);
 
-        public virtual IEnumerable<string> GetAdditionalSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
+        public abstract IEnumerable<PropertyInfo>? GetSerializableProperties(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null);
+
+        public virtual IEnumerable<string> GetAdditionalSerializableFields(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null)
         {
             return Enumerable.Empty<string>();
         }
-        public virtual IEnumerable<string> GetAdditionalSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
+
+        public virtual IEnumerable<string> GetAdditionalSerializableProperties(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null)
         {
             return Enumerable.Empty<string>();
         }
