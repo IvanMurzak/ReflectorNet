@@ -130,6 +130,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             ValidateIntegerProperty(properties, ModelWithDifferentFieldsAndProperties.IntFieldNullable);
             ValidateIntegerProperty(properties, ModelWithDifferentFieldsAndProperties.IntProperty);
             ValidateIntegerProperty(properties, ModelWithDifferentFieldsAndProperties.IntPropertyNullable);
+
+            // Test that ignored properties are not present in the schema
+            ValidatePropertyNotExists(properties, ModelWithDifferentFieldsAndProperties.IntFieldIgnored);
+            ValidatePropertyNotExists(properties, ModelWithDifferentFieldsAndProperties.IntPropertyIgnored);
+            ValidatePropertyNotExists(properties, ModelWithDifferentFieldsAndProperties.IntPropertyIgnoredReadOnly);
         }
 
         private static void ValidateIntegerProperty(JsonNode properties, string propertyName)
@@ -148,6 +153,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var propertyType = propertySchema[JsonSchema.Type];
             Assert.NotNull(propertyType);
             Assert.Equal(JsonSchema.Integer, propertyType.ToString());
+        }
+
+        private static void ValidatePropertyNotExists(JsonNode properties, string propertyName)
+        {
+            // Validate property does not exist
+            Assert.False(properties.AsObject().ContainsKey(propertyName),
+                $"Properties should NOT contain '{propertyName}' property (it should be ignored). Available properties: {string.Join(", ", properties.AsObject().Select(x => x.Key))}");
         }
     }
 }

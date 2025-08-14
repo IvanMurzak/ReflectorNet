@@ -135,6 +135,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 foreach (var field in fields)
                 {
+                    if (field.GetCustomAttribute<JsonIgnoreAttribute>() != null)
+                        continue;
+
                     var fieldName = field.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? field.Name;
                     var fieldSchema = GetSchema(reflector, field.FieldType, justRef: !TypeUtils.IsPrimitive(field.FieldType));
 
@@ -158,6 +161,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 foreach (var prop in props)
                 {
+                    if (prop.GetCustomAttribute<JsonIgnoreAttribute>() != null)
+                        continue;
+
                     var propName = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
                     var propSchema = GetSchema(reflector, prop.PropertyType, justRef: !TypeUtils.IsPrimitive(prop.PropertyType));
 
