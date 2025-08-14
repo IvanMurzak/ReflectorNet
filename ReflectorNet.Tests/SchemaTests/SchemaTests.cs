@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Json;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -107,6 +108,81 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             reflector.JsonSerializer.AddConverter(new MethodInfoConverter());
             JsonSchemaValidation(typeof(MethodInfo), reflector);
+        }
+
+        [Fact]
+        void JsonPropertyName_Attribute()
+        {
+            var reflector = new Reflector();
+            var schema = JsonSchemaValidation(typeof(ModelWithDifferentFieldsAndProperties), reflector);
+
+            // Null check for schema
+            Assert.NotNull(schema);
+
+            // Validate schema has Properties section
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties),
+                $"Schema should contain '{JsonSchema.Properties}' property. Available properties: {string.Join(", ", schema.AsObject().Select(x => x.Key))}");
+
+            var properties = schema[JsonSchema.Properties];
+            Assert.NotNull(properties);
+
+            // ----------------------------------
+
+            // Validate fields section contains expected IntField
+            Assert.True(properties.AsObject().ContainsKey(ModelWithDifferentFieldsAndProperties.IntField),
+                $"Fields should contain '{ModelWithDifferentFieldsAndProperties.IntField}' field. Available fields: {string.Join(", ", properties.AsObject().Select(x => x.Key))}");
+
+            var intFieldSchema = properties[ModelWithDifferentFieldsAndProperties.IntField];
+            Assert.NotNull(intFieldSchema);
+
+            Assert.True(intFieldSchema.AsObject().ContainsKey(JsonSchema.Type),
+                $"{ModelWithDifferentFieldsAndProperties.IntField} schema should contain '{JsonSchema.Type}' property. Available properties: {string.Join(", ", intFieldSchema.AsObject().Select(x => x.Key))}");
+
+            var intFieldType = intFieldSchema[JsonSchema.Type];
+            Assert.NotNull(intFieldType);
+            Assert.Equal(JsonSchema.Integer, intFieldType.ToString());
+
+            // Validate fields section contains expected IntFieldNullable
+            Assert.True(properties.AsObject().ContainsKey(ModelWithDifferentFieldsAndProperties.IntFieldNullable),
+                $"Fields should contain '{ModelWithDifferentFieldsAndProperties.IntFieldNullable}' field. Available fields: {string.Join(", ", properties.AsObject().Select(x => x.Key))}");
+
+            var intFieldNullableSchema = properties[ModelWithDifferentFieldsAndProperties.IntFieldNullable];
+            Assert.NotNull(intFieldNullableSchema);
+
+            Assert.True(intFieldNullableSchema.AsObject().ContainsKey(JsonSchema.Type),
+                $"{ModelWithDifferentFieldsAndProperties.IntFieldNullable} schema should contain '{JsonSchema.Type}' property. Available properties: {string.Join(", ", intFieldNullableSchema.AsObject().Select(x => x.Key))}");
+
+            var intFieldNullableType = intFieldNullableSchema[JsonSchema.Type];
+            Assert.NotNull(intFieldNullableType);
+            Assert.Equal(JsonSchema.Integer, intFieldNullableType.ToString());
+
+            // Validate props section contains expected IntProperty
+            Assert.True(properties.AsObject().ContainsKey(ModelWithDifferentFieldsAndProperties.IntProperty),
+                $"Props should contain '{ModelWithDifferentFieldsAndProperties.IntProperty}' property. Available props: {string.Join(", ", properties.AsObject().Select(x => x.Key))}");
+
+            var intPropertySchema = properties[ModelWithDifferentFieldsAndProperties.IntProperty];
+            Assert.NotNull(intPropertySchema);
+
+            Assert.True(intPropertySchema.AsObject().ContainsKey(JsonSchema.Type),
+                $"{ModelWithDifferentFieldsAndProperties.IntProperty} schema should contain '{JsonSchema.Type}' property. Available properties: {string.Join(", ", intPropertySchema.AsObject().Select(x => x.Key))}");
+
+            var intPropertyType = intPropertySchema[JsonSchema.Type];
+            Assert.NotNull(intPropertyType);
+            Assert.Equal(JsonSchema.Integer, intPropertyType.ToString());
+
+            // Validate props section contains expected IntPropertyNullable
+            Assert.True(properties.AsObject().ContainsKey(ModelWithDifferentFieldsAndProperties.IntPropertyNullable),
+                $"Props should contain '{ModelWithDifferentFieldsAndProperties.IntPropertyNullable}' property. Available props: {string.Join(", ", properties.AsObject().Select(x => x.Key))}");
+
+            var intPropertyNullableSchema = properties[ModelWithDifferentFieldsAndProperties.IntPropertyNullable];
+            Assert.NotNull(intPropertyNullableSchema);
+
+            Assert.True(intPropertyNullableSchema.AsObject().ContainsKey(JsonSchema.Type),
+                $"{ModelWithDifferentFieldsAndProperties.IntPropertyNullable} schema should contain '{JsonSchema.Type}' property. Available properties: {string.Join(", ", intPropertyNullableSchema.AsObject().Select(x => x.Key))}");
+
+            var intPropertyNullableType = intPropertyNullableSchema[JsonSchema.Type];
+            Assert.NotNull(intPropertyNullableType);
+            Assert.Equal(JsonSchema.Integer, intPropertyNullableType.ToString());
         }
     }
 }

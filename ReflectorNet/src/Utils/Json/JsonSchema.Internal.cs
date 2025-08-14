@@ -8,7 +8,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
@@ -133,6 +135,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 foreach (var field in fields)
                 {
+                    var fieldName = field.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? field.Name;
                     var fieldSchema = GetSchema(reflector, field.FieldType, justRef: !TypeUtils.IsPrimitive(field.FieldType));
 
                     // Add description if available
@@ -140,12 +143,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (!string.IsNullOrEmpty(description) && fieldSchema is JsonObject fieldSchemaObj)
                         fieldSchemaObj[Description] = JsonValue.Create(description);
 
-                    properties![field.Name] = fieldSchema;
+                    properties![fieldName] = fieldSchema;
 
                     // Fields are typically required unless they are nullable
                     var underlyingType = Nullable.GetUnderlyingType(field.FieldType);
                     if (underlyingType == null && !field.FieldType.IsClass)
-                        required.Add(field.Name);
+                        required.Add(fieldName);
                 }
             }
 
@@ -155,6 +158,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 foreach (var prop in props)
                 {
+                    var propName = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
                     var propSchema = GetSchema(reflector, prop.PropertyType, justRef: !TypeUtils.IsPrimitive(prop.PropertyType));
 
                     // Add description if available
@@ -162,12 +166,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (!string.IsNullOrEmpty(description) && propSchema is JsonObject propSchemaObj)
                         propSchemaObj[Description] = JsonValue.Create(description);
 
-                    properties![prop.Name] = propSchema;
+                    properties![propName] = propSchema;
 
                     // Properties are required if they are value types and not nullable
                     var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType);
                     if (underlyingType == null && !prop.PropertyType.IsClass && prop.CanWrite)
-                        required.Add(prop.Name);
+                        required.Add(propName);
                 }
             }
 
