@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
@@ -12,7 +13,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
         }
 
-        protected void JsonSchemaValidation(Type type, Reflector? reflector = null)
+        protected JsonNode? JsonSchemaValidation(Type type, Reflector? reflector = null)
         {
             reflector ??= new Reflector();
 
@@ -27,6 +28,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.Fail(errorValue!.ToString());
             }
             Assert.NotNull(schema.AsObject());
+            return schema;
         }
 
         protected void TestMethodInputs_PropertyRefs(Reflector? reflector, MethodInfo methodInfo, params string[] parameterNames)
@@ -67,7 +69,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             }
         }
 
-        protected void TestMethodInputs_Defines(Reflector? reflector, MethodInfo methodInfo, params Type[] expectedTypes)
+        protected JsonNode? TestMethodInputs_Defines(Reflector? reflector, MethodInfo methodInfo, params Type[] expectedTypes)
         {
             reflector ??= new Reflector();
 
@@ -90,6 +92,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 var targetDefine = defines[typeId];
                 Assert.NotNull(targetDefine);
             }
+
+            return schema;
         }
     }
 }

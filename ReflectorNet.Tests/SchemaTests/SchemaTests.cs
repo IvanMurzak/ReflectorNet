@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using com.IvanMurzak.ReflectorNet.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Tests.Model;
@@ -107,6 +109,45 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             reflector.JsonSerializer.AddConverter(new MethodInfoConverter());
             JsonSchemaValidation(typeof(MethodInfo), reflector);
+        }
+
+        [Fact]
+        void JsonPropertyName_Attribute()
+        {
+            var reflector = new Reflector();
+            var schema = JsonSchemaValidation(typeof(ModelWithDifferentFieldsAndProperties), reflector);
+
+            // Validate schema structure
+            Assert.NotNull(schema);
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties),
+                $"Schema should contain '{JsonSchema.Properties}' property. Available properties: {string.Join(", ", schema.AsObject().Select(x => x.Key))}");
+
+            var properties = schema[JsonSchema.Properties];
+            Assert.NotNull(properties);
+
+            // Test each expected property with custom JSON property names
+            ValidateIntegerProperty(properties, ModelWithDifferentFieldsAndProperties.IntField);
+            ValidateIntegerProperty(properties, ModelWithDifferentFieldsAndProperties.IntFieldNullable);
+            ValidateIntegerProperty(properties, ModelWithDifferentFieldsAndProperties.IntProperty);
+            ValidateIntegerProperty(properties, ModelWithDifferentFieldsAndProperties.IntPropertyNullable);
+        }
+
+        private static void ValidateIntegerProperty(JsonNode properties, string propertyName)
+        {
+            // Validate property exists
+            Assert.True(properties.AsObject().ContainsKey(propertyName),
+                $"Properties should contain '{propertyName}' property. Available properties: {string.Join(", ", properties.AsObject().Select(x => x.Key))}");
+
+            var propertySchema = properties[propertyName];
+            Assert.NotNull(propertySchema);
+
+            // Validate property has type field
+            Assert.True(propertySchema.AsObject().ContainsKey(JsonSchema.Type),
+                $"Property '{propertyName}' schema should contain '{JsonSchema.Type}' field. Available fields: {string.Join(", ", propertySchema.AsObject().Select(x => x.Key))}");
+
+            var propertyType = propertySchema[JsonSchema.Type];
+            Assert.NotNull(propertyType);
+            Assert.Equal(JsonSchema.Integer, propertyType.ToString());
         }
     }
 }
