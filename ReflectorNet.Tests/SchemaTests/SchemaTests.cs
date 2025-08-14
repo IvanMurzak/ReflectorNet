@@ -135,7 +135,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             ValidatePropertyNotExists(properties, ModelWithDifferentFieldsAndProperties.IntFieldIgnored);
             ValidatePropertyNotExists(properties, ModelWithDifferentFieldsAndProperties.IntPropertyIgnored);
             ValidatePropertyNotExists(properties, ModelWithDifferentFieldsAndProperties.IntPropertyIgnoredReadOnly);
-            ValidatePropertyNotExists(properties, ModelWithDifferentFieldsAndProperties.IntPropertyIgnoredReadOnly);
         }
 
         private static void ValidateIntegerProperty(JsonNode properties, string propertyName)
