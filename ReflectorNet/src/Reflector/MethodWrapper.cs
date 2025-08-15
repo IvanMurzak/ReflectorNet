@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -82,7 +83,8 @@ namespace com.IvanMurzak.ReflectorNet
             _inputSchema = reflector.GetArgumentsSchema(methodInfo);
         }
 
-        public virtual async Task<object?> Invoke(params object?[] parameters)
+        public virtual Task<object?> Invoke(params object?[] parameters) => Invoke(CancellationToken.None, parameters);
+        public virtual async Task<object?> Invoke(CancellationToken cancellationToken, params object?[] parameters)
         {
             // If _targetInstance is null and _targetType is set, create an instance of the target type
             var instance = _targetInstance ?? (_classType != null ? Activator.CreateInstance(_classType) : null); // TODO: replace with Reflector.CreateInstance
@@ -102,7 +104,9 @@ namespace com.IvanMurzak.ReflectorNet
             // Handle Task, Task<T>, or synchronous return types
             if (result is Task task)
             {
-                await task.ConfigureAwait(continueOnCapturedContext: false);
+                await task
+                    .WithCancellation(cancellationToken)
+                    .ConfigureAwait(continueOnCapturedContext: false);
 
                 // If it's a Task<T>, extract the result
                 var resultProperty = task.GetType().GetProperty(nameof(Task<int>.Result));
@@ -113,7 +117,7 @@ namespace com.IvanMurzak.ReflectorNet
             return result;
         }
 
-        public virtual async Task<object?> InvokeDict(IReadOnlyDictionary<string, object?>? namedParameters)
+        public virtual async Task<object?> InvokeDict(IReadOnlyDictionary<string, object?>? namedParameters, CancellationToken cancellationToken = default)
         {
             // If _targetInstance is null and _targetType is set, create an instance of the target type
             var instance = _targetInstance ?? (_classType != null ? _reflector.CreateInstance(_classType) : null);
@@ -134,7 +138,9 @@ namespace com.IvanMurzak.ReflectorNet
             // Handle Task, Task<T>, or synchronous return types
             if (result is Task task)
             {
-                await task.ConfigureAwait(continueOnCapturedContext: false);
+                await task
+                    .WithCancellation(cancellationToken)
+                    .ConfigureAwait(continueOnCapturedContext: false);
 
                 // If it's a Task<T>, extract the result
                 var resultProperty = task.GetType().GetProperty(nameof(Task<int>.Result));
