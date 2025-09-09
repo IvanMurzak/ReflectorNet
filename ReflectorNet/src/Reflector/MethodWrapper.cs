@@ -151,7 +151,7 @@ namespace com.IvanMurzak.ReflectorNet
             return result;
         }
 
-        public bool VerifyParameters(IReadOnlyDictionary<string, object?>? namedParameters, out string? error)
+        public virtual bool VerifyParameters(IReadOnlyDictionary<string, object?>? namedParameters, out string? error)
         {
             var methodParameters = _methodInfo.GetParameters();
             if (methodParameters.Length == 0)
@@ -196,7 +196,7 @@ namespace com.IvanMurzak.ReflectorNet
             return true;
         }
 
-        protected object?[]? BuildParameters(object?[]? parameters)
+        protected virtual object?[]? BuildParameters(object?[]? parameters)
         {
             if (parameters == null)
                 return null;
@@ -209,41 +209,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 if (i < parameters.Length)
                 {
-                    // Handle JsonElement conversion
-                    if (parameters[i] is JsonElement jsonElement)
-                    {
-                        var isPrimitive = TypeUtils.IsPrimitive(methodParameters[i].ParameterType);
-                        if (!isPrimitive)
-                        {
-                            // Handle stringified json
-                            if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
-                            {
-                                parameters[i] = unstringifiedJson;
-                                jsonElement = unstringifiedJson!.Value;
-                            }
-                        }
-                        try
-                        {
-                            // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = jsonElement.Deserialize(
-                                returnType: methodParameters[i].ParameterType,
-                                options: _reflector.JsonSerializerOptions);
-                        }
-                        catch
-                        {
-                            // Try #2: Parsing as SerializedMember
-                            var serializedParameter = jsonElement.Deserialize<SerializedMember>();
-                            if (serializedParameter == null)
-                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameters[i].Name}'");
-
-                            finalParameters[i] = _reflector.Deserialize(serializedParameter, fallbackType: methodParameters[i].ParameterType, logger: _logger);
-                        }
-                    }
-                    else
-                    {
-                        // Use the provided parameter value
-                        finalParameters[i] = parameters[i];
-                    }
+                    finalParameters[i] = GetParameterValue(_reflector, methodParameters[i], parameters[i]);
                 }
                 else if (methodParameters[i].HasDefaultValue)
                 {
@@ -270,7 +236,46 @@ namespace com.IvanMurzak.ReflectorNet
             return finalParameters;
         }
 
-        protected object?[]? BuildParameters(Reflector reflector, IReadOnlyDictionary<string, object?>? namedParameters)
+        protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo methodParameter, object? parameter)
+        {
+            // Handle JsonElement conversion
+            if (parameter is JsonElement jsonElement)
+            {
+                var isPrimitive = TypeUtils.IsPrimitive(methodParameter.ParameterType);
+                if (!isPrimitive)
+                {
+                    // Handle stringified json
+                    if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
+                    {
+                        parameter = unstringifiedJson;
+                        jsonElement = unstringifiedJson!.Value;
+                    }
+                }
+                try
+                {
+                    // Try #1: Parsing as the parameter type directly
+                    return jsonElement.Deserialize(
+                        returnType: methodParameter.ParameterType,
+                        options: _reflector.JsonSerializerOptions);
+                }
+                catch
+                {
+                    // Try #2: Parsing as SerializedMember
+                    var serializedParameter = jsonElement.Deserialize<SerializedMember>();
+                    if (serializedParameter == null)
+                        throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameter.Name}'");
+
+                    return _reflector.Deserialize(serializedParameter, fallbackType: methodParameter.ParameterType, logger: _logger);
+                }
+            }
+            else
+            {
+                // Use the provided parameter value
+                return parameter;
+            }
+        }
+
+        protected virtual object?[]? BuildParameters(Reflector reflector, IReadOnlyDictionary<string, object?>? namedParameters)
         {
             if (namedParameters == null)
                 return null;
@@ -282,56 +287,7 @@ namespace com.IvanMurzak.ReflectorNet
             for (int i = 0; i < methodParameters.Length; i++)
             {
                 var parameter = methodParameters[i];
-
-                if (namedParameters != null && namedParameters.TryGetValue(parameter.Name!, out var value))
-                {
-                    if (value is JsonElement jsonElement)
-                    {
-                        var isPrimitive = TypeUtils.IsPrimitive(methodParameters[i].ParameterType);
-                        if (!isPrimitive)
-                        {
-                            // Handle stringified json
-                            if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
-                            {
-                                value = unstringifiedJson;
-                                jsonElement = unstringifiedJson!.Value;
-                            }
-                        }
-                        try
-                        {
-                            // Try #1: Parsing as the parameter type directly
-                            finalParameters[i] = jsonElement.Deserialize(
-                                returnType: parameter.ParameterType,
-                                options: _reflector.JsonSerializerOptions);
-                        }
-                        catch
-                        {
-                            // Try #2: Parsing as SerializedMember
-                            var serializedParameter = jsonElement.Deserialize<SerializedMember>();
-                            if (serializedParameter == null)
-                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
-
-                            finalParameters[i] = reflector.Deserialize(serializedParameter, fallbackType: parameter.ParameterType, logger: _logger);
-                        }
-                    }
-                    else
-                    {
-                        // Use the provided parameter value
-                        finalParameters[i] = value;
-                    }
-                }
-                else if (parameter.HasDefaultValue)
-                {
-                    // Use the default value if no value is provided
-                    finalParameters[i] = parameter.DefaultValue;
-                }
-                else
-                {
-                    // Use the type's default value if no value is provided
-                    finalParameters[i] = parameter.ParameterType.IsValueType
-                        ? Activator.CreateInstance(parameter.ParameterType) // TODO: replace with Reflector.CreateInstance
-                        : null;
-                }
+                finalParameters[i] = GetParameterValue(reflector, parameter, namedParameters);
             }
 
             // Validate parameters
@@ -347,7 +303,60 @@ namespace com.IvanMurzak.ReflectorNet
 
             return finalParameters;
         }
-        void PrintParameters(object?[]? parameters)
+        protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo parameter, IReadOnlyDictionary<string, object?> namedParameters)
+        {
+            if (namedParameters != null && namedParameters.TryGetValue(parameter.Name!, out var value))
+            {
+                if (value is JsonElement jsonElement)
+                {
+                    var isPrimitive = TypeUtils.IsPrimitive(parameter.ParameterType);
+                    if (!isPrimitive)
+                    {
+                        // Handle stringified json
+                        if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
+                        {
+                            value = unstringifiedJson;
+                            jsonElement = unstringifiedJson!.Value;
+                        }
+                    }
+                    try
+                    {
+                        // Try #1: Parsing as the parameter type directly
+                        return jsonElement.Deserialize(
+                            returnType: parameter.ParameterType,
+                            options: _reflector.JsonSerializerOptions);
+                    }
+                    catch
+                    {
+                        // Try #2: Parsing as SerializedMember
+                        var serializedParameter = jsonElement.Deserialize<SerializedMember>();
+                        if (serializedParameter == null)
+                            throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
+
+                        return reflector.Deserialize(serializedParameter, fallbackType: parameter.ParameterType, logger: _logger);
+                    }
+                }
+                else
+                {
+                    // Use the provided parameter value
+                    return value;
+                }
+            }
+            else if (parameter.HasDefaultValue)
+            {
+                // Use the default value if no value is provided
+                return parameter.DefaultValue;
+            }
+            else
+            {
+                // Use the type's default value if no value is provided
+                return parameter.ParameterType.IsValueType
+                    ? Activator.CreateInstance(parameter.ParameterType) // TODO: replace with Reflector.CreateInstance
+                    : null;
+            }
+        }
+
+        protected virtual void PrintParameters(object?[]? parameters)
         {
             if (!(_logger?.IsEnabled(LogLevel.Debug) ?? false))
                 return;
