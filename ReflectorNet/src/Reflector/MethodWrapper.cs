@@ -112,6 +112,17 @@ namespace com.IvanMurzak.ReflectorNet
                 var resultProperty = task.GetType().GetProperty(nameof(Task<int>.Result));
                 return resultProperty?.GetValue(task);
             }
+            else if (result is ValueTask valueTask)
+            {
+                await valueTask
+                    .AsTask()
+                    .WithCancellation(cancellationToken)
+                    .ConfigureAwait(continueOnCapturedContext: false);
+
+                // If it's a ValueTask<T>, extract the result
+                var resultProperty = valueTask.GetType().GetProperty(nameof(ValueTask<int>.Result));
+                return resultProperty?.GetValue(valueTask);
+            }
 
             // For synchronous methods, return the result directly
             return result;
@@ -198,27 +209,19 @@ namespace com.IvanMurzak.ReflectorNet
 
         protected virtual object?[]? BuildParameters(object?[]? parameters)
         {
-            if (parameters == null)
-                return null;
-
             var methodParameters = _methodInfo.GetParameters();
 
             // Prepare the final arguments array, filling in default values where necessary
             var finalParameters = new object?[methodParameters.Length];
             for (int i = 0; i < methodParameters.Length; i++)
             {
-                if (i < parameters.Length)
+                if (parameters != null && i < parameters.Length)
                 {
                     finalParameters[i] = GetParameterValue(_reflector, methodParameters[i], parameters[i]);
                 }
-                else if (methodParameters[i].HasDefaultValue)
-                {
-                    // Use the default value if no value is provided
-                    finalParameters[i] = methodParameters[i].DefaultValue;
-                }
                 else
                 {
-                    throw new ArgumentException($"No value provided for parameter '{methodParameters[i].Name}' and no default value is defined.");
+                    finalParameters[i] = GetDefaultParameterValue(_reflector, methodParameters[i]);
                 }
             }
 
@@ -234,6 +237,19 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             return finalParameters;
+        }
+
+        protected virtual object? GetDefaultParameterValue(Reflector reflector, ParameterInfo methodParameter)
+        {
+            if (methodParameter.HasDefaultValue)
+            {
+                // Use the default value if no value is provided
+                return methodParameter.DefaultValue;
+            }
+            else
+            {
+                throw new ArgumentException($"No value provided for parameter '{methodParameter.Name}' and no default value is defined.");
+            }
         }
 
         protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo methodParameter, object? parameter)
@@ -277,9 +293,6 @@ namespace com.IvanMurzak.ReflectorNet
 
         protected virtual object?[]? BuildParameters(Reflector reflector, IReadOnlyDictionary<string, object?>? namedParameters)
         {
-            if (namedParameters == null)
-                return null;
-
             var methodParameters = _methodInfo.GetParameters();
 
             // Prepare the final arguments array
@@ -303,7 +316,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             return finalParameters;
         }
-        protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo parameter, IReadOnlyDictionary<string, object?> namedParameters)
+        protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo parameter, IReadOnlyDictionary<string, object?>? namedParameters)
         {
             if (namedParameters != null && namedParameters.TryGetValue(parameter.Name!, out var value))
             {
