@@ -286,6 +286,18 @@ namespace com.IvanMurzak.ReflectorNet
             }
             else
             {
+                // Handle enum conversion for string values
+                if (parameter is string stringValue && methodParameter.ParameterType.IsEnum)
+                {
+                    try
+                    {
+                        return Enum.Parse(methodParameter.ParameterType, stringValue, ignoreCase: true);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        throw new ArgumentException($"Failed to convert string '{stringValue}' to enum type '{methodParameter.ParameterType.Name}' for parameter '{methodParameter.Name}'. {ex.Message}");
+                    }
+                }
                 // Use the provided parameter value
                 return parameter;
             }
@@ -351,6 +363,18 @@ namespace com.IvanMurzak.ReflectorNet
                 }
                 else
                 {
+                    // Handle enum conversion for string values
+                    if (value is string stringValue && parameter.ParameterType.IsEnum)
+                    {
+                        try
+                        {
+                            return Enum.Parse(parameter.ParameterType, stringValue, ignoreCase: true);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            throw new ArgumentException($"Failed to convert string '{stringValue}' to enum type '{parameter.ParameterType.Name}' for parameter '{parameter.Name}'. {ex.Message}");
+                        }
+                    }
                     // Use the provided parameter value
                     return value;
                 }
