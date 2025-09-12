@@ -377,9 +377,9 @@ namespace com.IvanMurzak.ReflectorNet
                 {
                     return Enum.Parse(parameterType, stringValue, ignoreCase: true);
                 }
-                catch (ArgumentException ex)
+                catch (ArgumentException)
                 {
-                    throw new ArgumentException($"Failed to convert string '{stringValue}' to enum type '{parameterType.Name}' for parameter '{parameterName}'. {ex.Message}");
+                    throw new ArgumentException($"Invalid value '{stringValue}' for parameter '{parameterName}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
                 }
             }
             return value;
