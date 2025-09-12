@@ -286,20 +286,8 @@ namespace com.IvanMurzak.ReflectorNet
             }
             else
             {
-                // Handle enum conversion for string values
-                if (parameter is string stringValue && methodParameter.ParameterType.IsEnum)
-                {
-                    try
-                    {
-                        return Enum.Parse(methodParameter.ParameterType, stringValue, ignoreCase: true);
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        throw new ArgumentException($"Failed to convert string '{stringValue}' to enum type '{methodParameter.ParameterType.Name}' for parameter '{methodParameter.Name}'. {ex.Message}");
-                    }
-                }
-                // Use the provided parameter value
-                return parameter;
+                // Handle enum conversion for string values and return the provided parameter value
+                return TryConvertStringToEnum(parameter, methodParameter.ParameterType, methodParameter.Name!);
             }
         }
 
@@ -363,20 +351,8 @@ namespace com.IvanMurzak.ReflectorNet
                 }
                 else
                 {
-                    // Handle enum conversion for string values
-                    if (value is string stringValue && parameter.ParameterType.IsEnum)
-                    {
-                        try
-                        {
-                            return Enum.Parse(parameter.ParameterType, stringValue, ignoreCase: true);
-                        }
-                        catch (ArgumentException ex)
-                        {
-                            throw new ArgumentException($"Failed to convert string '{stringValue}' to enum type '{parameter.ParameterType.Name}' for parameter '{parameter.Name}'. {ex.Message}");
-                        }
-                    }
-                    // Use the provided parameter value
-                    return value;
+                    // Handle enum conversion for string values and return the provided parameter value
+                    return TryConvertStringToEnum(value, parameter.ParameterType, parameter.Name!);
                 }
             }
             else if (parameter.HasDefaultValue)
@@ -391,6 +367,22 @@ namespace com.IvanMurzak.ReflectorNet
                     ? Activator.CreateInstance(parameter.ParameterType) // TODO: replace with Reflector.CreateInstance
                     : null;
             }
+        }
+
+        private static object? TryConvertStringToEnum(object? value, Type parameterType, string parameterName)
+        {
+            if (value is string stringValue && parameterType.IsEnum)
+            {
+                try
+                {
+                    return Enum.Parse(parameterType, stringValue, ignoreCase: true);
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Failed to convert string '{stringValue}' to enum type '{parameterType.Name}' for parameter '{parameterName}'. {ex.Message}");
+                }
+            }
+            return value;
         }
 
         protected virtual void PrintParameters(object?[]? parameters)
