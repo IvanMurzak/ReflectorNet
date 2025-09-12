@@ -272,5 +272,92 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 _output.WriteLine("Async method testing skipped - no suitable method found");
             }
         }
+
+        [Fact]
+        public async Task MethodWrapper_Enum_Parameter_String_Input()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = typeof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper).GetMethod(nameof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper.ProcessEnum))!;
+            var wrapper = MethodWrapper.Create(reflector, null, methodInfo);
+
+            // Act & Assert - Test with string representation of enum
+            var parameters = new Dictionary<string, object?> 
+            { 
+                { "enumValue", "Option2" } 
+            };
+
+            var result = await wrapper.InvokeDict(parameters);
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Processed enum: Option2", result.ToString());
+            _output.WriteLine($"Enum parameter test with string input: {result}");
+        }
+
+        [Fact]
+        public async Task MethodWrapper_Enum_Parameter_JsonElement_Input()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = typeof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper).GetMethod(nameof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper.ProcessEnum))!;
+            var wrapper = MethodWrapper.Create(reflector, null, methodInfo);
+
+            // Act & Assert - Test with JsonElement containing enum string
+            var jsonDocument = JsonDocument.Parse("\"Option3\"");
+            var jsonElement = jsonDocument.RootElement;
+            
+            var parameters = new Dictionary<string, object?> 
+            { 
+                { "enumValue", jsonElement } 
+            };
+
+            var result = await wrapper.InvokeDict(parameters);
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Processed enum: Option3", result.ToString());
+            _output.WriteLine($"Enum parameter test with JsonElement input: {result}");
+        }
+
+        [Fact]
+        public async Task MethodWrapper_Enum_Parameter_Default_Value()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = typeof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper).GetMethod(nameof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper.ProcessEnumWithDefault))!;
+            var wrapper = MethodWrapper.Create(reflector, null, methodInfo);
+
+            // Act & Assert - Test with no parameter (should use default value Option2)
+            var result = await wrapper.InvokeDict(null);
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Processed enum with default: Option2", result.ToString());
+            _output.WriteLine($"Enum parameter test with default value: {result}");
+        }
+
+        [Fact]
+        public async Task MethodWrapper_Enum_Parameter_Mixed_Types()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = typeof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper).GetMethod(nameof(com.IvanMurzak.ReflectorNet.Tests.Utils.MethodHelper.ProcessStringAndEnum))!;
+            var wrapper = MethodWrapper.Create(reflector, null, methodInfo);
+
+            // Act & Assert - Test with string and enum parameters
+            var parameters = new Dictionary<string, object?> 
+            { 
+                { "text", "Hello" },
+                { "enumValue", "Option4" } 
+            };
+
+            var result = await wrapper.InvokeDict(parameters);
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Text: Hello, Enum: Option4", result.ToString());
+            _output.WriteLine($"Mixed parameters test with enum: {result}");
+        }
     }
 }

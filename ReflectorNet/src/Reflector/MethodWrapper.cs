@@ -286,8 +286,8 @@ namespace com.IvanMurzak.ReflectorNet
             }
             else
             {
-                // Use the provided parameter value
-                return parameter;
+                // Handle enum conversion for string values and return the provided parameter value
+                return TryConvertStringToEnum(parameter, methodParameter.ParameterType, methodParameter.Name!);
             }
         }
 
@@ -351,8 +351,8 @@ namespace com.IvanMurzak.ReflectorNet
                 }
                 else
                 {
-                    // Use the provided parameter value
-                    return value;
+                    // Handle enum conversion for string values and return the provided parameter value
+                    return TryConvertStringToEnum(value, parameter.ParameterType, parameter.Name!);
                 }
             }
             else if (parameter.HasDefaultValue)
@@ -367,6 +367,22 @@ namespace com.IvanMurzak.ReflectorNet
                     ? Activator.CreateInstance(parameter.ParameterType) // TODO: replace with Reflector.CreateInstance
                     : null;
             }
+        }
+
+        private static object? TryConvertStringToEnum(object? value, Type parameterType, string parameterName)
+        {
+            if (value is string stringValue && parameterType.IsEnum)
+            {
+                try
+                {
+                    return Enum.Parse(parameterType, stringValue, ignoreCase: true);
+                }
+                catch (ArgumentException)
+                {
+                    throw new ArgumentException($"Invalid value '{stringValue}' for parameter '{parameterName}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
+                }
+            }
+            return value;
         }
 
         protected virtual void PrintParameters(object?[]? parameters)

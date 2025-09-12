@@ -217,6 +217,22 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (underlyingType == typeof(Guid))
                 return new JsonObject { [Type] = String, ["format"] = "uuid" };
 
+            // Handle enum types
+            if (underlyingType.IsEnum)
+            {
+                var enumValues = new JsonArray();
+                foreach (var enumValue in Enum.GetValues(underlyingType))
+                {
+                    enumValues.Add(JsonValue.Create(enumValue.ToString()));
+                }
+
+                return new JsonObject 
+                { 
+                    [Type] = String,
+                    ["enum"] = enumValues
+                };
+            }
+
             // Default for unknown primitives
             return new JsonObject { [Type] = String };
         }

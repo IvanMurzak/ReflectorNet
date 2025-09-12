@@ -161,5 +161,42 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.False(properties.AsObject().ContainsKey(propertyName),
                 $"Properties should NOT contain '{propertyName}' property (it should be ignored). Available properties: {string.Join(", ", properties.AsObject().Select(x => x.Key))}");
         }
+
+        [Fact]
+        public void Enum_Schema_Should_Include_All_Enum_Values()
+        {
+            var reflector = new Reflector();
+            var schema = JsonSchemaValidation(typeof(TestEnumWithDescriptions), reflector);
+
+            // Validate that the schema has the correct structure for enums
+            Assert.NotNull(schema);
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Type),
+                $"Enum schema should contain '{JsonSchema.Type}' property. Available properties: {string.Join(", ", schema.AsObject().Select(x => x.Key))}");
+
+            // Validate that type is "string"
+            var schemaType = schema[JsonSchema.Type];
+            Assert.NotNull(schemaType);
+            Assert.Equal(JsonSchema.String, schemaType.ToString());
+
+            // Validate that the schema contains an "enum" property
+            Assert.True(schema.AsObject().ContainsKey("enum"),
+                $"Enum schema should contain 'enum' property. Available properties: {string.Join(", ", schema.AsObject().Select(x => x.Key))}");
+
+            var enumValues = schema["enum"];
+            Assert.NotNull(enumValues);
+            Assert.True(enumValues is JsonArray, "Enum values should be a JSON array");
+
+            var enumArray = enumValues.AsArray();
+            
+            // Validate that all enum values are present
+            var expectedValues = new[] { "Option1", "Option2", "Option3", "Option4" };
+            Assert.Equal(expectedValues.Length, enumArray.Count);
+
+            foreach (var expectedValue in expectedValues)
+            {
+                var hasValue = enumArray.Any(v => v?.ToString() == expectedValue);
+                Assert.True(hasValue, $"Enum schema should contain value '{expectedValue}'. Actual values: {string.Join(", ", enumArray.Select(v => v?.ToString()))}");
+            }
+        }
     }
 }
