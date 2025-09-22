@@ -269,14 +269,26 @@ namespace com.IvanMurzak.ReflectorNet
                 }
                 try
                 {
-                    // Try #1: Parsing as the parameter type directly
+                    // Try #1: Handle primitive types with string values
+                    if (isPrimitive && jsonElement.ValueKind == JsonValueKind.String)
+                    {
+                        var stringValue = jsonElement.GetString();
+                        if (!string.IsNullOrEmpty(stringValue))
+                        {
+                            var result = TryConvertStringToPrimitive(stringValue, methodParameter.ParameterType);
+                            if (result != null)
+                                return result;
+                        }
+                    }
+
+                    // Try #2: Parsing as the parameter type directly
                     return jsonElement.Deserialize(
                         returnType: methodParameter.ParameterType,
                         options: _reflector.JsonSerializerOptions);
                 }
                 catch
                 {
-                    // Try #2: Parsing as SerializedMember
+                    // Try #3: Parsing as SerializedMember
                     var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                     if (serializedParameter == null)
                         throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameter.Name}'");
@@ -334,14 +346,26 @@ namespace com.IvanMurzak.ReflectorNet
                     }
                     try
                     {
-                        // Try #1: Parsing as the parameter type directly
+                        // Try #1: Handle primitive types with string values
+                        if (isPrimitive && jsonElement.ValueKind == JsonValueKind.String)
+                        {
+                            var stringValue = jsonElement.GetString();
+                            if (!string.IsNullOrEmpty(stringValue))
+                            {
+                                var result = TryConvertStringToPrimitive(stringValue, parameter.ParameterType);
+                                if (result != null)
+                                    return result;
+                            }
+                        }
+
+                        // Try #2: Parsing as the parameter type directly
                         return jsonElement.Deserialize(
                             returnType: parameter.ParameterType,
                             options: _reflector.JsonSerializerOptions);
                     }
                     catch
                     {
-                        // Try #2: Parsing as SerializedMember
+                        // Try #3: Parsing as SerializedMember
                         var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                         if (serializedParameter == null)
                             throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
@@ -383,6 +407,73 @@ namespace com.IvanMurzak.ReflectorNet
                 }
             }
             return value;
+        }
+
+        private static object? TryConvertStringToPrimitive(string stringValue, Type targetType)
+        {
+            // Handle nullable types
+            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+            try
+            {
+                if (underlyingType == typeof(bool))
+                    return bool.Parse(stringValue);
+
+                if (underlyingType == typeof(int))
+                    return int.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(long))
+                    return long.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(short))
+                    return short.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(uint))
+                    return uint.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(ulong))
+                    return ulong.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(ushort))
+                    return ushort.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(byte))
+                    return byte.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(sbyte))
+                    return sbyte.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(float))
+                    return float.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(double))
+                    return double.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(decimal))
+                    return decimal.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(Guid))
+                    return Guid.Parse(stringValue);
+
+                if (underlyingType == typeof(DateTime))
+                    return DateTime.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(DateTimeOffset))
+                    return DateTimeOffset.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType == typeof(TimeSpan))
+                    return TimeSpan.Parse(stringValue, System.Globalization.CultureInfo.InvariantCulture);
+
+                if (underlyingType.IsEnum)
+                    return Enum.Parse(underlyingType, stringValue, ignoreCase: true);
+            }
+            catch
+            {
+                // If parsing fails, return null to let the default conversion handle it
+                return null;
+            }
+
+            return null;
         }
 
         protected virtual void PrintParameters(object?[]? parameters)
