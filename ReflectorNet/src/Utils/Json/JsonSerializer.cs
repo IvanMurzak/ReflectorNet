@@ -84,7 +84,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             ),
                 Converters =
                 {
-                    new JsonStringEnumConverter(),
+                    new StringToPrimitiveConverter(),
+                    // new JsonStringEnumConverter(),
                     new MethodDataConverter(),
                     new MethodInfoConverter(),
                     new SerializedMemberConverter(reflector),

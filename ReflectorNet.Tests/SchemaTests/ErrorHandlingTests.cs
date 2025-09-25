@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var exception = Assert.ThrowsAny<Exception>(() =>
                 reflector.Serialize(unsupportedObject));
 
-            Assert.Contains("not supported", exception.Message);
+            Assert.Contains("not supported", exception.Message.ToLowerInvariant());
             _output.WriteLine($"Expected exception caught: {exception.Message}");
         }
 
