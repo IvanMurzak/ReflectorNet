@@ -199,7 +199,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                 if (!methodParameter.ParameterType.IsInstanceOfType(parameter.Value))
                 {
-                    error = $"Parameter '{parameter.Key}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeName()}', but got '{parameter.Value.GetType()}'.";
+                    error = $"Parameter '{parameter.Key}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeShortName()}', but got '{parameter.Value.GetType()}'.";
                     return false;
                 }
             }
@@ -233,7 +233,7 @@ namespace com.IvanMurzak.ReflectorNet
                     continue;
 
                 if (!parameter.ParameterType.IsInstanceOfType(finalParameters[i]))
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName()}', but got '{finalParameters[i]?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeShortName()}', but got '{finalParameters[i]?.GetType()}'.");
             }
 
             return finalParameters;
@@ -290,7 +290,7 @@ namespace com.IvanMurzak.ReflectorNet
                     catch (Exception ex2)
                     {
                         // If all parsing attempts fail, throw ArgumentException as expected by tests
-                        throw new ArgumentException($"Unable to convert value to parameter '{methodParameter.Name}' of type '{methodParameter.ParameterType.GetTypeName()}'");
+                        throw new ArgumentException($"Unable to convert value to parameter '{methodParameter.Name}' of type '{methodParameter.ParameterType.GetTypeShortName()}'");
                     }
                 }
             }
@@ -305,7 +305,7 @@ namespace com.IvanMurzak.ReflectorNet
                     return ConvertStringToEnum(value, underlyingType, methodParameter.Name!);
                 }
 
-                throw new ArgumentException($"Parameter '{methodParameter.Name}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeName()}', but got '{value?.GetType()}'.");
+                throw new ArgumentException($"Parameter '{methodParameter.Name}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeShortName()}', but got '{value?.GetType()}'.");
             }
         }
 
@@ -329,7 +329,7 @@ namespace com.IvanMurzak.ReflectorNet
                     continue;
 
                 if (!parameter.ParameterType.IsInstanceOfType(finalParameters[i]))
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName()}', but got '{finalParameters[i]?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeShortName()}', but got '{finalParameters[i]?.GetType()}'.");
             }
 
             return finalParameters;
@@ -373,7 +373,7 @@ namespace com.IvanMurzak.ReflectorNet
                         catch (Exception ex2)
                         {
                             // If all parsing attempts fail, throw ArgumentException as expected by tests
-                            throw new ArgumentException($"Unable to convert value to parameter '{parameter.Name}' of type '{parameter.ParameterType.GetTypeName()}'");
+                            throw new ArgumentException($"Unable to convert value to parameter '{parameter.Name}' of type '{parameter.ParameterType.GetTypeShortName()}'");
                         }
                     }
                 }
@@ -388,7 +388,7 @@ namespace com.IvanMurzak.ReflectorNet
                         return ConvertStringToEnum(value, underlyingType, parameter.Name!);
                     }
 
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName()}', but got '{value?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeShortName()}', but got '{value?.GetType()}'.");
                 }
             }
             else if (parameter.HasDefaultValue)
@@ -416,7 +416,7 @@ namespace com.IvanMurzak.ReflectorNet
                 }
                 throw new ArgumentException($"Invalid value '{stringValue}' for parameter '{parameterName}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
             }
-            throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{parameterType.GetTypeName()}', but got '{value?.GetType()}'.");
+            throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{parameterType.GetTypeShortName()}', but got '{value?.GetType()}'.");
         }
 
         protected virtual void PrintParameters(object?[]? parameters)

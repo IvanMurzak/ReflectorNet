@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName()}.");
+                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeShortName()}.");
             }
 
             if (reader.TokenType == JsonTokenType.True && (typeToConvert == typeof(bool) || typeToConvert == typeof(bool?)))
@@ -101,14 +101,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     case Type t when t == typeof(Guid):
                         return reader.GetGuid();
                     default:
-                        throw new JsonException($"Unsupported number type: {typeToConvert.GetTypeName()}");
+                        throw new JsonException($"Unsupported number type: {typeToConvert.GetTypeShortName()}");
                 }
             }
 
             // If it's not a string, throw since this converter only handles string-to-primitive conversion
             if (reader.TokenType != JsonTokenType.String)
             {
-                throw new JsonException($"Expected string token but got {reader.TokenType} for type {typeToConvert.GetTypeName()}");
+                throw new JsonException($"Expected string token but got {reader.TokenType} for type {typeToConvert.GetTypeShortName()}");
             }
 
             var stringValue = reader.GetString();
@@ -117,7 +117,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName()}.");
+                throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.");
             }
 
             return ConvertStringToPrimitive(stringValue, typeToConvert);
@@ -183,7 +183,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     writer.WriteStringValue(value.ToString());
                     break;
                 default:
-                    throw new JsonException($"Not supported type for writing: {type.GetTypeName()}");
+                    throw new JsonException($"Not supported type for writing: {type.GetTypeShortName()}");
             }
         }
 
@@ -199,7 +199,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     case Type t when t == typeof(bool):
                         if (bool.TryParse(stringValue, out var boolResult))
                             return boolResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to boolean.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(bool).GetTypeShortName()}.");
 
                     case Type t when t == typeof(byte):
                         if (byte.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var byteResult))
@@ -286,12 +286,12 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
 
                     default:
-                        throw new JsonException($"Not supported target type: {targetType.GetTypeName()}");
+                        throw new JsonException($"Not supported target type: {targetType.GetTypeShortName()}");
                 }
             }
             catch (Exception ex) when (ex is not JsonException)
             {
-                throw new JsonException($"Failed to convert '{stringValue}' to {targetType.GetTypeName()}: {ex.Message}", ex);
+                throw new JsonException($"Failed to convert '{stringValue}' to {targetType.GetTypeShortName()}: {ex.Message}", ex);
             }
         }
     }
