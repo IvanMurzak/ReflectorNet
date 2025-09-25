@@ -204,77 +204,77 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     case Type t when t == typeof(byte):
                         if (byte.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var byteResult))
                             return byteResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to byte.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(byte).GetTypeShortName()}.");
 
                     case Type t when t == typeof(sbyte):
                         if (sbyte.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var sbyteResult))
                             return sbyteResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to sbyte.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(sbyte).GetTypeShortName()}.");
 
                     case Type t when t == typeof(short):
                         if (short.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var shortResult))
                             return shortResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to short.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(short).GetTypeShortName()}.");
 
                     case Type t when t == typeof(ushort):
                         if (ushort.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ushortResult))
                             return ushortResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to ushort.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(ushort).GetTypeShortName()}.");
 
                     case Type t when t == typeof(int):
                         if (int.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intResult))
                             return intResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to int.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(int).GetTypeShortName()}.");
 
                     case Type t when t == typeof(uint):
                         if (uint.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var uintResult))
                             return uintResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to uint.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(uint).GetTypeShortName()}.");
 
                     case Type t when t == typeof(long):
                         if (long.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var longResult))
                             return longResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to long.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(long).GetTypeShortName()}.");
 
                     case Type t when t == typeof(ulong):
                         if (ulong.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ulongResult))
                             return ulongResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to ulong.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(ulong).GetTypeShortName()}.");
 
                     case Type t when t == typeof(float):
                         if (float.TryParse(stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatResult))
                             return floatResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to float.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(float).GetTypeShortName()}.");
 
                     case Type t when t == typeof(double):
                         if (double.TryParse(stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleResult))
                             return doubleResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to double.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(double).GetTypeShortName()}.");
 
                     case Type t when t == typeof(decimal):
                         if (decimal.TryParse(stringValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalResult))
                             return decimalResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to decimal.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(decimal).GetTypeShortName()}.");
 
                     case Type t when t == typeof(DateTime):
                         if (DateTime.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTimeResult))
                             return dateTimeResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to DateTime.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(DateTime).GetTypeShortName()}.");
 
                     case Type t when t == typeof(DateTimeOffset):
                         if (DateTimeOffset.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTimeOffsetResult))
                             return dateTimeOffsetResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to DateTimeOffset.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(DateTimeOffset).GetTypeShortName()}.");
 
                     case Type t when t == typeof(TimeSpan):
                         if (TimeSpan.TryParse(stringValue, CultureInfo.InvariantCulture, out var timeSpanResult))
                             return timeSpanResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to TimeSpan.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(TimeSpan).GetTypeShortName()}.");
 
                     case Type t when t == typeof(Guid):
                         if (Guid.TryParse(stringValue, out var guidResult))
                             return guidResult;
-                        throw new JsonException($"Unable to convert '{stringValue}' to Guid.");
+                        throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeShortName()}.");
 
                     case Type t when t.IsEnum:
                         if (!Enum.TryParse(underlyingType, stringValue, ignoreCase: true, out var enumValue))
