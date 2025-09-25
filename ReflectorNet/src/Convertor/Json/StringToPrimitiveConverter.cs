@@ -174,7 +174,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     writer.WriteStringValue(((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture));
                     break;
                 case Type t when t == typeof(TimeSpan):
-                    writer.WriteStringValue(((TimeSpan)value).ToString("O", CultureInfo.InvariantCulture));
+                    writer.WriteStringValue(((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture));
                     break;
                 case Type t when t == typeof(Guid):
                     writer.WriteStringValue(((Guid)value).ToString());
@@ -277,13 +277,18 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeShortName()}.");
 
                     case Type t when t.IsEnum:
-                        if (!Enum.TryParse(underlyingType, stringValue, ignoreCase: true, out var enumValue))
+                        try
+                        {
+                            var enumValue = Enum.Parse(underlyingType, stringValue, ignoreCase: true);
+                            if (Enum.IsDefined(underlyingType, enumValue))
+                                return enumValue;
+
                             throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
-
-                        if (Enum.IsDefined(underlyingType, enumValue))
-                            return enumValue;
-
-                        throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
+                        }
+                        catch (ArgumentException)
+                        {
+                            throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
+                        }
 
                     default:
                         throw new JsonException($"Not supported target type: {targetType.GetTypeShortName()}");

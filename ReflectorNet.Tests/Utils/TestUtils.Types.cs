@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -10,7 +11,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
     {
         public static partial class Types
         {
-
             public static readonly Type[] BaseStaticTypes = new[]
             {
                 typeof(StaticParentClass),
@@ -20,16 +20,29 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
             public static readonly Type[] BaseNonStaticTypes = new[]
             {
                 typeof(string),
+
                 typeof(bool),
+                typeof(byte),
+                typeof(sbyte),
+                typeof(short),
+                typeof(ushort),
                 typeof(int),
-                typeof(double),
+                typeof(uint),
+                typeof(long),
+                typeof(ulong),
                 typeof(float),
+                typeof(double),
                 typeof(decimal),
-                typeof(System.Single),
 
                 typeof(DateTime),
-                typeof(Guid),
+                typeof(DateTimeOffset),
                 typeof(TimeSpan),
+                typeof(Guid),
+
+                // typeof(CultureInfo),
+                // typeof(AssemblyName),
+                // typeof(Version),
+                // typeof(IntPtr),
 
                 typeof(ParentClass),
                 typeof(ParentClass.NestedClass),
