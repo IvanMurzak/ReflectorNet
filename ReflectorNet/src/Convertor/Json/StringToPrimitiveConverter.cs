@@ -174,7 +174,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     writer.WriteStringValue(((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture));
                     break;
                 case Type t when t == typeof(TimeSpan):
-                    writer.WriteNumberValue(((TimeSpan)value).Ticks);
+                    writer.WriteStringValue(((TimeSpan)value).ToString("O", CultureInfo.InvariantCulture));
                     break;
                 case Type t when t == typeof(Guid):
                     writer.WriteStringValue(((Guid)value).ToString());
