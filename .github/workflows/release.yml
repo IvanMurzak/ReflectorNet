@@ -71,6 +71,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-version-tag, build-and-test]
     if: needs.check-version-tag.outputs.is_new_version == 'true'
+    outputs:
+      version: ${{ needs.check-version-tag.outputs.version }}
+      success: ${{ steps.rel_desc.outputs.success }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,7 +88,7 @@ jobs:
         run: |
           set -e
           version=${{ needs.check-version-tag.outputs.version }}
-          prev_tag=${{ needs.check-version-tag.outputs.prev_version }}
+          prev_version=${{ needs.check-version-tag.outputs.prev_version }}
           repo_url="https://github.com/${GITHUB_REPOSITORY}"
           today=$(date +'%B %e, %Y')
 
@@ -99,16 +102,16 @@ jobs:
           echo "---" >> release.md
           echo "" >> release.md
 
-          if [ -n "$prev_tag" ]; then
+          if [ -n "$prev_version" ]; then
             echo "## Comparison" >> release.md
-            echo "See every change: [Compare $prev_tag...$version]($repo_url/compare/$prev_tag...$version)" >> release.md
+            echo "See every change: [Compare $prev_version...$version]($repo_url/compare/$prev_version...$version)" >> release.md
 
             echo "" >> release.md
             echo "---" >> release.md
             echo "" >> release.md
 
             echo "## Commit Summary (Newest → Oldest)" >> release.md
-            for sha in $(git log --pretty=format:'%H' $prev_tag..HEAD); do
+            for sha in $(git log --pretty=format:'%H' $prev_version..HEAD); do
               username=$(gh api repos/${GITHUB_REPOSITORY}/commits/$sha --jq '.author.login // .commit.author.name')
               message=$(git log -1 --pretty=format:'%s' $sha)
               short_sha=$(git log -1 --pretty=format:'%h' $sha)
