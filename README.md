@@ -2,10 +2,10 @@
 # ReflectorNet
 
 [![nuget](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/)
-![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet)
+[![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet?label=License)](https://github.com/IvanMurzak/ReflectorNet/blob/main/LICENSE)
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
-[![Tests](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml)
+[![Tests](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue?logoColor=white)
 ![netstandard2.1](https://img.shields.io/badge/.NET-netstandard2.1-blue?logoColor=white)
 
