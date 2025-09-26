@@ -31,13 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeShortName()}.");
-            }
-
-            // Handle direct Guid tokens
-            if (reader.TokenType == JsonTokenType.Number)
-            {
-                return reader.GetGuid();
+                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
             // Handle string tokens
@@ -49,16 +43,16 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
                 }
 
                 if (Guid.TryParse(stringValue, out var guidResult))
                     return guidResult;
 
-                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeShortName()}.");
+                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeName(pretty: true)}.");
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeShortName()}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)

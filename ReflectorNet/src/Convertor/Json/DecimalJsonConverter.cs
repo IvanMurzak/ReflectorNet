@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
             // Handle direct number tokens
@@ -50,16 +50,16 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
                 }
 
                 if (decimal.TryParse(stringValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalResult))
                     return decimalResult;
 
-                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(decimal).GetTypeShortName()}.");
+                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(decimal).GetTypeName(pretty: true)}.");
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeShortName()}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)

@@ -32,13 +32,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
-            // Handle direct DateTimeOffset tokens
+            // Handle numeric timestamps (Unix time)
             if (reader.TokenType == JsonTokenType.Number)
             {
-                return reader.GetDateTimeOffset();
+                var unixTime = reader.GetInt64();
+                return DateTimeOffset.FromUnixTimeMilliseconds(unixTime);
             }
 
             // Handle string tokens
@@ -50,21 +51,21 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
                 }
 
                 if (DateTimeOffset.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTimeOffsetResult))
                     return dateTimeOffsetResult;
 
-                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(DateTimeOffset).GetTypeShortName()}.");
+                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(DateTimeOffset).GetTypeName(pretty: true)}.");
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeShortName()}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture));
+            writer.WriteNumberValue(((DateTimeOffset)value).ToUnixTimeMilliseconds());
         }
     }
 }

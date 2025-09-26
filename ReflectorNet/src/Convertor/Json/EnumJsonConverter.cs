@@ -31,7 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
             var underlyingType = Nullable.GetUnderlyingType(typeToConvert) ?? typeToConvert;
@@ -40,8 +40,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (reader.TokenType == JsonTokenType.Number)
             {
                 var numericValue = reader.GetInt64();
-                if (Enum.IsDefined(underlyingType, numericValue))
-                    return Enum.ToObject(underlyingType, numericValue);
+                var underlyingEnumType = Enum.GetUnderlyingType(underlyingType);
+                var convertedValue = Convert.ChangeType(numericValue, underlyingEnumType);
+                if (Enum.IsDefined(underlyingType, convertedValue))
+                    return Enum.ToObject(underlyingType, convertedValue);
 
                 throw new JsonException($"Value '{numericValue}' is not defined for enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
             }
@@ -55,7 +57,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
                 }
 
                 if (!Enum.TryParse(underlyingType, stringValue, ignoreCase: true, out var enumValue))
@@ -67,7 +69,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for enum type {typeToConvert.GetTypeShortName()}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for enum type {typeToConvert.GetTypeName(pretty: true)}");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)

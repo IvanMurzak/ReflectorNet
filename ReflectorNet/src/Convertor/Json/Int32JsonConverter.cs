@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
             // Handle direct number tokens
@@ -51,13 +51,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
                 }
 
                 return ParseInt32(stringValue);
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeShortName()}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
@@ -69,14 +69,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
         {
             if (int.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
                 return result;
-            throw new JsonException($"Unable to convert '{stringValue}' to {typeof(int).GetTypeShortName()}.");
+            throw new JsonException($"Unable to convert '{stringValue}' to {typeof(int).GetTypeName(pretty: true)}.");
         }
 
         private static int ConvertToInt32(double value)
         {
             if (value >= int.MinValue && value <= int.MaxValue && value == Math.Floor(value))
                 return (int)value;
-            throw new JsonException($"Value {value} is out of range for {typeof(int).GetTypeShortName()}.");
+            throw new JsonException($"Value {value} is out of range for {typeof(int).GetTypeName(pretty: true)}.");
         }
     }
 }
