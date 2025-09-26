@@ -103,10 +103,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     new GuidJsonConverter(),
                     new TimeSpanJsonConverter(),
 
-                    // Original monolithic converter
-                    // new StringToPrimitiveConverter(),
-
-                    // new JsonStringEnumConverter(),
+                    // Other converters
                     new MethodDataConverter(),
                     new MethodInfoConverter(),
                     new SerializedMemberConverter(reflector),
