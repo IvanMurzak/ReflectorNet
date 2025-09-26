@@ -400,7 +400,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 // Use the type's default value if no value is provided
                 return parameter.ParameterType.IsValueType
-                    ? Activator.CreateInstance(underlyingType) // TODO: replace with Reflector.CreateInstance
+                    ? Activator.CreateInstance(parameter.ParameterType) // TODO: replace with Reflector.CreateInstance
                     : null;
             }
         }

@@ -543,5 +543,187 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
         }
 
         #endregion
+
+        #region Edge Case Tests - Malformed JSON and Large Numbers
+
+        [Fact]
+        public void MethodWrapper_MalformedJsonElement_ShouldThrow()
+        {
+            // Create a malformed JSON element by manipulating raw JSON
+            var malformedJson = "{ \"incomplete\": ";
+
+            _output.WriteLine("Testing malformed JSON handling");
+
+            // Act & Assert - Any JSON exception is acceptable (JsonException or its derived types)
+            var exception = Assert.ThrowsAny<JsonException>(() =>
+            {
+                var jsonElement = JsonDocument.Parse(malformedJson).RootElement;
+            });
+
+            _output.WriteLine($"Exception thrown: {exception.GetType().Name}: {exception.Message}");
+        }
+
+        [Theory]
+        [InlineData("92233720368547758080")] // Much larger than long.MaxValue
+        [InlineData("-92233720368547758090")] // Much smaller than long.MinValue
+        [InlineData("abc123")] // Non-numeric string for long conversion
+        [InlineData("123.456")] // Decimal string for long conversion
+        public async Task MethodWrapper_VeryLargeNumbers_ShouldThrow(string largeNumber)
+        {
+            // Arrange
+            var methodInfo = typeof(MethodWrapperStringConversionTests).GetMethod(nameof(TestLongMethod));
+            var wrapper = MethodWrapper.Create(_reflector, null, methodInfo!);
+
+            var jsonElement = JsonDocument.Parse($"\"{largeNumber}\"").RootElement;
+            var parameters = new Dictionary<string, object?> { { "value", jsonElement } };
+
+            _output.WriteLine($"Testing invalid long number: \"{largeNumber}\"");
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentException>(() => wrapper.InvokeDict(parameters));
+        }
+
+        [Theory]
+        [InlineData("3.4028236E+39")] // Greater than float.MaxValue
+        [InlineData("-3.4028236E+39")] // Less than float.MinValue
+        public async Task MethodWrapper_VeryLargeFloats_ShouldConvertToInfinity(string largeFloat)
+        {
+            // Arrange
+            var methodInfo = typeof(MethodWrapperStringConversionTests).GetMethod(nameof(TestFloatMethod));
+            var wrapper = MethodWrapper.Create(_reflector, null, methodInfo!);
+
+            var jsonElement = JsonDocument.Parse($"\"{largeFloat}\"").RootElement;
+            var parameters = new Dictionary<string, object?> { { "value", jsonElement } };
+
+            _output.WriteLine($"Testing very large float: \"{largeFloat}\"");
+
+            // Act
+            var result = await wrapper.InvokeDict(parameters);
+
+            // Assert - very large floats should convert to infinity
+            var floatResult = (float)result!;
+            if (largeFloat.StartsWith("-"))
+            {
+                Assert.True(float.IsNegativeInfinity(floatResult));
+            }
+            else
+            {
+                Assert.True(float.IsPositiveInfinity(floatResult));
+            }
+        }
+
+        [Theory]
+        [InlineData("79228162514264337593543950336")] // Greater than decimal.MaxValue
+        [InlineData("-79228162514264337593543950336")] // Less than decimal.MinValue
+        public async Task MethodWrapper_VeryLargeDecimals_ShouldThrow(string largeDecimal)
+        {
+            // Arrange
+            var methodInfo = typeof(MethodWrapperStringConversionTests).GetMethod(nameof(TestDecimalMethod));
+            var wrapper = MethodWrapper.Create(_reflector, null, methodInfo!);
+
+            var jsonElement = JsonDocument.Parse($"\"{largeDecimal}\"").RootElement;
+            var parameters = new Dictionary<string, object?> { { "value", jsonElement } };
+
+            _output.WriteLine($"Testing very large decimal: \"{largeDecimal}\"");
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentException>(() => wrapper.InvokeDict(parameters));
+        }
+
+        [Fact]
+        public async Task MethodWrapper_NullJsonElement_ShouldHandleGracefully()
+        {
+            // Arrange
+            var methodInfo = typeof(MethodWrapperStringConversionTests).GetMethod(nameof(TestNullableIntMethod));
+            var wrapper = MethodWrapper.Create(_reflector, null, methodInfo!);
+
+            var jsonElement = JsonDocument.Parse("null").RootElement;
+            var parameters = new Dictionary<string, object?> { { "value", jsonElement } };
+
+            _output.WriteLine("Testing null JSON element handling");
+
+            // Act
+            var result = await wrapper.InvokeDict(parameters);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Theory]
+        [InlineData("{\"malformed\": json}")]
+        [InlineData("[incomplete array")]
+        [InlineData("\"unterminated string")]
+        public void MethodWrapper_InvalidJsonStrings_ShouldThrow(string invalidJson)
+        {
+            _output.WriteLine($"Testing invalid JSON string: {invalidJson}");
+
+            // Act & Assert - Any JSON exception is acceptable (JsonException or its derived types)
+            Assert.ThrowsAny<JsonException>(() =>
+            {
+                JsonDocument.Parse(invalidJson);
+            });
+        }
+
+        [Theory]
+        [InlineData("NaN")]
+        [InlineData("Infinity")]
+        [InlineData("-Infinity")]
+        public async Task MethodWrapper_SpecialFloatValues_ShouldConvertOrThrow(string specialValue)
+        {
+            // Arrange
+            var methodInfo = typeof(MethodWrapperStringConversionTests).GetMethod(nameof(TestDoubleMethod));
+            var wrapper = MethodWrapper.Create(_reflector, null, methodInfo!);
+
+            var jsonElement = JsonDocument.Parse($"\"{specialValue}\"").RootElement;
+            var parameters = new Dictionary<string, object?> { { "value", jsonElement } };
+
+            _output.WriteLine($"Testing special float value: \"{specialValue}\"");
+
+            try
+            {
+                // Act
+                var result = await wrapper.InvokeDict(parameters);
+
+                // Assert - if no exception, verify the result is the expected special value
+                var doubleResult = (double)result!;
+                switch (specialValue)
+                {
+                    case "NaN":
+                        Assert.True(double.IsNaN(doubleResult));
+                        break;
+                    case "Infinity":
+                        Assert.True(double.IsPositiveInfinity(doubleResult));
+                        break;
+                    case "-Infinity":
+                        Assert.True(double.IsNegativeInfinity(doubleResult));
+                        break;
+                }
+            }
+            catch (ArgumentException)
+            {
+                // Also acceptable if the conversion throws an ArgumentException
+                _output.WriteLine($"Special value {specialValue} threw ArgumentException as expected");
+            }
+        }
+
+        [Theory]
+        [InlineData("4294967296")] // uint.MaxValue + 1
+        [InlineData("-1")] // Less than uint.MinValue
+        public async Task MethodWrapper_UnsignedIntOverflow_ShouldThrow(string overflowValue)
+        {
+            // Arrange
+            var methodInfo = typeof(MethodWrapperStringConversionTests).GetMethod(nameof(TestUIntMethod));
+            var wrapper = MethodWrapper.Create(_reflector, null, methodInfo!);
+
+            var jsonElement = JsonDocument.Parse($"\"{overflowValue}\"").RootElement;
+            var parameters = new Dictionary<string, object?> { { "value", jsonElement } };
+
+            _output.WriteLine($"Testing uint overflow: \"{overflowValue}\"");
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentException>(() => wrapper.InvokeDict(parameters));
+        }
+
+        #endregion
     }
 }
