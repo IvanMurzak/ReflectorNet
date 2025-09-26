@@ -199,7 +199,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                 if (!methodParameter.ParameterType.IsInstanceOfType(parameter.Value))
                 {
-                    error = $"Parameter '{parameter.Key}' type mismatch. Expected '{methodParameter.ParameterType}', but got '{parameter.Value.GetType()}'.";
+                    error = $"Parameter '{parameter.Key}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeName(pretty: true)}', but got '{parameter.Value.GetType()}'.";
                     return false;
                 }
             }
@@ -233,7 +233,7 @@ namespace com.IvanMurzak.ReflectorNet
                     continue;
 
                 if (!parameter.ParameterType.IsInstanceOfType(finalParameters[i]))
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType}', but got '{finalParameters[i]?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName(pretty: true)}', but got '{finalParameters[i]?.GetType()}'.");
             }
 
             return finalParameters;
@@ -252,18 +252,20 @@ namespace com.IvanMurzak.ReflectorNet
             }
         }
 
-        protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo methodParameter, object? parameter)
+        protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo methodParameter, object? value)
         {
+            var underlyingType = Nullable.GetUnderlyingType(methodParameter.ParameterType) ?? methodParameter.ParameterType;
+
             // Handle JsonElement conversion
-            if (parameter is JsonElement jsonElement)
+            if (value is JsonElement jsonElement)
             {
-                var isPrimitive = TypeUtils.IsPrimitive(methodParameter.ParameterType);
+                var isPrimitive = TypeUtils.IsPrimitive(underlyingType);
                 if (!isPrimitive)
                 {
                     // Handle stringified json
                     if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
                     {
-                        parameter = unstringifiedJson;
+                        value = unstringifiedJson;
                         jsonElement = unstringifiedJson!.Value;
                     }
                 }
@@ -274,20 +276,36 @@ namespace com.IvanMurzak.ReflectorNet
                         returnType: methodParameter.ParameterType,
                         options: _reflector.JsonSerializerOptions);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Try #2: Parsing as SerializedMember
-                    var serializedParameter = jsonElement.Deserialize<SerializedMember>();
-                    if (serializedParameter == null)
-                        throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameter.Name}'");
+                    try
+                    {
+                        // Try #2: Parsing as SerializedMember
+                        var serializedParameter = jsonElement.Deserialize<SerializedMember>();
+                        if (serializedParameter == null)
+                            throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameter.Name}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}");
 
-                    return _reflector.Deserialize(serializedParameter, fallbackType: methodParameter.ParameterType, logger: _logger);
+                        return _reflector.Deserialize(serializedParameter, fallbackType: methodParameter.ParameterType, logger: _logger);
+                    }
+                    catch (Exception ex2)
+                    {
+                        // If all parsing attempts fail, throw ArgumentException as expected by tests
+                        throw new ArgumentException($"Unable to convert value to parameter '{methodParameter.Name}' of type '{methodParameter.ParameterType.GetTypeName(pretty: true)}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
+                    }
                 }
             }
             else
             {
-                // Handle enum conversion for string values and return the provided parameter value
-                return TryConvertStringToEnum(parameter, methodParameter.ParameterType, methodParameter.Name!);
+                if (underlyingType.IsInstanceOfType(value))
+                    return value;
+
+                if (underlyingType.IsEnum)
+                {
+                    // Handle enum conversion for string values and return the provided parameter value
+                    return ConvertStringToEnum(value, underlyingType, methodParameter.Name!);
+                }
+
+                throw new ArgumentException($"Parameter '{methodParameter.Name}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
             }
         }
 
@@ -311,18 +329,20 @@ namespace com.IvanMurzak.ReflectorNet
                     continue;
 
                 if (!parameter.ParameterType.IsInstanceOfType(finalParameters[i]))
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType}', but got '{finalParameters[i]?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName(pretty: true)}', but got '{finalParameters[i]?.GetType()}'.");
             }
 
             return finalParameters;
         }
         protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo parameter, IReadOnlyDictionary<string, object?>? namedParameters)
         {
+            var underlyingType = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
+
             if (namedParameters != null && namedParameters.TryGetValue(parameter.Name!, out var value))
             {
                 if (value is JsonElement jsonElement)
                 {
-                    var isPrimitive = TypeUtils.IsPrimitive(parameter.ParameterType);
+                    var isPrimitive = TypeUtils.IsPrimitive(underlyingType);
                     if (!isPrimitive)
                     {
                         // Handle stringified json
@@ -339,20 +359,36 @@ namespace com.IvanMurzak.ReflectorNet
                             returnType: parameter.ParameterType,
                             options: _reflector.JsonSerializerOptions);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Try #2: Parsing as SerializedMember
-                        var serializedParameter = jsonElement.Deserialize<SerializedMember>();
-                        if (serializedParameter == null)
-                            throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
+                        try
+                        {
+                            var serializedParameter = jsonElement.Deserialize<SerializedMember>();
+                            if (serializedParameter == null)
+                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}");
 
-                        return reflector.Deserialize(serializedParameter, fallbackType: parameter.ParameterType, logger: _logger);
+                            return reflector.Deserialize(serializedParameter, fallbackType: parameter.ParameterType, logger: _logger);
+                        }
+                        catch (Exception ex2)
+                        {
+                            // If all parsing attempts fail, throw ArgumentException as expected by tests
+                            throw new ArgumentException($"Unable to convert value to parameter '{parameter.Name}' of type '{parameter.ParameterType.GetTypeName(pretty: true)}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
+                        }
                     }
                 }
                 else
                 {
-                    // Handle enum conversion for string values and return the provided parameter value
-                    return TryConvertStringToEnum(value, parameter.ParameterType, parameter.Name!);
+                    if (underlyingType.IsInstanceOfType(value))
+                        return value;
+
+                    if (underlyingType.IsEnum)
+                    {
+                        // Handle enum conversion for string values and return the provided parameter value
+                        return ConvertStringToEnum(value, underlyingType, parameter.Name!);
+                    }
+
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
                 }
             }
             else if (parameter.HasDefaultValue)
@@ -369,20 +405,29 @@ namespace com.IvanMurzak.ReflectorNet
             }
         }
 
-        private static object? TryConvertStringToEnum(object? value, Type parameterType, string parameterName)
+        private static object? ConvertStringToEnum(object? value, Type parameterType, string parameterName)
         {
             if (value is string stringValue && parameterType.IsEnum)
             {
-                try
+                if (Enum.TryParse(parameterType, stringValue, ignoreCase: true, out var result))
                 {
-                    return Enum.Parse(parameterType, stringValue, ignoreCase: true);
+                    if (Enum.IsDefined(parameterType, result))
+                    {
+                        return result;
+                    }
+                    else
+                    {
+                        throw new ArgumentException(
+                            $"Value '{stringValue}' for parameter '{parameterName}' was parsed but is not a defined member of '{parameterType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
+                    }
                 }
-                catch (ArgumentException)
+                else
                 {
-                    throw new ArgumentException($"Invalid value '{stringValue}' for parameter '{parameterName}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
+                    throw new ArgumentException(
+                        $"Value '{stringValue}' for parameter '{parameterName}' could not be parsed as '{parameterType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
                 }
             }
-            return value;
+            throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{parameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
         }
 
         protected virtual void PrintParameters(object?[]? parameters)
