@@ -1,13 +1,15 @@
 
 # ReflectorNet
 
-[![nuget](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/)
-[![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet?label=License)](https://github.com/IvanMurzak/ReflectorNet/blob/main/LICENSE)
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
-
+[![NuGet](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&labelColor=333A41)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/)
+[![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue?logoColor=white&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet)
+[![netstandard2.1](https://img.shields.io/badge/.NET-netstandard2.1-blue?logoColor=white&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet)
 [![Tests](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml)
-![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue?logoColor=white)
-![netstandard2.1](https://img.shields.io/badge/.NET-netstandard2.1-blue?logoColor=white)
+
+[![Stars](https://img.shields.io/github/stars/IvanMurzak/ReflectorNet 'Stars')](https://github.com/IvanMurzak/ReflectorNet/stargazers)
+[![Discord](https://img.shields.io/badge/Discord-Join-7289da?logo=discord&logoColor=white&labelColor=333A41 'Join')](https://discord.gg/Cgs6nM8BPU)
+[![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet?label=License&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet/blob/main/LICENSE)
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 ReflectorNet is an advanced .NET reflection toolkit specifically designed for AI-driven scenarios. It provides sophisticated reflection-based serialization, deserialization, population, and method invocation capabilities that enable seamless integration between AI systems and .NET applications.
 
