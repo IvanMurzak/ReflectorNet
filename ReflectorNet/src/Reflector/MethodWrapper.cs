@@ -283,14 +283,14 @@ namespace com.IvanMurzak.ReflectorNet
                         // Try #2: Parsing as SerializedMember
                         var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                         if (serializedParameter == null)
-                            throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameter.Name}'");
+                            throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{methodParameter.Name}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}");
 
                         return _reflector.Deserialize(serializedParameter, fallbackType: methodParameter.ParameterType, logger: _logger);
                     }
                     catch (Exception ex2)
                     {
                         // If all parsing attempts fail, throw ArgumentException as expected by tests
-                        throw new ArgumentException($"Unable to convert value to parameter '{methodParameter.Name}' of type '{methodParameter.ParameterType.GetTypeShortName()}'");
+                        throw new ArgumentException($"Unable to convert value to parameter '{methodParameter.Name}' of type '{methodParameter.ParameterType.GetTypeShortName()}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
                     }
                 }
             }
@@ -366,14 +366,14 @@ namespace com.IvanMurzak.ReflectorNet
                         {
                             var serializedParameter = jsonElement.Deserialize<SerializedMember>();
                             if (serializedParameter == null)
-                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'");
+                                throw new ArgumentException($"Failed to parse {nameof(SerializedMember)} for parameter '{parameter.Name}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}");
 
                             return reflector.Deserialize(serializedParameter, fallbackType: parameter.ParameterType, logger: _logger);
                         }
                         catch (Exception ex2)
                         {
                             // If all parsing attempts fail, throw ArgumentException as expected by tests
-                            throw new ArgumentException($"Unable to convert value to parameter '{parameter.Name}' of type '{parameter.ParameterType.GetTypeShortName()}'");
+                            throw new ArgumentException($"Unable to convert value to parameter '{parameter.Name}' of type '{parameter.ParameterType.GetTypeShortName()}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
                         }
                     }
                 }

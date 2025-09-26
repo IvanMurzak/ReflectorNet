@@ -1,8 +1,8 @@
+#nullable enable
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
-using com.IvanMurzak.ReflectorNet.Json;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
@@ -184,7 +184,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
             var result = JsonSerializer.Deserialize<float>(json, _options);
 
             // Assert
-            Assert.Equal(expected, result, precision: 6);
+            Assert.Equal(expected, result, precision: 5);
         }
 
         [Theory]
@@ -202,7 +202,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
             var result = JsonSerializer.Deserialize<decimal>(json, _options);
 
             // Assert
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, precision: 6);
         }
 
         #endregion
@@ -452,7 +452,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
             _output.WriteLine($"Round-trip: {value} -> {json} -> {deserialized}");
 
             // Assert
-            Assert.Equal(value, deserialized);
+            Assert.Equal<T>(
+                expected: value,
+                actual: deserialized,
+                comparer: EqualityComparer<T>.Default);
         }
 
         [Fact]

@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git log:*)",
       "Bash(dotnet test:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(git checkout:*)",
+      "Bash(dotnet clean:*)"
     ],
     "deny": [],
     "ask": []

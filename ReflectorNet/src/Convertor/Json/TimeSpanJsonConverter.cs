@@ -65,7 +65,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(((TimeSpan)value).ToString("O", CultureInfo.InvariantCulture));
+            writer.WriteNumberValue(((TimeSpan)value).Ticks);
         }
     }
 }

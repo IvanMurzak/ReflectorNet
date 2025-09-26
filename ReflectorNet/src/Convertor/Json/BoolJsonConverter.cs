@@ -56,21 +56,23 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeShortName()}.\nInput value: null");
                 }
 
                 if (bool.TryParse(stringValue, out var boolResult))
                     return boolResult;
 
-                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(bool).GetTypeShortName()}.");
+                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(bool).GetTypeShortName()}.\nInput value: {stringValue}");
             }
 
-            throw new JsonException($"Expected string, boolean, or number token but got {reader.TokenType} for type {typeToConvert.GetTypeShortName()}");
+            throw new JsonException($"Expected string, boolean, or number token but got {reader.TokenType} for type {typeToConvert.GetTypeShortName()}.");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            writer.WriteBooleanValue((bool)value);
+            writer.WriteBooleanValue(value != null
+                ? (bool)value
+                : false);
         }
     }
 }

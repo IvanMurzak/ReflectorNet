@@ -277,18 +277,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeShortName()}.");
 
                     case Type t when t.IsEnum:
-                        try
-                        {
-                            var enumValue = Enum.Parse(underlyingType, stringValue, ignoreCase: true);
-                            if (Enum.IsDefined(underlyingType, enumValue))
-                                return enumValue;
+                        if (!Enum.TryParse(underlyingType, stringValue, ignoreCase: true, out var enumValue))
+                            throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
 
-                            throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
-                        }
-                        catch (ArgumentException)
-                        {
-                            throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
-                        }
+                        if (Enum.IsDefined(underlyingType, enumValue))
+                            return enumValue;
+
+                        throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
 
                     default:
                         throw new JsonException($"Not supported target type: {targetType.GetTypeShortName()}");

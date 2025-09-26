@@ -84,18 +84,27 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             ),
                 Converters =
                 {
-                    // Individual converters (temporarily disabled)
-                    // new PrimitiveJsonConverter(),
-                    // new BoolJsonConverter(),
-                    // new EnumJsonConverter(),
-                    // new DateTimeJsonConverter(),
-                    // new DateTimeOffsetJsonConverter(),
-                    // new DecimalJsonConverter(),
-                    // new GuidJsonConverter(),
-                    // new TimeSpanJsonConverter(),
+                    // Individual primitive type converters
+                    new ByteJsonConverter(),
+                    new SByteJsonConverter(),
+                    new Int16JsonConverter(),
+                    new UInt16JsonConverter(),
+                    new Int32JsonConverter(),
+                    new UInt32JsonConverter(),
+                    new Int64JsonConverter(),
+                    new UInt64JsonConverter(),
+                    new SingleJsonConverter(),
+                    new DoubleJsonConverter(),
+                    new BoolJsonConverter(),
+                    new EnumJsonConverter(),
+                    new DateTimeJsonConverter(),
+                    new DateTimeOffsetJsonConverter(),
+                    new DecimalJsonConverter(),
+                    new GuidJsonConverter(),
+                    new TimeSpanJsonConverter(),
 
                     // Original monolithic converter
-                    new StringToPrimitiveConverter(),
+                    // new StringToPrimitiveConverter(),
 
                     // new JsonStringEnumConverter(),
                     new MethodDataConverter(),
