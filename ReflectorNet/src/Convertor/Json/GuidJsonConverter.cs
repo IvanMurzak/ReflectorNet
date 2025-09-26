@@ -52,7 +52,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeName(pretty: true)}.");
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
+            throw new JsonException($"Expected string token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)

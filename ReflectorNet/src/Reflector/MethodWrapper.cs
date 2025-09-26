@@ -412,9 +412,20 @@ namespace com.IvanMurzak.ReflectorNet
                 if (Enum.TryParse(parameterType, stringValue, ignoreCase: true, out var result))
                 {
                     if (Enum.IsDefined(parameterType, result))
+                    {
                         return result;
+                    }
+                    else
+                    {
+                        throw new ArgumentException(
+                            $"Value '{stringValue}' for parameter '{parameterName}' was parsed but is not a defined member of '{parameterType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
+                    }
                 }
-                throw new ArgumentException($"Invalid value '{stringValue}' for parameter '{parameterName}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
+                else
+                {
+                    throw new ArgumentException(
+                        $"Value '{stringValue}' for parameter '{parameterName}' could not be parsed as '{parameterType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
+                }
             }
             throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{parameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
         }
