@@ -45,7 +45,6 @@ jobs:
         run: |
           echo "Version tag '${{ steps.get_version.outputs.version }}' does not exist. Proceeding with release process."
 
-
   build-and-test:
     runs-on: ${{ matrix.os }}
     needs: check-version-tag
@@ -60,10 +59,13 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --no-restore --configuration Release
+
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release
 
@@ -143,11 +145,15 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --no-restore --configuration Release
+
     - name: Pack
       run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output ./packages
+
     - name: Publish to NuGet
       run: dotnet nuget push ./packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
