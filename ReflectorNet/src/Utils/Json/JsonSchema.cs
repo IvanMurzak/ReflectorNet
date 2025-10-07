@@ -338,7 +338,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 unwrappedType == typeof(ValueTask))
                 return null;
 
-
             // Unwrap Task<T> and ValueTask<T> to get the actual return type T
             if (unwrappedType.IsGenericType)
             {
