@@ -293,13 +293,58 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return schema;
         }
 
+        /// <summary>
+        /// Generates a comprehensive JSON Schema for the return type of a method.
+        /// This method analyzes method return types and produces schemas that describe the structure
+        /// of the returned data, enabling type-safe result handling in dynamic execution environments.
+        ///
+        /// Schema Generation Features:
+        /// - Async unwrapping: Automatically unwraps Task&lt;T&gt; and ValueTask&lt;T&gt; to return schema for T
+        /// - Void handling: Returns null for void, Task, and ValueTask (methods with no return value)
+        /// - Type resolution: Generates appropriate schemas for complex return types
+        /// - Reference optimization: Supports both full schema definitions and compact $ref references
+        /// - Documentation: Extracts descriptions from return type attributes
+        ///
+        /// Return Type Handling:
+        /// - void → null (no return value)
+        /// - Task → null (async method with no return value)
+        /// - ValueTask → null (async method with no return value)
+        /// - Task&lt;string&gt; → schema for string (unwrapped)
+        /// - ValueTask&lt;int&gt; → schema for int (unwrapped)
+        /// - Any other type → schema for that type
+        ///
+        /// Use Cases:
+        /// - API documentation generation for response schemas
+        /// - Dynamic result type validation
+        /// - Code generation and template systems
+        /// - AI-driven method understanding and invocation
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type analysis and schema generation.</param>
+        /// <param name="methodInfo">The MethodInfo for which to generate the return type schema.</param>
+        /// <param name="justRef">Whether to use compact references for complex types. Default is false.</param>
+        /// <returns>A JsonNode containing the JSON Schema for the method's return type, or null for void/Task/ValueTask.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when methodInfo parameter is null.</exception>
         public JsonNode? GetReturnSchema(Reflector reflector, MethodInfo methodInfo, bool justRef = false)
         {
-            if (methodInfo.ReturnType == typeof(void) ||
-                methodInfo.ReturnType == typeof(Task) ||
-                methodInfo.ReturnType == typeof(ValueTask))
+            ArgumentNullException.ThrowIfNull(methodInfo);
+
+            var returnType = methodInfo.ReturnType;
+
+            // Handle void, Task, and ValueTask - these have no return value
+            if (returnType == typeof(void) ||
+                returnType == typeof(Task) ||
+                returnType == typeof(ValueTask))
                 return null;
-            return GetSchema(reflector, methodInfo.ReturnType, justRef);
+
+            // Unwrap Task<T> and ValueTask<T> to get the actual return type T
+            if (returnType.IsGenericType)
+            {
+                var genericDefinition = returnType.GetGenericTypeDefinition();
+                if (genericDefinition == typeof(Task<>) || genericDefinition == typeof(ValueTask<>))
+                    returnType = returnType.GetGenericArguments()[0];
+            }
+
+            return GetSchema(reflector, returnType, justRef);
         }
     }
 }
