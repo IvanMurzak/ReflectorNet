@@ -86,7 +86,9 @@ namespace com.IvanMurzak.ReflectorNet
             => jsonSchema.GetArgumentsSchema(this, methodInfo, justRef);
 
         /// <summary>
-        /// Generates a comprehensive JSON Schema for the return type of a method, enabling dynamic method invocation.
+        /// Generates a comprehensive JSON Schema for the return type of a method.
+        /// This schema can be used to describe the structure of the method's return value,
+        /// supporting dynamic method invocation and validation scenarios.
         /// </summary>
         /// <param name="methodInfo">The MethodInfo for which to generate the return type schema.</param>
         /// <param name="justRef">Whether to use compact references for complex types. Default is false.</param>
