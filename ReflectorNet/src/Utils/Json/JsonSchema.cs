@@ -326,25 +326,28 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <exception cref="ArgumentNullException">Thrown when methodInfo parameter is null.</exception>
         public JsonNode? GetReturnSchema(Reflector reflector, MethodInfo methodInfo, bool justRef = false)
         {
-            ArgumentNullException.ThrowIfNull(methodInfo);
+            if (methodInfo == null)
+                throw new ArgumentNullException(nameof(methodInfo));
 
             var returnType = methodInfo.ReturnType;
+            var unwrappedType = Nullable.GetUnderlyingType(returnType) ?? returnType;
 
             // Handle void, Task, and ValueTask - these have no return value
-            if (returnType == typeof(void) ||
-                returnType == typeof(Task) ||
-                returnType == typeof(ValueTask))
+            if (unwrappedType == typeof(void) ||
+                unwrappedType == typeof(Task) ||
+                unwrappedType == typeof(ValueTask))
                 return null;
 
+
             // Unwrap Task<T> and ValueTask<T> to get the actual return type T
-            if (returnType.IsGenericType)
+            if (unwrappedType.IsGenericType)
             {
-                var genericDefinition = returnType.GetGenericTypeDefinition();
+                var genericDefinition = unwrappedType.GetGenericTypeDefinition();
                 if (genericDefinition == typeof(Task<>) || genericDefinition == typeof(ValueTask<>))
-                    returnType = returnType.GetGenericArguments()[0];
+                    unwrappedType = unwrappedType.GetGenericArguments()[0];
             }
 
-            return GetSchema(reflector, returnType, justRef);
+            return GetSchema(reflector, unwrappedType, justRef);
         }
     }
 }
