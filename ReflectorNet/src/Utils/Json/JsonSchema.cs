@@ -9,6 +9,7 @@ using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Json;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
@@ -290,6 +291,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (defines.Count == 0)
                 schema.Remove(Defs);
             return schema;
+        }
+
+        public JsonNode? GetReturnSchema(Reflector reflector, MethodInfo methodInfo, bool justRef = false)
+        {
+            if (methodInfo.ReturnType == typeof(void) ||
+                methodInfo.ReturnType == typeof(Task) ||
+                methodInfo.ReturnType == typeof(ValueTask))
+                return null;
+            return GetSchema(reflector, methodInfo.ReturnType, justRef);
         }
     }
 }

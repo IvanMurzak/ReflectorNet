@@ -23,8 +23,10 @@ namespace com.IvanMurzak.ReflectorNet
         protected readonly string? _description;
         protected readonly ILogger? _logger;
         protected readonly JsonNode? _inputSchema;
+        protected readonly JsonNode? _outputSchema;
 
         public JsonNode? InputSchema => _inputSchema;
+        public JsonNode? OutputSchema => _outputSchema;
         public string? Description => _description;
 
         public static MethodWrapper Create(Reflector reflector, ILogger? logger, MethodInfo methodInfo)
@@ -53,6 +55,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
             _inputSchema = reflector.GetArgumentsSchema(methodInfo);
+            _outputSchema = reflector.GetReturnSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, object targetInstance, MethodInfo methodInfo)
@@ -67,6 +70,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
             _inputSchema = reflector.GetArgumentsSchema(methodInfo);
+            _outputSchema = reflector.GetReturnSchema(methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, Type classType, MethodInfo methodInfo)
@@ -81,6 +85,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
             _inputSchema = reflector.GetArgumentsSchema(methodInfo);
+            _outputSchema = reflector.GetReturnSchema(methodInfo);
         }
 
         public virtual Task<object?> Invoke(params object?[] parameters) => Invoke(CancellationToken.None, parameters);
