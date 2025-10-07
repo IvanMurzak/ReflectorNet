@@ -15,6 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           fetch-tags: true
 
       - name: Get version from ReflectorNet.csproj
@@ -81,7 +82,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          fetch-tags: 'true'
+          fetch-tags: true
 
       - name: Generate release description
         id: rel_desc
