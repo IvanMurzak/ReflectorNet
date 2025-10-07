@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet
@@ -83,5 +84,16 @@ namespace com.IvanMurzak.ReflectorNet
         /// <returns>A JsonNode containing the complete JSON Schema for the method's parameters.</returns>
         public JsonNode GetArgumentsSchema(MethodInfo methodInfo, bool justRef = false)
             => jsonSchema.GetArgumentsSchema(this, methodInfo, justRef);
+
+        /// <summary>
+        /// Generates a comprehensive JSON Schema for the return type of a method.
+        /// This schema can be used to describe the structure of the method's return value,
+        /// supporting dynamic method invocation and validation scenarios.
+        /// </summary>
+        /// <param name="methodInfo">The MethodInfo for which to generate the return type schema.</param>
+        /// <param name="justRef">Whether to use compact references for complex types. Default is false.</param>
+        /// <returns>A JsonNode containing the complete JSON Schema for the method's return type.</returns>
+        public JsonNode? GetReturnSchema(MethodInfo methodInfo, bool justRef = false)
+            => jsonSchema.GetReturnSchema(this, methodInfo, justRef);
     }
 }
