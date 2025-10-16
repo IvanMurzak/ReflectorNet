@@ -192,11 +192,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 var expectedRef = $"{JsonSchema.RefValue}{expectedTypeId}";
                 var isReferenced = allReferences.Contains(expectedRef);
 
-                // 3. Referenced as part of a generic type (e.g., List<Person>, Dictionary<K,Person>)
-                var isReferencedInGeneric = allReferences.Any(r => r.Contains(expectedTypeId));
-
-                Assert.True(isDirectlyDefined || isReferenced || isReferencedInGeneric,
-                    $"Expected type '{expectedType.GetTypeShortName()}' with ID '{expectedTypeId}' should be either defined in $defs or referenced in schema. " +
+                Assert.True(isDirectlyDefined && isReferenced,
+                    $"Expected type '{expectedType.GetTypeShortName()}' with ID '{expectedTypeId}' should be both defined in $defs and referenced in schema. " +
                     $"Expected $ref: '{expectedRef}'. " +
                     $"Defined types: {string.Join(", ", defines.Select(d => d.Key))}. " +
                     $"Referenced types: {string.Join(", ", allReferences)}");

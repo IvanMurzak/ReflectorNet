@@ -811,7 +811,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>.Echo));
             AssertComplexListReturnSchema(schema!, shouldBeRequired: true);
         }
 
@@ -819,7 +819,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoNullableListComplex_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>.EchoNullable));
             AssertComplexListReturnSchema(schema!, shouldBeRequired: false);
         }
 
@@ -827,7 +827,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoOuterPerson_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterPerson));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterPerson>.Echo));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
@@ -839,7 +839,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoOuterAddress_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterAddress));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterAddress>.Echo));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
@@ -851,7 +851,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoOuterCompany_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterCompany));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterCompany>.Echo));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
@@ -863,7 +863,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoNullableOuterPerson_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterPerson));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterPerson>.EchoNullable));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
@@ -875,7 +875,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoNullableOuterAddress_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterAddress));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterAddress>.EchoNullable));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
@@ -887,7 +887,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void GetReturnSchema_WrapperEchoNullableOuterCompany_ReturnsCorrectSchema()
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterCompany));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterCompany>.EchoNullable));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
