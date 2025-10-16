@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
@@ -160,6 +161,72 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             {
                 var required = schema[JsonSchema.Required]!.AsArray();
                 Assert.Contains(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        /// <summary>
+        /// Asserts that all expected types are defined in the $defs section of the schema OR referenced within the schema.
+        /// This method recursively checks all $ref values in the schema to ensure nested types are properly referenced.
+        /// </summary>
+        protected void AssertResultDefines(JsonNode schema, params Type[] expectedTypes)
+        {
+            Assert.NotNull(schema);
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs), "Schema should contain $defs section");
+
+            var defines = schema[JsonSchema.Defs]!.AsObject();
+            Assert.NotNull(defines);
+
+            // Collect all $ref values throughout the schema (includes nested references)
+            var allReferences = new HashSet<string>();
+            CollectAllReferences(schema, allReferences);
+
+            foreach (var expectedType in expectedTypes)
+            {
+                var expectedTypeId = expectedType.GetTypeId();
+
+                // Check if the type is either:
+                // 1. Directly defined in $defs (exact match)
+                var isDirectlyDefined = defines.ContainsKey(expectedTypeId);
+
+                // 2. Referenced somewhere in the schema (exact match in $ref)
+                var expectedRef = $"{JsonSchema.RefValue}{expectedTypeId}";
+                var isReferenced = allReferences.Contains(expectedRef);
+
+                // 3. Referenced as part of a generic type (e.g., List<Person>, Dictionary<K,Person>)
+                var isReferencedInGeneric = allReferences.Any(r => r.Contains(expectedTypeId));
+
+                Assert.True(isDirectlyDefined || isReferenced || isReferencedInGeneric,
+                    $"Expected type '{expectedType.GetTypeShortName()}' with ID '{expectedTypeId}' should be either defined in $defs or referenced in schema. " +
+                    $"Expected $ref: '{expectedRef}'. " +
+                    $"Defined types: {string.Join(", ", defines.Select(d => d.Key))}. " +
+                    $"Referenced types: {string.Join(", ", allReferences)}");
+            }
+        }
+
+        /// <summary>
+        /// Helper method to recursively collect all $ref values in a JSON schema
+        /// </summary>
+        private void CollectAllReferences(JsonNode? node, HashSet<string> references)
+        {
+            if (node == null) return;
+
+            if (node is JsonObject obj)
+            {
+                foreach (var kvp in obj)
+                {
+                    if (kvp.Key == JsonSchema.Ref && kvp.Value != null)
+                    {
+                        references.Add(kvp.Value.ToString());
+                    }
+                    CollectAllReferences(kvp.Value, references);
+                }
+            }
+            else if (node is JsonArray arr)
+            {
+                foreach (var item in arr)
+                {
+                    CollectAllReferences(item, references);
+                }
             }
         }
 

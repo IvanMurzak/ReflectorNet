@@ -204,16 +204,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: true);
         }
 
-        [Theory]
-        [InlineData(nameof(TaskOuterPersonMethod))]
-        [InlineData(nameof(TaskOuterAddressMethod))]
-        [InlineData(nameof(TaskOuterCompanyMethod))]
-        public void GetReturnSchema_TaskOuterAssemblyType_UnwrapsCorrectly(string methodName)
+        [Fact]
+        public void GetReturnSchema_TaskOuterPerson_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(methodName);
+            var schema = GetReturnSchemaForMethod(nameof(TaskOuterPersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_TaskOuterAddress_UnwrapsCorrectly()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(TaskOuterAddressMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_TaskOuterCompany_UnwrapsCorrectly()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(TaskOuterCompanyMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
@@ -237,16 +255,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
         }
 
-        [Theory]
-        [InlineData(nameof(TaskNullableOuterPersonMethod))]
-        [InlineData(nameof(TaskNullableOuterAddressMethod))]
-        [InlineData(nameof(TaskNullableOuterCompanyMethod))]
-        public void GetReturnSchema_TaskNullableOuterAssemblyType_UnwrapsWithoutRequired(string methodName)
+        [Fact]
+        public void GetReturnSchema_TaskNullableOuterPerson_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(methodName);
+            var schema = GetReturnSchemaForMethod(nameof(TaskNullableOuterPersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_TaskNullableOuterAddress_UnwrapsWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(TaskNullableOuterAddressMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_TaskNullableOuterCompany_UnwrapsWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(TaskNullableOuterCompanyMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
@@ -269,16 +305,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
         }
 
-        [Theory]
-        [InlineData(nameof(NullableTaskNullableOuterPersonMethod))]
-        [InlineData(nameof(NullableTaskNullableOuterAddressMethod))]
-        [InlineData(nameof(NullableTaskNullableOuterCompanyMethod))]
-        public void GetReturnSchema_NullableTaskNullableOuterAssemblyType_UnwrapsWithoutRequired(string methodName)
+        [Fact]
+        public void GetReturnSchema_NullableTaskNullableOuterPerson_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(methodName);
+            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableOuterPersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableTaskNullableOuterAddress_UnwrapsWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableOuterAddressMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableTaskNullableOuterCompany_UnwrapsWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableOuterCompanyMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
@@ -301,16 +355,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: true);
         }
 
-        [Theory]
-        [InlineData(nameof(ValueTaskOuterPersonMethod))]
-        [InlineData(nameof(ValueTaskOuterAddressMethod))]
-        [InlineData(nameof(ValueTaskOuterCompanyMethod))]
-        public void GetReturnSchema_ValueTaskOuterAssemblyType_UnwrapsCorrectly(string methodName)
+        [Fact]
+        public void GetReturnSchema_ValueTaskOuterPerson_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(methodName);
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskOuterPersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_ValueTaskOuterAddress_UnwrapsCorrectly()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskOuterAddressMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_ValueTaskOuterCompany_UnwrapsCorrectly()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskOuterCompanyMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
@@ -333,16 +405,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
         }
 
-        [Theory]
-        [InlineData(nameof(ValueTaskNullableOuterPersonMethod))]
-        [InlineData(nameof(ValueTaskNullableOuterAddressMethod))]
-        [InlineData(nameof(ValueTaskNullableOuterCompanyMethod))]
-        public void GetReturnSchema_ValueTaskNullableOuterAssemblyType_UnwrapsWithoutRequired(string methodName)
+        [Fact]
+        public void GetReturnSchema_ValueTaskNullableOuterPerson_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(methodName);
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableOuterPersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_ValueTaskNullableOuterAddress_UnwrapsWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableOuterAddressMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_ValueTaskNullableOuterCompany_UnwrapsWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableOuterCompanyMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
@@ -364,6 +454,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(ComplexTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "StringProperty", "IntProperty", "NestedObject", "StringArray" }, shouldBeRequired: true);
+            AssertResultDefines(schema!, typeof(ComplexReturnType), typeof(CustomReturnType));
         }
 
         [Fact]
@@ -373,6 +464,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
         }
 
         [Fact]
@@ -382,6 +474,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
         }
 
         [Fact]
@@ -391,6 +484,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
@@ -409,6 +503,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(NullableComplexTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "StringProperty", "IntProperty", "NestedObject", "StringArray" }, shouldBeRequired: false);
+            AssertResultDefines(schema!, typeof(ComplexReturnType), typeof(CustomReturnType));
         }
 
         [Fact]
@@ -418,6 +513,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
         }
 
         [Fact]
@@ -427,6 +523,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
         }
 
         [Fact]
@@ -436,6 +533,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
@@ -725,40 +823,76 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertComplexListReturnSchema(schema!, shouldBeRequired: false);
         }
 
-        [Theory]
-        [InlineData(typeof(OuterPerson), true)]
-        [InlineData(typeof(OuterAddress), true)]
-        [InlineData(typeof(OuterCompany), true)]
-        public void GetReturnSchema_WrapperEchoOuterAssemblyType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
+        [Fact]
+        public void GetReturnSchema_WrapperEchoOuterPerson_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterPerson));
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-
-            if (shouldBeRequired)
-                AssertResultRequired(schema);
-            else
-                AssertResultNotRequired(schema);
+            AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
         }
 
-        [Theory]
-        [InlineData(typeof(OuterPerson), false)]
-        [InlineData(typeof(OuterAddress), false)]
-        [InlineData(typeof(OuterCompany), false)]
-        public void GetReturnSchema_WrapperEchoNullableOuterAssemblyType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
+        [Fact]
+        public void GetReturnSchema_WrapperEchoOuterAddress_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterAddress));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_WrapperEchoOuterCompany_ReturnsCorrectSchema()
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterCompany));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+        }
+
+        [Fact]
+        public void GetReturnSchema_WrapperEchoNullableOuterPerson_ReturnsCorrectSchema()
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterPerson));
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+        }
 
-            if (shouldBeRequired)
-                AssertResultRequired(schema);
-            else
-                AssertResultNotRequired(schema);
+        [Fact]
+        public void GetReturnSchema_WrapperEchoNullableOuterAddress_ReturnsCorrectSchema()
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterAddress));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterAddress));
+        }
+
+        [Fact]
+        public void GetReturnSchema_WrapperEchoNullableOuterCompany_ReturnsCorrectSchema()
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterCompany));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
         }
 
         #endregion
