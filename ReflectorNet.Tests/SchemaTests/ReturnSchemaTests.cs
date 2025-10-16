@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
+using OuterPerson = com.IvanMurzak.ReflectorNet.OuterAssembly.Model.Person;
+using OuterAddress = com.IvanMurzak.ReflectorNet.OuterAssembly.Model.Address;
+using OuterCompany = com.IvanMurzak.ReflectorNet.OuterAssembly.Model.Company;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
@@ -38,15 +41,24 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private Task<int> TaskIntMethod() => Task.FromResult(42);
         private Task<bool> TaskBoolMethod() => Task.FromResult(true);
         private Task<CustomReturnType> TaskCustomTypeMethod() => Task.FromResult(new CustomReturnType());
+        private Task<OuterPerson> TaskOuterPersonMethod() => Task.FromResult(new OuterPerson());
+        private Task<OuterAddress> TaskOuterAddressMethod() => Task.FromResult(new OuterAddress());
+        private Task<OuterCompany> TaskOuterCompanyMethod() => Task.FromResult(new OuterCompany());
 
         // ValueTask<T> return types (should be unwrapped)
         private ValueTask<string> ValueTaskStringMethod() => ValueTask.FromResult("test");
         private ValueTask<int> ValueTaskIntMethod() => ValueTask.FromResult(42);
         private ValueTask<CustomReturnType> ValueTaskCustomTypeMethod() => ValueTask.FromResult(new CustomReturnType());
+        private ValueTask<OuterPerson> ValueTaskOuterPersonMethod() => ValueTask.FromResult(new OuterPerson());
+        private ValueTask<OuterAddress> ValueTaskOuterAddressMethod() => ValueTask.FromResult(new OuterAddress());
+        private ValueTask<OuterCompany> ValueTaskOuterCompanyMethod() => ValueTask.FromResult(new OuterCompany());
 
         // Custom types
         private CustomReturnType CustomTypeMethod() => new CustomReturnType();
         private ComplexReturnType ComplexTypeMethod() => new ComplexReturnType();
+        private OuterPerson OuterPersonMethod() => new OuterPerson();
+        private OuterAddress OuterAddressMethod() => new OuterAddress();
+        private OuterCompany OuterCompanyMethod() => new OuterCompany();
 
         // Collections
         private string[] StringArrayMethod() => new[] { "test" };
@@ -75,6 +87,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private DateTime? NullableDateTimeMethod() => DateTime.Now;
         private CustomReturnType? NullableCustomTypeMethod() => new CustomReturnType();
         private ComplexReturnType? NullableComplexTypeMethod() => new ComplexReturnType();
+        private OuterPerson? NullableOuterPersonMethod() => new OuterPerson();
+        private OuterAddress? NullableOuterAddressMethod() => new OuterAddress();
+        private OuterCompany? NullableOuterCompanyMethod() => new OuterCompany();
         private string[]? NullableStringArrayMethod() => new[] { "test" };
 
         // Task<T?> return types (nullable wrapped in Task)
@@ -82,16 +97,25 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private Task<int?> TaskNullableIntMethod() => Task.FromResult<int?>(42);
         private Task<bool?> TaskNullableBoolMethod() => Task.FromResult<bool?>(true);
         private Task<CustomReturnType?> TaskNullableCustomTypeMethod() => Task.FromResult<CustomReturnType?>(new CustomReturnType());
+        private Task<OuterPerson?> TaskNullableOuterPersonMethod() => Task.FromResult<OuterPerson?>(new OuterPerson());
+        private Task<OuterAddress?> TaskNullableOuterAddressMethod() => Task.FromResult<OuterAddress?>(new OuterAddress());
+        private Task<OuterCompany?> TaskNullableOuterCompanyMethod() => Task.FromResult<OuterCompany?>(new OuterCompany());
 
         // ValueTask<T?> return types (nullable wrapped in ValueTask)
         private ValueTask<string?> ValueTaskNullableStringMethod() => ValueTask.FromResult<string?>("test");
         private ValueTask<int?> ValueTaskNullableIntMethod() => ValueTask.FromResult<int?>(42);
         private ValueTask<CustomReturnType?> ValueTaskNullableCustomTypeMethod() => ValueTask.FromResult<CustomReturnType?>(new CustomReturnType());
+        private ValueTask<OuterPerson?> ValueTaskNullableOuterPersonMethod() => ValueTask.FromResult<OuterPerson?>(new OuterPerson());
+        private ValueTask<OuterAddress?> ValueTaskNullableOuterAddressMethod() => ValueTask.FromResult<OuterAddress?>(new OuterAddress());
+        private ValueTask<OuterCompany?> ValueTaskNullableOuterCompanyMethod() => ValueTask.FromResult<OuterCompany?>(new OuterCompany());
 
         // Task<T?>? return types (nullable T wrapped in nullable Task)
         private Task<string?>? NullableTaskNullableStringMethod() => Task.FromResult<string?>("test");
         private Task<int?>? NullableTaskNullableIntMethod() => Task.FromResult<int?>(42);
         private Task<CustomReturnType?>? NullableTaskNullableCustomTypeMethod() => Task.FromResult<CustomReturnType?>(new CustomReturnType());
+        private Task<OuterPerson?>? NullableTaskNullableOuterPersonMethod() => Task.FromResult<OuterPerson?>(new OuterPerson());
+        private Task<OuterAddress?>? NullableTaskNullableOuterAddressMethod() => Task.FromResult<OuterAddress?>(new OuterAddress());
+        private Task<OuterCompany?>? NullableTaskNullableOuterCompanyMethod() => Task.FromResult<OuterCompany?>(new OuterCompany());
 
         // NOTE: ValueTask<T?>? is not a valid scenario because ValueTask is a struct, not a class
         // So it cannot be made nullable in the reference type sense. We removed these tests.
@@ -180,6 +204,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: true);
         }
 
+        [Theory]
+        [InlineData(nameof(TaskOuterPersonMethod))]
+        [InlineData(nameof(TaskOuterAddressMethod))]
+        [InlineData(nameof(TaskOuterCompanyMethod))]
+        public void GetReturnSchema_TaskOuterAssemblyType_UnwrapsCorrectly(string methodName)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+        }
+
         #endregion
 
         #region Task<T?> Nullable Unwrapping Tests
@@ -199,6 +235,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(TaskNullableCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
+        }
+
+        [Theory]
+        [InlineData(nameof(TaskNullableOuterPersonMethod))]
+        [InlineData(nameof(TaskNullableOuterAddressMethod))]
+        [InlineData(nameof(TaskNullableOuterCompanyMethod))]
+        public void GetReturnSchema_TaskNullableOuterAssemblyType_UnwrapsWithoutRequired(string methodName)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
         }
 
         #endregion
@@ -221,6 +269,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
         }
 
+        [Theory]
+        [InlineData(nameof(NullableTaskNullableOuterPersonMethod))]
+        [InlineData(nameof(NullableTaskNullableOuterAddressMethod))]
+        [InlineData(nameof(NullableTaskNullableOuterCompanyMethod))]
+        public void GetReturnSchema_NullableTaskNullableOuterAssemblyType_UnwrapsWithoutRequired(string methodName)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+        }
+
         #endregion
 
         #region ValueTask<T> Unwrapping Tests
@@ -241,6 +301,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: true);
         }
 
+        [Theory]
+        [InlineData(nameof(ValueTaskOuterPersonMethod))]
+        [InlineData(nameof(ValueTaskOuterAddressMethod))]
+        [InlineData(nameof(ValueTaskOuterCompanyMethod))]
+        public void GetReturnSchema_ValueTaskOuterAssemblyType_UnwrapsCorrectly(string methodName)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+        }
+
         #endregion
 
         #region ValueTask<T?> Nullable Unwrapping Tests
@@ -259,6 +331,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
+        }
+
+        [Theory]
+        [InlineData(nameof(ValueTaskNullableOuterPersonMethod))]
+        [InlineData(nameof(ValueTaskNullableOuterAddressMethod))]
+        [InlineData(nameof(ValueTaskNullableOuterCompanyMethod))]
+        public void GetReturnSchema_ValueTaskNullableOuterAssemblyType_UnwrapsWithoutRequired(string methodName)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
         }
 
         #endregion
@@ -282,6 +366,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertCustomTypeReturnSchema(schema!, new[] { "StringProperty", "IntProperty", "NestedObject", "StringArray" }, shouldBeRequired: true);
         }
 
+        [Fact]
+        public void GetReturnSchema_OuterPerson_ReturnsValidObjectSchema()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(OuterPersonMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+        }
+
+        [Fact]
+        public void GetReturnSchema_OuterAddress_ReturnsValidObjectSchema()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(OuterAddressMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+        }
+
+        [Fact]
+        public void GetReturnSchema_OuterCompany_ReturnsValidObjectSchema()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(OuterCompanyMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultRequired(schema);
+        }
+
         #endregion
 
         #region Nullable Custom Type Tests
@@ -298,6 +409,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(NullableComplexTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "StringProperty", "IntProperty", "NestedObject", "StringArray" }, shouldBeRequired: false);
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableOuterPerson_ReturnsValidObjectSchemaWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(NullableOuterPersonMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableOuterAddress_ReturnsValidObjectSchemaWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(NullableOuterAddressMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableOuterCompany_ReturnsValidObjectSchemaWithoutRequired()
+        {
+            var schema = GetReturnSchemaForMethod(nameof(NullableOuterCompanyMethod));
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            AssertResultNotRequired(schema);
         }
 
         #endregion
@@ -437,6 +575,36 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.False(resultSchema.ContainsKey(JsonSchema.Ref));
         }
 
+        [Theory]
+        [InlineData(nameof(OuterPersonMethod), "Person")]
+        [InlineData(nameof(OuterAddressMethod), "Address")]
+        [InlineData(nameof(OuterCompanyMethod), "Company")]
+        public void GetReturnSchema_OuterAssemblyType_WithJustRef_ReturnsRefSchema(string methodName, string expectedTypeName)
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo, justRef: true);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain a $ref to the OuterAssembly type
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+            Assert.True(resultSchema.ContainsKey(JsonSchema.Ref));
+            Assert.Contains(expectedTypeName, resultSchema[JsonSchema.Ref]?.ToString());
+
+            // $defs should exist with the full type definition
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+        }
+
         #endregion
 
         #region Error Handling Tests
@@ -555,6 +723,42 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var wrapperType = typeof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>);
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
             AssertComplexListReturnSchema(schema!, shouldBeRequired: false);
+        }
+
+        [Theory]
+        [InlineData(typeof(OuterPerson), true)]
+        [InlineData(typeof(OuterAddress), true)]
+        [InlineData(typeof(OuterCompany), true)]
+        public void GetReturnSchema_WrapperEchoOuterAssemblyType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
+                AssertResultNotRequired(schema);
+        }
+
+        [Theory]
+        [InlineData(typeof(OuterPerson), false)]
+        [InlineData(typeof(OuterAddress), false)]
+        [InlineData(typeof(OuterCompany), false)]
+        public void GetReturnSchema_WrapperEchoNullableOuterAssemblyType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
+                AssertResultNotRequired(schema);
         }
 
         #endregion
