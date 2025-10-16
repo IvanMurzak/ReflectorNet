@@ -54,6 +54,27 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private System.Collections.Generic.List<int> ListIntMethod() => new System.Collections.Generic.List<int>();
         private System.Collections.Generic.Dictionary<string, int> DictionaryMethod() => new System.Collections.Generic.Dictionary<string, int>();
 
+        // Nullable return types
+        private string? NullableStringMethod() => "test";
+        private int? NullableIntMethod() => 42;
+        private bool? NullableBoolMethod() => true;
+        private double? NullableDoubleMethod() => 3.14;
+        private DateTime? NullableDateTimeMethod() => DateTime.Now;
+        private CustomReturnType? NullableCustomTypeMethod() => new CustomReturnType();
+        private ComplexReturnType? NullableComplexTypeMethod() => new ComplexReturnType();
+        private string[]? NullableStringArrayMethod() => new[] { "test" };
+
+        // Task<T?> return types (nullable wrapped in Task)
+        private Task<string?> TaskNullableStringMethod() => Task.FromResult<string?>("test");
+        private Task<int?> TaskNullableIntMethod() => Task.FromResult<int?>(42);
+        private Task<bool?> TaskNullableBoolMethod() => Task.FromResult<bool?>(true);
+        private Task<CustomReturnType?> TaskNullableCustomTypeMethod() => Task.FromResult<CustomReturnType?>(new CustomReturnType());
+
+        // ValueTask<T?> return types (nullable wrapped in ValueTask)
+        private ValueTask<string?> ValueTaskNullableStringMethod() => ValueTask.FromResult<string?>("test");
+        private ValueTask<int?> ValueTaskNullableIntMethod() => ValueTask.FromResult<int?>(42);
+        private ValueTask<CustomReturnType?> ValueTaskNullableCustomTypeMethod() => ValueTask.FromResult<CustomReturnType?>(new CustomReturnType());
+
         #endregion
 
         #region Test Classes
@@ -203,6 +224,138 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
         #endregion
 
+        #region Nullable Primitive Return Type Tests
+
+        [Fact]
+        public void GetReturnSchema_NullableStringMethod_ReturnsStringSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableStringMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.String, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableIntMethod_ReturnsIntegerSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableIntMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Integer, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableBoolMethod_ReturnsBooleanSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableBoolMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Boolean, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableDoubleMethod_ReturnsNumberSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableDoubleMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Number, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableDateTimeMethod_ReturnsStringSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableDateTimeMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            // DateTime is typically serialized as string in JSON
+            Assert.Equal(JsonSchema.String, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        #endregion
+
         #region Task<T> Unwrapping Tests
 
         [Fact]
@@ -299,6 +452,130 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
         #endregion
 
+        #region Task<T?> Nullable Unwrapping Tests
+
+        [Fact]
+        public void GetReturnSchema_TaskNullableString_UnwrapsToStringSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(TaskNullableStringMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.String, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_TaskNullableInt_UnwrapsToIntegerSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(TaskNullableIntMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Integer, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_TaskNullableBool_UnwrapsToBooleanSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(TaskNullableBoolMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Boolean, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_TaskNullableCustomType_UnwrapsToCustomTypeSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(TaskNullableCustomTypeMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain a $ref to the CustomReturnType in $defs
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+            Assert.True(resultSchema.ContainsKey(JsonSchema.Ref) || resultSchema.ContainsKey(JsonSchema.Properties));
+
+            // If it's a ref, verify $defs exists
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            // If it's not a ref, verify it has the expected properties
+            else
+            {
+                var nestedProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                Assert.True(nestedProperties.ContainsKey("Name"));
+                Assert.True(nestedProperties.ContainsKey("Value"));
+            }
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        #endregion
+
         #region ValueTask<T> Unwrapping Tests
 
         [Fact]
@@ -358,6 +635,105 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // The result property should contain a $ref to the CustomReturnType in $defs
             var resultSchema = properties[JsonSchema.Result]!.AsObject();
             Assert.True(resultSchema.ContainsKey(JsonSchema.Ref) || resultSchema.ContainsKey(JsonSchema.Properties));
+        }
+
+        #endregion
+
+        #region ValueTask<T?> Nullable Unwrapping Tests
+
+        [Fact]
+        public void GetReturnSchema_ValueTaskNullableString_UnwrapsToStringSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(ValueTaskNullableStringMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.String, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_ValueTaskNullableInt_UnwrapsToIntegerSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(ValueTaskNullableIntMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Integer, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_ValueTaskNullableCustomType_UnwrapsToCustomTypeSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(ValueTaskNullableCustomTypeMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain a $ref to the CustomReturnType in $defs
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+            Assert.True(resultSchema.ContainsKey(JsonSchema.Ref) || resultSchema.ContainsKey(JsonSchema.Properties));
+
+            // If it's a ref, verify $defs exists
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            // If it's not a ref, verify it has the expected properties
+            else
+            {
+                var nestedProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                Assert.True(nestedProperties.ContainsKey("Name"));
+                Assert.True(nestedProperties.ContainsKey("Value"));
+            }
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
         }
 
         #endregion
@@ -435,6 +811,98 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.True(complexTypeProperties.ContainsKey("IntProperty"));
                 Assert.True(complexTypeProperties.ContainsKey("NestedObject"));
                 Assert.True(complexTypeProperties.ContainsKey("StringArray"));
+            }
+        }
+
+        #endregion
+
+        #region Nullable Custom Type Tests
+
+        [Fact]
+        public void GetReturnSchema_NullableCustomType_ReturnsValidObjectSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableCustomTypeMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain the CustomReturnType schema (either inline or ref)
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+
+            // It could be a $ref or an inline schema
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                // If it's a ref, $defs should exist with the type definition
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else
+            {
+                // If it's inline, verify the properties
+                Assert.True(resultSchema.ContainsKey(JsonSchema.Properties));
+                var customTypeProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                Assert.True(customTypeProperties.ContainsKey("Name"));
+                Assert.True(customTypeProperties.ContainsKey("Value"));
+            }
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        [Fact]
+        public void GetReturnSchema_NullableComplexType_ReturnsValidNestedSchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableComplexTypeMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain the ComplexReturnType schema
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+
+            // It could be a $ref or an inline schema
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else
+            {
+                Assert.True(resultSchema.ContainsKey(JsonSchema.Properties));
+                var complexTypeProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                Assert.True(complexTypeProperties.ContainsKey("StringProperty"));
+                Assert.True(complexTypeProperties.ContainsKey("IntProperty"));
+                Assert.True(complexTypeProperties.ContainsKey("NestedObject"));
+                Assert.True(complexTypeProperties.ContainsKey("StringArray"));
+            }
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
             }
         }
 
@@ -521,6 +989,58 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             else
             {
                 Assert.Fail("Expected result to be a schema object");
+            }
+        }
+
+        #endregion
+
+        #region Nullable Collection Tests
+
+        [Fact]
+        public void GetReturnSchema_NullableStringArray_ReturnsArraySchemaWithoutRequired()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(nameof(NullableStringArrayMethod), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+            // Act
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            // Assert
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should be an array schema (either inline or ref)
+            var resultNode = properties[JsonSchema.Result]!;
+
+            if (resultNode is JsonObject resultSchema && resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                // If it's a ref, verify $defs contains the array schema
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else if (resultNode is JsonObject resultInlineSchema)
+            {
+                // If it's inline, verify it's an array schema
+                Assert.Equal(JsonSchema.Array, resultInlineSchema[JsonSchema.Type]?.ToString());
+                Assert.True(resultInlineSchema.ContainsKey(JsonSchema.Items));
+
+                var items = resultInlineSchema[JsonSchema.Items]!;
+                Assert.Equal(JsonSchema.String, items[JsonSchema.Type]?.ToString());
+            }
+            else
+            {
+                Assert.Fail("Expected result to be a schema object");
+            }
+
+            // Verify that "result" is NOT in the required array for nullable return types
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
             }
         }
 

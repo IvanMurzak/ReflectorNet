@@ -367,7 +367,57 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 var genericDefinition = unwrappedType.GetGenericTypeDefinition();
                 if (genericDefinition == typeof(Task<>) || genericDefinition == typeof(ValueTask<>))
-                    unwrappedType = unwrappedType.GetGenericArguments()[0];
+                {
+                    var taskGenericArg = unwrappedType.GetGenericArguments()[0];
+
+                    // Check if T in Task<T> is nullable (e.g., Task<int?> or Task<string?>)
+                    var nullableUnderlyingType = Nullable.GetUnderlyingType(taskGenericArg);
+                    if (nullableUnderlyingType != null)
+                    {
+                        // T is a nullable value type (e.g., int?, bool?)
+                        isNullable = true;
+                        unwrappedType = nullableUnderlyingType;
+                    }
+                    else
+                    {
+                        unwrappedType = taskGenericArg;
+                    }
+                }
+            }
+
+            // Check for nullable reference types using NullabilityInfoContext
+            if (!isNullable && (unwrappedType.IsClass || unwrappedType.IsInterface || unwrappedType.IsArray))
+            {
+                try
+                {
+#if NET5_0_OR_GREATER
+                    var nullabilityContext = new System.Reflection.NullabilityInfoContext();
+                    var nullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
+
+                    // For Task<T> or ValueTask<T>, check the generic argument's nullability
+                    if (returnType.IsGenericType)
+                    {
+                        var genericDef = returnType.GetGenericTypeDefinition();
+                        if (genericDef == typeof(Task<>) || genericDef == typeof(ValueTask<>))
+                        {
+                            isNullable = nullabilityInfo.GenericTypeArguments.Length > 0 &&
+                                        nullabilityInfo.GenericTypeArguments[0].ReadState == System.Reflection.NullabilityState.Nullable;
+                        }
+                        else
+                        {
+                            isNullable = nullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
+                        }
+                    }
+                    else
+                    {
+                        isNullable = nullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
+                    }
+#endif
+                }
+                catch
+                {
+                    // If we can't determine nullability, assume not nullable
+                }
             }
 
             // Generate schema for the return type using the shared method
