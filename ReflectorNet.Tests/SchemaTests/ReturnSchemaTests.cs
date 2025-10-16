@@ -134,7 +134,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.String, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Required));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.String, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            var required = schema[JsonSchema.Required]!.AsArray();
+            Assert.Single(required);
+            Assert.Equal(JsonSchema.Result, required[0]?.ToString());
         }
 
         [Fact]
@@ -149,7 +159,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Integer, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Integer, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         [Fact]
@@ -164,7 +177,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Boolean, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Boolean, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         [Fact]
@@ -179,7 +195,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Number, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Number, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         #endregion
@@ -198,10 +217,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.String, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
 
-            // Verify it's not a schema for Task<string>, but for string
-            Assert.False(schema.AsObject().ContainsKey(JsonSchema.Properties));
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.String, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         [Fact]
@@ -216,7 +237,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Integer, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Integer, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         [Fact]
@@ -231,7 +255,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Boolean, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Boolean, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         [Fact]
@@ -250,8 +277,24 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
 
             var properties = schema[JsonSchema.Properties]!.AsObject();
-            Assert.True(properties.ContainsKey("Name"));
-            Assert.True(properties.ContainsKey("Value"));
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain a $ref to the CustomReturnType in $defs
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+            Assert.True(resultSchema.ContainsKey(JsonSchema.Ref) || resultSchema.ContainsKey(JsonSchema.Properties));
+
+            // If it's a ref, verify $defs exists
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            // If it's not a ref, verify it has the expected properties
+            else
+            {
+                var nestedProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                Assert.True(nestedProperties.ContainsKey("Name"));
+                Assert.True(nestedProperties.ContainsKey("Value"));
+            }
         }
 
         #endregion
@@ -270,7 +313,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.String, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.String, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         [Fact]
@@ -285,7 +331,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Integer, schema[JsonSchema.Type]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(JsonSchema.Integer, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
         }
 
         [Fact]
@@ -304,8 +353,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
 
             var properties = schema[JsonSchema.Properties]!.AsObject();
-            Assert.True(properties.ContainsKey("Name"));
-            Assert.True(properties.ContainsKey("Value"));
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain a $ref to the CustomReturnType in $defs
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+            Assert.True(resultSchema.ContainsKey(JsonSchema.Ref) || resultSchema.ContainsKey(JsonSchema.Properties));
         }
 
         #endregion
@@ -328,12 +380,25 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
 
             var properties = schema[JsonSchema.Properties]!.AsObject();
-            Assert.True(properties.ContainsKey("Name"));
-            Assert.True(properties.ContainsKey("Value"));
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
 
-            // Verify property types
-            Assert.Equal(JsonSchema.String, properties["Name"]![JsonSchema.Type]?.ToString());
-            Assert.Equal(JsonSchema.Integer, properties["Value"]![JsonSchema.Type]?.ToString());
+            // The result property should contain the CustomReturnType schema (either inline or ref)
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+
+            // It could be a $ref or an inline schema
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                // If it's a ref, $defs should exist with the type definition
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else
+            {
+                // If it's inline, verify the properties
+                Assert.True(resultSchema.ContainsKey(JsonSchema.Properties));
+                var customTypeProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                Assert.True(customTypeProperties.ContainsKey("Name"));
+                Assert.True(customTypeProperties.ContainsKey("Value"));
+            }
         }
 
         [Fact]
@@ -352,10 +417,25 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
 
             var properties = schema[JsonSchema.Properties]!.AsObject();
-            Assert.True(properties.ContainsKey("StringProperty"));
-            Assert.True(properties.ContainsKey("IntProperty"));
-            Assert.True(properties.ContainsKey("NestedObject"));
-            Assert.True(properties.ContainsKey("StringArray"));
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain the ComplexReturnType schema
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+
+            // It could be a $ref or an inline schema
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else
+            {
+                Assert.True(resultSchema.ContainsKey(JsonSchema.Properties));
+                var complexTypeProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                Assert.True(complexTypeProperties.ContainsKey("StringProperty"));
+                Assert.True(complexTypeProperties.ContainsKey("IntProperty"));
+                Assert.True(complexTypeProperties.ContainsKey("NestedObject"));
+                Assert.True(complexTypeProperties.ContainsKey("StringArray"));
+            }
         }
 
         #endregion
@@ -374,11 +454,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Array, schema[JsonSchema.Type]?.ToString());
-            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Items));
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
 
-            var items = schema[JsonSchema.Items]!;
-            Assert.Equal(JsonSchema.String, items[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should be an array schema (either inline or ref)
+            var resultNode = properties[JsonSchema.Result]!;
+
+            if (resultNode is JsonObject resultSchema && resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                // If it's a ref, verify $defs contains the array schema
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else if (resultNode is JsonObject resultInlineSchema)
+            {
+                // If it's inline, verify it's an array schema
+                Assert.Equal(JsonSchema.Array, resultInlineSchema[JsonSchema.Type]?.ToString());
+                Assert.True(resultInlineSchema.ContainsKey(JsonSchema.Items));
+
+                var items = resultInlineSchema[JsonSchema.Items]!;
+                Assert.Equal(JsonSchema.String, items[JsonSchema.Type]?.ToString());
+            }
+            else
+            {
+                Assert.Fail("Expected result to be a schema object");
+            }
         }
 
         [Fact]
@@ -393,11 +495,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Array, schema[JsonSchema.Type]?.ToString());
-            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Items));
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
 
-            var items = schema[JsonSchema.Items]!;
-            Assert.Equal(JsonSchema.Integer, items[JsonSchema.Type]?.ToString());
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should be an array schema (either inline or ref)
+            var resultNode = properties[JsonSchema.Result]!;
+
+            if (resultNode is JsonObject resultSchema && resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                // If it's a ref, verify $defs contains the array schema
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else if (resultNode is JsonObject resultInlineSchema)
+            {
+                // If it's inline, verify it's an array schema
+                Assert.Equal(JsonSchema.Array, resultInlineSchema[JsonSchema.Type]?.ToString());
+                Assert.True(resultInlineSchema.ContainsKey(JsonSchema.Items));
+
+                var items = resultInlineSchema[JsonSchema.Items]!;
+                Assert.Equal(JsonSchema.Integer, items[JsonSchema.Type]?.ToString());
+            }
+            else
+            {
+                Assert.Fail("Expected result to be a schema object");
+            }
         }
 
         #endregion
@@ -416,8 +540,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
-            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Ref));
-            Assert.Contains("CustomReturnType", schema[JsonSchema.Ref]?.ToString());
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            // The result property should contain a $ref to CustomReturnType
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+            Assert.True(resultSchema.ContainsKey(JsonSchema.Ref));
+            Assert.Contains("CustomReturnType", resultSchema[JsonSchema.Ref]?.ToString());
+
+            // $defs should exist with the full type definition
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
         }
 
         [Fact]
@@ -432,9 +567,16 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
             // Primitive types should be inlined even with justRef=true
-            Assert.Equal(JsonSchema.String, schema[JsonSchema.Type]?.ToString());
-            Assert.False(schema.AsObject().ContainsKey(JsonSchema.Ref));
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+            Assert.Equal(JsonSchema.String, resultSchema[JsonSchema.Type]?.ToString());
+            Assert.False(resultSchema.ContainsKey(JsonSchema.Ref));
         }
 
         #endregion

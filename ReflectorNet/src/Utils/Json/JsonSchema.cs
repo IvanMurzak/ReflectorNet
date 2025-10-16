@@ -169,6 +169,57 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return schema;
         }
         /// <summary>
+        /// Generates a JSON Schema with proper $defs handling for complex types.
+        /// This method handles type deduplication by placing complex type definitions in the $defs section
+        /// and using $ref references to avoid schema repetition.
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type analysis and schema generation.</param>
+        /// <param name="type">The Type for which to generate the schema.</param>
+        /// <param name="justRef">Whether to use compact references for complex types. Default is false.</param>
+        /// <param name="defines">Optional JsonObject to accumulate type definitions. If null, a new object is created.</param>
+        /// <returns>A tuple containing the generated schema and the definitions object.</returns>
+        private (JsonNode schema, JsonObject? defines) GenerateSchemaWithDefs(Reflector reflector, Type type, bool justRef = false, JsonObject? defines = null)
+        {
+            var isPrimitive = TypeUtils.IsPrimitive(type);
+            JsonNode schema;
+
+            if (isPrimitive)
+            {
+                schema = GetSchema(reflector, type, justRef: justRef);
+            }
+            else
+            {
+                schema = GetSchema(reflector, type, justRef: true);
+                var typeId = type.GetTypeId();
+
+                defines ??= new JsonObject();
+
+                if (!defines.ContainsKey(typeId))
+                {
+                    var fullSchema = GetSchema(reflector, type, justRef: false);
+                    defines[typeId] = fullSchema;
+                }
+
+                // Add generic type parameters recursively if any
+                foreach (var genericArgument in TypeUtils.GetGenericTypes(type))
+                {
+                    if (TypeUtils.IsPrimitive(genericArgument))
+                        continue;
+
+                    var genericTypeId = genericArgument.GetTypeId();
+                    if (defines.ContainsKey(genericTypeId))
+                        continue;
+
+                    var genericSchema = GetSchema(reflector, genericArgument, justRef: false);
+                    if (genericSchema != null)
+                        defines[genericTypeId] = genericSchema;
+                }
+            }
+
+            return (schema, defines);
+        }
+
+        /// <summary>
         /// Generates a comprehensive JSON Schema for method parameters, creating schemas suitable for
         /// dynamic method invocation, API documentation, form generation, and parameter validation.
         /// This method analyzes method signatures and produces schemas that enable type-safe parameter
@@ -225,39 +276,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 // [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
                 [Type] = Object,
                 [Properties] = properties,
-                [Required] = required,
-                [Defs] = defines
+                [Required] = required
             };
 
             foreach (var parameter in parameters)
             {
-                var parameterSchema = default(JsonNode);
-                var isPrimitive = TypeUtils.IsPrimitive(parameter.ParameterType);
-                if (isPrimitive)
-                {
-                    parameterSchema = GetSchema(reflector, parameter.ParameterType, justRef: justRef);
-                    if (parameterSchema == null)
-                        continue;
-                }
-                else
-                {
-                    var typeId = parameter.ParameterType.GetTypeId();
-                    if (defines.ContainsKey(typeId))
-                    {
-                        parameterSchema = GetSchema(reflector, parameter.ParameterType, justRef: true);
-                    }
-                    else
-                    {
-                        var fullSchema = GetSchema(reflector, parameter.ParameterType, justRef: false);
-                        if (fullSchema == null)
-                            continue;
-                        defines[typeId] = fullSchema;
-                        parameterSchema = GetSchema(reflector, parameter.ParameterType, justRef: true);
-                    }
+                var (parameterSchema, updatedDefines) = GenerateSchemaWithDefs(reflector, parameter.ParameterType, justRef, defines);
+                defines = updatedDefines;
 
-                    if (parameterSchema == null)
-                        continue;
-                }
+                if (parameterSchema == null)
+                    continue;
 
                 properties[parameter.Name!] = parameterSchema;
 
@@ -271,25 +299,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 // Check if the parameter has a default value
                 if (!parameter.HasDefaultValue)
                     required.Add(parameter.Name!);
-
-                // Add generic type parameters recursively if any
-                foreach (var genericArgument in TypeUtils.GetGenericTypes(parameter.ParameterType))
-                {
-                    if (TypeUtils.IsPrimitive(genericArgument))
-                        continue;
-
-                    var typeId = genericArgument.GetTypeId();
-                    if (defines.ContainsKey(typeId))
-                        continue;
-
-                    var genericSchema = GetSchema(reflector, genericArgument, justRef: false);
-                    if (genericSchema != null)
-                        defines[typeId] = genericSchema;
-                }
             }
 
-            if (defines.Count == 0)
-                schema.Remove(Defs);
+            if (defines != null && defines.Count > 0)
+                schema[Defs] = defines;
             return schema;
         }
 
@@ -298,20 +311,28 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// This method analyzes method return types and produces schemas that describe the structure
         /// of the returned data, enabling type-safe result handling in dynamic execution environments.
         ///
+        /// Schema Structure:
+        /// - Root object schema with "properties" containing the "result" property
+        /// - "required" array listing the "result" property (for non-void returns)
+        /// - "$defs" section containing complex type definitions to avoid duplication
+        /// - Return type wrapped as a property named "result"
+        /// - Proper JSON Schema Draft 2020-12 compliance
+        ///
         /// Schema Generation Features:
         /// - Async unwrapping: Automatically unwraps Task&lt;T&gt; and ValueTask&lt;T&gt; to return schema for T
         /// - Void handling: Returns null for void, Task, and ValueTask (methods with no return value)
         /// - Type resolution: Generates appropriate schemas for complex return types
         /// - Reference optimization: Supports both full schema definitions and compact $ref references
         /// - Documentation: Extracts descriptions from return type attributes
+        /// - Proper $defs handling: Complex types are placed in $defs section with $ref references
         ///
         /// Return Type Handling:
         /// - void → null (no return value)
         /// - Task → null (async method with no return value)
         /// - ValueTask → null (async method with no return value)
-        /// - Task&lt;string&gt; → schema for string (unwrapped)
-        /// - ValueTask&lt;int&gt; → schema for int (unwrapped)
-        /// - Any other type → schema for that type
+        /// - Task&lt;string&gt; → object schema with "result" property of type string (unwrapped)
+        /// - ValueTask&lt;int&gt; → object schema with "result" property of type int (unwrapped)
+        /// - Any other type → object schema with "result" property of that type with $defs support
         ///
         /// Use Cases:
         /// - API documentation generation for response schemas
@@ -330,7 +351,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 throw new ArgumentNullException(nameof(methodInfo));
 
             var returnType = methodInfo.ReturnType;
-            var unwrappedType = Nullable.GetUnderlyingType(returnType) ?? returnType;
+            var unwrappedType = Nullable.GetUnderlyingType(returnType);
+            var isNullable = unwrappedType != null;
+
+            unwrappedType ??= returnType;
 
             // Handle void, Task, and ValueTask - these have no return value
             if (unwrappedType == typeof(void) ||
@@ -346,7 +370,24 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     unwrappedType = unwrappedType.GetGenericArguments()[0];
             }
 
-            return GetSchema(reflector, unwrappedType, justRef);
+            // Generate schema for the return type using the shared method
+            var (resultSchema, defines) = GenerateSchemaWithDefs(reflector, unwrappedType, justRef);
+
+            // Create the root schema object in the same format as GetArgumentsSchema
+            var schema = new JsonObject { [Type] = Object };
+
+            if (resultSchema != null)
+            {
+                schema[Properties] = new JsonObject { [Result] = resultSchema };
+
+                if (!isNullable)
+                    schema[Required] = new JsonArray { Result };
+            }
+
+            if (defines != null && defines.Count > 0)
+                schema[Defs] = defines;
+
+            return schema;
         }
     }
 }
