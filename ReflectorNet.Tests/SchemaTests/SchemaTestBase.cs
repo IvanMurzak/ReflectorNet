@@ -95,5 +95,133 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             return schema;
         }
+
+        #region Return Schema Helper Methods
+
+        /// <summary>
+        /// Gets the return schema for a method by name
+        /// </summary>
+        protected JsonNode? GetReturnSchemaForMethod(string methodName, bool justRef = false)
+        {
+            var reflector = new Reflector();
+            var methodInfo = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance)!;
+            return reflector.GetReturnSchema(methodInfo, justRef);
+        }
+
+        /// <summary>
+        /// Asserts that a primitive return type has the correct schema structure
+        /// </summary>
+        protected void AssertPrimitiveReturnSchema(JsonNode schema, string expectedJsonType, bool shouldBeRequired = true)
+        {
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+            Assert.Equal(expectedJsonType, properties[JsonSchema.Result]![JsonSchema.Type]?.ToString());
+
+            if (shouldBeRequired)
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Required));
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.Single(required);
+                Assert.Equal(JsonSchema.Result, required[0]?.ToString());
+            }
+            else
+            {
+                AssertResultNotRequired(schema);
+            }
+        }
+
+        /// <summary>
+        /// Asserts that "result" is NOT in the required array (for nullable types)
+        /// </summary>
+        protected void AssertResultNotRequired(JsonNode schema)
+        {
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.DoesNotContain(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        /// <summary>
+        /// Asserts that a custom type return schema has the correct structure
+        /// </summary>
+        protected void AssertCustomTypeReturnSchema(JsonNode schema, string[] expectedProperties, bool shouldBeRequired = true)
+        {
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            var resultSchema = properties[JsonSchema.Result]!.AsObject();
+
+            // Check if it's a ref or inline
+            if (resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else if (resultSchema.ContainsKey(JsonSchema.Properties))
+            {
+                var typeProperties = resultSchema[JsonSchema.Properties]!.AsObject();
+                foreach (var expectedProp in expectedProperties)
+                {
+                    Assert.True(typeProperties.ContainsKey(expectedProp));
+                }
+            }
+            else
+            {
+                // If neither ref nor inline properties, this is unexpected
+                Assert.True(resultSchema.ContainsKey(JsonSchema.Ref) || resultSchema.ContainsKey(JsonSchema.Properties),
+                    "Result schema should contain either $ref or properties");
+            }
+
+            if (!shouldBeRequired)
+            {
+                AssertResultNotRequired(schema);
+            }
+        }
+
+        /// <summary>
+        /// Asserts that an array return type has the correct schema structure
+        /// </summary>
+        protected void AssertArrayReturnSchema(JsonNode schema, string expectedItemType, bool shouldBeRequired = true)
+        {
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            var resultNode = properties[JsonSchema.Result]!;
+
+            if (resultNode is JsonObject resultSchema && resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else if (resultNode is JsonObject resultInlineSchema)
+            {
+                Assert.Equal(JsonSchema.Array, resultInlineSchema[JsonSchema.Type]?.ToString());
+                Assert.True(resultInlineSchema.ContainsKey(JsonSchema.Items));
+
+                var items = resultInlineSchema[JsonSchema.Items]!;
+                Assert.Equal(expectedItemType, items[JsonSchema.Type]?.ToString());
+            }
+            else
+            {
+                Assert.Fail("Expected result to be a schema object");
+            }
+
+            if (!shouldBeRequired)
+            {
+                AssertResultNotRequired(schema);
+            }
+        }
+
+        #endregion
     }
 }
