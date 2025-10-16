@@ -105,7 +105,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var reflector = new Reflector();
             var methodInfo = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance)!;
-            return reflector.GetReturnSchema(methodInfo, justRef);
+            var schema = reflector.GetReturnSchema(methodInfo, justRef);
+
+            _output.WriteLine($"Return schema for {methodName}:");
+            _output.WriteLine(schema?.ToString() ?? "null");
+            _output.WriteLine("");
+
+            return schema;
         }
 
         /// <summary>
