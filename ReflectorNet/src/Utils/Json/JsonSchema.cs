@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json.Nodes;
@@ -190,33 +191,81 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             else
             {
                 schema = GetSchema(reflector, type, justRef: true);
-                var typeId = type.GetTypeId();
-
                 defines ??= new JsonObject();
 
-                if (!defines.ContainsKey(typeId))
-                {
-                    var fullSchema = GetSchema(reflector, type, justRef: false);
-                    defines[typeId] = fullSchema;
-                }
-
-                // Add generic type parameters recursively if any
-                foreach (var genericArgument in TypeUtils.GetGenericTypes(type))
-                {
-                    if (TypeUtils.IsPrimitive(genericArgument))
-                        continue;
-
-                    var genericTypeId = genericArgument.GetTypeId();
-                    if (defines.ContainsKey(genericTypeId))
-                        continue;
-
-                    var genericSchema = GetSchema(reflector, genericArgument, justRef: false);
-                    if (genericSchema != null)
-                        defines[genericTypeId] = genericSchema;
-                }
+                // Recursively collect all nested types
+                CollectNestedTypes(reflector, type, defines);
             }
 
             return (schema, defines);
+        }
+
+        /// <summary>
+        /// Recursively collects all nested non-primitive types from a given type and adds them to the definitions.
+        /// This method traverses through properties, fields, generic arguments, and collection item types
+        /// to find all types that need to be included in the $defs section.
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type analysis.</param>
+        /// <param name="type">The type to analyze for nested types.</param>
+        /// <param name="defines">The JsonObject to accumulate type definitions.</param>
+        /// <param name="visitedTypes">Set of already visited types to prevent infinite recursion.</param>
+        private void CollectNestedTypes(Reflector reflector, Type type, JsonObject defines, HashSet<Type>? visitedTypes = null)
+        {
+            visitedTypes ??= new HashSet<Type>();
+
+            // Avoid infinite recursion
+            if (visitedTypes.Contains(type))
+                return;
+
+            visitedTypes.Add(type);
+
+            // Skip primitive types
+            if (TypeUtils.IsPrimitive(type))
+                return;
+
+            var typeId = type.GetTypeId();
+
+            // Add the type definition if not already present
+            if (!defines.ContainsKey(typeId))
+            {
+                var fullSchema = GetSchema(reflector, type, justRef: false);
+                defines[typeId] = fullSchema;
+            }
+
+            // Handle generic type arguments (e.g., List<T>, Dictionary<K,V>)
+            foreach (var genericArgument in TypeUtils.GetGenericTypes(type))
+            {
+                CollectNestedTypes(reflector, genericArgument, defines, visitedTypes);
+            }
+
+            // Handle collection item types (e.g., T[], List<T>, IEnumerable<T>)
+            if (TypeUtils.IsIEnumerable(type))
+            {
+                var itemType = TypeUtils.GetEnumerableItemType(type);
+                if (itemType != null)
+                {
+                    CollectNestedTypes(reflector, itemType, defines, visitedTypes);
+                }
+            }
+
+            // Handle properties and fields to find nested types
+            var properties = reflector.GetSerializableProperties(type);
+            if (properties != null)
+            {
+                foreach (var prop in properties)
+                {
+                    CollectNestedTypes(reflector, prop.PropertyType, defines, visitedTypes);
+                }
+            }
+
+            var fields = reflector.GetSerializableFields(type);
+            if (fields != null)
+            {
+                foreach (var field in fields)
+                {
+                    CollectNestedTypes(reflector, field.FieldType, defines, visitedTypes);
+                }
+            }
         }
 
         /// <summary>
