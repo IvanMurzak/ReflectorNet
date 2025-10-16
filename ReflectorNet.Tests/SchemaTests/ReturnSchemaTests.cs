@@ -1,10 +1,7 @@
 using System;
-using System.Linq;
 using System.Reflection;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Utils;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
