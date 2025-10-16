@@ -222,6 +222,68 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             }
         }
 
+        /// <summary>
+        /// Asserts that a List<ComplexReturnType> return type has the correct schema structure
+        /// </summary>
+        protected void AssertComplexListReturnSchema(JsonNode schema, bool shouldBeRequired = true, bool itemsAreNullable = false)
+        {
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Properties));
+
+            var properties = schema[JsonSchema.Properties]!.AsObject();
+            Assert.True(properties.ContainsKey(JsonSchema.Result));
+
+            var resultNode = properties[JsonSchema.Result]!;
+
+            if (resultNode is JsonObject resultSchema && resultSchema.ContainsKey(JsonSchema.Ref))
+            {
+                // Result is a reference to a list definition
+                Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            }
+            else if (resultNode is JsonObject resultInlineSchema)
+            {
+                // Result is an inline array schema
+                Assert.Equal(JsonSchema.Array, resultInlineSchema[JsonSchema.Type]?.ToString());
+                Assert.True(resultInlineSchema.ContainsKey(JsonSchema.Items));
+
+                var items = resultInlineSchema[JsonSchema.Items]!;
+
+                // Items should be either a reference to ComplexReturnType or an inline object
+                if (items is JsonObject itemsSchema)
+                {
+                    if (itemsSchema.ContainsKey(JsonSchema.Ref))
+                    {
+                        // Items are a reference to ComplexReturnType
+                        Assert.Contains("ComplexReturnType", itemsSchema[JsonSchema.Ref]?.ToString());
+                        Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+                    }
+                    else if (itemsSchema.ContainsKey(JsonSchema.Type))
+                    {
+                        // Items are inlined
+                        Assert.Equal(JsonSchema.Object, itemsSchema[JsonSchema.Type]?.ToString());
+                    }
+                    else
+                    {
+                        Assert.Fail("Items schema should contain either $ref or type");
+                    }
+                }
+                else
+                {
+                    Assert.Fail("Expected items to be a schema object");
+                }
+            }
+            else
+            {
+                Assert.Fail("Expected result to be a schema object");
+            }
+
+            if (!shouldBeRequired)
+            {
+                AssertResultNotRequired(schema);
+            }
+        }
+
         #endregion
     }
 }

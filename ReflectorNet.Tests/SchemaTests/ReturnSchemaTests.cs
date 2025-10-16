@@ -51,6 +51,20 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private System.Collections.Generic.List<int> ListIntMethod() => new System.Collections.Generic.List<int>();
         private System.Collections.Generic.Dictionary<string, int> DictionaryMethod() => new System.Collections.Generic.Dictionary<string, int>();
 
+        // List<ComplexReturnType> variations
+        private System.Collections.Generic.List<ComplexReturnType> ListComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType>();
+        private System.Collections.Generic.List<ComplexReturnType?> ListNullableComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType?>();
+        private System.Collections.Generic.List<ComplexReturnType>? NullableListComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType>();
+        private System.Collections.Generic.List<ComplexReturnType?>? NullableListNullableComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType?>();
+        private Task<System.Collections.Generic.List<ComplexReturnType>> TaskListComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType>());
+        private Task<System.Collections.Generic.List<ComplexReturnType>>? NullableTaskListComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType>());
+        private Task<System.Collections.Generic.List<ComplexReturnType>?> TaskNullableListComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType>?>(new System.Collections.Generic.List<ComplexReturnType>());
+        private Task<System.Collections.Generic.List<ComplexReturnType?>> TaskListNullableComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType?>());
+        private Task<System.Collections.Generic.List<ComplexReturnType>?>? NullableTaskNullableListComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType>?>(new System.Collections.Generic.List<ComplexReturnType>());
+        private Task<System.Collections.Generic.List<ComplexReturnType?>?> TaskNullableListNullableComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType?>?>(new System.Collections.Generic.List<ComplexReturnType?>());
+        private Task<System.Collections.Generic.List<ComplexReturnType?>>? NullableTaskListNullableComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType?>());
+        private Task<System.Collections.Generic.List<ComplexReturnType?>?>? NullableTaskNullableListNullableComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType?>?>(new System.Collections.Generic.List<ComplexReturnType?>());
+
         // Nullable return types
         private string? NullableStringMethod() => "test";
         private int? NullableIntMethod() => 42;
@@ -306,6 +320,64 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(NullableStringArrayMethod));
             AssertArrayReturnSchema(schema!, JsonSchema.String, shouldBeRequired: false);
+        }
+
+        #endregion
+
+        #region List<ComplexReturnType> Tests
+
+        [Theory]
+        [InlineData(nameof(ListComplexTypeMethod), true)]
+        [InlineData(nameof(NullableListComplexTypeMethod), false)]
+        public void GetReturnSchema_ListComplexType_ReturnsArraySchemaWithComplexItems(string methodName, bool shouldBeRequired)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired);
+        }
+
+        [Theory]
+        [InlineData(nameof(ListNullableComplexTypeMethod), true)]
+        [InlineData(nameof(NullableListNullableComplexTypeMethod), false)]
+        public void GetReturnSchema_ListNullableComplexType_ReturnsArraySchemaWithNullableComplexItems(string methodName, bool shouldBeRequired)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
+        }
+
+        [Theory]
+        [InlineData(nameof(TaskListComplexTypeMethod), true)]
+        [InlineData(nameof(NullableTaskListComplexTypeMethod), false)]
+        public void GetReturnSchema_TaskListComplexType_UnwrapsToArraySchemaWithComplexItems(string methodName, bool shouldBeRequired)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired);
+        }
+
+        [Theory]
+        [InlineData(nameof(TaskNullableListComplexTypeMethod), false)]
+        [InlineData(nameof(NullableTaskNullableListComplexTypeMethod), false)]
+        public void GetReturnSchema_TaskNullableListComplexType_UnwrapsToArraySchemaWithoutRequired(string methodName, bool shouldBeRequired)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired);
+        }
+
+        [Theory]
+        [InlineData(nameof(TaskListNullableComplexTypeMethod), true)]
+        [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), false)]
+        public void GetReturnSchema_TaskListNullableComplexType_UnwrapsToArraySchemaWithNullableItems(string methodName, bool shouldBeRequired)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
+        }
+
+        [Theory]
+        [InlineData(nameof(TaskNullableListNullableComplexTypeMethod), false)]
+        [InlineData(nameof(NullableTaskNullableListNullableComplexTypeMethod), false)]
+        public void GetReturnSchema_TaskNullableListNullableComplexType_UnwrapsToArraySchemaWithNullableItemsWithoutRequired(string methodName, bool shouldBeRequired)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
         }
 
         #endregion
