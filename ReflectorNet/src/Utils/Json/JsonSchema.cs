@@ -351,38 +351,53 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 throw new ArgumentNullException(nameof(methodInfo));
 
             var returnType = methodInfo.ReturnType;
-            var unwrappedType = Nullable.GetUnderlyingType(returnType);
-            var isNullable = unwrappedType != null;
-
-            unwrappedType ??= returnType;
 
             // Handle void, Task, and ValueTask - these have no return value
-            if (unwrappedType == typeof(void) ||
-                unwrappedType == typeof(Task) ||
-                unwrappedType == typeof(ValueTask))
+            if (returnType == typeof(void) ||
+                returnType == typeof(Task) ||
+                returnType == typeof(ValueTask))
                 return null;
 
-            // Unwrap Task<T> and ValueTask<T> to get the actual return type T
+            // First, check if the return type itself is a nullable Task/ValueTask (e.g., Task<T>? or ValueTask<T>?)
+            var isTaskNullable = false;
+#if NET5_0_OR_GREATER
+            try
+            {
+                var nullabilityContext = new System.Reflection.NullabilityInfoContext();
+                var returnTypeNullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
+
+                // Check if the Task/ValueTask itself is nullable
+                if (returnType.IsGenericType &&
+                    (returnType.GetGenericTypeDefinition() == typeof(Task<>) || returnType.GetGenericTypeDefinition() == typeof(ValueTask<>)))
+                {
+                    isTaskNullable = returnTypeNullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
+                }
+            }
+            catch
+            {
+                // If we can't determine nullability, assume not nullable
+            }
+#endif
+
+            // Unwrap Task<T>/ValueTask<T> first, then compute nullability on the inner T
+            var unwrappedType = returnType;
+            var isNullable = isTaskNullable; // If the Task itself is nullable, the result is also nullable
+
             if (unwrappedType.IsGenericType)
             {
                 var genericDefinition = unwrappedType.GetGenericTypeDefinition();
                 if (genericDefinition == typeof(Task<>) || genericDefinition == typeof(ValueTask<>))
                 {
-                    var taskGenericArg = unwrappedType.GetGenericArguments()[0];
-
-                    // Check if T in Task<T> is nullable (e.g., Task<int?> or Task<string?>)
-                    var nullableUnderlyingType = Nullable.GetUnderlyingType(taskGenericArg);
-                    if (nullableUnderlyingType != null)
-                    {
-                        // T is a nullable value type (e.g., int?, bool?)
-                        isNullable = true;
-                        unwrappedType = nullableUnderlyingType;
-                    }
-                    else
-                    {
-                        unwrappedType = taskGenericArg;
-                    }
+                    unwrappedType = unwrappedType.GetGenericArguments()[0];
                 }
+            }
+
+            // Recompute nullability after unwrapping async wrappers
+            var nullableUnderlyingType = Nullable.GetUnderlyingType(unwrappedType);
+            if (nullableUnderlyingType != null)
+            {
+                isNullable = true;
+                unwrappedType = nullableUnderlyingType;
             }
 
             // Check for nullable reference types using NullabilityInfoContext
@@ -400,8 +415,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         var genericDef = returnType.GetGenericTypeDefinition();
                         if (genericDef == typeof(Task<>) || genericDef == typeof(ValueTask<>))
                         {
-                            isNullable = nullabilityInfo.GenericTypeArguments.Length > 0 &&
-                                        nullabilityInfo.GenericTypeArguments[0].ReadState == System.Reflection.NullabilityState.Nullable;
+                            isNullable = isNullable || (nullabilityInfo.GenericTypeArguments.Length > 0 &&
+                                         nullabilityInfo.GenericTypeArguments[0].ReadState == System.Reflection.NullabilityState.Nullable);
                         }
                         else
                         {
