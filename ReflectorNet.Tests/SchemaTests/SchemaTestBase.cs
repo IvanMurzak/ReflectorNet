@@ -146,6 +146,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         /// <summary>
+        /// Asserts that "result" IS in the required array (for non-nullable types
+        /// </summary>
+        protected void AssertResultRequired(JsonNode schema)
+        {
+            if (schema.AsObject().ContainsKey(JsonSchema.Required))
+            {
+                var required = schema[JsonSchema.Required]!.AsArray();
+                Assert.Contains(required, r => r?.ToString() == JsonSchema.Result);
+            }
+        }
+
+        /// <summary>
         /// Asserts that a custom type return schema has the correct structure
         /// </summary>
         protected void AssertCustomTypeReturnSchema(JsonNode schema, string[] expectedProperties, bool shouldBeRequired = true)
@@ -179,10 +191,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                     "Result schema should contain either $ref or properties");
             }
 
-            if (!shouldBeRequired)
-            {
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
                 AssertResultNotRequired(schema);
-            }
         }
 
         /// <summary>
@@ -216,10 +228,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.Fail("Expected result to be a schema object");
             }
 
-            if (!shouldBeRequired)
-            {
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
                 AssertResultNotRequired(schema);
-            }
         }
 
         /// <summary>
@@ -278,10 +290,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.Fail("Expected result to be a schema object");
             }
 
-            if (!shouldBeRequired)
-            {
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
                 AssertResultNotRequired(schema);
-            }
         }
 
         #endregion
