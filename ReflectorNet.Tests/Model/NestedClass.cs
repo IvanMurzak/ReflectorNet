@@ -52,5 +52,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
             ValueField = valueField;
             ValueProperty = valueProperty;
         }
+
+        /// <summary>
+        /// Echo method that returns the provided value unchanged.
+        /// Used for testing return type schemas with various generic types.
+        /// </summary>
+        public T Echo(T value) => value;
+
+        /// <summary>
+        /// Echo method that returns a nullable version of the provided value.
+        /// Used for testing return type schemas with nullable generic types.
+        /// </summary>
+        public T? EchoNullable(T? value) => value;
     }
 }

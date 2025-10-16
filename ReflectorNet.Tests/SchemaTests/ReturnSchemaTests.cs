@@ -1,6 +1,8 @@
 using System;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
@@ -447,6 +449,112 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => reflector.GetReturnSchema(null!));
+        }
+
+        #endregion
+
+        #region WrapperClass<T> Echo Method Tests
+
+        /// <summary>
+        /// Helper to get return schema for a WrapperClass method
+        /// </summary>
+        private JsonNode? GetWrapperMethodReturnSchema(Type wrapperType, string methodName)
+        {
+            var reflector = new Reflector();
+            var methodInfo = wrapperType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance)!;
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            _output.WriteLine($"Return schema for {wrapperType.GetTypeShortName()}.{methodName}:");
+            _output.WriteLine(schema?.ToString() ?? "null");
+            _output.WriteLine("");
+
+            return schema;
+        }
+
+        [Theory]
+        [InlineData(typeof(string), nameof(WrapperClass<string>.Echo), JsonSchema.String, false)] // string is reference type, T is nullable
+        [InlineData(typeof(int), nameof(WrapperClass<int>.Echo), JsonSchema.Integer, true)] // int is value type, T is non-nullable
+        [InlineData(typeof(bool), nameof(WrapperClass<bool>.Echo), JsonSchema.Boolean, true)] // bool is value type, T is non-nullable
+        [InlineData(typeof(double), nameof(WrapperClass<double>.Echo), JsonSchema.Number, true)] // double is value type, T is non-nullable
+        [InlineData(typeof(string), nameof(WrapperClass<string>.EchoNullable), JsonSchema.String, false)] // string? is nullable reference
+        [InlineData(typeof(int), nameof(WrapperClass<int>.EchoNullable), JsonSchema.Integer, true)] // int? (Nullable<int>) is itself non-nullable struct
+        [InlineData(typeof(bool), nameof(WrapperClass<bool>.EchoNullable), JsonSchema.Boolean, true)] // bool? (Nullable<bool>) is itself non-nullable struct
+        [InlineData(typeof(double), nameof(WrapperClass<double>.EchoNullable), JsonSchema.Number, true)] // double? (Nullable<double>) is itself non-nullable struct
+        public void GetReturnSchema_WrapperEchoPrimitive_ReturnsCorrectSchema(Type genericType, string methodName, string expectedType, bool shouldBeRequired)
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, methodName);
+            AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired);
+        }
+
+        [Theory]
+        [InlineData(typeof(CustomReturnType), true)]
+        [InlineData(typeof(ComplexReturnType), true)]
+        public void GetReturnSchema_WrapperEchoCustomType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
+                AssertResultNotRequired(schema);
+        }
+
+        [Theory]
+        [InlineData(typeof(CustomReturnType), false)]
+        [InlineData(typeof(ComplexReturnType), false)]
+        public void GetReturnSchema_WrapperEchoNullableCustomType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
+                AssertResultNotRequired(schema);
+        }
+
+        [Theory]
+        [InlineData(typeof(string[]), JsonSchema.String, true)]
+        [InlineData(typeof(int[]), JsonSchema.Integer, true)]
+        public void GetReturnSchema_WrapperEchoArray_ReturnsCorrectSchema(Type genericType, string expectedItemType, bool shouldBeRequired)
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+            AssertArrayReturnSchema(schema!, expectedItemType, shouldBeRequired);
+        }
+
+        [Theory]
+        [InlineData(typeof(string[]), JsonSchema.String, false)]
+        [InlineData(typeof(int[]), JsonSchema.Integer, false)]
+        public void GetReturnSchema_WrapperEchoNullableArray_ReturnsCorrectSchema(Type genericType, string expectedItemType, bool shouldBeRequired)
+        {
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+            AssertArrayReturnSchema(schema!, expectedItemType, shouldBeRequired);
+        }
+
+        [Fact]
+        public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema()
+        {
+            var wrapperType = typeof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+            AssertComplexListReturnSchema(schema!, shouldBeRequired: true);
+        }
+
+        [Fact]
+        public void GetReturnSchema_WrapperEchoNullableListComplex_ReturnsCorrectSchema()
+        {
+            var wrapperType = typeof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+            AssertComplexListReturnSchema(schema!, shouldBeRequired: false);
         }
 
         #endregion
