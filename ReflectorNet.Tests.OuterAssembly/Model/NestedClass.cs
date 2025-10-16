@@ -45,5 +45,10 @@ namespace com.IvanMurzak.ReflectorNet.OuterAssembly.Model
         [JsonInclude]
         public T? ValueField;
         public T? ValueProperty { get; set; }
+
+        public T Echo(T value)
+        {
+            return value;
+        }
     }
 }
