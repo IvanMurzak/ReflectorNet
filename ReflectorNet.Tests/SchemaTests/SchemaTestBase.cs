@@ -246,6 +246,44 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         /// <summary>
+        /// Asserts that all $ref references found in the schema are defined in the $defs section.
+        /// This method recursively scans the entire schema for all $ref values and verifies that
+        /// each referenced type has a corresponding definition in $defs.
+        /// </summary>
+        protected void AssertAllRefsDefined(JsonNode schema)
+        {
+            Assert.NotNull(schema);
+
+            // Collect all $ref values in the schema
+            var allReferences = new HashSet<string>();
+            CollectAllReferences(schema, allReferences);
+
+            // If there are no references, we're done
+            if (allReferences.Count == 0)
+            {
+                return;
+            }
+
+            // Schema must have $defs if there are references
+            Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs),
+                $"Schema contains {allReferences.Count} $ref reference(s) but no $defs section. References: {string.Join(", ", allReferences)}");
+
+            var defines = schema[JsonSchema.Defs]!.AsObject();
+            Assert.NotNull(defines);
+
+            // Check each reference to ensure it's defined
+            foreach (var reference in allReferences)
+            {
+                // Extract the type ID from the reference (e.g., "#/$defs/TypeId" -> "TypeId")
+                var typeId = reference.Replace(JsonSchema.RefValue, string.Empty);
+
+                Assert.True(defines.ContainsKey(typeId),
+                    $"Reference '{reference}' (type ID: '{typeId}') is not defined in $defs. " +
+                    $"Available definitions: {string.Join(", ", defines.Select(d => d.Key))}");
+            }
+        }
+
+        /// <summary>
         /// Asserts that a custom type return schema has the correct structure
         /// </summary>
         protected void AssertCustomTypeReturnSchema(JsonNode schema, string[] expectedProperties, bool shouldBeRequired = true)

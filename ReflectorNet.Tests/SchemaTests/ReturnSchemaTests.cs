@@ -163,6 +163,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         #endregion
@@ -179,6 +180,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         #endregion
@@ -193,6 +195,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -200,6 +203,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(TaskCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -210,6 +214,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -220,6 +225,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -230,6 +236,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -244,6 +251,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -251,6 +259,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(TaskNullableCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -261,6 +270,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -271,6 +281,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -281,6 +292,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -294,6 +306,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -301,6 +314,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -311,6 +325,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -321,6 +336,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -331,6 +347,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -344,6 +361,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -351,6 +369,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(ValueTaskCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -361,6 +380,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -371,6 +391,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -381,6 +402,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -401,6 +423,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -411,6 +434,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -421,6 +445,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -431,6 +456,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -445,6 +471,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(CustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -453,6 +480,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var schema = GetReturnSchemaForMethod(nameof(ComplexTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "StringProperty", "IntProperty", "NestedObject", "StringArray" }, shouldBeRequired: true);
             AssertResultDefines(schema!, typeof(ComplexReturnType), typeof(CustomReturnType));
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -463,6 +491,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -473,6 +502,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -483,6 +513,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -494,6 +525,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(NullableCustomTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -502,6 +534,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var schema = GetReturnSchemaForMethod(nameof(NullableComplexTypeMethod));
             AssertCustomTypeReturnSchema(schema!, new[] { "StringProperty", "IntProperty", "NestedObject", "StringArray" }, shouldBeRequired: false);
             AssertResultDefines(schema!, typeof(ComplexReturnType), typeof(CustomReturnType));
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -512,6 +545,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -522,6 +556,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -532,6 +567,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -545,6 +581,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertArrayReturnSchema(schema!, expectedItemType, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         #endregion
@@ -556,6 +593,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(nameof(NullableStringArrayMethod));
             AssertArrayReturnSchema(schema!, JsonSchema.String, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         #endregion
@@ -569,6 +607,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertComplexListReturnSchema(schema!, shouldBeRequired);
+            AssertAllRefsDefined(schema!);
         }
 
         [Theory]
@@ -578,6 +617,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Theory]
@@ -587,6 +627,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertComplexListReturnSchema(schema!, shouldBeRequired);
+            AssertAllRefsDefined(schema!);
         }
 
         [Theory]
@@ -596,6 +637,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertComplexListReturnSchema(schema!, shouldBeRequired);
+            AssertAllRefsDefined(schema!);
         }
 
         [Theory]
@@ -605,6 +647,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Theory]
@@ -614,6 +657,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
+            AssertAllRefsDefined(schema!);
         }
 
         #endregion
@@ -645,6 +689,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // $defs should exist with the full type definition
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -669,6 +714,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var resultSchema = properties[JsonSchema.Result]!.AsObject();
             Assert.Equal(JsonSchema.String, resultSchema[JsonSchema.Type]?.ToString());
             Assert.False(resultSchema.ContainsKey(JsonSchema.Ref));
+            AssertAllRefsDefined(schema);
         }
 
         [Theory]
@@ -699,6 +745,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // $defs should exist with the full type definition
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
@@ -749,6 +796,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
             var schema = GetWrapperMethodReturnSchema(wrapperType, methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired);
+            AssertAllRefsDefined(schema!);
         }
 
         [Theory]
@@ -766,6 +814,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 AssertResultRequired(schema);
             else
                 AssertResultNotRequired(schema);
+            AssertAllRefsDefined(schema);
         }
 
         [Theory]
@@ -783,6 +832,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 AssertResultRequired(schema);
             else
                 AssertResultNotRequired(schema);
+            AssertAllRefsDefined(schema);
         }
 
         [Theory]
@@ -793,6 +843,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
             AssertArrayReturnSchema(schema!, expectedItemType, shouldBeRequired);
+            AssertAllRefsDefined(schema!);
         }
 
         [Theory]
@@ -803,6 +854,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
             AssertArrayReturnSchema(schema!, expectedItemType, shouldBeRequired);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -811,6 +863,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.Echo));
             AssertComplexListReturnSchema(schema!, shouldBeRequired: true);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -819,6 +872,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.EchoNullable));
             AssertComplexListReturnSchema(schema!, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -831,6 +885,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -843,6 +898,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -855,6 +911,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -867,6 +924,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Person), typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -879,6 +937,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Address));
+            AssertAllRefsDefined(schema);
         }
 
         [Fact]
@@ -891,6 +950,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
             AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
+            AssertAllRefsDefined(schema);
         }
 
         #endregion
