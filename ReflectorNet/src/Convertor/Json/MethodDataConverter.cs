@@ -20,7 +20,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
     public class MethodDataConverter : JsonConverter<MethodData>, IJsonSchemaConverter
     {
-        public static string StaticId => TypeUtils.GetTypeId<MethodData>();
+        public static string StaticId => TypeUtils.GetSchemaTypeId<MethodData>();
 
         public static JsonNode Schema => new JsonObject
         {
@@ -101,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     [JsonSchema.Type] = JsonSchema.Array,
                     [JsonSchema.Items] = new JsonObject
                     {
-                        [JsonSchema.Ref] = JsonSchema.RefValue + TypeUtils.GetTypeId<MethodData.Parameter>()
+                        [JsonSchema.Ref] = JsonSchema.RefValue + TypeUtils.GetSchemaTypeId<MethodData.Parameter>()
                     },
                     [JsonSchema.Description] = TypeUtils.GetDescription(
                         typeof(MethodData)

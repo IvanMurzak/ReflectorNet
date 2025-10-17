@@ -17,6 +17,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public const string Array = "array";
         public const string AnyOf = "anyOf";
         public const string Required = "required";
+        public const string Result = "result";
         public const string Error = "error";
         public const string AdditionalProperties = "additionalProperties";
 

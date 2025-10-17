@@ -6,7 +6,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -119,7 +121,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         // If justRef is true and the type is not primitive, we return a reference schema
                         schema = new JsonObject
                         {
-                            [Ref] = RefValue + type.GetTypeId()
+                            [Ref] = RefValue + type.GetSchemaTypeId()
                         };
 
                         // Get description from the type if available
@@ -168,6 +170,76 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             return schema;
         }
+
+
+        /// <summary>
+        /// Recursively collects all nested non-primitive types from a given type and adds them to the definitions.
+        /// This method traverses through properties, fields, generic arguments, and collection item types
+        /// to find all types that need to be included in the $defs section.
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type analysis.</param>
+        /// <param name="type">The type to analyze for nested types.</param>
+        /// <param name="defines">The JsonObject to accumulate type definitions.</param>
+        /// <param name="visitedTypes">Set of already visited types to prevent infinite recursion.</param>
+        private void CollectNestedTypes(Reflector reflector, Type type, JsonObject defines, HashSet<Type>? visitedTypes = null)
+        {
+            visitedTypes ??= new HashSet<Type>();
+
+            // Avoid infinite recursion
+            if (visitedTypes.Contains(type))
+                return;
+
+            visitedTypes.Add(type);
+
+            // Skip primitive types
+            if (TypeUtils.IsPrimitive(type))
+                return;
+
+            var typeId = type.GetSchemaTypeId();
+
+            // Add the type definition if not already present
+            if (!defines.ContainsKey(typeId))
+            {
+                var fullSchema = GetSchema(reflector, type, justRef: false);
+                defines[typeId] = fullSchema;
+            }
+
+            // Handle generic type arguments (e.g., List<T>, Dictionary<K,V>)
+            foreach (var genericArgument in TypeUtils.GetGenericTypes(type))
+            {
+                CollectNestedTypes(reflector, genericArgument, defines, visitedTypes);
+            }
+
+            // Handle collection item types (e.g., T[], List<T>, IEnumerable<T>)
+            if (TypeUtils.IsIEnumerable(type))
+            {
+                var itemType = TypeUtils.GetEnumerableItemType(type);
+                if (itemType != null)
+                {
+                    CollectNestedTypes(reflector, itemType, defines, visitedTypes);
+                }
+            }
+
+            // Handle properties and fields to find nested types
+            var properties = reflector.GetSerializableProperties(type);
+            if (properties != null)
+            {
+                foreach (var prop in properties)
+                {
+                    CollectNestedTypes(reflector, prop.PropertyType, defines, visitedTypes);
+                }
+            }
+
+            var fields = reflector.GetSerializableFields(type);
+            if (fields != null)
+            {
+                foreach (var field in fields)
+                {
+                    CollectNestedTypes(reflector, field.FieldType, defines, visitedTypes);
+                }
+            }
+        }
+
         /// <summary>
         /// Generates a comprehensive JSON Schema for method parameters, creating schemas suitable for
         /// dynamic method invocation, API documentation, form generation, and parameter validation.
@@ -215,82 +287,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (parameters.Length == 0)
                 return new JsonObject { [Type] = Object };
 
-            var properties = new JsonObject();
-            var defines = new JsonObject();
-            var required = new JsonArray();
+            var types = parameters
+                .Select(p => (
+                    type: p.ParameterType,
+                    name: p.Name,
+                    description: TypeUtils.GetDescription(p),
+                    required: !p.HasDefaultValue));
 
-            // Create a schema object manually
-            var schema = new JsonObject
-            {
-                // [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
-                [Type] = Object,
-                [Properties] = properties,
-                [Required] = required,
-                [Defs] = defines
-            };
-
-            foreach (var parameter in parameters)
-            {
-                var parameterSchema = default(JsonNode);
-                var isPrimitive = TypeUtils.IsPrimitive(parameter.ParameterType);
-                if (isPrimitive)
-                {
-                    parameterSchema = GetSchema(reflector, parameter.ParameterType, justRef: justRef);
-                    if (parameterSchema == null)
-                        continue;
-                }
-                else
-                {
-                    var typeId = parameter.ParameterType.GetTypeId();
-                    if (defines.ContainsKey(typeId))
-                    {
-                        parameterSchema = GetSchema(reflector, parameter.ParameterType, justRef: true);
-                    }
-                    else
-                    {
-                        var fullSchema = GetSchema(reflector, parameter.ParameterType, justRef: false);
-                        if (fullSchema == null)
-                            continue;
-                        defines[typeId] = fullSchema;
-                        parameterSchema = GetSchema(reflector, parameter.ParameterType, justRef: true);
-                    }
-
-                    if (parameterSchema == null)
-                        continue;
-                }
-
-                properties[parameter.Name!] = parameterSchema;
-
-                if (parameterSchema is JsonObject parameterSchemaObject)
-                {
-                    var propertyDescription = TypeUtils.GetDescription(parameter);
-                    if (!string.IsNullOrEmpty(propertyDescription))
-                        parameterSchemaObject[Description] = JsonValue.Create(propertyDescription);
-                }
-
-                // Check if the parameter has a default value
-                if (!parameter.HasDefaultValue)
-                    required.Add(parameter.Name!);
-
-                // Add generic type parameters recursively if any
-                foreach (var genericArgument in TypeUtils.GetGenericTypes(parameter.ParameterType))
-                {
-                    if (TypeUtils.IsPrimitive(genericArgument))
-                        continue;
-
-                    var typeId = genericArgument.GetTypeId();
-                    if (defines.ContainsKey(typeId))
-                        continue;
-
-                    var genericSchema = GetSchema(reflector, genericArgument, justRef: false);
-                    if (genericSchema != null)
-                        defines[typeId] = genericSchema;
-                }
-            }
-
-            if (defines.Count == 0)
-                schema.Remove(Defs);
-            return schema;
+            return GenerateSchema(reflector, types, justRef);
         }
 
         /// <summary>
@@ -298,20 +302,28 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// This method analyzes method return types and produces schemas that describe the structure
         /// of the returned data, enabling type-safe result handling in dynamic execution environments.
         ///
+        /// Schema Structure:
+        /// - Root object schema with "properties" containing the "result" property
+        /// - "required" array listing the "result" property (for non-void returns)
+        /// - "$defs" section containing complex type definitions to avoid duplication
+        /// - Return type wrapped as a property named "result"
+        /// - Proper JSON Schema Draft 2020-12 compliance
+        ///
         /// Schema Generation Features:
         /// - Async unwrapping: Automatically unwraps Task&lt;T&gt; and ValueTask&lt;T&gt; to return schema for T
         /// - Void handling: Returns null for void, Task, and ValueTask (methods with no return value)
         /// - Type resolution: Generates appropriate schemas for complex return types
         /// - Reference optimization: Supports both full schema definitions and compact $ref references
         /// - Documentation: Extracts descriptions from return type attributes
+        /// - Proper $defs handling: Complex types are placed in $defs section with $ref references
         ///
         /// Return Type Handling:
         /// - void → null (no return value)
         /// - Task → null (async method with no return value)
         /// - ValueTask → null (async method with no return value)
-        /// - Task&lt;string&gt; → schema for string (unwrapped)
-        /// - ValueTask&lt;int&gt; → schema for int (unwrapped)
-        /// - Any other type → schema for that type
+        /// - Task&lt;string&gt; → object schema with "result" property of type string (unwrapped)
+        /// - ValueTask&lt;int&gt; → object schema with "result" property of type int (unwrapped)
+        /// - Any other type → object schema with "result" property of that type with $defs support
         ///
         /// Use Cases:
         /// - API documentation generation for response schemas
@@ -330,23 +342,181 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 throw new ArgumentNullException(nameof(methodInfo));
 
             var returnType = methodInfo.ReturnType;
-            var unwrappedType = Nullable.GetUnderlyingType(returnType) ?? returnType;
 
             // Handle void, Task, and ValueTask - these have no return value
-            if (unwrappedType == typeof(void) ||
-                unwrappedType == typeof(Task) ||
-                unwrappedType == typeof(ValueTask))
+            if (returnType == typeof(void) ||
+                returnType == typeof(Task) ||
+                returnType == typeof(ValueTask))
                 return null;
 
-            // Unwrap Task<T> and ValueTask<T> to get the actual return type T
+            // First, check if the return type itself is a nullable Task/ValueTask (e.g., Task<T>? or ValueTask<T>?)
+            var isTaskNullable = false;
+#if NET5_0_OR_GREATER
+            try
+            {
+                var nullabilityContext = new System.Reflection.NullabilityInfoContext();
+                var returnTypeNullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
+
+                // Check if the Task/ValueTask itself is nullable
+                if (returnType.IsGenericType &&
+                    (returnType.GetGenericTypeDefinition() == typeof(Task<>) || returnType.GetGenericTypeDefinition() == typeof(ValueTask<>)))
+                {
+                    isTaskNullable = returnTypeNullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
+                }
+            }
+            catch
+            {
+                // If we can't determine nullability, assume not nullable
+            }
+#endif
+
+            // Unwrap Task<T>/ValueTask<T> first, then compute nullability on the inner T
+            var unwrappedType = returnType;
+            var isNullable = isTaskNullable; // If the Task itself is nullable, the result is also nullable
+
             if (unwrappedType.IsGenericType)
             {
                 var genericDefinition = unwrappedType.GetGenericTypeDefinition();
                 if (genericDefinition == typeof(Task<>) || genericDefinition == typeof(ValueTask<>))
+                {
                     unwrappedType = unwrappedType.GetGenericArguments()[0];
+                }
             }
 
-            return GetSchema(reflector, unwrappedType, justRef);
+            // Recompute nullability after unwrapping async wrappers
+            var nullableUnderlyingType = Nullable.GetUnderlyingType(unwrappedType);
+            if (nullableUnderlyingType != null)
+            {
+                isNullable = true;
+                unwrappedType = nullableUnderlyingType;
+            }
+
+            //             // Check for nullable reference types using NullabilityInfoContext
+            //             if (!isNullable && (unwrappedType.IsClass || unwrappedType.IsInterface || unwrappedType.IsArray))
+            //             {
+            //                 try
+            //                 {
+            // #if NET5_0_OR_GREATER
+            //                     var nullabilityContext = new System.Reflection.NullabilityInfoContext();
+            //                     var nullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
+
+            //                     // For Task<T> or ValueTask<T>, check the generic argument's nullability
+            //                     if (returnType.IsGenericType)
+            //                     {
+            //                         var genericDef = returnType.GetGenericTypeDefinition();
+            //                         if (genericDef == typeof(Task<>) || genericDef == typeof(ValueTask<>))
+            //                         {
+            //                             isNullable = isNullable || (nullabilityInfo.GenericTypeArguments.Length > 0 &&
+            //                                          nullabilityInfo.GenericTypeArguments[0].ReadState == System.Reflection.NullabilityState.Nullable);
+            //                         }
+            //                         else
+            //                         {
+            //                             isNullable = nullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
+            //                         }
+            //                     }
+            //                     else
+            //                     {
+            //                         isNullable = nullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
+            //                     }
+            // #endif
+            //                 }
+            //                 catch
+            //                 {
+            //                     // If we can't determine nullability, assume not nullable
+            //                 }
+            //             }
+
+            var types = new (Type type, string name, string? description, bool required)[]
+            {
+                (
+                    type: unwrappedType,
+                    name: Result,
+                    description: null,
+                    required: true
+                )
+            };
+            return GenerateSchema(reflector, types, justRef);
+        }
+
+        public JsonNode GenerateSchema(Reflector reflector, IEnumerable<(Type type, string name, string? description, bool required)> types, bool justRef = false)
+        {
+            var properties = new JsonObject();
+            var defines = new JsonObject();
+            var required = new JsonArray();
+
+            // Create a schema object manually
+            var schema = new JsonObject
+            {
+                // [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
+                [Type] = Object,
+                [Properties] = properties
+            };
+
+            foreach (var parameter in types)
+            {
+                var parameterSchema = default(JsonNode);
+                var isPrimitive = TypeUtils.IsPrimitive(parameter.type);
+                if (isPrimitive)
+                {
+                    parameterSchema = GetSchema(reflector, parameter.type, justRef: justRef);
+                    if (parameterSchema == null)
+                        continue;
+                }
+                else
+                {
+                    var typeId = parameter.type.GetTypeId();
+                    if (defines.ContainsKey(typeId))
+                    {
+                        parameterSchema = GetSchema(reflector, parameter.type, justRef: true);
+                    }
+                    else
+                    {
+                        var fullSchema = GetSchema(reflector, parameter.type, justRef: false);
+                        if (fullSchema == null)
+                            continue;
+                        defines[typeId] = fullSchema;
+                        parameterSchema = GetSchema(reflector, parameter.type, justRef: true);
+                    }
+
+                    if (parameterSchema == null)
+                        continue;
+                }
+
+                properties[parameter.name!] = parameterSchema;
+
+                if (parameterSchema is JsonObject parameterSchemaObject)
+                {
+                    var propertyDescription = parameter.description;
+                    if (!string.IsNullOrEmpty(propertyDescription))
+                        parameterSchemaObject[Description] = JsonValue.Create(propertyDescription);
+                }
+
+                // Check if the parameter has a default value
+                if (parameter.required)
+                    required.Add(parameter.name!);
+
+                // Add generic type parameters recursively if any
+                foreach (var genericArgument in TypeUtils.GetGenericTypes(parameter.type))
+                {
+                    if (TypeUtils.IsPrimitive(genericArgument))
+                        continue;
+
+                    var typeId = genericArgument.GetTypeId();
+                    if (defines.ContainsKey(typeId))
+                        continue;
+
+                    var genericSchema = GetSchema(reflector, genericArgument, justRef: false);
+                    if (genericSchema != null)
+                        defines[typeId] = genericSchema;
+                }
+            }
+
+            if (defines.Count > 0)
+                schema[Defs] = defines;
+            if (required.Count > 0)
+                schema[Required] = required;
+
+            return schema;
         }
     }
 }

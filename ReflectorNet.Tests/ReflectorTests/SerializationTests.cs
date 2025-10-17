@@ -2,6 +2,7 @@
 using com.IvanMurzak.ReflectorNet.Utils;
 using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
+using com.IvanMurzak.ReflectorNet.OuterAssembly.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 {

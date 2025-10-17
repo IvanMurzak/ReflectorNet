@@ -16,7 +16,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
 {
     public class SerializedMemberListConverter : JsonConverter<SerializedMemberList>, IJsonSchemaConverter
     {
-        public static string StaticId => TypeUtils.GetTypeId<SerializedMemberList>();
+        public static string StaticId => TypeUtils.GetSchemaTypeId<SerializedMemberList>();
         public static JsonNode Schema => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Array,

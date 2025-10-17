@@ -12,7 +12,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
     {
         public const string CustomDescription = "Custom description, used for testing purposes.";
 
-        public static string StaticId => TypeUtils.GetTypeId<SerializedMember>();
+        public static string StaticId => TypeUtils.GetSchemaTypeId<SerializedMember>();
         public static JsonNode Schema => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Object,
