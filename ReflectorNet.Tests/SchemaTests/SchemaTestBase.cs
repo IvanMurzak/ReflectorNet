@@ -54,7 +54,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 var methodParameter = methodInfo.GetParameters().FirstOrDefault(p => p.Name == parameterName);
                 Assert.NotNull(methodParameter);
 
-                var typeId = methodParameter.ParameterType.GetTypeId();
+                var typeId = methodParameter.ParameterType.GetSchemaTypeId();
                 var refString = $"{JsonSchema.RefValue}{typeId}";
 
                 var targetDefine = defines[typeId];
@@ -89,7 +89,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             foreach (var expectedType in expectedTypes)
             {
-                var typeId = expectedType.GetTypeId();
+                var typeId = expectedType.GetSchemaTypeId();
                 var targetDefine = defines[typeId];
                 Assert.NotNull(targetDefine);
             }
@@ -167,6 +167,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         /// <summary>
         /// Asserts that all expected types are defined in the $defs section of the schema OR referenced within the schema.
         /// This method recursively checks all $ref values in the schema to ensure nested types are properly referenced.
+        /// Only non-primitive and non-enum types should be included in $defs, as primitives and enums are inlined.
+        /// Verifies that at minimum the expected types are present (additional types may be included by the schema generator).
         /// </summary>
         protected void AssertResultDefines(JsonNode schema, params Type[] expectedTypes)
         {
@@ -180,9 +182,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var allReferences = new HashSet<string>();
             CollectAllReferences(schema, allReferences);
 
-            foreach (var expectedType in expectedTypes)
+            // Filter expected types to only include non-primitive, non-enum types
+            var nonPrimitiveTypes = expectedTypes.Where(t => !TypeUtils.IsPrimitive(t) && !t.IsEnum).ToArray();
+
+            // Verify all expected types are present in $defs and referenced
+            foreach (var expectedType in nonPrimitiveTypes)
             {
-                var expectedTypeId = expectedType.GetTypeId();
+                var expectedTypeId = expectedType.GetSchemaTypeId();
 
                 // Check if the type is either:
                 // 1. Directly defined in $defs (exact match)
@@ -197,6 +203,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                     $"Expected $ref: '{expectedRef}'. " +
                     $"Defined types: {string.Join(", ", defines.Select(d => d.Key))}. " +
                     $"Referenced types: {string.Join(", ", allReferences)}");
+            }
+
+            // Verify that if any of the expected types appear in $defs, they are not primitive or enum
+            foreach (var expectedType in expectedTypes)
+            {
+                var expectedTypeId = expectedType.GetSchemaTypeId();
+                if (defines.ContainsKey(expectedTypeId))
+                {
+                    Assert.False(TypeUtils.IsPrimitive(expectedType) || expectedType.IsEnum,
+                        $"Type '{expectedType.GetTypeShortName()}' with ID '{expectedTypeId}' is primitive or enum and should not be in $defs. " +
+                        $"Primitives and enums should be inlined in the schema.");
+                }
             }
         }
 

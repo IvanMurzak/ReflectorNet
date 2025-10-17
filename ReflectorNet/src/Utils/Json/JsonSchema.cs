@@ -120,7 +120,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         // If justRef is true and the type is not primitive, we return a reference schema
                         schema = new JsonObject
                         {
-                            [Ref] = RefValue + type.GetTypeId()
+                            [Ref] = RefValue + type.GetSchemaTypeId()
                         };
 
                         // Get description from the type if available
@@ -223,7 +223,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (TypeUtils.IsPrimitive(type))
                 return;
 
-            var typeId = type.GetTypeId();
+            var typeId = type.GetSchemaTypeId();
 
             // Add the type definition if not already present
             if (!defines.ContainsKey(typeId))

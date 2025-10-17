@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
@@ -32,7 +33,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             // Special case: string is technically IEnumerable<char> but shouldn't be treated as an array
             if (type == typeof(string))
-                return type.GetTypeName(pretty: true);
+                return GetTypeName(type, pretty: true);
 
             // If type is a generic type, use its full name with generic arguments
             if (type.IsGenericType)
@@ -58,8 +59,67 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return $"{GetTypeId(elementType)}{ArraySuffix}";
             }
 
-            return type.GetTypeName(pretty: true);
+            return GetTypeName(type, pretty: true);
         }
+
+        public static string GetSchemaTypeId<T>() => GetSchemaTypeId(typeof(T));
+        public static string GetSchemaTypeId(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            // Handle nullable types
+            type = Nullable.GetUnderlyingType(type) ?? type;
+
+            // Special case: string is technically IEnumerable<char> but shouldn't be treated as an array
+            if (type == typeof(string))
+                return GetTypeName(type, pretty: true);
+
+            // If type is a generic type, use its full name with generic arguments
+            if (type.IsGenericType)
+            {
+                var genericTypes = type.GetGenericArguments();
+                if (genericTypes.Length == 1)
+                {
+                    if (typeof(System.Collections.IList).IsAssignableFrom(type) ||
+                        typeof(ISet<>).MakeGenericType(genericTypes).IsAssignableFrom(type) ||
+                        typeof(LinkedList<>).MakeGenericType(genericTypes).IsAssignableFrom(type) ||
+                        typeof(Queue<>).MakeGenericType(genericTypes).IsAssignableFrom(type) ||
+                        typeof(Stack<>).MakeGenericType(genericTypes).IsAssignableFrom(type) ||
+                        typeof(List<>).MakeGenericType(genericTypes).IsAssignableFrom(type) ||
+                        typeof(SortedSet<>).MakeGenericType(genericTypes).IsAssignableFrom(type))
+                    {
+                        var itemType = genericTypes[0];
+                        if (itemType == null)
+                            throw new InvalidOperationException($"Array type '{type}' has no item type.");
+                        return $"{GetSchemaTypeId(itemType)}{ArraySuffix}";
+                    }
+                }
+
+                var genericTypeName = type.GetGenericTypeDefinition().GetTypeName(pretty: true);
+                if (StringUtils.IsNullOrEmpty(genericTypeName))
+                    throw new InvalidOperationException($"Generic type '{type}' does not have a full name.");
+
+                var tickIndex = genericTypeName.IndexOf('`');
+                if (tickIndex > 0)
+                    genericTypeName = genericTypeName.Substring(0, tickIndex);
+
+                // Recursively get the type ID for each generic argument
+                var genericArgs = genericTypes.Select(GetSchemaTypeId);
+                return $"{genericTypeName}<{string.Join(",", genericArgs)}>";
+            }
+
+            if (type.IsArray)
+            {
+                var elementType = type.GetElementType();
+                if (elementType == null)
+                    throw new InvalidOperationException($"Array type '{type}' has no element type.");
+                return $"{GetSchemaTypeId(elementType)}{ArraySuffix}";
+            }
+
+            return GetTypeName(type, pretty: true);
+        }
+
         public static bool IsNameMatch(Type? type, string? typeName)
         {
             if (type == null || string.IsNullOrEmpty(typeName))

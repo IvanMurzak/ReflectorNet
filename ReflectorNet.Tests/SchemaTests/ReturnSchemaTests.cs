@@ -2,12 +2,10 @@ using System;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using com.IvanMurzak.ReflectorNet.Tests.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
-using OuterPerson = com.IvanMurzak.ReflectorNet.OuterAssembly.Model.Person;
-using OuterAddress = com.IvanMurzak.ReflectorNet.OuterAssembly.Model.Address;
-using OuterCompany = com.IvanMurzak.ReflectorNet.OuterAssembly.Model.Company;
+using com.IvanMurzak.ReflectorNet.OuterAssembly.Model;
+using System.Collections.Generic;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
@@ -41,43 +39,43 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private Task<int> TaskIntMethod() => Task.FromResult(42);
         private Task<bool> TaskBoolMethod() => Task.FromResult(true);
         private Task<CustomReturnType> TaskCustomTypeMethod() => Task.FromResult(new CustomReturnType());
-        private Task<OuterPerson> TaskOuterPersonMethod() => Task.FromResult(new OuterPerson());
-        private Task<OuterAddress> TaskOuterAddressMethod() => Task.FromResult(new OuterAddress());
-        private Task<OuterCompany> TaskOuterCompanyMethod() => Task.FromResult(new OuterCompany());
+        private Task<Person> TaskPersonMethod() => Task.FromResult(new Person());
+        private Task<Address> TaskAddressMethod() => Task.FromResult(new Address());
+        private Task<Company> TaskCompanyMethod() => Task.FromResult(new Company());
 
         // ValueTask<T> return types (should be unwrapped)
         private ValueTask<string> ValueTaskStringMethod() => ValueTask.FromResult("test");
         private ValueTask<int> ValueTaskIntMethod() => ValueTask.FromResult(42);
         private ValueTask<CustomReturnType> ValueTaskCustomTypeMethod() => ValueTask.FromResult(new CustomReturnType());
-        private ValueTask<OuterPerson> ValueTaskOuterPersonMethod() => ValueTask.FromResult(new OuterPerson());
-        private ValueTask<OuterAddress> ValueTaskOuterAddressMethod() => ValueTask.FromResult(new OuterAddress());
-        private ValueTask<OuterCompany> ValueTaskOuterCompanyMethod() => ValueTask.FromResult(new OuterCompany());
+        private ValueTask<Person> ValueTaskPersonMethod() => ValueTask.FromResult(new Person());
+        private ValueTask<Address> ValueTaskAddressMethod() => ValueTask.FromResult(new Address());
+        private ValueTask<Company> ValueTaskCompanyMethod() => ValueTask.FromResult(new Company());
 
         // Custom types
         private CustomReturnType CustomTypeMethod() => new CustomReturnType();
         private ComplexReturnType ComplexTypeMethod() => new ComplexReturnType();
-        private OuterPerson OuterPersonMethod() => new OuterPerson();
-        private OuterAddress OuterAddressMethod() => new OuterAddress();
-        private OuterCompany OuterCompanyMethod() => new OuterCompany();
+        private Person PersonMethod() => new Person();
+        private Address AddressMethod() => new Address();
+        private Company CompanyMethod() => new Company();
 
         // Collections
         private string[] StringArrayMethod() => new[] { "test" };
-        private System.Collections.Generic.List<int> ListIntMethod() => new System.Collections.Generic.List<int>();
-        private System.Collections.Generic.Dictionary<string, int> DictionaryMethod() => new System.Collections.Generic.Dictionary<string, int>();
+        private List<int> ListIntMethod() => new List<int>();
+        private Dictionary<string, int> DictionaryMethod() => new Dictionary<string, int>();
 
         // List<ComplexReturnType> variations
-        private System.Collections.Generic.List<ComplexReturnType> ListComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType>();
-        private System.Collections.Generic.List<ComplexReturnType?> ListNullableComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType?>();
-        private System.Collections.Generic.List<ComplexReturnType>? NullableListComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType>();
-        private System.Collections.Generic.List<ComplexReturnType?>? NullableListNullableComplexTypeMethod() => new System.Collections.Generic.List<ComplexReturnType?>();
-        private Task<System.Collections.Generic.List<ComplexReturnType>> TaskListComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType>());
-        private Task<System.Collections.Generic.List<ComplexReturnType>>? NullableTaskListComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType>());
-        private Task<System.Collections.Generic.List<ComplexReturnType>?> TaskNullableListComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType>?>(new System.Collections.Generic.List<ComplexReturnType>());
-        private Task<System.Collections.Generic.List<ComplexReturnType?>> TaskListNullableComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType?>());
-        private Task<System.Collections.Generic.List<ComplexReturnType>?>? NullableTaskNullableListComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType>?>(new System.Collections.Generic.List<ComplexReturnType>());
-        private Task<System.Collections.Generic.List<ComplexReturnType?>?> TaskNullableListNullableComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType?>?>(new System.Collections.Generic.List<ComplexReturnType?>());
-        private Task<System.Collections.Generic.List<ComplexReturnType?>>? NullableTaskListNullableComplexTypeMethod() => Task.FromResult(new System.Collections.Generic.List<ComplexReturnType?>());
-        private Task<System.Collections.Generic.List<ComplexReturnType?>?>? NullableTaskNullableListNullableComplexTypeMethod() => Task.FromResult<System.Collections.Generic.List<ComplexReturnType?>?>(new System.Collections.Generic.List<ComplexReturnType?>());
+        private List<ComplexReturnType> ListComplexTypeMethod() => new List<ComplexReturnType>();
+        private List<ComplexReturnType?> ListNullableComplexTypeMethod() => new List<ComplexReturnType?>();
+        private List<ComplexReturnType>? NullableListComplexTypeMethod() => new List<ComplexReturnType>();
+        private List<ComplexReturnType?>? NullableListNullableComplexTypeMethod() => new List<ComplexReturnType?>();
+        private Task<List<ComplexReturnType>> TaskListComplexTypeMethod() => Task.FromResult(new List<ComplexReturnType>());
+        private Task<List<ComplexReturnType>>? NullableTaskListComplexTypeMethod() => Task.FromResult(new List<ComplexReturnType>());
+        private Task<List<ComplexReturnType>?> TaskNullableListComplexTypeMethod() => Task.FromResult<List<ComplexReturnType>?>(new List<ComplexReturnType>());
+        private Task<List<ComplexReturnType?>> TaskListNullableComplexTypeMethod() => Task.FromResult(new List<ComplexReturnType?>());
+        private Task<List<ComplexReturnType>?>? NullableTaskNullableListComplexTypeMethod() => Task.FromResult<List<ComplexReturnType>?>(new List<ComplexReturnType>());
+        private Task<List<ComplexReturnType?>?> TaskNullableListNullableComplexTypeMethod() => Task.FromResult<List<ComplexReturnType?>?>(new List<ComplexReturnType?>());
+        private Task<List<ComplexReturnType?>>? NullableTaskListNullableComplexTypeMethod() => Task.FromResult(new List<ComplexReturnType?>());
+        private Task<List<ComplexReturnType?>?>? NullableTaskNullableListNullableComplexTypeMethod() => Task.FromResult<List<ComplexReturnType?>?>(new List<ComplexReturnType?>());
 
         // Nullable return types
         private string? NullableStringMethod() => "test";
@@ -87,9 +85,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private DateTime? NullableDateTimeMethod() => DateTime.Now;
         private CustomReturnType? NullableCustomTypeMethod() => new CustomReturnType();
         private ComplexReturnType? NullableComplexTypeMethod() => new ComplexReturnType();
-        private OuterPerson? NullableOuterPersonMethod() => new OuterPerson();
-        private OuterAddress? NullableOuterAddressMethod() => new OuterAddress();
-        private OuterCompany? NullableOuterCompanyMethod() => new OuterCompany();
+        private Person? NullablePersonMethod() => new Person();
+        private Address? NullableAddressMethod() => new Address();
+        private Company? NullableCompanyMethod() => new Company();
         private string[]? NullableStringArrayMethod() => new[] { "test" };
 
         // Task<T?> return types (nullable wrapped in Task)
@@ -97,25 +95,25 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         private Task<int?> TaskNullableIntMethod() => Task.FromResult<int?>(42);
         private Task<bool?> TaskNullableBoolMethod() => Task.FromResult<bool?>(true);
         private Task<CustomReturnType?> TaskNullableCustomTypeMethod() => Task.FromResult<CustomReturnType?>(new CustomReturnType());
-        private Task<OuterPerson?> TaskNullableOuterPersonMethod() => Task.FromResult<OuterPerson?>(new OuterPerson());
-        private Task<OuterAddress?> TaskNullableOuterAddressMethod() => Task.FromResult<OuterAddress?>(new OuterAddress());
-        private Task<OuterCompany?> TaskNullableOuterCompanyMethod() => Task.FromResult<OuterCompany?>(new OuterCompany());
+        private Task<Person?> TaskNullablePersonMethod() => Task.FromResult<Person?>(new Person());
+        private Task<Address?> TaskNullableAddressMethod() => Task.FromResult<Address?>(new Address());
+        private Task<Company?> TaskNullableCompanyMethod() => Task.FromResult<Company?>(new Company());
 
         // ValueTask<T?> return types (nullable wrapped in ValueTask)
         private ValueTask<string?> ValueTaskNullableStringMethod() => ValueTask.FromResult<string?>("test");
         private ValueTask<int?> ValueTaskNullableIntMethod() => ValueTask.FromResult<int?>(42);
         private ValueTask<CustomReturnType?> ValueTaskNullableCustomTypeMethod() => ValueTask.FromResult<CustomReturnType?>(new CustomReturnType());
-        private ValueTask<OuterPerson?> ValueTaskNullableOuterPersonMethod() => ValueTask.FromResult<OuterPerson?>(new OuterPerson());
-        private ValueTask<OuterAddress?> ValueTaskNullableOuterAddressMethod() => ValueTask.FromResult<OuterAddress?>(new OuterAddress());
-        private ValueTask<OuterCompany?> ValueTaskNullableOuterCompanyMethod() => ValueTask.FromResult<OuterCompany?>(new OuterCompany());
+        private ValueTask<Person?> ValueTaskNullablePersonMethod() => ValueTask.FromResult<Person?>(new Person());
+        private ValueTask<Address?> ValueTaskNullableAddressMethod() => ValueTask.FromResult<Address?>(new Address());
+        private ValueTask<Company?> ValueTaskNullableCompanyMethod() => ValueTask.FromResult<Company?>(new Company());
 
         // Task<T?>? return types (nullable T wrapped in nullable Task)
         private Task<string?>? NullableTaskNullableStringMethod() => Task.FromResult<string?>("test");
         private Task<int?>? NullableTaskNullableIntMethod() => Task.FromResult<int?>(42);
         private Task<CustomReturnType?>? NullableTaskNullableCustomTypeMethod() => Task.FromResult<CustomReturnType?>(new CustomReturnType());
-        private Task<OuterPerson?>? NullableTaskNullableOuterPersonMethod() => Task.FromResult<OuterPerson?>(new OuterPerson());
-        private Task<OuterAddress?>? NullableTaskNullableOuterAddressMethod() => Task.FromResult<OuterAddress?>(new OuterAddress());
-        private Task<OuterCompany?>? NullableTaskNullableOuterCompanyMethod() => Task.FromResult<OuterCompany?>(new OuterCompany());
+        private Task<Person?>? NullableTaskNullablePersonMethod() => Task.FromResult<Person?>(new Person());
+        private Task<Address?>? NullableTaskNullableAddressMethod() => Task.FromResult<Address?>(new Address());
+        private Task<Company?>? NullableTaskNullableCompanyMethod() => Task.FromResult<Company?>(new Company());
 
         // NOTE: ValueTask<T?>? is not a valid scenario because ValueTask is a struct, not a class
         // So it cannot be made nullable in the reference type sense. We removed these tests.
@@ -205,33 +203,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetReturnSchema_TaskOuterPerson_UnwrapsCorrectly()
+        public void GetReturnSchema_TaskPerson_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskOuterPersonMethod));
+            var schema = GetReturnSchemaForMethod(nameof(TaskPersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_TaskOuterAddress_UnwrapsCorrectly()
+        public void GetReturnSchema_TaskAddress_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskOuterAddressMethod));
+            var schema = GetReturnSchemaForMethod(nameof(TaskAddressMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_TaskOuterCompany_UnwrapsCorrectly()
+        public void GetReturnSchema_TaskCompany_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskOuterCompanyMethod));
+            var schema = GetReturnSchemaForMethod(nameof(TaskCompanyMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion
@@ -256,33 +254,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetReturnSchema_TaskNullableOuterPerson_UnwrapsWithoutRequired()
+        public void GetReturnSchema_TaskNullablePerson_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskNullableOuterPersonMethod));
+            var schema = GetReturnSchemaForMethod(nameof(TaskNullablePersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_TaskNullableOuterAddress_UnwrapsWithoutRequired()
+        public void GetReturnSchema_TaskNullableAddress_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskNullableOuterAddressMethod));
+            var schema = GetReturnSchemaForMethod(nameof(TaskNullableAddressMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_TaskNullableOuterCompany_UnwrapsWithoutRequired()
+        public void GetReturnSchema_TaskNullableCompany_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskNullableOuterCompanyMethod));
+            var schema = GetReturnSchemaForMethod(nameof(TaskNullableCompanyMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion
@@ -306,33 +304,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetReturnSchema_NullableTaskNullableOuterPerson_UnwrapsWithoutRequired()
+        public void GetReturnSchema_NullableTaskNullablePerson_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableOuterPersonMethod));
+            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullablePersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_NullableTaskNullableOuterAddress_UnwrapsWithoutRequired()
+        public void GetReturnSchema_NullableTaskNullableAddress_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableOuterAddressMethod));
+            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableAddressMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_NullableTaskNullableOuterCompany_UnwrapsWithoutRequired()
+        public void GetReturnSchema_NullableTaskNullableCompany_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableOuterCompanyMethod));
+            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableCompanyMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion
@@ -356,33 +354,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetReturnSchema_ValueTaskOuterPerson_UnwrapsCorrectly()
+        public void GetReturnSchema_ValueTaskPerson_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskOuterPersonMethod));
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskPersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_ValueTaskOuterAddress_UnwrapsCorrectly()
+        public void GetReturnSchema_ValueTaskAddress_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskOuterAddressMethod));
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskAddressMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_ValueTaskOuterCompany_UnwrapsCorrectly()
+        public void GetReturnSchema_ValueTaskCompany_UnwrapsCorrectly()
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskOuterCompanyMethod));
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskCompanyMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion
@@ -406,33 +404,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetReturnSchema_ValueTaskNullableOuterPerson_UnwrapsWithoutRequired()
+        public void GetReturnSchema_ValueTaskNullablePerson_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableOuterPersonMethod));
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullablePersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_ValueTaskNullableOuterAddress_UnwrapsWithoutRequired()
+        public void GetReturnSchema_ValueTaskNullableAddress_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableOuterAddressMethod));
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableAddressMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_ValueTaskNullableOuterCompany_UnwrapsWithoutRequired()
+        public void GetReturnSchema_ValueTaskNullableCompany_UnwrapsWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableOuterCompanyMethod));
+            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableCompanyMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion
@@ -458,33 +456,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetReturnSchema_OuterPerson_ReturnsValidObjectSchema()
+        public void GetReturnSchema_Person_ReturnsValidObjectSchema()
         {
-            var schema = GetReturnSchemaForMethod(nameof(OuterPersonMethod));
+            var schema = GetReturnSchemaForMethod(nameof(PersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_OuterAddress_ReturnsValidObjectSchema()
+        public void GetReturnSchema_Address_ReturnsValidObjectSchema()
         {
-            var schema = GetReturnSchemaForMethod(nameof(OuterAddressMethod));
+            var schema = GetReturnSchemaForMethod(nameof(AddressMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_OuterCompany_ReturnsValidObjectSchema()
+        public void GetReturnSchema_Company_ReturnsValidObjectSchema()
         {
-            var schema = GetReturnSchemaForMethod(nameof(OuterCompanyMethod));
+            var schema = GetReturnSchemaForMethod(nameof(CompanyMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion
@@ -507,33 +505,33 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetReturnSchema_NullableOuterPerson_ReturnsValidObjectSchemaWithoutRequired()
+        public void GetReturnSchema_NullablePerson_ReturnsValidObjectSchemaWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullableOuterPersonMethod));
+            var schema = GetReturnSchemaForMethod(nameof(NullablePersonMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_NullableOuterAddress_ReturnsValidObjectSchemaWithoutRequired()
+        public void GetReturnSchema_NullableAddress_ReturnsValidObjectSchemaWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullableOuterAddressMethod));
+            var schema = GetReturnSchemaForMethod(nameof(NullableAddressMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_NullableOuterCompany_ReturnsValidObjectSchemaWithoutRequired()
+        public void GetReturnSchema_NullableCompany_ReturnsValidObjectSchemaWithoutRequired()
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullableOuterCompanyMethod));
+            var schema = GetReturnSchemaForMethod(nameof(NullableCompanyMethod));
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion
@@ -674,9 +672,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Theory]
-        [InlineData(nameof(OuterPersonMethod), "Person")]
-        [InlineData(nameof(OuterAddressMethod), "Address")]
-        [InlineData(nameof(OuterCompanyMethod), "Company")]
+        [InlineData(nameof(PersonMethod), "Person")]
+        [InlineData(nameof(AddressMethod), "Address")]
+        [InlineData(nameof(CompanyMethod), "Company")]
         public void GetReturnSchema_OuterAssemblyType_WithJustRef_ReturnsRefSchema(string methodName, string expectedTypeName)
         {
             // Arrange
@@ -810,89 +808,89 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>.Echo));
+            var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.Echo));
             AssertComplexListReturnSchema(schema!, shouldBeRequired: true);
         }
 
         [Fact]
         public void GetReturnSchema_WrapperEchoNullableListComplex_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<System.Collections.Generic.List<ComplexReturnType>>.EchoNullable));
+            var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.EchoNullable));
             AssertComplexListReturnSchema(schema!, shouldBeRequired: false);
         }
 
         [Fact]
-        public void GetReturnSchema_WrapperEchoOuterPerson_ReturnsCorrectSchema()
+        public void GetReturnSchema_WrapperEchoPerson_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterPerson));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterPerson>.Echo));
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Person));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Person>.Echo));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_WrapperEchoOuterAddress_ReturnsCorrectSchema()
+        public void GetReturnSchema_WrapperEchoAddress_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterAddress));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterAddress>.Echo));
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Address));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Address>.Echo));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_WrapperEchoOuterCompany_ReturnsCorrectSchema()
+        public void GetReturnSchema_WrapperEchoCompany_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterCompany));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterCompany>.Echo));
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Company));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Company>.Echo));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         [Fact]
-        public void GetReturnSchema_WrapperEchoNullableOuterPerson_ReturnsCorrectSchema()
+        public void GetReturnSchema_WrapperEchoNullablePerson_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterPerson));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterPerson>.EchoNullable));
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Person));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Person>.EchoNullable));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterPerson), typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Person), typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_WrapperEchoNullableOuterAddress_ReturnsCorrectSchema()
+        public void GetReturnSchema_WrapperEchoNullableAddress_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterAddress));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterAddress>.EchoNullable));
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Address));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Address>.EchoNullable));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterAddress));
+            AssertResultDefines(schema, typeof(Address));
         }
 
         [Fact]
-        public void GetReturnSchema_WrapperEchoNullableOuterCompany_ReturnsCorrectSchema()
+        public void GetReturnSchema_WrapperEchoNullableCompany_ReturnsCorrectSchema()
         {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(OuterCompany));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<OuterCompany>.EchoNullable));
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Company));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Company>.EchoNullable));
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
             AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(OuterCompany), typeof(OuterAddress), typeof(OuterPerson));
+            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
         }
 
         #endregion

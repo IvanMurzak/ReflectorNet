@@ -9,7 +9,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
     public class ObjectRefConverter : JsonConverter<ObjectRef>, IJsonSchemaConverter
     {
-        public string Id => typeof(ObjectRef).GetTypeId();
+        public string Id => typeof(ObjectRef).GetSchemaTypeId();
         public JsonNode GetScheme() => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Object,
