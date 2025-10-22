@@ -5,6 +5,8 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
 
 namespace com.IvanMurzak.ReflectorNet.Json
@@ -12,7 +14,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
     public interface IJsonSchemaConverter
     {
         string Id { get; }
-        JsonNode GetScheme();
-        JsonNode GetSchemeRef();
+        JsonNode GetSchema();
+        JsonNode GetSchemaRef();
+        IEnumerable<Type> GetDefinedTypes();
     }
 }

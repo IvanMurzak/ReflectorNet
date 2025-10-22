@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 
@@ -18,10 +17,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
 {
     using JsonSerializer = System.Text.Json.JsonSerializer;
 
-    public class MethodDataConverter : JsonConverter<MethodData>, IJsonSchemaConverter
+    public class MethodDataConverter : JsonSchemaConverter<MethodData>
     {
-        public static string StaticId => TypeUtils.GetSchemaTypeId<MethodData>();
-
         public static JsonNode Schema => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Object,
@@ -116,10 +113,12 @@ namespace com.IvanMurzak.ReflectorNet.Json
             [JsonSchema.Ref] = JsonSchema.RefValue + StaticId
         };
 
-        public string Id => StaticId;
-
-        public JsonNode GetSchemeRef() => SchemaRef;
-        public JsonNode GetScheme() => Schema;
+        public override JsonNode GetSchemaRef() => SchemaRef;
+        public override JsonNode GetSchema() => Schema;
+        public override IEnumerable<Type> GetDefinedTypes()
+        {
+            yield return typeof(MethodData.Parameter);
+        }
 
         public override MethodData? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

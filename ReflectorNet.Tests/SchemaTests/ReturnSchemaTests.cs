@@ -622,7 +622,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
         [Theory]
         [InlineData(nameof(TaskListComplexTypeMethod), true)]
+#if NET5_0_OR_GREATER
         [InlineData(nameof(NullableTaskListComplexTypeMethod), false)]
+#else
+        [InlineData(nameof(NullableTaskListComplexTypeMethod), true)] // netstandard2.1 cannot detect Task<T>? nullability
+#endif
         public void GetReturnSchema_TaskListComplexType_UnwrapsToArraySchemaWithComplexItems(string methodName, bool shouldBeRequired)
         {
             var schema = GetReturnSchemaForMethod(methodName);
@@ -642,7 +646,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
         [Theory]
         [InlineData(nameof(TaskListNullableComplexTypeMethod), true)]
+#if NET5_0_OR_GREATER
         [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), false)]
+#else
+        [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), true)] // netstandard2.1 cannot detect Task<T>? nullability
+#endif
         public void GetReturnSchema_TaskListNullableComplexType_UnwrapsToArraySchemaWithNullableItems(string methodName, bool shouldBeRequired)
         {
             var schema = GetReturnSchemaForMethod(methodName);

@@ -18,7 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             reflector ??= new Reflector();
 
-            var schema = reflector.GetSchema(type, justRef: false);
+            var schema = reflector.GetSchema(type);
 
             _output.WriteLine($"Schema for {type.GetTypeShortName()}");
             _output.WriteLine($"{schema}");
@@ -36,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             reflector ??= new Reflector();
 
-            var schema = reflector.GetArgumentsSchema(methodInfo, justRef: false)!;
+            var schema = reflector.GetArgumentsSchema(methodInfo)!;
 
             _output.WriteLine(schema.ToString());
 
@@ -74,7 +74,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             reflector ??= new Reflector();
 
-            var schema = reflector.GetArgumentsSchema(methodInfo, justRef: false)!;
+            var schema = reflector.GetArgumentsSchema(methodInfo)!;
 
             _output.WriteLine(schema.ToString());
 

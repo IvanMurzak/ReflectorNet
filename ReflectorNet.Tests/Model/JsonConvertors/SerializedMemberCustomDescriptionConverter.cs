@@ -1,18 +1,16 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
-    public class SerializedMemberCustomDescriptionConverter : JsonConverter<SerializedMember>, IJsonSchemaConverter
+    public class SerializedMemberCustomDescriptionConverter : JsonSchemaConverter<SerializedMember>, IJsonSchemaConverter
     {
         public const string CustomDescription = "Custom description, used for testing purposes.";
 
-        public static string StaticId => TypeUtils.GetSchemaTypeId<SerializedMember>();
         public static JsonNode Schema => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Object,
@@ -64,15 +62,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
 
         readonly Reflector _reflector;
 
-        public string Id => StaticId;
-
         public SerializedMemberCustomDescriptionConverter(Reflector reflector)
         {
             _reflector = reflector ?? throw new ArgumentNullException(nameof(reflector));
         }
 
-        public JsonNode GetSchemeRef() => SchemaRef;
-        public JsonNode GetScheme() => Schema;
+        public override JsonNode GetSchemaRef() => SchemaRef;
+        public override JsonNode GetSchema() => Schema;
 
         public override SerializedMember? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

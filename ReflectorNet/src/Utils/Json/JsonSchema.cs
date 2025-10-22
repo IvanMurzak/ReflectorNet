@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
@@ -67,11 +66,37 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </summary>
         /// <typeparam name="T">The type for which to generate the JSON Schema.</typeparam>
         /// <param name="reflector">The Reflector instance used for type analysis and converter access.</param>
-        /// <param name="justRef">Whether to generate a compact reference schema for non-primitive types. Default is false.</param>
         /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
         /// <exception cref="InvalidOperationException">Thrown when schema generation fails for the specified type.</exception>
-        public JsonNode GetSchema<T>(Reflector reflector, bool justRef = false)
-            => GetSchema(reflector, typeof(T), justRef);
+        public JsonNode GetSchema<T>(Reflector reflector, JsonObject? defines = null)
+            => GetSchema(reflector, typeof(T), defines);
+
+        /// <summary>
+        /// Generates a comprehensive JSON Schema representation for the specified generic type.
+        /// This method provides flexible schema generation supporting both full schema definitions
+        /// and compact reference schemas, with intelligent handling of primitive vs complex types.
+        ///
+        /// Schema Generation Features:
+        /// - Type unwrapping: Automatically handles nullable types by unwrapping to underlying type
+        /// - Converter integration: Leverages registered JsonConverter implementations for custom schema logic
+        /// - Reference optimization: Generates compact $ref schemas for complex types when justRef=true
+        /// - Documentation extraction: Includes descriptions from DescriptionAttribute and type metadata
+        /// - Error handling: Provides detailed error information for schema generation failures
+        /// - Primitive handling: Optimizes schema generation for built-in types
+        ///
+        /// Schema Modes:
+        /// - Full schema (justRef=false): Complete schema definition with all properties and nested types
+        /// - Reference schema (justRef=true): Compact $ref pointing to type definition in $defs
+        /// - Primitive inline: Primitive types are always inlined regardless of justRef setting
+        ///
+        /// Generated schemas conform to JSON Schema Draft 2020-12 specification.
+        /// </summary>
+        /// <typeparam name="T">The type for which to generate the JSON Schema.</typeparam>
+        /// <param name="reflector">The Reflector instance used for type analysis and converter access.</param>
+        /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when schema generation fails for the specified type.</exception>
+        public JsonNode GetSchemaRef<T>(Reflector reflector)
+            => GetSchemaRef(reflector, typeof(T));
 
         /// <summary>
         /// Generates a comprehensive JSON Schema representation for the specified type.
@@ -95,51 +120,66 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </summary>
         /// <param name="reflector">The Reflector instance used for type analysis and converter access.</param>
         /// <param name="type">The Type for which to generate the JSON Schema.</param>
-        /// <param name="justRef">Whether to generate a compact reference schema for non-primitive types. Default is false.</param>
         /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
         /// <exception cref="InvalidOperationException">Thrown when schema generation fails for the specified type.</exception>
-        public JsonNode GetSchema(Reflector reflector, Type type, bool justRef = false)
+        public JsonNode GetSchema(Reflector reflector, Type type, JsonObject? defines = null)
         {
             // Handle nullable types
             type = Nullable.GetUnderlyingType(type) ?? type;
-
             var schema = default(JsonNode);
+            var typeId = type.GetSchemaTypeId();
 
             try
             {
+                var definesNeeded = defines == null;
+                defines ??= new JsonObject();
+
+                var defineContainsType = defines.ContainsKey(typeId);
+
                 var jsonConverter = reflector.JsonSerializerOptions.GetConverter(type);
                 if (jsonConverter is IJsonSchemaConverter schemeConvertor)
                 {
-                    schema = justRef
-                        ? schemeConvertor.GetSchemeRef()
-                        : schemeConvertor.GetScheme();
+                    // Add placeholder to prevent infinite recursion
+                    if (definesNeeded && !defineContainsType)
+                        defines[typeId] = new JsonObject { [Type] = Object };
+
+                    schema = schemeConvertor.GetSchema();
+
+                    if (definesNeeded && !defineContainsType)
+                        defines[typeId] = schema;
+
+                    foreach (var defType in schemeConvertor.GetDefinedTypes())
+                    {
+                        var defTypeId = defType.GetSchemaTypeId();
+                        if (defines.ContainsKey(defTypeId))
+                            continue;
+
+                        // Add placeholder to prevent infinite recursion
+                        defines[defTypeId] = new JsonObject { [Type] = Object };
+
+                        var def = GetSchema(reflector, defType, defines);
+                        defines[defTypeId] = def;
+                    }
                 }
                 else
                 {
-                    if (justRef && !TypeUtils.IsPrimitive(type))
-                    {
-                        // If justRef is true and the type is not primitive, we return a reference schema
-                        schema = new JsonObject
-                        {
-                            [Ref] = RefValue + type.GetSchemaTypeId()
-                        };
+                    // Add placeholder to prevent infinite recursion
+                    // if (definesNeeded && !defineContainsType)
+                    //     defines[typeId] = new JsonObject { [Type] = Object };
 
-                        // Get description from the type if available
-                        var description = TypeUtils.GetDescription(type);
-                        if (!string.IsNullOrEmpty(description))
-                            schema[Description] = JsonValue.Create(description);
-                    }
-                    else
-                    {
-                        // If not justRef, we generate the full schema
-                        schema = GenerateSchemaFromType(reflector, type);
+                    schema = GenerateSchemaFromType(reflector, type, defines);
 
-                        // Get description from the type if available
-                        var description = TypeUtils.GetDescription(type);
-                        if (!string.IsNullOrEmpty(description))
-                            schema[Description] = JsonValue.Create(description);
-                    }
+                    // if (definesNeeded && !defineContainsType)
+                    //     defines[typeId] = schema;
+
+                    if (definesNeeded && defines.Count > 0)
+                        schema[Defs] = defines;
                 }
+
+                // Get description from the type if available
+                var description = TypeUtils.GetDescription(type);
+                if (!string.IsNullOrEmpty(description))
+                    schema[Description] = JsonValue.Create(description);
             }
             catch (Exception ex)
             {
@@ -155,13 +195,83 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             PostprocessFields(schema);
 
-            if (schema is JsonObject parameterSchemaObject)
+            if (schema is not JsonObject)
             {
-                var propertyDescription = type.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                if (!string.IsNullOrEmpty(propertyDescription))
-                    parameterSchemaObject[Description] = JsonValue.Create(propertyDescription);
+                return new JsonObject()
+                {
+                    [Error] = $"Unexpected schema type for '{type.GetTypeName(pretty: false)}'. Json Schema type: {schema.GetType().GetTypeName()}"
+                };
             }
-            else
+            return schema;
+        }
+
+        /// <summary>
+        /// Generates a comprehensive JSON Schema representation for the specified type.
+        /// This method provides flexible schema generation supporting both full schema definitions
+        /// and compact reference schemas, with intelligent handling of primitive vs complex types.
+        ///
+        /// Schema Generation Features:
+        /// - Type unwrapping: Automatically handles nullable types by unwrapping to underlying type
+        /// - Converter integration: Leverages registered JsonConverter implementations for custom schema logic
+        /// - Reference optimization: Generates compact $ref schemas for complex types when justRef=true
+        /// - Documentation extraction: Includes descriptions from DescriptionAttribute and type metadata
+        /// - Error handling: Provides detailed error information for schema generation failures
+        /// - Primitive handling: Optimizes schema generation for built-in types
+        ///
+        /// Schema Modes:
+        /// - Full schema (justRef=false): Complete schema definition with all properties and nested types
+        /// - Reference schema (justRef=true): Compact $ref pointing to type definition in $defs
+        /// - Primitive inline: Primitive types are always inlined regardless of justRef setting
+        ///
+        /// Generated schemas conform to JSON Schema Draft 2020-12 specification.
+        /// </summary>
+        /// <param name="reflector">The Reflector instance used for type analysis and converter access.</param>
+        /// <param name="type">The Type for which to generate the JSON Schema.</param>
+        /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when schema generation fails for the specified type.</exception>
+        public JsonNode GetSchemaRef(Reflector reflector, Type type)
+        {
+            // Handle nullable types
+            type = Nullable.GetUnderlyingType(type) ?? type;
+            var schema = default(JsonNode);
+
+            try
+            {
+                var jsonConverter = reflector.JsonSerializerOptions.GetConverter(type);
+                if (jsonConverter is IJsonSchemaConverter schemeConvertor)
+                {
+                    schema = schemeConvertor.GetSchemaRef();
+                }
+                else
+                {
+                    var typeId = type.GetSchemaTypeId();
+                    // If justRef is true and the type is not primitive, we return a reference schema
+                    schema = new JsonObject
+                    {
+                        [Ref] = RefValue + typeId
+                    };
+                }
+
+                // Get description from the type if available
+                var description = TypeUtils.GetDescription(type);
+                if (!string.IsNullOrEmpty(description))
+                    schema[Description] = JsonValue.Create(description);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions and return null or an error message
+                return new JsonObject()
+                {
+                    [Error] = $"Failed to get schema for '{type.GetTypeName(pretty: false)}':\n{ex.Message}\n{ex.StackTrace}\n"
+                };
+            }
+
+            if (schema == null)
+                throw new InvalidOperationException($"Failed to get schema for type '{type.GetTypeName(pretty: false)}'.");
+
+            PostprocessFields(schema);
+
+            if (schema is not JsonObject)
             {
                 return new JsonObject()
                 {
@@ -181,7 +291,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <param name="type">The type to analyze for nested types.</param>
         /// <param name="defines">The JsonObject to accumulate type definitions.</param>
         /// <param name="visitedTypes">Set of already visited types to prevent infinite recursion.</param>
-        private void CollectNestedTypes(Reflector reflector, Type type, JsonObject defines, HashSet<Type>? visitedTypes = null)
+        void CollectNestedTypes(Reflector reflector, Type type, HashSet<Type>? visitedTypes = null)
         {
             visitedTypes ??= new HashSet<Type>();
 
@@ -195,29 +305,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (TypeUtils.IsPrimitive(type))
                 return;
 
-            var typeId = type.GetSchemaTypeId();
-
-            // Add the type definition if not already present
-            if (!defines.ContainsKey(typeId))
-            {
-                var fullSchema = GetSchema(reflector, type, justRef: false);
-                defines[typeId] = fullSchema;
-            }
-
             // Handle generic type arguments (e.g., List<T>, Dictionary<K,V>)
             foreach (var genericArgument in TypeUtils.GetGenericTypes(type))
-            {
-                CollectNestedTypes(reflector, genericArgument, defines, visitedTypes);
-            }
+                CollectNestedTypes(reflector, genericArgument, visitedTypes);
 
             // Handle collection item types (e.g., T[], List<T>, IEnumerable<T>)
             if (TypeUtils.IsIEnumerable(type))
             {
                 var itemType = TypeUtils.GetEnumerableItemType(type);
                 if (itemType != null)
-                {
-                    CollectNestedTypes(reflector, itemType, defines, visitedTypes);
-                }
+                    CollectNestedTypes(reflector, itemType, visitedTypes);
             }
 
             // Handle properties and fields to find nested types
@@ -225,18 +322,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (properties != null)
             {
                 foreach (var prop in properties)
-                {
-                    CollectNestedTypes(reflector, prop.PropertyType, defines, visitedTypes);
-                }
+                    CollectNestedTypes(reflector, prop.PropertyType, visitedTypes);
             }
 
             var fields = reflector.GetSerializableFields(type);
             if (fields != null)
             {
                 foreach (var field in fields)
-                {
-                    CollectNestedTypes(reflector, field.FieldType, defines, visitedTypes);
-                }
+                    CollectNestedTypes(reflector, field.FieldType, visitedTypes);
             }
         }
 
@@ -278,7 +371,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <param name="justRef">Whether to use compact references for complex types in parameter schemas. Default is false.</param>
         /// <returns>A JsonNode containing the complete JSON Schema for the method's parameters.</returns>
         /// <exception cref="ArgumentNullException">Thrown when method parameter is null.</exception>
-        public JsonNode GetArgumentsSchema(Reflector reflector, MethodInfo method, bool justRef = false)
+        public JsonNode GetArgumentsSchema(Reflector reflector, MethodInfo method, bool justRef = false, JsonObject? defines = null)
         {
             if (method == null)
                 throw new ArgumentNullException(nameof(method));
@@ -290,11 +383,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var types = parameters
                 .Select(p => (
                     type: p.ParameterType,
-                    name: p.Name,
+                    name: p.Name ?? throw new InvalidOperationException($"Parameter in method '{method.Name}' has no name."),
                     description: TypeUtils.GetDescription(p),
                     required: !p.HasDefaultValue));
 
-            return GenerateSchema(reflector, types, justRef);
+            return GenerateSchema(reflector, types, justRef, defines);
         }
 
         /// <summary>
@@ -336,7 +429,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <param name="justRef">Whether to use compact references for complex types. Default is false.</param>
         /// <returns>A JsonNode containing the JSON Schema for the method's return type, or null for void/Task/ValueTask.</returns>
         /// <exception cref="ArgumentNullException">Thrown when methodInfo parameter is null.</exception>
-        public JsonNode? GetReturnSchema(Reflector reflector, MethodInfo methodInfo, bool justRef = false)
+        public JsonNode? GetReturnSchema(Reflector reflector, MethodInfo methodInfo, bool justRef = false, JsonObject? defines = null)
         {
             if (methodInfo == null)
                 throw new ArgumentNullException(nameof(methodInfo));
@@ -349,82 +442,61 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 returnType == typeof(ValueTask))
                 return null;
 
-            // First, check if the return type itself is a nullable Task/ValueTask (e.g., Task<T>? or ValueTask<T>?)
-            var isTaskNullable = false;
-#if NET5_0_OR_GREATER
-            try
-            {
-                var nullabilityContext = new System.Reflection.NullabilityInfoContext();
-                var returnTypeNullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
+            // Check if return type is Task<T> or ValueTask<T>
+            var isAsyncWrapper = returnType.IsGenericType &&
+                (returnType.GetGenericTypeDefinition() == typeof(Task<>) ||
+                 returnType.GetGenericTypeDefinition() == typeof(ValueTask<>));
 
-                // Check if the Task/ValueTask itself is nullable
-                if (returnType.IsGenericType &&
-                    (returnType.GetGenericTypeDefinition() == typeof(Task<>) || returnType.GetGenericTypeDefinition() == typeof(ValueTask<>)))
-                {
-                    isTaskNullable = returnTypeNullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
-                }
-            }
-            catch
-            {
-                // If we can't determine nullability, assume not nullable
-            }
-#endif
+            // Unwrap Task<T>/ValueTask<T> to get the inner T
+            var unwrappedType = isAsyncWrapper
+                ? returnType.GetGenericArguments()[0]
+                : returnType;
 
-            // Unwrap Task<T>/ValueTask<T> first, then compute nullability on the inner T
-            var unwrappedType = returnType;
-            var isNullable = isTaskNullable; // If the Task itself is nullable, the result is also nullable
+            var isNullable = false;
 
-            if (unwrappedType.IsGenericType)
-            {
-                var genericDefinition = unwrappedType.GetGenericTypeDefinition();
-                if (genericDefinition == typeof(Task<>) || genericDefinition == typeof(ValueTask<>))
-                {
-                    unwrappedType = unwrappedType.GetGenericArguments()[0];
-                }
-            }
-
-            // Recompute nullability after unwrapping async wrappers
+            // Check for Nullable<T> (value types like int?, DateTime?)
             var nullableUnderlyingType = Nullable.GetUnderlyingType(unwrappedType);
             if (nullableUnderlyingType != null)
             {
+                // This handles Nullable<T> for value types (e.g., Task<int?>, int?)
                 isNullable = true;
                 unwrappedType = nullableUnderlyingType;
             }
+            else if (!unwrappedType.IsValueType)
+            {
+                // For reference types, check nullability using NullabilityInfoContext
+#if NET5_0_OR_GREATER
+                try
+                {
+                    var nullabilityContext = new NullabilityInfoContext();
+                    var nullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
 
-            //             // Check for nullable reference types using NullabilityInfoContext
-            //             if (!isNullable && (unwrappedType.IsClass || unwrappedType.IsInterface || unwrappedType.IsArray))
-            //             {
-            //                 try
-            //                 {
-            // #if NET5_0_OR_GREATER
-            //                     var nullabilityContext = new System.Reflection.NullabilityInfoContext();
-            //                     var nullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
-
-            //                     // For Task<T> or ValueTask<T>, check the generic argument's nullability
-            //                     if (returnType.IsGenericType)
-            //                     {
-            //                         var genericDef = returnType.GetGenericTypeDefinition();
-            //                         if (genericDef == typeof(Task<>) || genericDef == typeof(ValueTask<>))
-            //                         {
-            //                             isNullable = isNullable || (nullabilityInfo.GenericTypeArguments.Length > 0 &&
-            //                                          nullabilityInfo.GenericTypeArguments[0].ReadState == System.Reflection.NullabilityState.Nullable);
-            //                         }
-            //                         else
-            //                         {
-            //                             isNullable = nullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
-            //                         }
-            //                     }
-            //                     else
-            //                     {
-            //                         isNullable = nullabilityInfo.ReadState == System.Reflection.NullabilityState.Nullable;
-            //                     }
-            // #endif
-            //                 }
-            //                 catch
-            //                 {
-            //                     // If we can't determine nullability, assume not nullable
-            //                 }
-            //             }
+                    // If the return type is Task<T> or ValueTask<T>, check the generic argument nullability
+                    if (isAsyncWrapper)
+                    {
+                        // Check the nullability of the T inside Task<T> or ValueTask<T>
+                        if (nullabilityInfo.GenericTypeArguments.Length > 0)
+                        {
+                            isNullable = nullabilityInfo.GenericTypeArguments[0].ReadState == NullabilityState.Nullable;
+                        }
+                    }
+                    else
+                    {
+                        // For non-async types, check the return type directly
+                        isNullable = nullabilityInfo.ReadState == NullabilityState.Nullable;
+                    }
+                }
+                catch (Exception)
+                {
+                    // If we can't determine nullability, assume not nullable
+                    isNullable = false;
+                }
+#else
+                // For .NET Standard 2.1 and earlier, we cannot determine reference type nullability
+                // Assume not nullable by default
+                isNullable = false;
+#endif
+            }
 
             var types = new (Type type, string name, string? description, bool required)[]
             {
@@ -432,16 +504,31 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     type: unwrappedType,
                     name: Result,
                     description: null,
-                    required: true
+                    required: isNullable == false
                 )
             };
-            return GenerateSchema(reflector, types, justRef);
+            return GenerateSchema(reflector, types, justRef, defines);
         }
 
-        public JsonNode GenerateSchema(Reflector reflector, IEnumerable<(Type type, string name, string? description, bool required)> types, bool justRef = false)
+        /// <summary>
+        /// Generates a JSON Schema for a collection of types, typically representing method parameters.
+        /// This method constructs a schema object with properties for each type, handling required fields,
+        /// </summary>
+        /// <param name="reflector"></param>
+        /// <param name="types"></param>
+        /// <param name="justRef"></param>
+        /// <param name="defines">If it is not null, it will be used to fill new definitions without injecting it into the schema. Needed for recursive call case, when need to generate a single top level definitions object.</param>
+        /// <returns></returns>
+        public JsonNode GenerateSchema(
+            Reflector reflector,
+            IEnumerable<(Type type, string name, string? description, bool required)> types,
+            bool justRef = false,
+            JsonObject? defines = null)
         {
+            var needToAddDefines = defines == null;
+            defines ??= new();
+
             var properties = new JsonObject();
-            var defines = new JsonObject();
             var required = new JsonArray();
 
             // Create a schema object manually
@@ -458,29 +545,24 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 var isPrimitive = TypeUtils.IsPrimitive(parameter.type);
                 if (isPrimitive)
                 {
-                    parameterSchema = GetSchema(reflector, parameter.type, justRef: justRef);
-                    if (parameterSchema == null)
-                        continue;
+                    parameterSchema = GetSchema(reflector, parameter.type, defines: defines);
                 }
                 else
                 {
-                    var typeId = parameter.type.GetTypeId();
-                    if (defines.ContainsKey(typeId))
+                    parameterSchema = GetSchemaRef(reflector, parameter.type);
+
+                    var typeId = parameter.type.GetSchemaTypeId();
+                    if (!defines.ContainsKey(typeId))
                     {
-                        parameterSchema = GetSchema(reflector, parameter.type, justRef: true);
-                    }
-                    else
-                    {
-                        var fullSchema = GetSchema(reflector, parameter.type, justRef: false);
+                        var fullSchema = GetSchema(reflector, parameter.type, defines: defines);
                         if (fullSchema == null)
                             continue;
                         defines[typeId] = fullSchema;
-                        parameterSchema = GetSchema(reflector, parameter.type, justRef: true);
                     }
-
-                    if (parameterSchema == null)
-                        continue;
                 }
+
+                if (parameterSchema == null)
+                    continue;
 
                 properties[parameter.name!] = parameterSchema;
 
@@ -501,17 +583,17 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (TypeUtils.IsPrimitive(genericArgument))
                         continue;
 
-                    var typeId = genericArgument.GetTypeId();
+                    var typeId = genericArgument.GetSchemaTypeId();
                     if (defines.ContainsKey(typeId))
                         continue;
 
-                    var genericSchema = GetSchema(reflector, genericArgument, justRef: false);
+                    var genericSchema = GetSchema(reflector, genericArgument, defines: defines);
                     if (genericSchema != null)
                         defines[typeId] = genericSchema;
                 }
             }
 
-            if (defines.Count > 0)
+            if (defines.Count > 0 && needToAddDefines)
                 schema[Defs] = defines;
             if (required.Count > 0)
                 schema[Required] = required;

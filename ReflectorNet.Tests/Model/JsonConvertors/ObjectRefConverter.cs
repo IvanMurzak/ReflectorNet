@@ -1,16 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Json;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Model
 {
-    public class ObjectRefConverter : JsonConverter<ObjectRef>, IJsonSchemaConverter
+    public class ObjectRefConverter : JsonSchemaConverter<ObjectRef>, IJsonSchemaConverter
     {
-        public string Id => typeof(ObjectRef).GetSchemaTypeId();
-        public JsonNode GetScheme() => new JsonObject
+        public override JsonNode GetSchema() => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Object,
             [JsonSchema.Properties] = new JsonObject
@@ -21,7 +20,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
             },
             [JsonSchema.Required] = new JsonArray { nameof(ObjectRef.instanceID) }
         };
-        public JsonNode GetSchemeRef() => new JsonObject
+        public override JsonNode GetSchemaRef() => new JsonObject
         {
             [JsonSchema.Ref] = JsonSchema.RefValue + Id
         };

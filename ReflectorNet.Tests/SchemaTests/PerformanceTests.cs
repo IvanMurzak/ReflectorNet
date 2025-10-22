@@ -82,7 +82,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var testType = typeof(GameObjectRef);
 
             // Act - Test introspection capabilities
-            var schema = testType.GetSchema(reflector, justRef: false);
+            var schema = testType.GetSchema(reflector);
             var typeId = testType.GetTypeId();
 
             // Assert
@@ -133,7 +133,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var serializedJson = reflector.JsonSerializer.Serialize(testObject);
             var deserializedObject = reflector.JsonSerializer.Deserialize<GameObjectRefList>(serializedJson);
 
-            var schema = reflector.GetSchema(typeof(GameObjectRefList), justRef: false);
+            var schema = reflector.GetSchema(typeof(GameObjectRefList));
             var argumentsSchema = reflector.GetArgumentsSchema(
                 typeof(MethodHelper).GetMethod(nameof(MethodHelper.ListObject_ListObject))!);
 

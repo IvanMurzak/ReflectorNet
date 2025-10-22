@@ -41,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             TestClassMembersDescription(typeof(TestCollectionWithDescription), reflector);
 
             // For List<TestClassWithDescriptions>, just test schema generation
-            var listComplexSchema = reflector.GetSchema(typeof(List<TestClassWithDescriptions>), justRef: false);
+            var listComplexSchema = reflector.GetSchema(typeof(List<TestClassWithDescriptions>));
             Assert.NotNull(listComplexSchema);
             _output.WriteLine($"List<TestClassWithDescriptions> schema: {listComplexSchema}");
         }
@@ -58,11 +58,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // SerializedMember and SerializedMemberList use custom converters with descriptions
             // Let's test their schema generation separately
-            var serializedMemberSchema = reflector.GetSchema(typeof(SerializedMember), justRef: false);
+            var serializedMemberSchema = reflector.GetSchema(typeof(SerializedMember));
             Assert.NotNull(serializedMemberSchema);
             _output.WriteLine($"SerializedMember schema: {serializedMemberSchema}");
 
-            var serializedMemberListSchema = reflector.GetSchema(typeof(SerializedMemberList), justRef: false);
+            var serializedMemberListSchema = reflector.GetSchema(typeof(SerializedMemberList));
             Assert.NotNull(serializedMemberListSchema);
             _output.WriteLine($"SerializedMemberList schema: {serializedMemberListSchema}");
         }
@@ -77,11 +77,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             TestClassMembersDescription(typeof(TestClassWithDescriptions[]), reflector);
 
             // For primitive arrays, just test schema generation
-            var stringArraySchema = reflector.GetSchema(typeof(string[]), justRef: false);
+            var stringArraySchema = reflector.GetSchema(typeof(string[]));
             Assert.NotNull(stringArraySchema);
             _output.WriteLine($"string[] schema: {stringArraySchema}");
 
-            var intArraySchema = reflector.GetSchema(typeof(int[]), justRef: false);
+            var intArraySchema = reflector.GetSchema(typeof(int[]));
             Assert.NotNull(intArraySchema);
             _output.WriteLine($"int[] schema: {intArraySchema}");
         }
@@ -96,15 +96,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             TestClassMembersDescription(typeof(List<TestClassWithDescriptions>), reflector);
 
             // For primitive collections, just test schema generation
-            var listStringSchema = reflector.GetSchema(typeof(List<string>), justRef: false);
+            var listStringSchema = reflector.GetSchema(typeof(List<string>));
             Assert.NotNull(listStringSchema);
             _output.WriteLine($"List<string> schema: {listStringSchema}");
 
-            var listIntSchema = reflector.GetSchema(typeof(List<int>), justRef: false);
+            var listIntSchema = reflector.GetSchema(typeof(List<int>));
             Assert.NotNull(listIntSchema);
             _output.WriteLine($"List<int> schema: {listIntSchema}");
 
-            var dictionarySchema = reflector.GetSchema(typeof(Dictionary<string, int>), justRef: false);
+            var dictionarySchema = reflector.GetSchema(typeof(Dictionary<string, int>));
             Assert.NotNull(dictionarySchema);
             _output.WriteLine($"Dictionary<string, int> schema: {dictionarySchema}");
         }
@@ -115,19 +115,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Primitive types don't have members to test, but we can test schema generation
-            var stringSchema = reflector.GetSchema(typeof(string), justRef: false);
+            var stringSchema = reflector.GetSchema(typeof(string));
             Assert.NotNull(stringSchema);
             _output.WriteLine($"String schema: {stringSchema}");
 
-            var intSchema = reflector.GetSchema(typeof(int), justRef: false);
+            var intSchema = reflector.GetSchema(typeof(int));
             Assert.NotNull(intSchema);
             _output.WriteLine($"Int schema: {intSchema}");
 
-            var boolSchema = reflector.GetSchema(typeof(bool), justRef: false);
+            var boolSchema = reflector.GetSchema(typeof(bool));
             Assert.NotNull(boolSchema);
             _output.WriteLine($"Bool schema: {boolSchema}");
 
-            var doubleSchema = reflector.GetSchema(typeof(double), justRef: false);
+            var doubleSchema = reflector.GetSchema(typeof(double));
             Assert.NotNull(doubleSchema);
             _output.WriteLine($"Double schema: {doubleSchema}");
         }
@@ -138,15 +138,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Nullable types also don't have members to test, but we can test schema generation
-            var nullableIntSchema = reflector.GetSchema(typeof(int?), justRef: false);
+            var nullableIntSchema = reflector.GetSchema(typeof(int?));
             Assert.NotNull(nullableIntSchema);
             _output.WriteLine($"Nullable int schema: {nullableIntSchema}");
 
-            var nullableBoolSchema = reflector.GetSchema(typeof(bool?), justRef: false);
+            var nullableBoolSchema = reflector.GetSchema(typeof(bool?));
             Assert.NotNull(nullableBoolSchema);
             _output.WriteLine($"Nullable bool schema: {nullableBoolSchema}");
 
-            var nullableDateTimeSchema = reflector.GetSchema(typeof(DateTime?), justRef: false);
+            var nullableDateTimeSchema = reflector.GetSchema(typeof(DateTime?));
             Assert.NotNull(nullableDateTimeSchema);
             _output.WriteLine($"Nullable DateTime schema: {nullableDateTimeSchema}");
         }
@@ -157,7 +157,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Test that class-level descriptions are properly captured
-            var schema = reflector.GetSchema(typeof(GameObjectRef), justRef: false);
+            var schema = reflector.GetSchema(typeof(GameObjectRef));
             Assert.NotNull(schema);
 
             var description = schema[JsonSchema.Description]?.ToString();
@@ -173,7 +173,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Test class-level description for our test class
-            var schema = reflector.GetSchema(typeof(TestClassWithDescriptions), justRef: false);
+            var schema = reflector.GetSchema(typeof(TestClassWithDescriptions));
             Assert.NotNull(schema);
 
             var description = schema[JsonSchema.Description]?.ToString();
@@ -189,7 +189,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Create a simple class without descriptions to test graceful handling
-            var schema = reflector.GetSchema(typeof(string), justRef: false);
+            var schema = reflector.GetSchema(typeof(string));
             Assert.NotNull(schema);
 
             // Primitive types might not have descriptions, that's OK
@@ -223,7 +223,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Test that struct-level descriptions are properly captured
-            var schema = reflector.GetSchema(typeof(TestStructWithDescriptions), justRef: false);
+            var schema = reflector.GetSchema(typeof(TestStructWithDescriptions));
             Assert.NotNull(schema);
 
             var description = schema[JsonSchema.Description]?.ToString();
@@ -239,7 +239,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Test that enum-level descriptions are properly captured
-            var schema = reflector.GetSchema(typeof(TestEnumWithDescriptions), justRef: false);
+            var schema = reflector.GetSchema(typeof(TestEnumWithDescriptions));
             Assert.NotNull(schema);
 
             // For enums, the schema might be different - let's just verify it generates
@@ -275,7 +275,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Test that specific descriptions are correctly applied to schema properties
-            var schema = reflector.GetSchema(typeof(GameObjectRef), justRef: false);
+            var schema = reflector.GetSchema(typeof(GameObjectRef));
             Assert.NotNull(schema);
 
             var properties = schema[JsonSchema.Properties]?.AsObject();
@@ -318,7 +318,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             reflector.JsonSerializer.AddConverter(new SerializedMemberCustomDescriptionConverter(reflector));
 
             // Test that custom JSON converters provide proper descriptions in schema
-            var serializedMemberSchema = reflector.GetSchema(typeof(SerializedMember), justRef: false);
+            var serializedMemberSchema = reflector.GetSchema(typeof(SerializedMember));
             Assert.NotNull(serializedMemberSchema);
 
             var properties = serializedMemberSchema[JsonSchema.Properties]?.AsObject();
@@ -335,7 +335,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             foreach (var type in types)
             {
-                var schema = reflector.GetSchema(type, justRef: false);
+                var schema = reflector.GetSchema(type);
 
                 var descriptions = JsonSchema.FindAllProperties(schema, JsonSchema.Description);
 

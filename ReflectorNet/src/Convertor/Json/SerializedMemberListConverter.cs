@@ -6,17 +6,16 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Json
 {
-    public class SerializedMemberListConverter : JsonConverter<SerializedMemberList>, IJsonSchemaConverter
+    public class SerializedMemberListConverter : JsonSchemaConverter<SerializedMemberList>, IJsonSchemaConverter
     {
-        public static string StaticId => TypeUtils.GetSchemaTypeId<SerializedMemberList>();
         public static JsonNode Schema => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.Array,
@@ -26,19 +25,21 @@ namespace com.IvanMurzak.ReflectorNet.Json
             }
         };
 
-        public string Id => StaticId;
-
         public SerializedMemberListConverter(Reflector reflector)
         {
             if (reflector == null)
                 throw new ArgumentNullException(nameof(reflector));
         }
 
-        public JsonNode GetScheme() => Schema;
-        public JsonNode GetSchemeRef() => new JsonObject
+        public override JsonNode GetSchema() => Schema;
+        public override JsonNode GetSchemaRef() => new JsonObject
         {
             [JsonSchema.Ref] = JsonSchema.RefValue + Id
         };
+        public override IEnumerable<Type> GetDefinedTypes()
+        {
+            yield return typeof(SerializedMember);
+        }
 
         public override SerializedMemberList? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
