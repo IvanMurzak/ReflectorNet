@@ -291,6 +291,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <param name="type">The type to analyze for nested types.</param>
         /// <param name="defines">The JsonObject to accumulate type definitions.</param>
         /// <param name="visitedTypes">Set of already visited types to prevent infinite recursion.</param>
+        /// <remarks>
+        /// This method is recursive: it calls itself for each generic argument, collection item type,
+        /// property type, and field type found within the provided <paramref name="type"/>. To prevent
+        /// infinite recursion in the case of cyclic type references, it maintains a <paramref name="visitedTypes"/>
+        /// set and skips types that have already been processed. The recursion ensures that all nested,
+        /// non-primitive types are discovered and can be included in the schema definitions.
+        /// </remarks>
         void CollectNestedTypes(Reflector reflector, Type type, HashSet<Type>? visitedTypes = null)
         {
             visitedTypes ??= new HashSet<Type>();
