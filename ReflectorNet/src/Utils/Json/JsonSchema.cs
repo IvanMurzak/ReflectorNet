@@ -163,14 +163,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
                 else
                 {
-                    // Add placeholder to prevent infinite recursion
-                    // if (definesNeeded && !defineContainsType)
-                    //     defines[typeId] = new JsonObject { [Type] = Object };
-
                     schema = GenerateSchemaFromType(reflector, type, defines);
-
-                    // if (definesNeeded && !defineContainsType)
-                    //     defines[typeId] = schema;
 
                     if (definesNeeded && defines.Count > 0)
                         schema[Defs] = defines;
