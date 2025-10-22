@@ -153,7 +153,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         /// <summary>
-        /// Asserts that "result" IS in the required array (for non-nullable types
+        /// Asserts that "result" IS in the required array (for non-nullable types)
         /// </summary>
         protected void AssertResultRequired(JsonNode schema)
         {

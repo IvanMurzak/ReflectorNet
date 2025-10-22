@@ -158,7 +158,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         defines[defTypeId] = new JsonObject { [Type] = Object };
 
                         var def = GetSchema(reflector, defType, defines);
-                        defines[defTypeId] = def;
+                        if (def != null)
+                            defines[defTypeId] = def;
                     }
                 }
                 else
