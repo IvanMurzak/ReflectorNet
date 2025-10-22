@@ -112,16 +112,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 if (itemType != null)
                 {
                     var itemTypeId = itemType.GetSchemaTypeId();
-                    if (defines.ContainsKey(itemTypeId) == false)
+                    var isItemPrimitive = TypeUtils.IsPrimitive(itemType);
+
+                    if (!isItemPrimitive && defines.ContainsKey(itemTypeId) == false)
                     {
                         // Add placeholder first to prevent infinite recursion
                         defines[itemTypeId] = new JsonObject { [Type] = Object };
                         defines[itemTypeId] = GetSchema(reflector, itemType, defines: defines);
                     }
+
                     var typeId = type.GetSchemaTypeId();
                     if (defines.ContainsKey(typeId) == false)
                     {
-                        var isItemPrimitive = TypeUtils.IsPrimitive(itemType);
                         // Add placeholder first to prevent infinite recursion
                         defines[typeId] = new JsonObject
                         {
@@ -131,17 +133,21 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                                 : GetSchemaRef(reflector, itemType)
                         };
                     }
-                    return GetSchemaRef(reflector, type);
+
+                    return new JsonObject
+                    {
+                        [Type] = Array,
+                        [Items] = isItemPrimitive
+                            ? GetSchema(reflector, itemType, defines: defines)
+                            : GetSchemaRef(reflector, itemType)
+                    };
                 }
             }
 
             // Handle regular objects by introspecting their fields and properties
             var properties = new JsonObject();
             var required = new JsonArray();
-            var schema = new JsonObject
-            {
-                [Type] = Object
-            };
+            var schema = new JsonObject { [Type] = Object };
 
             defines ??= new();
 

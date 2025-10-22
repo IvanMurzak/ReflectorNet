@@ -471,19 +471,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     var nullabilityContext = new NullabilityInfoContext();
                     var nullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
 
+                    isNullable = nullabilityInfo.ReadState == NullabilityState.Nullable;
                     // If the return type is Task<T> or ValueTask<T>, check the generic argument nullability
                     if (isAsyncWrapper)
                     {
                         // Check the nullability of the T inside Task<T> or ValueTask<T>
                         if (nullabilityInfo.GenericTypeArguments.Length > 0)
-                        {
-                            isNullable = nullabilityInfo.GenericTypeArguments[0].ReadState == NullabilityState.Nullable;
-                        }
-                    }
-                    else
-                    {
-                        // For non-async types, check the return type directly
-                        isNullable = nullabilityInfo.ReadState == NullabilityState.Nullable;
+                            isNullable |= nullabilityInfo.GenericTypeArguments[0].ReadState == NullabilityState.Nullable;
                     }
                 }
                 catch (Exception)
