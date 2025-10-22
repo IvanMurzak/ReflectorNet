@@ -66,12 +66,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(type, TypeUtils.GetType(typeName));
         }
 
-        [Fact]
-        public void GetTypeName_CurrentAssembly()
-        {
-            TestTypeName(typeof(Model.ParentClass));
-            TestTypeName(typeof(Model.ParentClass.NestedClass));
-        }
+        
 
         [Fact]
         public void GetTypeName_OuterAssembly()

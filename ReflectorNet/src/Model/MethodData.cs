@@ -45,9 +45,13 @@ namespace com.IvanMurzak.ReflectorNet.Model
             ReturnType = methodInfo.ReturnType.GetTypeName(pretty: false);
             ReturnSchema = methodInfo.ReturnType == typeof(void)
                 ? null
-                : reflector.GetSchema(methodInfo.ReturnType, justRef: justRef);
+                : justRef
+                ? reflector.GetSchemaRef(methodInfo.ReturnType)
+                : reflector.GetSchema(methodInfo.ReturnType);
             InputParametersSchema = methodInfo.GetParameters()
-                ?.Select(parameter => reflector.GetSchema(parameter.ParameterType, justRef: justRef)!)
+                ?.Select(parameter => justRef
+                    ? reflector.GetSchemaRef(parameter.ParameterType)
+                    : reflector.GetSchema(parameter.ParameterType))
                 ?.ToList();
         }
     }

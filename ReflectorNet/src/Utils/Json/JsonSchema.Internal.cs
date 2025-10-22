@@ -97,7 +97,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// Generate a JSON schema from a type using ReflectorNet's introspection capabilities.
         /// This method uses the Reflector's converter system to understand the type structure.
         /// </summary>
-        JsonNode GenerateSchemaFromType(Reflector reflector, Type type)
+        JsonNode GenerateSchemaFromType(Reflector reflector, Type type, JsonObject defines)
         {
             // Handle primitive types
             if (TypeUtils.IsPrimitive(type))
@@ -111,23 +111,45 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 var itemType = TypeUtils.GetEnumerableItemType(type);
                 if (itemType != null)
                 {
+                    var itemTypeId = itemType.GetSchemaTypeId();
+                    var isItemPrimitive = TypeUtils.IsPrimitive(itemType);
+
+                    if (!isItemPrimitive && defines.ContainsKey(itemTypeId) == false)
+                    {
+                        // Add placeholder first to prevent infinite recursion
+                        defines[itemTypeId] = new JsonObject { [Type] = Object };
+                        defines[itemTypeId] = GetSchema(reflector, itemType, defines: defines);
+                    }
+
+                    var typeId = type.GetSchemaTypeId();
+                    if (defines.ContainsKey(typeId) == false)
+                    {
+                        // Add placeholder first to prevent infinite recursion
+                        defines[typeId] = new JsonObject
+                        {
+                            [Type] = Array,
+                            [Items] = isItemPrimitive
+                                ? GetSchema(reflector, itemType, defines: defines)
+                                : GetSchemaRef(reflector, itemType)
+                        };
+                    }
+
                     return new JsonObject
                     {
                         [Type] = Array,
-                        [Items] = GetSchema(reflector, itemType, justRef: !TypeUtils.IsPrimitive(itemType))
+                        [Items] = isItemPrimitive
+                            ? GetSchema(reflector, itemType, defines: defines)
+                            : GetSchemaRef(reflector, itemType)
                     };
                 }
             }
 
             // Handle regular objects by introspecting their fields and properties
-            var schema = new JsonObject
-            {
-                [Type] = Object,
-                [Properties] = new JsonObject()
-            };
-
-            var properties = schema[Properties] as JsonObject;
+            var properties = new JsonObject();
             var required = new JsonArray();
+            var schema = new JsonObject { [Type] = Object };
+
+            defines ??= new();
 
             // Get serializable fields
             var fields = reflector.GetSerializableFields(type);
@@ -138,18 +160,32 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (field.GetCustomAttribute<JsonIgnoreAttribute>() != null)
                         continue;
 
+                    var underlyingType = Nullable.GetUnderlyingType(field.FieldType);
+                    var isPrimitive = TypeUtils.IsPrimitive(underlyingType ?? field.FieldType);
                     var fieldName = field.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? field.Name;
-                    var fieldSchema = GetSchema(reflector, field.FieldType, justRef: !TypeUtils.IsPrimitive(field.FieldType));
+                    var schemaRef = isPrimitive
+                        ? GetSchema(reflector, field.FieldType, defines: defines)
+                        : GetSchemaRef(reflector, field.FieldType);
+
+                    if (!isPrimitive)
+                    {
+                        var typeId = field.FieldType.GetSchemaTypeId();
+                        if (!defines.ContainsKey(typeId))
+                        {
+                            // Add placeholder first to prevent infinite recursion
+                            defines[typeId] = new JsonObject { [Type] = Object };
+                            defines[typeId] = GetSchema(reflector, field.FieldType, defines: defines);
+                        }
+                    }
 
                     // Add description if available
                     var description = TypeUtils.GetFieldDescription(field);
-                    if (!string.IsNullOrEmpty(description) && fieldSchema is JsonObject fieldSchemaObj)
+                    if (!string.IsNullOrEmpty(description) && schemaRef is JsonObject fieldSchemaObj)
                         fieldSchemaObj[Description] = JsonValue.Create(description);
 
-                    properties![fieldName] = fieldSchema;
+                    properties[fieldName] = schemaRef;
 
                     // Fields are typically required unless they are nullable
-                    var underlyingType = Nullable.GetUnderlyingType(field.FieldType);
                     if (underlyingType == null && !field.FieldType.IsClass)
                         required.Add(fieldName);
                 }
@@ -164,18 +200,32 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (prop.GetCustomAttribute<JsonIgnoreAttribute>() != null)
                         continue;
 
+                    var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType);
+                    var isPrimitive = TypeUtils.IsPrimitive(underlyingType ?? prop.PropertyType);
                     var propName = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
-                    var propSchema = GetSchema(reflector, prop.PropertyType, justRef: !TypeUtils.IsPrimitive(prop.PropertyType));
+                    var schemaRef = isPrimitive
+                        ? GetSchema(reflector, prop.PropertyType, defines: defines)
+                        : GetSchemaRef(reflector, prop.PropertyType);
+
+                    if (!isPrimitive)
+                    {
+                        var typeId = prop.PropertyType.GetSchemaTypeId();
+                        if (!defines.ContainsKey(typeId))
+                        {
+                            // Add placeholder first to prevent infinite recursion
+                            defines[typeId] = new JsonObject { [Type] = Object };
+                            defines[typeId] = GetSchema(reflector, prop.PropertyType, defines: defines);
+                        }
+                    }
 
                     // Add description if available
                     var description = TypeUtils.GetPropertyDescription(prop);
-                    if (!string.IsNullOrEmpty(description) && propSchema is JsonObject propSchemaObj)
+                    if (!string.IsNullOrEmpty(description) && schemaRef is JsonObject propSchemaObj)
                         propSchemaObj[Description] = JsonValue.Create(description);
 
-                    properties![propName] = propSchema;
+                    properties![propName] = schemaRef;
 
                     // Properties are required if they are value types and not nullable
-                    var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType);
                     if (underlyingType == null && !prop.PropertyType.IsClass && prop.CanWrite)
                         required.Add(propName);
                 }
@@ -184,6 +234,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             // Add required array if it has items
             if (required.Count > 0)
                 schema[Required] = required;
+
+            if (properties.Count > 0)
+                schema[Properties] = properties;
 
             return schema;
         }
@@ -226,8 +279,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     enumValues.Add(JsonValue.Create(enumValue.ToString()));
                 }
 
-                return new JsonObject 
-                { 
+                return new JsonObject
+                {
                     [Type] = String,
                     ["enum"] = enumValues
                 };

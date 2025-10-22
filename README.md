@@ -372,7 +372,7 @@ jsonSerializer.AddConverter(new MyCustomJsonConverter());
 
 // Access to JSON schema generation
 var jsonSchema = reflector.JsonSchema;
-var schema = jsonSchema.GetSchema<MyClass>(reflector, justRef: false);
+var schema = jsonSchema.GetSchema<MyClass>(reflector);
 ```
 
 #### Converter System Architecture

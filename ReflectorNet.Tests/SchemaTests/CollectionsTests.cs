@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
@@ -57,7 +58,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             {
                 var result = reflector.GetSchema(type);
 
-                _output.WriteLine($"Type: {type.GetTypeShortName()}\n{result.ToJsonString()}\n");
+                _output.WriteLine($"Type: {type.GetTypeShortName()}\n{result.ToJsonString(new JsonSerializerOptions { WriteIndented = true })}\n");
 
                 // Assert
                 Assert.NotNull(result);

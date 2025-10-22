@@ -15,7 +15,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             _output.WriteLine($"Testing members description for type: '{type.GetTypeShortName()}'");
 
-            var schema = reflector.GetSchema(type, justRef: false);
+            var schema = reflector.GetSchema(type);
             Assert.NotNull(schema);
 
             var properties = default(JsonNode?);

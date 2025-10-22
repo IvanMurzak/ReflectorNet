@@ -13,10 +13,12 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsType
     {
-        public static JsonNode? GetSchema(this Type type, Reflector reflector, bool justRef = false) => reflector.GetSchema(type, justRef);
+        public static JsonNode? GetSchema(this Type type, Reflector reflector) => reflector.GetSchema(type);
+        public static JsonNode? GetSchemaRef(this Type type, Reflector reflector) => reflector.GetSchemaRef(type);
         public static string GetTypeShortName(this Type? type) => TypeUtils.GetTypeShortName(type);
         public static string GetTypeName(this Type? type, bool pretty = false) => TypeUtils.GetTypeName(type, pretty);
         public static string GetTypeId(this Type type) => TypeUtils.GetTypeId(type);
+        public static string GetSchemaTypeId(this Type type) => TypeUtils.GetSchemaTypeId(type);
         public static bool IsMatch(this Type? type, string? typeName) => TypeUtils.IsNameMatch(type, typeName);
     }
 }

@@ -1,4 +1,5 @@
-﻿using com.IvanMurzak.ReflectorNet.Tests.Model;
+﻿using com.IvanMurzak.ReflectorNet.OuterAssembly.Model;
+using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Utils
