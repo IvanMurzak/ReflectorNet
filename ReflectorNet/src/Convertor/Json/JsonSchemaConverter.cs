@@ -17,7 +17,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
     {
         public static string StaticId => TypeUtils.GetSchemaTypeId<T>();
 
-        private static Type[] _emptyTypes = new Type[] { };
+        private static readonly Type[] _emptyTypes = Array.Empty<Type>();
 
         public virtual string Id => StaticId;
         public abstract JsonNode GetSchema();
