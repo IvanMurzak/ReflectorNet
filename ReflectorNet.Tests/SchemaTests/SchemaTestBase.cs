@@ -299,7 +299,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                     $"Available definitions: {string.Join(", ", defines.Select(d => d.Key))}");
             }
 
-            // References don't include restricted types
+            // Defines don't include restricted types
             foreach (var define in defines)
             {
                 Assert.False(RestrictedDefineTypes.Any(x => x.GetSchemaTypeId() == define.Key),
