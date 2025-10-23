@@ -18,11 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
     /// </summary>
     public class JsonElementJsonConverter : JsonSchemaConverter<JsonElement>, IJsonSchemaConverter
     {
-        public static JsonNode Schema => new JsonObject
-        {
-            [JsonSchema.Type] = JsonSchema.Object,
-            [JsonSchema.AdditionalProperties] = true
-        };
+        public static JsonNode Schema => JsonArrayJsonConverter.JsonAnySchema;
         public static JsonNode SchemaRef => new JsonObject
         {
             [JsonSchema.Ref] = JsonSchema.RefValue + StaticId

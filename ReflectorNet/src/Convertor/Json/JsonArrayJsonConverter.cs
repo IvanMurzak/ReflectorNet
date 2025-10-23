@@ -19,12 +19,12 @@ namespace com.IvanMurzak.ReflectorNet.Json
     public class JsonArrayJsonConverter : JsonNodeJsonConverter<JsonArray>, IJsonSchemaConverter
     {
         // Schema for any JSON value type
-        private static readonly JsonNode JsonAnySchema = new JsonObject
+        public static readonly JsonNode JsonAnySchema = new JsonObject
         {
             [JsonSchema.AnyOf] = new JsonArray
             {
-                new JsonObject { [JsonSchema.Type] = JsonSchema.Object },
-                new JsonObject { [JsonSchema.Type] = JsonSchema.Array },
+                new JsonObject { [JsonSchema.Type] = JsonSchema.Object, [JsonSchema.AdditionalProperties] = true },
+                new JsonObject { [JsonSchema.Type] = JsonSchema.Array, [JsonSchema.Items] = new JsonObject() },
                 new JsonObject { [JsonSchema.Type] = JsonSchema.String },
                 new JsonObject { [JsonSchema.Type] = JsonSchema.Number },
                 new JsonObject { [JsonSchema.Type] = JsonSchema.Boolean },
