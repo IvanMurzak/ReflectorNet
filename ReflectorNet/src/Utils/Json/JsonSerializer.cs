@@ -103,6 +103,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     new GuidJsonConverter(),
                     new TimeSpanJsonConverter(),
 
+                    // Json converters
+                    new JsonElementJsonConverter(),
+                    new JsonObjectJsonConverter(),
+                    new JsonArrayJsonConverter(),
+
                     // Other converters
                     new MethodDataConverter(),
                     new MethodInfoConverter(),
