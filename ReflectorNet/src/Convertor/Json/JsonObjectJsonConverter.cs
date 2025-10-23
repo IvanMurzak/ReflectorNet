@@ -13,8 +13,8 @@ using com.IvanMurzak.ReflectorNet.Utils;
 namespace com.IvanMurzak.ReflectorNet.Json
 {
     /// <summary>
-    /// JsonConverter that handles conversion from JSON string values to DateTimeOffset type.
-    /// Supports nullable DateTimeOffset types and uses ISO 8601 format for writing.
+    /// JsonConverter that handles serialization and deserialization of JsonObject instances.
+    /// Supports conversion between JsonObject and JSON, and provides JSON schema information.
     /// </summary>
     public class JsonObjectJsonConverter : JsonNodeJsonConverter<JsonObject>, IJsonSchemaConverter
     {
