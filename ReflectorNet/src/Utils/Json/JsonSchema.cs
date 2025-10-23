@@ -170,6 +170,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
                     foreach (var genericArgument in genericArgs)
                     {
+                        if (TypeUtils.IsPrimitive(genericArgument))
+                            continue;
+
                         var defTypeId = genericArgument.GetSchemaTypeId();
                         if (defines.ContainsKey(defTypeId))
                             continue;
@@ -552,8 +555,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var schema = new JsonObject
             {
                 // [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
-                [Type] = Object,
-                [Properties] = properties
+                [Type] = Object
             };
 
             foreach (var parameter in types)
@@ -610,8 +612,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
             }
 
+            if (properties.Count > 0)
+                schema[Properties] = properties;
+
             if (defines.Count > 0 && needToAddDefines)
                 schema[Defs] = defines;
+
             if (required.Count > 0)
                 schema[Required] = required;
 
