@@ -21,7 +21,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         // Schema for any JSON value type
         private static readonly JsonNode JsonAnySchema = new JsonObject
         {
-            ["anyOf"] = new JsonArray
+            [JsonSchema.AnyOf] = new JsonArray
             {
                 new JsonObject { [JsonSchema.Type] = JsonSchema.Object },
                 new JsonObject { [JsonSchema.Type] = JsonSchema.Array },
