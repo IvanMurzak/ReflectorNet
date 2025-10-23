@@ -33,13 +33,17 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (reader.TokenType == JsonTokenType.StartObject)
             {
                 using JsonDocument document = JsonDocument.ParseValue(ref reader);
-                return CreateJsonNode(document.RootElement);
+                // Clone the element to break the dependency on the JsonDocument
+                var clonedElement = document.RootElement.Clone();
+                return CreateJsonNode(clonedElement);
             }
 
             if (reader.TokenType == JsonTokenType.StartArray)
             {
                 using JsonDocument document = JsonDocument.ParseValue(ref reader);
-                return CreateJsonNode(document.RootElement);
+                // Clone the element to break the dependency on the JsonDocument
+                var clonedElement = document.RootElement.Clone();
+                return CreateJsonNode(clonedElement);
             }
 
             throw new JsonException($"Expected Null, StartObject or StartArray token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
