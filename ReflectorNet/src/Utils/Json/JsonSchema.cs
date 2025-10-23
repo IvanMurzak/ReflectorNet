@@ -182,10 +182,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             defines[defTypeId] = defSchema;
                     }
 
+                    if (genericArgs.Length >= 2)
+                    {
+                        // Use the value type's schema for additionalProperties
+                        var valueTypeSchema = GetSchema(reflector, genericArgs[1], defines);
+                        schema = new JsonObject { [Type] = Object, [AdditionalProperties] = valueTypeSchema };
+                    }
+                    else
+                    {
+                        schema = new JsonObject { [Type] = Object, [AdditionalProperties] = true };
+                    }
+
                     if (definesNeeded && !defineContainsType)
                         defines[typeId] = schema;
-
-                    schema = new JsonObject { [Type] = Object, [AdditionalProperties] = true };
                 }
                 else
                 {
