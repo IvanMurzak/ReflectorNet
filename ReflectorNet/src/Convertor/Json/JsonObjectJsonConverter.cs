@@ -31,9 +31,9 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public override JsonNode GetSchema() => Schema;
         public override JsonNode GetSchemaRef() => SchemaRef;
 
-        protected override JsonObject CreateJsonNode(JsonElement element)
+        protected override JsonObject? CreateJsonNode(JsonElement element)
         {
-            return JsonObject.Create(element)!;
+            return JsonObject.Create(element);
         }
     }
 }

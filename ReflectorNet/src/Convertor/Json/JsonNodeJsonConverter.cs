@@ -18,7 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
     public abstract class JsonNodeJsonConverter<T> : JsonSchemaConverter<T>, IJsonSchemaConverter
         where T : JsonNode
     {
-        protected abstract T CreateJsonNode(JsonElement element);
+        protected abstract T? CreateJsonNode(JsonElement element);
         public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             // Handle null values for nullable types
