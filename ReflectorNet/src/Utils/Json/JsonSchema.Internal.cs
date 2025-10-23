@@ -149,8 +149,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var required = new JsonArray();
             var schema = new JsonObject { [Type] = Object };
 
-            defines ??= new();
-
             // Get serializable fields
             var fields = reflector.GetSerializableFields(type);
             if (fields != null)
@@ -231,12 +229,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
             }
 
+            if (properties.Count > 0)
+                schema[Properties] = properties;
+
             // Add required array if it has items
             if (required.Count > 0)
                 schema[Required] = required;
-
-            if (properties.Count > 0)
-                schema[Properties] = properties;
 
             return schema;
         }

@@ -162,6 +162,31 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             defines[defTypeId] = def;
                     }
                 }
+                else if (TypeUtils.IsDictionary(type))
+                {
+                    var genericArgs = TypeUtils.GetDictionaryGenericArguments(type);
+                    if (genericArgs == null)
+                        throw new InvalidOperationException($"Unable to get generic arguments for dictionary type '{type.GetTypeName(pretty: false)}'.");
+
+                    foreach (var genericArgument in genericArgs)
+                    {
+                        if (TypeUtils.IsPrimitive(genericArgument))
+                            continue;
+
+                        var defTypeId = genericArgument.GetSchemaTypeId();
+                        if (defines.ContainsKey(defTypeId))
+                            continue;
+
+                        var defSchema = GetSchema(reflector, genericArgument, defines);
+                        if (defSchema != null)
+                            defines[defTypeId] = defSchema;
+                    }
+
+                    if (definesNeeded && !defineContainsType)
+                        defines[typeId] = schema;
+
+                    schema = new JsonObject { [Type] = Object, [AdditionalProperties] = true };
+                }
                 else
                 {
                     schema = GenerateSchemaFromType(reflector, type, defines);
@@ -530,8 +555,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var schema = new JsonObject
             {
                 // [SchemaDraft] = JsonValue.Create(SchemaDraftValue),
-                [Type] = Object,
-                [Properties] = properties
+                [Type] = Object
             };
 
             foreach (var parameter in types)
@@ -588,8 +612,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
             }
 
+            if (properties.Count > 0)
+                schema[Properties] = properties;
+
             if (defines.Count > 0 && needToAddDefines)
                 schema[Defs] = defines;
+
             if (required.Count > 0)
                 schema[Required] = required;
 
