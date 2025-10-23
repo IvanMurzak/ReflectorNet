@@ -36,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (reader.TokenType == JsonTokenType.Null)
                 return default;
 
-            return JsonDocument.ParseValue(ref reader).RootElement;
+            return JsonDocument.ParseValue(ref reader).RootElement.Clone();
         }
 
         public override void Write(Utf8JsonWriter writer, JsonElement value, JsonSerializerOptions options)
