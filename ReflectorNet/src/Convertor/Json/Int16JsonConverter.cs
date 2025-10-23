@@ -65,6 +65,19 @@ namespace com.IvanMurzak.ReflectorNet.Json
             writer.WriteNumberValue((short)value);
         }
 
+        public override void WriteAsPropertyName(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+        {
+            writer.WritePropertyName(((short)value).ToString(CultureInfo.InvariantCulture));
+        }
+
+        public override object ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var propertyName = reader.GetString();
+            if (propertyName == null)
+                throw new JsonException($"Cannot convert null property name to {typeof(short).GetTypeName(pretty: true)}.");
+            return ParseInt16(propertyName);
+        }
+
         private static short ParseInt16(string stringValue)
         {
             if (short.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))

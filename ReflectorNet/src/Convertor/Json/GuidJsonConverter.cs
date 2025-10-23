@@ -59,5 +59,22 @@ namespace com.IvanMurzak.ReflectorNet.Json
         {
             writer.WriteStringValue(((Guid)value).ToString());
         }
+
+        public override void WriteAsPropertyName(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+        {
+            writer.WritePropertyName(((Guid)value).ToString());
+        }
+
+        public override object ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var propertyName = reader.GetString();
+            if (propertyName == null)
+                throw new JsonException($"Cannot convert null property name to {typeof(Guid).GetTypeName(pretty: true)}.");
+
+            if (Guid.TryParse(propertyName, out var guidResult))
+                return guidResult;
+
+            throw new JsonException($"Unable to convert '{propertyName}' to {typeof(Guid).GetTypeName(pretty: true)}.");
+        }
     }
 }
