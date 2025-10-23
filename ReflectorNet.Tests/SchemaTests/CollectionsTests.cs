@@ -63,9 +63,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 // Assert
                 Assert.NotNull(result);
                 Assert.NotNull(result[JsonSchema.Type]);
-                Assert.Equal(JsonSchema.Array, result[JsonSchema.Type]!.ToString());
 
-                Assert.NotNull(result[JsonSchema.Items]);
+                if (TypeUtils.IsDictionary(type))
+                {
+                    Assert.Equal(JsonSchema.Object, result[JsonSchema.Type]!.ToString());
+                    Assert.NotNull(result[JsonSchema.AdditionalProperties]);
+                }
+                else
+                {
+                    Assert.Equal(JsonSchema.Array, result[JsonSchema.Type]!.ToString());
+                    Assert.NotNull(result[JsonSchema.Items]);
+                }
+
 
                 Assert.Null(result[nameof(ListType.shouldBeIgnored)]);
                 Assert.Null(result[nameof(ListType.ShouldBeIgnored)]);

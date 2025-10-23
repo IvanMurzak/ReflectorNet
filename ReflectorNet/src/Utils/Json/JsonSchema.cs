@@ -162,6 +162,28 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             defines[defTypeId] = def;
                     }
                 }
+                else if (TypeUtils.IsDictionary(type))
+                {
+                    var genericArgs = TypeUtils.GetDictionaryGenericArguments(type);
+                    if (genericArgs == null)
+                        throw new InvalidOperationException($"Unable to get generic arguments for dictionary type '{type.GetTypeName(pretty: false)}'.");
+
+                    foreach (var genericArgument in genericArgs)
+                    {
+                        var defTypeId = genericArgument.GetSchemaTypeId();
+                        if (defines.ContainsKey(defTypeId))
+                            continue;
+
+                        var defSchema = GetSchema(reflector, genericArgument, defines);
+                        if (defSchema != null)
+                            defines[defTypeId] = defSchema;
+                    }
+
+                    if (definesNeeded && !defineContainsType)
+                        defines[typeId] = schema;
+
+                    schema = new JsonObject { [Type] = Object, [AdditionalProperties] = true };
+                }
                 else
                 {
                     schema = GenerateSchemaFromType(reflector, type, defines);

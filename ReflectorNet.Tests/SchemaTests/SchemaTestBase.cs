@@ -10,6 +10,16 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     public abstract class SchemaTestBase : BaseTest
     {
+        static readonly Type[] RestrictedDefineTypes = new Type[]
+        {
+            typeof(string),
+            typeof(object),
+            typeof(DateTime),
+            typeof(DateTimeOffset),
+            typeof(Guid),
+            typeof(TimeSpan),
+            typeof(Uri)
+        };
         protected SchemaTestBase(ITestOutputHelper output) : base(output)
         {
         }
@@ -264,6 +274,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 return;
             }
 
+            // References don't include restricted types
+            foreach (var reference in allReferences)
+            {
+                Assert.False(RestrictedDefineTypes.Any(x => JsonSchema.RefValue + x.GetSchemaTypeId() == reference),
+                    $"Reference '{reference}' is for a restricted type that should not appear as a $ref.");
+            }
+
             // Schema must have $defs if there are references
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs),
                 $"Schema contains {allReferences.Count} $ref reference(s) but no $defs section. References: {string.Join(", ", allReferences)}");
@@ -280,6 +297,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.True(defines.ContainsKey(typeId),
                     $"Reference '{reference}' (type ID: '{typeId}') is not defined in $defs. " +
                     $"Available definitions: {string.Join(", ", defines.Select(d => d.Key))}");
+            }
+
+            // References don't include restricted types
+            foreach (var define in defines)
+            {
+                Assert.False(RestrictedDefineTypes.Any(x => x.GetSchemaTypeId() == define.Key),
+                    $"Reference '{define.Key}' is for a restricted type that should not appear as a $ref.");
             }
         }
 
