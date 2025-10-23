@@ -30,15 +30,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
-            if (reader.TokenType == JsonTokenType.StartObject)
-            {
-                using JsonDocument document = JsonDocument.ParseValue(ref reader);
-                // Clone the element to break the dependency on the JsonDocument
-                var clonedElement = document.RootElement.Clone();
-                return CreateJsonNode(clonedElement);
-            }
-
-            if (reader.TokenType == JsonTokenType.StartArray)
+            if (reader.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
             {
                 using JsonDocument document = JsonDocument.ParseValue(ref reader);
                 // Clone the element to break the dependency on the JsonDocument
