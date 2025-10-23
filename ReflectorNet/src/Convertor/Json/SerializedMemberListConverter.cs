@@ -38,6 +38,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         };
         public override IEnumerable<Type> GetDefinedTypes()
         {
+            yield return typeof(SerializedMemberList);
             yield return typeof(SerializedMember);
         }
 
