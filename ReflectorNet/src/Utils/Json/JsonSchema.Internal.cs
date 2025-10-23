@@ -125,6 +125,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (defines.ContainsKey(typeId) == false)
                     {
                         // Add placeholder first to prevent infinite recursion
+                        defines[typeId] = new JsonObject { [Type] = Array };
                         defines[typeId] = new JsonObject
                         {
                             [Type] = Array,

@@ -145,9 +145,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
                     schema = schemeConvertor.GetSchema();
 
-                    if (definesNeeded && !defineContainsType)
-                        defines[typeId] = schema;
-
                     foreach (var defType in schemeConvertor.GetDefinedTypes())
                     {
                         var defTypeId = defType.GetSchemaTypeId();
@@ -182,6 +179,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             defines[defTypeId] = defSchema;
                     }
 
+                    // Add placeholder to prevent infinite recursion
+                    if (definesNeeded && !defineContainsType)
+                        defines[typeId] = new JsonObject { [Type] = Object };
+
                     if (genericArgs.Length >= 2)
                     {
                         // Use the value type's schema for additionalProperties
@@ -192,22 +193,29 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     {
                         schema = new JsonObject { [Type] = Object, [AdditionalProperties] = true };
                     }
-
-                    if (definesNeeded && !defineContainsType)
-                        defines[typeId] = schema;
                 }
                 else
                 {
-                    schema = GenerateSchemaFromType(reflector, type, defines);
+                    // Add placeholder to prevent infinite recursion
+                    if (definesNeeded && !defineContainsType)
+                        defines[typeId] = new JsonObject { [Type] = Object };
 
-                    if (definesNeeded && defines.Count > 0)
-                        schema[Defs] = defines;
+                    schema = GenerateSchemaFromType(reflector, type, defines);
                 }
 
                 // Get description from the type if available
                 var description = TypeUtils.GetDescription(type);
                 if (!string.IsNullOrEmpty(description))
                     schema[Description] = JsonValue.Create(description);
+
+                if (definesNeeded)
+                {
+                    if (!defineContainsType)
+                        defines[typeId] = schema.DeepClone();
+
+                    if (defines.Count > 0)
+                        schema[Defs] = defines;
+                }
             }
             catch (Exception ex)
             {
