@@ -12,8 +12,8 @@ using System.Text.Json.Nodes;
 namespace com.IvanMurzak.ReflectorNet.Json
 {
     /// <summary>
-    /// JsonConverter that handles conversion from JSON string values to DateTimeOffset type.
-    /// Supports nullable DateTimeOffset types and uses ISO 8601 format for writing.
+    /// Abstract base class for converting between JSON and types derived from JsonNode.
+    /// Provides extensibility for custom JsonNode handling via the CreateJsonNode method.
     /// </summary>
     public abstract class JsonNodeJsonConverter<T> : JsonSchemaConverter<T>, IJsonSchemaConverter
         where T : JsonNode
