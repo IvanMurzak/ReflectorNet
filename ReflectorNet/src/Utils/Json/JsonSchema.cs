@@ -490,49 +490,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 (returnType.GetGenericTypeDefinition() == typeof(Task<>) ||
                  returnType.GetGenericTypeDefinition() == typeof(ValueTask<>));
 
-            // Unwrap Task<T>/ValueTask<T> to get the inner T
+            // Determine if the return type is nullable using MethodUtils
+            var isNullable = MethodUtils.IsReturnTypeNullable(methodInfo);
+
+            // Unwrap Task<T>/ValueTask<T> to get the inner T for type resolution
             var unwrappedType = isAsyncWrapper
                 ? returnType.GetGenericArguments()[0]
                 : returnType;
 
-            var isNullable = false;
-
-            // Check for Nullable<T> (value types like int?, DateTime?)
+            // Unwrap Nullable<T> to get the underlying type for type resolution
             var nullableUnderlyingType = Nullable.GetUnderlyingType(unwrappedType);
             if (nullableUnderlyingType != null)
             {
-                // This handles Nullable<T> for value types (e.g., Task<int?>, int?)
-                isNullable = true;
                 unwrappedType = nullableUnderlyingType;
-            }
-            else if (!unwrappedType.IsValueType)
-            {
-                // For reference types, check nullability using NullabilityInfoContext
-#if NET5_0_OR_GREATER
-                try
-                {
-                    var nullabilityContext = new NullabilityInfoContext();
-                    var nullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
-
-                    isNullable = nullabilityInfo.ReadState == NullabilityState.Nullable;
-                    // If the return type is Task<T> or ValueTask<T>, check the generic argument nullability
-                    if (isAsyncWrapper)
-                    {
-                        // Check the nullability of the T inside Task<T> or ValueTask<T>
-                        if (nullabilityInfo.GenericTypeArguments.Length > 0)
-                            isNullable |= nullabilityInfo.GenericTypeArguments[0].ReadState == NullabilityState.Nullable;
-                    }
-                }
-                catch (Exception)
-                {
-                    // If we can't determine nullability, assume not nullable
-                    isNullable = false;
-                }
-#else
-                // For .NET Standard 2.1 and earlier, we cannot determine reference type nullability
-                // Assume not nullable by default
-                isNullable = false;
-#endif
             }
 
             var types = new (Type type, string name, string? description, bool required)[]
