@@ -16,6 +16,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     /// </summary>
     public static class MethodUtils
     {
+#if NET5_0_OR_GREATER
+        // Cache the NullableContextAttribute type for performance
+        // This is a compiler-generated internal attribute, so we must access it by name
+        private static readonly Type? NullableContextAttributeType = typeof(System.Runtime.CompilerServices.NullableContextAttribute);
+        // Type.GetType("System.Runtime.CompilerServices.NullableContextAttribute, System.Private.CoreLib");
+
+        // NullableContext attribute values
+        private const byte NullableContextOblivious = 0; // No annotation - treat as non-nullable
+        private const byte NullableContextNotNull = 1;   // Non-nullable
+        private const byte NullableContextNullable = 2;  // Nullable
+#endif
+
         /// <summary>
         /// Determines whether the return type of a method is nullable.
         /// Handles generic type parameters (T vs T?), value types, reference types, and async wrappers.
@@ -105,13 +117,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         // - NullableContextAttribute(1) on methods with non-nullable return types (T)
                         // - No attribute (or inherited context) for nullable return types (T?)
                         var hasNullableContextAttr = false;
-                        var nullableContextValue = (byte)1; // Default to non-nullable
+                        var nullableContextValue = NullableContextNotNull; // Default to non-nullable
 
                         // Check method-level NullableContextAttribute
                         var methodAttrs = methodToInspect.GetCustomAttributesData();
                         foreach (var attr in methodAttrs)
                         {
-                            if (attr.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute")
+                            if (NullableContextAttributeType != null && attr.AttributeType == NullableContextAttributeType)
                             {
                                 hasNullableContextAttr = true;
                                 if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments[0].Value is byte value)
@@ -126,7 +138,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             var typeAttrs = methodToInspect.DeclaringType.GetCustomAttributesData();
                             foreach (var attr in typeAttrs)
                             {
-                                if (attr.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute")
+                                if (NullableContextAttributeType != null && attr.AttributeType == NullableContextAttributeType)
                                 {
                                     if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments[0].Value is byte value)
                                         nullableContextValue = value;
@@ -135,11 +147,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                             }
                         }
 
-                        // NullableContext values:
-                        // 0 = Oblivious (no annotation) - treat as non-nullable
-                        // 1 = NotNull
-                        // 2 = Nullable
-                        isNullable = nullableContextValue == 2;
+                        // Check if the context value indicates nullable
+                        isNullable = nullableContextValue == NullableContextNullable;
                         nullabilityDeterminedFromGenericParameter = true;
                     }
                     catch (Exception)
