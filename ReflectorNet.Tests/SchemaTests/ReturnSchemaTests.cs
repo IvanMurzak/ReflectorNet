@@ -676,7 +676,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Theory]
         [InlineData(typeof(string[]), EchoMethodName, JsonSchema.String, true)]
         [InlineData(typeof(int[]), EchoMethodName, JsonSchema.Integer, true)]
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
         [InlineData(typeof(string[]), EchoNullableMethodName, JsonSchema.String, false)]
         [InlineData(typeof(int[]), EchoNullableMethodName, JsonSchema.Integer, false)]
 #else
