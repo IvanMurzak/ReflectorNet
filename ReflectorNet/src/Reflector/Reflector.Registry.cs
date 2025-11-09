@@ -50,7 +50,7 @@ namespace com.IvanMurzak.ReflectorNet
                 Add(new PrimitiveReflectionConvertor());
                 Add(new ArrayReflectionConvertor());
                 Add(new GenericReflectionConvertor<object>());
-                Add(new IgnoreFieldsAndPropertiesReflectionConvertor<Type>(ignoreFields: true, ignoreProperties: true));
+                Add(new IgnoreFieldsAndPropertiesReflectionConvertor<System.Type>(ignoreFields: true, ignoreProperties: true));
                 Add(new IgnoreFieldsAndPropertiesReflectionConvertor<System.Reflection.Assembly>(ignoreFields: true, ignoreProperties: true));
             }
 
