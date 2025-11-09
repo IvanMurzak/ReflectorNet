@@ -14,6 +14,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
     /// </summary>
     public class ReturnSchemaTests : SchemaTestBase
     {
+        // Method name constants for WrapperClass to avoid hardcoded strings
+        private const string EchoMethodName = "Echo";
+        private const string EchoNullableMethodName = "EchoNullable";
+
         public ReturnSchemaTests(ITestOutputHelper output) : base(output) { }
 
         #region Test Helper Methods
@@ -138,6 +142,57 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
         #endregion
 
+        #region Helper Methods for Testing
+
+        /// <summary>
+        /// Tests that a method returns a complex object schema with expected type definitions
+        /// </summary>
+        private void TestComplexObjectSchema(string methodName, bool shouldBeRequired, params Type[] expectedDefinedTypes)
+        {
+            var schema = GetReturnSchemaForMethod(methodName);
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
+                AssertResultNotRequired(schema);
+
+            if (expectedDefinedTypes.Length > 0)
+                AssertResultDefines(schema, expectedDefinedTypes);
+
+            AssertAllRefsDefined(schema);
+        }
+
+        /// <summary>
+        /// Tests wrapper class methods with complex types
+        /// </summary>
+        private void TestWrapperComplexObjectSchema(Type wrapperType, string methodName, bool shouldBeRequired, params Type[] expectedDefinedTypes)
+        {
+            var reflector = new Reflector();
+            var methodInfo = wrapperType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance)!;
+            var schema = reflector.GetReturnSchema(methodInfo);
+
+            _output.WriteLine($"Return schema for {wrapperType.GetTypeShortName()}.{methodName}:");
+            _output.WriteLine(schema?.ToString() ?? "null");
+            _output.WriteLine("");
+
+            Assert.NotNull(schema);
+            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
+
+            if (shouldBeRequired)
+                AssertResultRequired(schema);
+            else
+                AssertResultNotRequired(schema);
+
+            if (expectedDefinedTypes.Length > 0)
+                AssertResultDefines(schema, expectedDefinedTypes);
+
+            AssertAllRefsDefined(schema);
+        }
+
+        #endregion
+
         #region Void Return Type Tests
 
         [Theory]
@@ -206,37 +261,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_TaskPerson_UnwrapsCorrectly()
+        [Theory]
+        [InlineData(nameof(TaskPersonMethod), new[] { typeof(Person), typeof(Address) })]
+        [InlineData(nameof(TaskAddressMethod), new[] { typeof(Address) })]
+        [InlineData(nameof(TaskCompanyMethod), new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_TaskComplexType_UnwrapsCorrectly(string methodName, Type[] expectedDefinedTypes)
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskPersonMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_TaskAddress_UnwrapsCorrectly()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(TaskAddressMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_TaskCompany_UnwrapsCorrectly()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(TaskCompanyMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            TestComplexObjectSchema(methodName, shouldBeRequired: true, expectedDefinedTypes);
         }
 
         #endregion
@@ -262,37 +293,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_TaskNullablePerson_UnwrapsWithoutRequired()
+        [Theory]
+        [InlineData(nameof(TaskNullablePersonMethod), new[] { typeof(Person), typeof(Address) })]
+        [InlineData(nameof(TaskNullableAddressMethod), new[] { typeof(Address) })]
+        [InlineData(nameof(TaskNullableCompanyMethod), new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_TaskNullableComplexType_UnwrapsWithoutRequired(string methodName, Type[] expectedDefinedTypes)
         {
-            var schema = GetReturnSchemaForMethod(nameof(TaskNullablePersonMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_TaskNullableAddress_UnwrapsWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(TaskNullableAddressMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_TaskNullableCompany_UnwrapsWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(TaskNullableCompanyMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            TestComplexObjectSchema(methodName, shouldBeRequired: false, expectedDefinedTypes);
         }
 
         #endregion
@@ -317,37 +324,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_NullableTaskNullablePerson_UnwrapsWithoutRequired()
+        [Theory]
+        [InlineData(nameof(NullableTaskNullablePersonMethod), new[] { typeof(Person), typeof(Address) })]
+        [InlineData(nameof(NullableTaskNullableAddressMethod), new[] { typeof(Address) })]
+        [InlineData(nameof(NullableTaskNullableCompanyMethod), new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_NullableTaskNullableComplexType_UnwrapsWithoutRequired(string methodName, Type[] expectedDefinedTypes)
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullablePersonMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_NullableTaskNullableAddress_UnwrapsWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableAddressMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_NullableTaskNullableCompany_UnwrapsWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(NullableTaskNullableCompanyMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            TestComplexObjectSchema(methodName, shouldBeRequired: false, expectedDefinedTypes);
         }
 
         #endregion
@@ -372,37 +355,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_ValueTaskPerson_UnwrapsCorrectly()
+        [Theory]
+        [InlineData(nameof(ValueTaskPersonMethod), new[] { typeof(Person), typeof(Address) })]
+        [InlineData(nameof(ValueTaskAddressMethod), new[] { typeof(Address) })]
+        [InlineData(nameof(ValueTaskCompanyMethod), new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_ValueTaskComplexType_UnwrapsCorrectly(string methodName, Type[] expectedDefinedTypes)
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskPersonMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_ValueTaskAddress_UnwrapsCorrectly()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskAddressMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_ValueTaskCompany_UnwrapsCorrectly()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskCompanyMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            TestComplexObjectSchema(methodName, shouldBeRequired: true, expectedDefinedTypes);
         }
 
         #endregion
@@ -416,6 +375,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = GetReturnSchemaForMethod(methodName);
             AssertPrimitiveReturnSchema(schema!, expectedType, shouldBeRequired: false);
+            AssertAllRefsDefined(schema!);
         }
 
         [Fact]
@@ -426,37 +386,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_ValueTaskNullablePerson_UnwrapsWithoutRequired()
+        [Theory]
+        [InlineData(nameof(ValueTaskNullablePersonMethod), new[] { typeof(Person), typeof(Address) })]
+        [InlineData(nameof(ValueTaskNullableAddressMethod), new[] { typeof(Address) })]
+        [InlineData(nameof(ValueTaskNullableCompanyMethod), new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_ValueTaskNullableComplexType_UnwrapsWithoutRequired(string methodName, Type[] expectedDefinedTypes)
         {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullablePersonMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_ValueTaskNullableAddress_UnwrapsWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableAddressMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_ValueTaskNullableCompany_UnwrapsWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(ValueTaskNullableCompanyMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            TestComplexObjectSchema(methodName, shouldBeRequired: false, expectedDefinedTypes);
         }
 
         #endregion
@@ -483,37 +419,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_Person_ReturnsValidObjectSchema()
+        [Theory]
+        [InlineData(nameof(PersonMethod), new[] { typeof(Person), typeof(Address) })]
+        [InlineData(nameof(AddressMethod), new[] { typeof(Address) })]
+        [InlineData(nameof(CompanyMethod), new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_ComplexType_ReturnsValidObjectSchema(string methodName, Type[] expectedDefinedTypes)
         {
-            var schema = GetReturnSchemaForMethod(nameof(PersonMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_Address_ReturnsValidObjectSchema()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(AddressMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_Company_ReturnsValidObjectSchema()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(CompanyMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            TestComplexObjectSchema(methodName, shouldBeRequired: true, expectedDefinedTypes);
         }
 
         #endregion
@@ -537,37 +449,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_NullablePerson_ReturnsValidObjectSchemaWithoutRequired()
+        [Theory]
+        [InlineData(nameof(NullablePersonMethod), new[] { typeof(Person), typeof(Address) })]
+        [InlineData(nameof(NullableAddressMethod), new[] { typeof(Address) })]
+        [InlineData(nameof(NullableCompanyMethod), new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_NullableComplexType_ReturnsValidObjectSchemaWithoutRequired(string methodName, Type[] expectedDefinedTypes)
         {
-            var schema = GetReturnSchemaForMethod(nameof(NullablePersonMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_NullableAddress_ReturnsValidObjectSchemaWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(NullableAddressMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_NullableCompany_ReturnsValidObjectSchemaWithoutRequired()
-        {
-            var schema = GetReturnSchemaForMethod(nameof(NullableCompanyMethod));
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            TestComplexObjectSchema(methodName, shouldBeRequired: false, expectedDefinedTypes);
         }
 
         #endregion
@@ -601,74 +489,28 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         #region List<ComplexReturnType> Tests
 
         [Theory]
-        [InlineData(nameof(ListComplexTypeMethod), true)]
-#if NET5_0_OR_GREATER
-        [InlineData(nameof(NullableListComplexTypeMethod), false)]
+        [InlineData(nameof(ListComplexTypeMethod), true, false)]
+        [InlineData(nameof(ListNullableComplexTypeMethod), true, true)]
+        [InlineData(nameof(NullableListNullableComplexTypeMethod), false, true)]
+        [InlineData(nameof(TaskListComplexTypeMethod), true, false)]
+        [InlineData(nameof(TaskNullableListComplexTypeMethod), false, false)]
+        [InlineData(nameof(NullableTaskNullableListComplexTypeMethod), false, false)]
+        [InlineData(nameof(TaskListNullableComplexTypeMethod), true, true)]
+        [InlineData(nameof(TaskNullableListNullableComplexTypeMethod), false, true)]
+        [InlineData(nameof(NullableTaskNullableListNullableComplexTypeMethod), false, true)]
+#if NET8_0_OR_GREATER
+        [InlineData(nameof(NullableListComplexTypeMethod), false, false)]
+        [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), false, true)]
+        [InlineData(nameof(NullableTaskListComplexTypeMethod), false, false)]
 #else
-        [InlineData(nameof(NullableListComplexTypeMethod), true)] // netstandard2.1 cannot detect List<T>? nullability
+        [InlineData(nameof(NullableListComplexTypeMethod), true, false)] // netstandard2.1 cannot detect List<T>? nullability
+        [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), true, true)] // netstandard2.1 cannot detect Task<T>? nullability
+        [InlineData(nameof(NullableTaskListComplexTypeMethod), true, false)] // netstandard2.1 cannot detect Task<T>? nullability
 #endif
-        public void GetReturnSchema_ListComplexType_ReturnsArraySchemaWithComplexItems(string methodName, bool shouldBeRequired)
+        public void GetReturnSchema_ListComplexType_ReturnsCorrectSchema(string methodName, bool shouldBeRequired, bool itemsAreNullable)
         {
             var schema = GetReturnSchemaForMethod(methodName);
-            AssertComplexListReturnSchema(schema!, shouldBeRequired);
-            AssertAllRefsDefined(schema!);
-        }
-
-        [Theory]
-        [InlineData(nameof(ListNullableComplexTypeMethod), true)]
-        [InlineData(nameof(NullableListNullableComplexTypeMethod), false)]
-        public void GetReturnSchema_ListNullableComplexType_ReturnsArraySchemaWithNullableComplexItems(string methodName, bool shouldBeRequired)
-        {
-            var schema = GetReturnSchemaForMethod(methodName);
-            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
-            AssertAllRefsDefined(schema!);
-        }
-
-        [Theory]
-        [InlineData(nameof(TaskListComplexTypeMethod), true)]
-#if NET5_0_OR_GREATER
-        [InlineData(nameof(NullableTaskListComplexTypeMethod), false)]
-#else
-        [InlineData(nameof(NullableTaskListComplexTypeMethod), true)] // netstandard2.1 cannot detect Task<T>? nullability
-#endif
-        public void GetReturnSchema_TaskListComplexType_UnwrapsToArraySchemaWithComplexItems(string methodName, bool shouldBeRequired)
-        {
-            var schema = GetReturnSchemaForMethod(methodName);
-            AssertComplexListReturnSchema(schema!, shouldBeRequired);
-            AssertAllRefsDefined(schema!);
-        }
-
-        [Theory]
-        [InlineData(nameof(TaskNullableListComplexTypeMethod), false)]
-        [InlineData(nameof(NullableTaskNullableListComplexTypeMethod), false)]
-        public void GetReturnSchema_TaskNullableListComplexType_UnwrapsToArraySchemaWithoutRequired(string methodName, bool shouldBeRequired)
-        {
-            var schema = GetReturnSchemaForMethod(methodName);
-            AssertComplexListReturnSchema(schema!, shouldBeRequired);
-            AssertAllRefsDefined(schema!);
-        }
-
-        [Theory]
-        [InlineData(nameof(TaskListNullableComplexTypeMethod), true)]
-#if NET5_0_OR_GREATER
-        [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), false)]
-#else
-        [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), true)] // netstandard2.1 cannot detect Task<T>? nullability
-#endif
-        public void GetReturnSchema_TaskListNullableComplexType_UnwrapsToArraySchemaWithNullableItems(string methodName, bool shouldBeRequired)
-        {
-            var schema = GetReturnSchemaForMethod(methodName);
-            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
-            AssertAllRefsDefined(schema!);
-        }
-
-        [Theory]
-        [InlineData(nameof(TaskNullableListNullableComplexTypeMethod), false)]
-        [InlineData(nameof(NullableTaskNullableListNullableComplexTypeMethod), false)]
-        public void GetReturnSchema_TaskNullableListNullableComplexType_UnwrapsToArraySchemaWithNullableItemsWithoutRequired(string methodName, bool shouldBeRequired)
-        {
-            var schema = GetReturnSchemaForMethod(methodName);
-            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable: true);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable);
             AssertAllRefsDefined(schema!);
         }
 
@@ -795,14 +637,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Theory]
-        [InlineData(typeof(string), nameof(WrapperClass<string>.Echo), JsonSchema.String, true)] // string with Echo (T) is non-nullable due to NullableContextAttribute(1)
-        [InlineData(typeof(int), nameof(WrapperClass<int>.Echo), JsonSchema.Integer, true)] // int is value type, T is non-nullable
-        [InlineData(typeof(bool), nameof(WrapperClass<bool>.Echo), JsonSchema.Boolean, true)] // bool is value type, T is non-nullable
-        [InlineData(typeof(double), nameof(WrapperClass<double>.Echo), JsonSchema.Number, true)] // double is value type, T is non-nullable
-        [InlineData(typeof(string), nameof(WrapperClass<string>.EchoNullable), JsonSchema.String, false)] // T? with reference type is nullable
-        [InlineData(typeof(int), nameof(WrapperClass<int>.EchoNullable), JsonSchema.Integer, false)] // T? with value type is also nullable (int? becomes int, but T? context is nullable)
-        [InlineData(typeof(bool), nameof(WrapperClass<bool>.EchoNullable), JsonSchema.Boolean, false)] // T? with value type is also nullable (bool? becomes bool, but T? context is nullable)
-        [InlineData(typeof(double), nameof(WrapperClass<double>.EchoNullable), JsonSchema.Number, false)] // T? with value type is also nullable (double? becomes double, but T? context is nullable)
+        [InlineData(typeof(string), EchoMethodName, JsonSchema.String, true)] // string with Echo (T) is non-nullable due to NullableContextAttribute(1)
+        [InlineData(typeof(int), EchoMethodName, JsonSchema.Integer, true)] // int is value type, T is non-nullable
+        [InlineData(typeof(bool), EchoMethodName, JsonSchema.Boolean, true)] // bool is value type, T is non-nullable
+        [InlineData(typeof(double), EchoMethodName, JsonSchema.Number, true)] // double is value type, T is non-nullable
+        [InlineData(typeof(string), EchoNullableMethodName, JsonSchema.String, false)] // T? with reference type is nullable
+        [InlineData(typeof(int), EchoNullableMethodName, JsonSchema.Integer, false)] // T? with value type is also nullable (int? becomes int, but T? context is nullable)
+        [InlineData(typeof(bool), EchoNullableMethodName, JsonSchema.Boolean, false)] // T? with value type is also nullable (bool? becomes bool, but T? context is nullable)
+        [InlineData(typeof(double), EchoNullableMethodName, JsonSchema.Number, false)] // T? with value type is also nullable (double? becomes double, but T? context is nullable)
         public void GetReturnSchema_WrapperEchoPrimitive_ReturnsCorrectSchema(Type genericType, string methodName, string expectedType, bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
@@ -812,12 +654,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Theory]
-        [InlineData(typeof(CustomReturnType), true)]
-        [InlineData(typeof(ComplexReturnType), true)]
-        public void GetReturnSchema_WrapperEchoCustomType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
+        [InlineData(typeof(CustomReturnType), EchoMethodName, true)]
+        [InlineData(typeof(ComplexReturnType), EchoMethodName, true)]
+        [InlineData(typeof(CustomReturnType), EchoNullableMethodName, false)]
+        [InlineData(typeof(ComplexReturnType), EchoNullableMethodName, false)]
+        public void GetReturnSchema_WrapperEchoCustomType_ReturnsCorrectSchema(Type genericType, string methodName, bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, methodName);
 
             Assert.NotNull(schema);
             Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
@@ -830,146 +674,47 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Theory]
-        [InlineData(typeof(CustomReturnType), false)]
-        [InlineData(typeof(ComplexReturnType), false)]
-        public void GetReturnSchema_WrapperEchoNullableCustomType_ReturnsCorrectSchema(Type genericType, bool shouldBeRequired)
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
-
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-
-            if (shouldBeRequired)
-                AssertResultRequired(schema);
-            else
-                AssertResultNotRequired(schema);
-            AssertAllRefsDefined(schema);
-        }
-
-        [Theory]
-        [InlineData(typeof(string[]), JsonSchema.String, true)]
-        [InlineData(typeof(int[]), JsonSchema.Integer, true)]
-        public void GetReturnSchema_WrapperEchoArray_ReturnsCorrectSchema(Type genericType, string expectedItemType, bool shouldBeRequired)
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.Echo));
-            AssertArrayReturnSchema(schema!, expectedItemType, shouldBeRequired);
-            AssertAllRefsDefined(schema!);
-        }
-
-        [Theory]
+        [InlineData(typeof(string[]), EchoMethodName, JsonSchema.String, true)]
+        [InlineData(typeof(int[]), EchoMethodName, JsonSchema.Integer, true)]
 #if NET5_0_OR_GREATER
-        [InlineData(typeof(string[]), JsonSchema.String, false)]
-        [InlineData(typeof(int[]), JsonSchema.Integer, false)]
+        [InlineData(typeof(string[]), EchoNullableMethodName, JsonSchema.String, false)]
+        [InlineData(typeof(int[]), EchoNullableMethodName, JsonSchema.Integer, false)]
 #else
-        [InlineData(typeof(string[]), JsonSchema.String, true)]
-        [InlineData(typeof(int[]), JsonSchema.Integer, true)]
+        [InlineData(typeof(string[]), EchoNullableMethodName, JsonSchema.String, true)]
+        [InlineData(typeof(int[]), EchoNullableMethodName, JsonSchema.Integer, true)]
 #endif
-        public void GetReturnSchema_WrapperEchoNullableArray_ReturnsCorrectSchema(Type genericType, string expectedItemType, bool shouldBeRequired)
+        public void GetReturnSchema_WrapperEchoArray_ReturnsCorrectSchema(Type genericType, string methodName, string expectedItemType, bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<int>.EchoNullable));
+            var schema = GetWrapperMethodReturnSchema(wrapperType, methodName);
             AssertArrayReturnSchema(schema!, expectedItemType, shouldBeRequired);
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema()
+        [Theory]
+        [InlineData(EchoMethodName, true, false)] // WrapperClass<T>.Echo has NullableContextAttribute(1), meaning T is non-nullable
+#if NET8_0_OR_GREATER
+        [InlineData(EchoNullableMethodName, false, false)]
+#endif
+        public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema(string methodName, bool shouldBeRequired, bool itemsAreNullable)
         {
-            // WrapperClass<T>.Echo has NullableContextAttribute(1), meaning T is non-nullable
-            // Therefore, WrapperClass<List<ComplexReturnType>>.Echo should return non-nullable List<ComplexReturnType>
             var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.Echo));
-            AssertComplexListReturnSchema(schema!, shouldBeRequired: true);
+            var schema = GetWrapperMethodReturnSchema(wrapperType, methodName);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired, itemsAreNullable);
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_WrapperEchoNullableListComplex_ReturnsCorrectSchema()
+        [Theory]
+        [InlineData(typeof(Person), EchoMethodName, true, new[] { typeof(Person), typeof(Address) })]
+        [InlineData(typeof(Address), EchoMethodName, true, new[] { typeof(Address) })]
+        [InlineData(typeof(Company), EchoMethodName, true, new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        [InlineData(typeof(Person), EchoNullableMethodName, false, new[] { typeof(Person), typeof(Address) })]
+        [InlineData(typeof(Address), EchoNullableMethodName, false, new[] { typeof(Address) })]
+        [InlineData(typeof(Company), EchoNullableMethodName, false, new[] { typeof(Company), typeof(Address), typeof(Person) })]
+        public void GetReturnSchema_WrapperEchoComplexType_ReturnsCorrectSchema(Type genericType, string methodName, bool shouldBeRequired, Type[] expectedDefinedTypes)
         {
-            var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.EchoNullable));
-            AssertComplexListReturnSchema(schema!, shouldBeRequired: false);
-            AssertAllRefsDefined(schema!);
-        }
-
-        [Fact]
-        public void GetReturnSchema_WrapperEchoPerson_ReturnsCorrectSchema()
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Person));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Person>.Echo));
-
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_WrapperEchoAddress_ReturnsCorrectSchema()
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Address));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Address>.Echo));
-
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_WrapperEchoCompany_ReturnsCorrectSchema()
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Company));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Company>.Echo));
-
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_WrapperEchoNullablePerson_ReturnsCorrectSchema()
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Person));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Person>.EchoNullable));
-
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Person), typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_WrapperEchoNullableAddress_ReturnsCorrectSchema()
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Address));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Address>.EchoNullable));
-
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Address));
-            AssertAllRefsDefined(schema);
-        }
-
-        [Fact]
-        public void GetReturnSchema_WrapperEchoNullableCompany_ReturnsCorrectSchema()
-        {
-            var wrapperType = typeof(WrapperClass<>).MakeGenericType(typeof(Company));
-            var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<Company>.EchoNullable));
-
-            Assert.NotNull(schema);
-            Assert.Equal(JsonSchema.Object, schema[JsonSchema.Type]?.ToString());
-            AssertResultNotRequired(schema);
-            AssertResultDefines(schema, typeof(Company), typeof(Address), typeof(Person));
-            AssertAllRefsDefined(schema);
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
+            TestWrapperComplexObjectSchema(wrapperType, methodName, shouldBeRequired, expectedDefinedTypes);
         }
 
         #endregion
