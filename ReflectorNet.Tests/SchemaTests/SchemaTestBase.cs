@@ -172,6 +172,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 var required = schema[JsonSchema.Required]!.AsArray();
                 Assert.Contains(required, r => r?.ToString() == JsonSchema.Result);
             }
+            else
+            {
+                Assert.Fail("Schema does not contain a required array");
+            }
         }
 
         /// <summary>

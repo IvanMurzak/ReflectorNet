@@ -6,7 +6,8 @@
       "Bash(dotnet build:*)",
       "Bash(git checkout:*)",
       "Bash(dotnet clean:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(dotnet run:*)"
     ],
     "deny": [],
     "ask": []
