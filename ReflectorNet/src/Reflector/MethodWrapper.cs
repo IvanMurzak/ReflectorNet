@@ -416,7 +416,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 if (Enum.TryParse(parameterType, stringValue, ignoreCase: true, out var result))
                 {
-                    if (result != null && Enum.IsDefined(parameterType, result))
+                    if (Enum.IsDefined(parameterType, result!))
                     {
                         return result;
                     }
