@@ -20,7 +20,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         // This is a compiler-generated internal attribute, so we must access it by name
 #if NET8_0_OR_GREATER
         private static readonly Type NullableContextAttributeType = typeof(System.Runtime.CompilerServices.NullableContextAttribute);
-#elif NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#elif NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER // Maybe some environment would support it
         private static readonly Type? NullableContextAttributeType = Type.GetType("System.Runtime.CompilerServices.NullableContextAttribute, System.Private.CoreLib");
 #endif
 
