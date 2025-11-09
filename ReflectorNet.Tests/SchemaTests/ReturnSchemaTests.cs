@@ -800,7 +800,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Theory]
-        [InlineData(typeof(string), nameof(WrapperClass<string>.Echo), JsonSchema.String, false)] // string is reference type, T is nullable
+        [InlineData(typeof(string), nameof(WrapperClass<string>.Echo), JsonSchema.String, true)] // string with Echo (T) is non-nullable due to NullableContextAttribute(1)
         [InlineData(typeof(int), nameof(WrapperClass<int>.Echo), JsonSchema.Integer, true)] // int is value type, T is non-nullable
         [InlineData(typeof(bool), nameof(WrapperClass<bool>.Echo), JsonSchema.Boolean, true)] // bool is value type, T is non-nullable
         [InlineData(typeof(double), nameof(WrapperClass<double>.Echo), JsonSchema.Number, true)] // double is value type, T is non-nullable
@@ -879,17 +879,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Theory]
-#if NET5_0_OR_GREATER
-        [InlineData(false)]
-#else
-        [InlineData(true)]
-#endif
-        public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema(bool shouldBeRequired)
+        [Fact]
+        public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema()
         {
+            // WrapperClass<T>.Echo has NullableContextAttribute(1), meaning T is non-nullable
+            // Therefore, WrapperClass<List<ComplexReturnType>>.Echo should return non-nullable List<ComplexReturnType>
             var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.Echo));
-            AssertComplexListReturnSchema(schema!, shouldBeRequired: shouldBeRequired);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired: true);
             AssertAllRefsDefined(schema!);
         }
 
