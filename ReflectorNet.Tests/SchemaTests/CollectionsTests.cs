@@ -57,8 +57,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             foreach (var type in _collectionTypes)
             {
                 var result = reflector.GetSchema(type);
+                var options = new JsonSerializerOptions
+                {
+                    TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
+                    WriteIndented = true
+                };
 
-                _output.WriteLine($"Type: {type.GetTypeShortName()}\n{result.ToJsonString(new JsonSerializerOptions { WriteIndented = true })}\n");
+                _output.WriteLine($"Type: {type.GetTypeShortName()}\n{result.ToJsonString(options)}\n");
 
                 // Assert
                 Assert.NotNull(result);
