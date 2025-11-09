@@ -63,8 +63,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (!Enum.TryParse(underlyingType, stringValue, ignoreCase: true, out var enumValue))
                     throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
 
-                if (Enum.IsDefined(underlyingType, enumValue))
-                    return enumValue;
+                if (Enum.IsDefined(underlyingType, enumValue!))
+                    return enumValue!;
 
                 throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
             }
