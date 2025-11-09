@@ -498,15 +498,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [InlineData(nameof(TaskListNullableComplexTypeMethod), true, true)]
         [InlineData(nameof(TaskNullableListNullableComplexTypeMethod), false, true)]
         [InlineData(nameof(NullableTaskNullableListNullableComplexTypeMethod), false, true)]
-#if NET8_0_OR_GREATER
         [InlineData(nameof(NullableListComplexTypeMethod), false, false)]
         [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), false, true)]
         [InlineData(nameof(NullableTaskListComplexTypeMethod), false, false)]
-#else
-        [InlineData(nameof(NullableListComplexTypeMethod), true, false)] // netstandard2.1 cannot detect List<T>? nullability
-        [InlineData(nameof(NullableTaskListNullableComplexTypeMethod), true, true)] // netstandard2.1 cannot detect Task<T>? nullability
-        [InlineData(nameof(NullableTaskListComplexTypeMethod), true, false)] // netstandard2.1 cannot detect Task<T>? nullability
-#endif
         public void GetReturnSchema_ListComplexType_ReturnsCorrectSchema(string methodName, bool shouldBeRequired, bool itemsAreNullable)
         {
             var schema = GetReturnSchemaForMethod(methodName);
@@ -641,10 +635,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [InlineData(typeof(int), EchoMethodName, JsonSchema.Integer, true)] // int is value type, T is non-nullable
         [InlineData(typeof(bool), EchoMethodName, JsonSchema.Boolean, true)] // bool is value type, T is non-nullable
         [InlineData(typeof(double), EchoMethodName, JsonSchema.Number, true)] // double is value type, T is non-nullable
+#if NET8_0_OR_GREATER
         [InlineData(typeof(string), EchoNullableMethodName, JsonSchema.String, false)] // T? with reference type is nullable
         [InlineData(typeof(int), EchoNullableMethodName, JsonSchema.Integer, false)] // T? with value type is also nullable (int? becomes int, but T? context is nullable)
         [InlineData(typeof(bool), EchoNullableMethodName, JsonSchema.Boolean, false)] // T? with value type is also nullable (bool? becomes bool, but T? context is nullable)
         [InlineData(typeof(double), EchoNullableMethodName, JsonSchema.Number, false)] // T? with value type is also nullable (double? becomes double, but T? context is nullable)
+#else
+        [InlineData(typeof(string), EchoNullableMethodName, JsonSchema.String, true)] // T? with reference type is non-nullable due to lack of nullable context
+        [InlineData(typeof(int), EchoNullableMethodName, JsonSchema.Integer, true)] // T? with value type is non-nullable due to lack of nullable context
+        [InlineData(typeof(bool), EchoNullableMethodName, JsonSchema.Boolean, true)] // T? with value type is non-nullable due to lack of nullable context
+        [InlineData(typeof(double), EchoNullableMethodName, JsonSchema.Number, true)] // T? with value type is non-nullable due to lack of nullable context
+#endif
         public void GetReturnSchema_WrapperEchoPrimitive_ReturnsCorrectSchema(Type genericType, string methodName, string expectedType, bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
@@ -656,8 +657,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Theory]
         [InlineData(typeof(CustomReturnType), EchoMethodName, true)]
         [InlineData(typeof(ComplexReturnType), EchoMethodName, true)]
+#if NET8_0_OR_GREATER
         [InlineData(typeof(CustomReturnType), EchoNullableMethodName, false)]
         [InlineData(typeof(ComplexReturnType), EchoNullableMethodName, false)]
+#else
+        [InlineData(typeof(CustomReturnType), EchoNullableMethodName, true)]
+        [InlineData(typeof(ComplexReturnType), EchoNullableMethodName, true)]
+#endif
         public void GetReturnSchema_WrapperEchoCustomType_ReturnsCorrectSchema(Type genericType, string methodName, bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
@@ -708,9 +714,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [InlineData(typeof(Person), EchoMethodName, true, new[] { typeof(Person), typeof(Address) })]
         [InlineData(typeof(Address), EchoMethodName, true, new[] { typeof(Address) })]
         [InlineData(typeof(Company), EchoMethodName, true, new[] { typeof(Company), typeof(Address), typeof(Person) })]
+#if NET8_0_OR_GREATER
         [InlineData(typeof(Person), EchoNullableMethodName, false, new[] { typeof(Person), typeof(Address) })]
         [InlineData(typeof(Address), EchoNullableMethodName, false, new[] { typeof(Address) })]
         [InlineData(typeof(Company), EchoNullableMethodName, false, new[] { typeof(Company), typeof(Address), typeof(Person) })]
+#else
+        [InlineData(typeof(Person), EchoNullableMethodName, true, new[] { typeof(Person), typeof(Address) })]
+        [InlineData(typeof(Address), EchoNullableMethodName, true, new[] { typeof(Address) })]
+        [InlineData(typeof(Company), EchoNullableMethodName, true, new[] { typeof(Company), typeof(Address), typeof(Person) })]
+#endif
         public void GetReturnSchema_WrapperEchoComplexType_ReturnsCorrectSchema(Type genericType, string methodName, bool shouldBeRequired, Type[] expectedDefinedTypes)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
