@@ -48,8 +48,12 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 // Basics
                 Add(new PrimitiveReflectionConvertor());
-                Add(new GenericReflectionConvertor<object>());
                 Add(new ArrayReflectionConvertor());
+                Add(new GenericReflectionConvertor<object>());
+
+                // Specialized converters for read-only system types
+                Add(new TypeReflectionConvertor());
+                Add(new AssemblyReflectionConvertor());
             }
 
             /// <summary>
