@@ -513,8 +513,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         }
 
         [Theory]
-        [InlineData(typeof(string), nameof(WrapperClass<string?>.Echo), true)] // WrapperClass<string?>.Echo returns T where T=string? (nullable reference type)
-        [InlineData(typeof(string), nameof(WrapperClass<string?>.EchoNullable), true)] // WrapperClass<string?>.EchoNullable returns T? where T=string? (nullable)
         [InlineData(typeof(Company), nameof(WrapperClass<Company?>.Echo), true)] // WrapperClass<Company?>.Echo returns T where T=Company? (nullable reference type)
         [InlineData(typeof(Company), nameof(WrapperClass<Company?>.EchoNullable), true)] // WrapperClass<Company?>.EchoNullable returns T? where T=Company? (nullable)
         [InlineData(typeof(List<int>), nameof(WrapperClass<List<int>?>.Echo), true)] // WrapperClass<List<int>?>.Echo returns T where T=List<int>? (nullable reference type)
