@@ -254,11 +254,16 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_TaskNullableCustomType_UnwrapsToCustomTypeSchemaWithoutRequired()
+        [Theory]
+#if NET5_0_OR_GREATER
+        [InlineData(false)]
+#else
+        [InlineData(true)]
+#endif
+        public void GetReturnSchema_TaskNullableCustomType_UnwrapsToCustomTypeSchemaWithoutRequired(bool shouldBeRequired)
         {
             var schema = GetReturnSchemaForMethod(nameof(TaskNullableCustomTypeMethod));
-            AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
+            AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: shouldBeRequired);
             AssertAllRefsDefined(schema!);
         }
 
@@ -602,7 +607,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
         [Theory]
         [InlineData(nameof(ListComplexTypeMethod), true)]
+#if NET5_0_OR_GREATER
         [InlineData(nameof(NullableListComplexTypeMethod), false)]
+#else
+        [InlineData(nameof(NullableListComplexTypeMethod), true)] // netstandard2.1 cannot detect List<T>? nullability
+#endif
         public void GetReturnSchema_ListComplexType_ReturnsArraySchemaWithComplexItems(string methodName, bool shouldBeRequired)
         {
             var schema = GetReturnSchemaForMethod(methodName);
@@ -855,8 +864,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Theory]
+#if NET5_0_OR_GREATER
         [InlineData(typeof(string[]), JsonSchema.String, false)]
         [InlineData(typeof(int[]), JsonSchema.Integer, false)]
+#else
+        [InlineData(typeof(string[]), JsonSchema.String, true)]
+        [InlineData(typeof(int[]), JsonSchema.Integer, true)]
+#endif
         public void GetReturnSchema_WrapperEchoNullableArray_ReturnsCorrectSchema(Type genericType, string expectedItemType, bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
@@ -865,12 +879,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Fact]
-        public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema()
+        [Theory]
+#if NET5_0_OR_GREATER
+        [InlineData(false)]
+#else
+        [InlineData(true)]
+#endif
+        public void GetReturnSchema_WrapperEchoListComplex_ReturnsCorrectSchema(bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<List<ComplexReturnType>>);
             var schema = GetWrapperMethodReturnSchema(wrapperType, nameof(WrapperClass<List<ComplexReturnType>>.Echo));
-            AssertComplexListReturnSchema(schema!, shouldBeRequired: true);
+            AssertComplexListReturnSchema(schema!, shouldBeRequired: shouldBeRequired);
             AssertAllRefsDefined(schema!);
         }
 
