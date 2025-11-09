@@ -493,7 +493,35 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [InlineData(typeof(int), nameof(WrapperClass<int>.EchoNullable), true)] // WrapperClass<int>.EchoNullable returns T? where T=int (nullable)
         [InlineData(typeof(string), nameof(WrapperClass<string>.EchoNullable), true)] // WrapperClass<string>.EchoNullable returns T? where T=string (nullable)
         [InlineData(typeof(Company), nameof(WrapperClass<Company>.EchoNullable), true)] // WrapperClass<Company>.EchoNullable returns T? where T=Company (nullable)
-        public void IsReturnTypeNullable_GenericTypeParameter_WithPrimitiveAndReferenceTypes(Type genericTypeArgument, string methodName, bool expectedNullable)
+        public void IsReturnTypeNullable_GenericTypeParameter_WithNonNullableTypes(Type genericTypeArgument, string methodName, bool expectedNullable)
+        {
+            AssertWrapperMethodNullability(genericTypeArgument, methodName, expectedNullable);
+        }
+
+        [Theory]
+        [InlineData(typeof(int?), nameof(WrapperClass<int?>.Echo), true)] // WrapperClass<int?>.Echo returns T where T=int? (nullable value type)
+        [InlineData(typeof(int?), nameof(WrapperClass<int?>.EchoNullable), true)] // WrapperClass<int?>.EchoNullable returns T? where T=int? (nullable)
+        [InlineData(typeof(bool?), nameof(WrapperClass<bool?>.Echo), true)] // WrapperClass<bool?>.Echo returns T where T=bool? (nullable value type)
+        [InlineData(typeof(bool?), nameof(WrapperClass<bool?>.EchoNullable), true)] // WrapperClass<bool?>.EchoNullable returns T? where T=bool? (nullable)
+        [InlineData(typeof(double?), nameof(WrapperClass<double?>.Echo), true)] // WrapperClass<double?>.Echo returns T where T=double? (nullable value type)
+        [InlineData(typeof(double?), nameof(WrapperClass<double?>.EchoNullable), true)] // WrapperClass<double?>.EchoNullable returns T? where T=double? (nullable)
+        [InlineData(typeof(DateTime?), nameof(WrapperClass<DateTime?>.Echo), true)] // WrapperClass<DateTime?>.Echo returns T where T=DateTime? (nullable value type)
+        [InlineData(typeof(DateTime?), nameof(WrapperClass<DateTime?>.EchoNullable), true)] // WrapperClass<DateTime?>.EchoNullable returns T? where T=DateTime? (nullable)
+        public void IsReturnTypeNullable_GenericTypeParameter_WithNullableValueTypes(Type genericTypeArgument, string methodName, bool expectedNullable)
+        {
+            AssertWrapperMethodNullability(genericTypeArgument, methodName, expectedNullable);
+        }
+
+        [Theory]
+        [InlineData(typeof(string), nameof(WrapperClass<string?>.Echo), true)] // WrapperClass<string?>.Echo returns T where T=string? (nullable reference type)
+        [InlineData(typeof(string), nameof(WrapperClass<string?>.EchoNullable), true)] // WrapperClass<string?>.EchoNullable returns T? where T=string? (nullable)
+        [InlineData(typeof(Company), nameof(WrapperClass<Company?>.Echo), true)] // WrapperClass<Company?>.Echo returns T where T=Company? (nullable reference type)
+        [InlineData(typeof(Company), nameof(WrapperClass<Company?>.EchoNullable), true)] // WrapperClass<Company?>.EchoNullable returns T? where T=Company? (nullable)
+        [InlineData(typeof(List<int>), nameof(WrapperClass<List<int>?>.Echo), true)] // WrapperClass<List<int>?>.Echo returns T where T=List<int>? (nullable reference type)
+        [InlineData(typeof(List<int>), nameof(WrapperClass<List<int>?>.EchoNullable), true)] // WrapperClass<List<int>?>.EchoNullable returns T? where T=List<int>? (nullable)
+        [InlineData(typeof(List<Company>), nameof(WrapperClass<List<Company>?>.Echo), true)] // WrapperClass<List<Company>?>.Echo returns T where T=List<Company>? (nullable reference type)
+        [InlineData(typeof(List<Company>), nameof(WrapperClass<List<Company>?>.EchoNullable), true)] // WrapperClass<List<Company>?>.EchoNullable returns T? where T=List<Company>? (nullable)
+        public void IsReturnTypeNullable_GenericTypeParameter_WithNullableReferenceTypes(Type genericTypeArgument, string methodName, bool expectedNullable)
         {
             AssertWrapperMethodNullability(genericTypeArgument, methodName, expectedNullable);
         }
