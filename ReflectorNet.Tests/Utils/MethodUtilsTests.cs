@@ -473,100 +473,37 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
         #region Generic Type Parameter Tests
 
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_T_Echo_WithInt_ReturnsFalse()
+        /// <summary>
+        /// Helper method to test nullability of WrapperClass&lt;T&gt; methods
+        /// </summary>
+        private static void AssertWrapperMethodNullability(Type genericTypeArgument, string methodName, bool expectedNullable)
         {
-            // WrapperClass<int>.Echo returns T where T=int (non-nullable context)
-            var wrapperType = typeof(WrapperClass<int>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<int>.Echo), BindingFlags.Public | BindingFlags.Instance);
+            var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericTypeArgument);
+            var method = wrapperType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance);
             Assert.NotNull(method);
 
             var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.False(result);
+            Assert.Equal(expectedNullable, result);
         }
 
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_T_Echo_WithString_ReturnsFalse()
+        [Theory]
+        [InlineData(typeof(int), nameof(WrapperClass<int>.Echo), false)] // WrapperClass<int>.Echo returns T where T=int (non-nullable)
+        [InlineData(typeof(string), nameof(WrapperClass<string>.Echo), false)] // WrapperClass<string>.Echo returns T where T=string (non-nullable)
+        [InlineData(typeof(Company), nameof(WrapperClass<Company>.Echo), false)] // WrapperClass<Company>.Echo returns T where T=Company (non-nullable)
+        [InlineData(typeof(int), nameof(WrapperClass<int>.EchoNullable), true)] // WrapperClass<int>.EchoNullable returns T? where T=int (nullable)
+        [InlineData(typeof(string), nameof(WrapperClass<string>.EchoNullable), true)] // WrapperClass<string>.EchoNullable returns T? where T=string (nullable)
+        [InlineData(typeof(Company), nameof(WrapperClass<Company>.EchoNullable), true)] // WrapperClass<Company>.EchoNullable returns T? where T=Company (nullable)
+        public void IsReturnTypeNullable_GenericTypeParameter_WithPrimitiveAndReferenceTypes(Type genericTypeArgument, string methodName, bool expectedNullable)
         {
-            // WrapperClass<string>.Echo returns T where T=string (non-nullable context)
-            var wrapperType = typeof(WrapperClass<string>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<string>.Echo), BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(method);
-
-            var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.False(result);
+            AssertWrapperMethodNullability(genericTypeArgument, methodName, expectedNullable);
         }
 
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_T_Echo_WithCompany_ReturnsFalse()
+        [Theory]
+        [InlineData(nameof(WrapperClass<List<Company>>.Echo), false)] // WrapperClass<List<Company>>.Echo returns T where T=List<Company> (non-nullable)
+        [InlineData(nameof(WrapperClass<List<Company>>.EchoNullable), true)] // WrapperClass<List<Company>>.EchoNullable returns T? where T=List<Company> (nullable)
+        public void IsReturnTypeNullable_GenericTypeParameter_WithComplexTypes(string methodName, bool expectedNullable)
         {
-            // WrapperClass<Company>.Echo returns T where T=Company (non-nullable context)
-            var wrapperType = typeof(WrapperClass<Company>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<Company>.Echo), BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(method);
-
-            var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_TNullable_EchoNullable_WithInt_ReturnsTrue()
-        {
-            // WrapperClass<int>.EchoNullable returns T? where T=int (nullable context)
-            var wrapperType = typeof(WrapperClass<int>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<int>.EchoNullable), BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(method);
-
-            var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_TNullable_EchoNullable_WithString_ReturnsTrue()
-        {
-            // WrapperClass<string>.EchoNullable returns T? where T=string (nullable context)
-            var wrapperType = typeof(WrapperClass<string>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<string>.EchoNullable), BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(method);
-
-            var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_TNullable_EchoNullable_WithCompany_ReturnsTrue()
-        {
-            // WrapperClass<Company>.EchoNullable returns T? where T=Company (nullable context)
-            var wrapperType = typeof(WrapperClass<Company>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<Company>.EchoNullable), BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(method);
-
-            var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_T_Echo_WithListCompany_ReturnsFalse()
-        {
-            // WrapperClass<List<Company>>.Echo returns T where T=List<Company> (non-nullable context)
-            var wrapperType = typeof(WrapperClass<List<Company>>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<List<Company>>.Echo), BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(method);
-
-            var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void IsReturnTypeNullable_GenericTypeParameter_TNullable_EchoNullable_WithListCompany_ReturnsTrue()
-        {
-            // WrapperClass<List<Company>>.EchoNullable returns T? where T=List<Company> (nullable context)
-            var wrapperType = typeof(WrapperClass<List<Company>>);
-            var method = wrapperType.GetMethod(nameof(WrapperClass<List<Company>>.EchoNullable), BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(method);
-
-            var result = MethodUtils.IsReturnTypeNullable(method!);
-            Assert.True(result);
+            AssertWrapperMethodNullability(typeof(List<Company>), methodName, expectedNullable);
         }
 
         #endregion
