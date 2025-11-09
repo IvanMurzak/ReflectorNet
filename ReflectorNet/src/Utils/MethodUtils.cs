@@ -105,7 +105,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         // - NullableContextAttribute(1) on methods with non-nullable return types (T)
                         // - No attribute (or inherited context) for nullable return types (T?)
                         var hasNullableContextAttr = false;
-                        var nullableContextValue = (byte)2; // Default to nullable
+                        var nullableContextValue = (byte)1; // Default to non-nullable
 
                         // Check method-level NullableContextAttribute
                         var methodAttrs = methodToInspect.GetCustomAttributesData();
