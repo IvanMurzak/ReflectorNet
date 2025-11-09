@@ -490,124 +490,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 (returnType.GetGenericTypeDefinition() == typeof(Task<>) ||
                  returnType.GetGenericTypeDefinition() == typeof(ValueTask<>));
 
-            // Unwrap Task<T>/ValueTask<T> to get the inner T
+            // Determine if the return type is nullable using MethodUtils
+            var isNullable = MethodUtils.IsReturnTypeNullable(methodInfo);
+
+            // Unwrap Task<T>/ValueTask<T> to get the inner T for type resolution
             var unwrappedType = isAsyncWrapper
                 ? returnType.GetGenericArguments()[0]
                 : returnType;
 
-            var isNullable = false;
-
-            // Check for Nullable<T> (value types like int?, DateTime?)
+            // Unwrap Nullable<T> to get the underlying type for type resolution
             var nullableUnderlyingType = Nullable.GetUnderlyingType(unwrappedType);
             if (nullableUnderlyingType != null)
             {
-                // This handles Nullable<T> for value types (e.g., Task<int?>, int?)
-                isNullable = true;
                 unwrappedType = nullableUnderlyingType;
-            }
-            else if (!unwrappedType.IsValueType)
-            {
-                // For reference types, check nullability using NullabilityInfoContext
-#if NET5_0_OR_GREATER
-                try
-                {
-                    // To properly handle generic type parameters, we need to check the method definition
-                    // For constructed generic types (e.g., WrapperClass<Company>.Echo), we need to inspect
-                    // the original generic method definition to see if it uses T vs T?
-                    var methodToInspect = methodInfo;
-                    var originalReturnType = methodInfo.ReturnType;
-
-                    if (methodInfo.DeclaringType != null && methodInfo.DeclaringType.IsGenericType && !methodInfo.DeclaringType.IsGenericTypeDefinition)
-                    {
-                        // This is a method on a constructed generic type (e.g., WrapperClass<Company>)
-                        // Get the generic type definition (e.g., WrapperClass<T>)
-                        var genericTypeDefinition = methodInfo.DeclaringType.GetGenericTypeDefinition();
-                        // Get the corresponding method from the generic type definition
-                        var genericMethod = genericTypeDefinition.GetMethod(methodInfo.Name,
-                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                        if (genericMethod != null)
-                        {
-                            methodToInspect = genericMethod;
-                            originalReturnType = genericMethod.ReturnType;
-                        }
-                    }
-
-                    // Unwrap async return types to get the actual type
-                    var typeToCheck = originalReturnType;
-                    if (isAsyncWrapper && typeToCheck.IsGenericType)
-                        typeToCheck = typeToCheck.GetGenericArguments()[0];
-
-                    // For generic type parameters (T vs T?), NullabilityInfoContext doesn't work correctly.
-                    // We need to check the NullableContextAttribute on the method to determine nullability.
-                    // ONLY apply this logic if the return type is a generic type parameter.
-                    if (typeToCheck.IsGenericParameter)
-                    {
-                        // The C# compiler emits:
-                        // - NullableContextAttribute(1) on methods with non-nullable return types (T)
-                        // - No attribute (or inherited context) for nullable return types (T?)
-                        var hasNullableContextAttr = false;
-                        var nullableContextValue = (byte)2; // Default to nullable
-
-                        // Check method-level NullableContextAttribute
-                        var methodAttrs = methodToInspect.GetCustomAttributesData();
-                        foreach (var attr in methodAttrs)
-                        {
-                            if (attr.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute")
-                            {
-                                hasNullableContextAttr = true;
-                                if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments[0].Value is byte value)
-                                    nullableContextValue = value;
-                                break;
-                            }
-                        }
-
-                        // If no method-level attribute, check the declaring type
-                        if (!hasNullableContextAttr && methodToInspect.DeclaringType != null)
-                        {
-                            var typeAttrs = methodToInspect.DeclaringType.GetCustomAttributesData();
-                            foreach (var attr in typeAttrs)
-                            {
-                                if (attr.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute")
-                                {
-                                    if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments[0].Value is byte value)
-                                        nullableContextValue = value;
-                                    break;
-                                }
-                            }
-                        }
-
-                        // NullableContext values:
-                        // 0 = Oblivious (no annotation) - treat as non-nullable
-                        // 1 = NotNull
-                        // 2 = Nullable
-                        isNullable = nullableContextValue == 2;
-                    }
-                    else
-                    {
-                        // For concrete reference types (non-generic parameters), use NullabilityInfoContext
-                        var nullabilityContext = new NullabilityInfoContext();
-                        var nullabilityInfo = nullabilityContext.Create(methodInfo.ReturnParameter);
-
-                        isNullable = nullabilityInfo.ReadState == NullabilityState.Nullable;
-                        // If the return type is Task<T> or ValueTask<T>, check the generic argument nullability
-                        if (isAsyncWrapper)
-                        {
-                            // Check the nullability of the T inside Task<T> or ValueTask<T>
-                            if (nullabilityInfo.GenericTypeArguments.Length > 0)
-                                isNullable |= nullabilityInfo.GenericTypeArguments[0].ReadState == NullabilityState.Nullable;
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // If we can't determine nullability, assume not nullable
-                    isNullable = false;
-                }
-#else
-                // For .NET Standard 2.1 and earlier, we cannot determine reference type nullability
-                // Assume not nullable by default
-                isNullable = false;
-#endif
             }
 
             var types = new (Type type, string name, string? description, bool required)[]

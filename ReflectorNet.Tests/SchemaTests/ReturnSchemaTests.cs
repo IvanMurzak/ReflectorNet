@@ -804,10 +804,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [InlineData(typeof(int), nameof(WrapperClass<int>.Echo), JsonSchema.Integer, true)] // int is value type, T is non-nullable
         [InlineData(typeof(bool), nameof(WrapperClass<bool>.Echo), JsonSchema.Boolean, true)] // bool is value type, T is non-nullable
         [InlineData(typeof(double), nameof(WrapperClass<double>.Echo), JsonSchema.Number, true)] // double is value type, T is non-nullable
-        [InlineData(typeof(string), nameof(WrapperClass<string>.EchoNullable), JsonSchema.String, false)] // string? is nullable reference
-        [InlineData(typeof(int), nameof(WrapperClass<int>.EchoNullable), JsonSchema.Integer, true)] // int? (Nullable<int>) is itself non-nullable struct
-        [InlineData(typeof(bool), nameof(WrapperClass<bool>.EchoNullable), JsonSchema.Boolean, true)] // bool? (Nullable<bool>) is itself non-nullable struct
-        [InlineData(typeof(double), nameof(WrapperClass<double>.EchoNullable), JsonSchema.Number, true)] // double? (Nullable<double>) is itself non-nullable struct
+        [InlineData(typeof(string), nameof(WrapperClass<string>.EchoNullable), JsonSchema.String, false)] // T? with reference type is nullable
+        [InlineData(typeof(int), nameof(WrapperClass<int>.EchoNullable), JsonSchema.Integer, false)] // T? with value type is also nullable (int? becomes int, but T? context is nullable)
+        [InlineData(typeof(bool), nameof(WrapperClass<bool>.EchoNullable), JsonSchema.Boolean, false)] // T? with value type is also nullable (bool? becomes bool, but T? context is nullable)
+        [InlineData(typeof(double), nameof(WrapperClass<double>.EchoNullable), JsonSchema.Number, false)] // T? with value type is also nullable (double? becomes double, but T? context is nullable)
         public void GetReturnSchema_WrapperEchoPrimitive_ReturnsCorrectSchema(Type genericType, string methodName, string expectedType, bool shouldBeRequired)
         {
             var wrapperType = typeof(WrapperClass<>).MakeGenericType(genericType);
