@@ -4,6 +4,11 @@ on:
   push:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
 jobs:
   check-version-tag:
     runs-on: ubuntu-latest
@@ -68,7 +73,14 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release
+      run: dotnet test --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: '**/TestResults/*.trx'
+        check_name: 'Test Results'
 
   publish-release:
     runs-on: ubuntu-latest
