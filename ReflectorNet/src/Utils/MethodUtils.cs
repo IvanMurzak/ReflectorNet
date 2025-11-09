@@ -16,12 +16,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     /// </summary>
     public static class MethodUtils
     {
-#if NET5_0_OR_GREATER
         // Cache the NullableContextAttribute type for performance
         // This is a compiler-generated internal attribute, so we must access it by name
-        private static readonly Type? NullableContextAttributeType = typeof(System.Runtime.CompilerServices.NullableContextAttribute);
-        // Type.GetType("System.Runtime.CompilerServices.NullableContextAttribute, System.Private.CoreLib");
+#if NET8_0_OR_GREATER
+        private static readonly Type? NullableContextAttributeType = Type.GetType("System.Runtime.CompilerServices.NullableContextAttribute, System.Private.CoreLib");
+#elif NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        private static readonly Type NullableContextAttributeType = typeof(System.Runtime.CompilerServices.NullableContextAttribute);
+#endif
 
+#if NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
         // NullableContext attribute values
         private const byte NullableContextOblivious = 0; // No annotation - treat as non-nullable
         private const byte NullableContextNotNull = 1;   // Non-nullable
@@ -77,7 +80,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 ? returnType.GetGenericArguments()[0]
                 : returnType;
 
-#if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
             // First, check if this is a method on a generic type - we need to inspect the generic definition
             // to correctly determine nullability for generic type parameters (T vs T?)
             MethodInfo? methodToInspect = null;
