@@ -27,10 +27,11 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=test-results.trx"
+      run: dotnet test --no-build --verbosity normal --configuration Release --logger trx
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
         files: '**/TestResults/*.trx'
         check_name: 'Test Results'
+        large_files: true
