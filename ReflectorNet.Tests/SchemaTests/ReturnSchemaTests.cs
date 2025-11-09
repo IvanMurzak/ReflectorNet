@@ -254,7 +254,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             AssertAllRefsDefined(schema!);
         }
 
-        [Theory]
+        [Fact]
         public void GetReturnSchema_TaskNullableCustomType_UnwrapsToCustomTypeSchemaWithoutRequired()
         {
             var schema = GetReturnSchemaForMethod(nameof(TaskNullableCustomTypeMethod));
