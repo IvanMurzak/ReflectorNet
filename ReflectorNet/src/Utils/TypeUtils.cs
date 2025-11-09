@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json.Schema;
 using com.IvanMurzak.ReflectorNet.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
@@ -132,7 +131,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var propertyInfo = type.GetProperty(propertyName);
             return propertyInfo != null ? GetPropertyDescription(propertyInfo) : null;
         }
-        public static string? GetPropertyDescription(JsonSchemaExporterContext context)
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        public static string? GetPropertyDescription(System.Text.Json.Schema.JsonSchemaExporterContext context)
         {
             if (context.PropertyInfo == null || context.PropertyInfo.DeclaringType == null)
                 return null;
@@ -169,6 +169,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             return GetDescription(memberInfo);
         }
+#endif
 
         private static string ToPascalCase(string camelCase)
         {
