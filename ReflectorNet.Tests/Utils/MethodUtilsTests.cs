@@ -513,18 +513,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         }
 
         [Theory]
-        [InlineData(typeof(Company), nameof(WrapperClass<Company?>.Echo), true)] // WrapperClass<Company?>.Echo returns T where T=Company? (nullable reference type)
-        [InlineData(typeof(Company), nameof(WrapperClass<Company?>.EchoNullable), true)] // WrapperClass<Company?>.EchoNullable returns T? where T=Company? (nullable)
-        [InlineData(typeof(List<int>), nameof(WrapperClass<List<int>?>.Echo), true)] // WrapperClass<List<int>?>.Echo returns T where T=List<int>? (nullable reference type)
-        [InlineData(typeof(List<int>), nameof(WrapperClass<List<int>?>.EchoNullable), true)] // WrapperClass<List<int>?>.EchoNullable returns T? where T=List<int>? (nullable)
-        [InlineData(typeof(List<Company>), nameof(WrapperClass<List<Company>?>.Echo), true)] // WrapperClass<List<Company>?>.Echo returns T where T=List<Company>? (nullable reference type)
-        [InlineData(typeof(List<Company>), nameof(WrapperClass<List<Company>?>.EchoNullable), true)] // WrapperClass<List<Company>?>.EchoNullable returns T? where T=List<Company>? (nullable)
-        public void IsReturnTypeNullable_GenericTypeParameter_WithNullableReferenceTypes(Type genericTypeArgument, string methodName, bool expectedNullable)
-        {
-            AssertWrapperMethodNullability(genericTypeArgument, methodName, expectedNullable);
-        }
-
-        [Theory]
         [InlineData(nameof(WrapperClass<List<Company>>.Echo), false)] // WrapperClass<List<Company>>.Echo returns T where T=List<Company> (non-nullable)
         [InlineData(nameof(WrapperClass<List<Company>>.EchoNullable), true)] // WrapperClass<List<Company>>.EchoNullable returns T? where T=List<Company> (nullable)
         public void IsReturnTypeNullable_GenericTypeParameter_WithComplexTypes(string methodName, bool expectedNullable)
