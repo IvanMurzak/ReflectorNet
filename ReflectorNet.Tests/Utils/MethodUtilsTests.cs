@@ -490,9 +490,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [InlineData(typeof(int), nameof(WrapperClass<int>.Echo), false)] // WrapperClass<int>.Echo returns T where T=int (non-nullable)
         [InlineData(typeof(string), nameof(WrapperClass<string>.Echo), false)] // WrapperClass<string>.Echo returns T where T=string (non-nullable)
         [InlineData(typeof(Company), nameof(WrapperClass<Company>.Echo), false)] // WrapperClass<Company>.Echo returns T where T=Company (non-nullable)
+#if NET8_0_OR_GREATER
         [InlineData(typeof(int), nameof(WrapperClass<int>.EchoNullable), true)] // WrapperClass<int>.EchoNullable returns T? where T=int (nullable)
         [InlineData(typeof(string), nameof(WrapperClass<string>.EchoNullable), true)] // WrapperClass<string>.EchoNullable returns T? where T=string (nullable)
         [InlineData(typeof(Company), nameof(WrapperClass<Company>.EchoNullable), true)] // WrapperClass<Company>.EchoNullable returns T? where T=Company (nullable)
+#endif
         public void IsReturnTypeNullable_GenericTypeParameter_WithNonNullableTypes(Type genericTypeArgument, string methodName, bool expectedNullable)
         {
             AssertWrapperMethodNullability(genericTypeArgument, methodName, expectedNullable);
@@ -514,7 +516,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
         [Theory]
         [InlineData(nameof(WrapperClass<List<Company>>.Echo), false)] // WrapperClass<List<Company>>.Echo returns T where T=List<Company> (non-nullable)
+#if NET8_0_OR_GREATER
         [InlineData(nameof(WrapperClass<List<Company>>.EchoNullable), true)] // WrapperClass<List<Company>>.EchoNullable returns T? where T=List<Company> (nullable)
+#endif
         public void IsReturnTypeNullable_GenericTypeParameter_WithComplexTypes(string methodName, bool expectedNullable)
         {
             AssertWrapperMethodNullability(typeof(List<Company>), methodName, expectedNullable);
