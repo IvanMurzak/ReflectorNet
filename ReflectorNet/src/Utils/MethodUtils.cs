@@ -24,12 +24,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         private static readonly Type? NullableContextAttributeType = Type.GetType("System.Runtime.CompilerServices.NullableContextAttribute, System.Private.CoreLib");
 #endif
 
-#if NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
         // NullableContext attribute values
         private const byte NullableContextOblivious = 0; // No annotation - treat as non-nullable
         private const byte NullableContextNotNull = 1;   // Non-nullable
         private const byte NullableContextNullable = 2;  // Nullable
-#endif
 
         /// <summary>
         /// Determines whether the return type of a method is nullable.
