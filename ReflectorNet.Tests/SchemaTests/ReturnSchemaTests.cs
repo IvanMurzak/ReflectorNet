@@ -255,15 +255,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Theory]
-#if NET5_0_OR_GREATER
-        [InlineData(false)]
-#else
-        [InlineData(true)]
-#endif
-        public void GetReturnSchema_TaskNullableCustomType_UnwrapsToCustomTypeSchemaWithoutRequired(bool shouldBeRequired)
+        public void GetReturnSchema_TaskNullableCustomType_UnwrapsToCustomTypeSchemaWithoutRequired()
         {
             var schema = GetReturnSchemaForMethod(nameof(TaskNullableCustomTypeMethod));
-            AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: shouldBeRequired);
+            AssertCustomTypeReturnSchema(schema!, new[] { "Name", "Value" }, shouldBeRequired: false);
             AssertAllRefsDefined(schema!);
         }
 
