@@ -12,7 +12,11 @@ using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Convertor
 {
-    public partial class IgnoreFieldsAndPropertiesReflectionConvertor<T> : GenericReflectionConvertor<T>
+    /// <summary>
+    /// Converter for types that should be serialized/deserialized without their fields and properties.
+    /// This is useful for types that should be treated as read-only during serialization.
+    /// </summary>
+    public class IgnoreFieldsAndPropertiesReflectionConvertor<T> : GenericReflectionConvertor<T>
     {
         readonly bool _ignoreFields;
         readonly bool _ignoreProperties;
@@ -22,6 +26,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             _ignoreFields = ignoreFields;
             _ignoreProperties = ignoreProperties;
         }
+
+        /// <summary>
+        /// Disable cascade serialization to prevent infinite recursion when serializing
+        /// objects with complex property graphs.
+        /// </summary>
+        public override bool AllowCascadeSerialization => false;
+
         public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
             => _ignoreFields
                 ? null

@@ -50,8 +50,10 @@ namespace com.IvanMurzak.ReflectorNet
                 Add(new PrimitiveReflectionConvertor());
                 Add(new ArrayReflectionConvertor());
                 Add(new GenericReflectionConvertor<object>());
-                Add(new IgnoreFieldsAndPropertiesReflectionConvertor<System.Type>(ignoreFields: true, ignoreProperties: true));
-                Add(new IgnoreFieldsAndPropertiesReflectionConvertor<System.Reflection.Assembly>(ignoreFields: true, ignoreProperties: true));
+
+                // Specialized converters for read-only system types
+                Add(new TypeReflectionConvertor());
+                Add(new AssemblyReflectionConvertor());
             }
 
             /// <summary>
