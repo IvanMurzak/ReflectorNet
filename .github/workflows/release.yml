@@ -52,19 +52,18 @@ jobs:
           echo "Version tag '${{ steps.get_version.outputs.version }}' does not exist. Proceeding with release process."
 
   build-and-test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     needs: check-version-tag
     if: needs.check-version-tag.outputs.is_new_version == 'true'
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        dotnet-version: [ '6.0.x', '8.0.x', '9.0.x' ]
     steps:
     - uses: actions/checkout@v4
-    - name: Setup .NET ${{ matrix.dotnet-version }}
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: |
+          6.0.x
+          8.0.x
+          9.0.x
 
     - name: Restore dependencies
       run: dotnet restore
@@ -158,7 +157,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x'
+        dotnet-version: |
+          6.0.x
+          8.0.x
+          9.0.x
 
     - name: Restore dependencies
       run: dotnet restore
