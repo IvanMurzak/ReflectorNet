@@ -197,7 +197,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     isNullable = false;
                 }
 #else
-                // For .NET Standard 2.0 and earlier, we cannot determine reference type nullability
+                // For .NET Standard 2.1 and earlier, we cannot determine reference type nullability
                 // Assume not nullable by default
                 isNullable = false;
 #endif
