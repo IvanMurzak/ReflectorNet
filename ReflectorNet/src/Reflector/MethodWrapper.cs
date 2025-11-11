@@ -25,9 +25,9 @@ namespace com.IvanMurzak.ReflectorNet
         protected readonly JsonNode? _inputSchema;
         protected readonly JsonNode? _outputSchema;
 
-        public virtual JsonNode? InputSchema => _inputSchema;
-        public virtual JsonNode? OutputSchema => _outputSchema;
-        public virtual string? Description => _description;
+        public JsonNode? InputSchema => _inputSchema;
+        public JsonNode? OutputSchema => _outputSchema;
+        public string? Description => _description;
 
         public MethodWrapper(Reflector reflector, ILogger? logger, MethodInfo methodInfo)
         {
@@ -307,7 +307,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (underlyingType.IsEnum)
                 {
                     // Handle enum conversion for string values and return the provided parameter value
-                    return ConvertStringToEnum(value, underlyingType, methodParameter.Name!);
+                    return StringUtils.ConvertParameterStringToEnum(value, underlyingType, methodParameter.Name!);
                 }
 
                 throw new ArgumentException($"Parameter '{methodParameter.Name}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
@@ -391,7 +391,7 @@ namespace com.IvanMurzak.ReflectorNet
                     if (underlyingType.IsEnum)
                     {
                         // Handle enum conversion for string values and return the provided parameter value
-                        return ConvertStringToEnum(value, underlyingType, parameter.Name!);
+                        return StringUtils.ConvertParameterStringToEnum(value, underlyingType, parameter.Name!);
                     }
 
                     throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
