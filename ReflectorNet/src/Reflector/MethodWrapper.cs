@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet
 {
-    public class MethodWrapper
+    public partial class MethodWrapper
     {
         protected readonly Reflector _reflector;
         protected readonly MethodInfo _methodInfo;
@@ -25,24 +25,9 @@ namespace com.IvanMurzak.ReflectorNet
         protected readonly JsonNode? _inputSchema;
         protected readonly JsonNode? _outputSchema;
 
-        public JsonNode? InputSchema => _inputSchema;
-        public JsonNode? OutputSchema => _outputSchema;
-        public string? Description => _description;
-
-        public static MethodWrapper Create(Reflector reflector, ILogger? logger, MethodInfo methodInfo)
-        {
-            if (methodInfo.IsStatic)
-                return new MethodWrapper(reflector, logger, methodInfo);
-            else
-                return new MethodWrapper(reflector, logger, methodInfo.DeclaringType!, methodInfo);
-        }
-        public static MethodWrapper CreateFromInstance(Reflector reflector, ILogger? logger, object targetInstance, MethodInfo methodInfo)
-        {
-            if (methodInfo.IsStatic)
-                return new MethodWrapper(reflector, logger, methodInfo);
-            else
-                return new MethodWrapper(reflector, logger, targetInstance, methodInfo);
-        }
+        public virtual JsonNode? InputSchema => _inputSchema;
+        public virtual JsonNode? OutputSchema => _outputSchema;
+        public virtual string? Description => _description;
 
         public MethodWrapper(Reflector reflector, ILogger? logger, MethodInfo methodInfo)
         {
@@ -53,9 +38,9 @@ namespace com.IvanMurzak.ReflectorNet
             if (!methodInfo.IsStatic)
                 throw new ArgumentException("The provided method must be static.");
 
-            _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = reflector.GetArgumentsSchema(methodInfo);
-            _outputSchema = reflector.GetReturnSchema(methodInfo);
+            _description = CreateDescription(reflector, methodInfo);
+            _inputSchema = CreateInputSchema(reflector, methodInfo);
+            _outputSchema = CreateOutputSchema(reflector, methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, object targetInstance, MethodInfo methodInfo)
@@ -68,9 +53,9 @@ namespace com.IvanMurzak.ReflectorNet
             if (methodInfo.IsStatic)
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
-            _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = reflector.GetArgumentsSchema(methodInfo);
-            _outputSchema = reflector.GetReturnSchema(methodInfo);
+            _description = CreateDescription(reflector, methodInfo);
+            _inputSchema = CreateInputSchema(reflector, methodInfo);
+            _outputSchema = CreateOutputSchema(reflector, methodInfo);
         }
 
         public MethodWrapper(Reflector reflector, ILogger? logger, Type classType, MethodInfo methodInfo)
@@ -83,9 +68,24 @@ namespace com.IvanMurzak.ReflectorNet
             if (methodInfo.IsStatic)
                 throw new ArgumentException("The provided method must be an instance method. Use the other constructor for static methods.");
 
-            _description = methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            _inputSchema = reflector.GetArgumentsSchema(methodInfo);
-            _outputSchema = reflector.GetReturnSchema(methodInfo);
+            _description = CreateDescription(reflector, methodInfo);
+            _inputSchema = CreateInputSchema(reflector, methodInfo);
+            _outputSchema = CreateOutputSchema(reflector, methodInfo);
+        }
+
+        protected virtual string? CreateDescription(Reflector reflector, MethodInfo methodInfo)
+        {
+            return methodInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
+        }
+
+        protected virtual JsonNode? CreateInputSchema(Reflector reflector, MethodInfo methodInfo)
+        {
+            return reflector.GetArgumentsSchema(methodInfo);
+        }
+
+        protected virtual JsonNode? CreateOutputSchema(Reflector reflector, MethodInfo methodInfo)
+        {
+            return reflector.GetReturnSchema(methodInfo);
         }
 
         public virtual Task<object?> Invoke(params object?[] parameters) => Invoke(CancellationToken.None, parameters);
@@ -339,6 +339,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             return finalParameters;
         }
+
         protected virtual object? GetParameterValue(Reflector reflector, ParameterInfo parameter, IReadOnlyDictionary<string, object?>? namedParameters)
         {
             var underlyingType = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
@@ -408,31 +409,6 @@ namespace com.IvanMurzak.ReflectorNet
                     ? Activator.CreateInstance(parameter.ParameterType) // TODO: replace with Reflector.CreateInstance
                     : null;
             }
-        }
-
-        private static object? ConvertStringToEnum(object? value, Type parameterType, string parameterName)
-        {
-            if (value is string stringValue && parameterType.IsEnum)
-            {
-                if (Enum.TryParse(parameterType, stringValue, ignoreCase: true, out var result))
-                {
-                    if (Enum.IsDefined(parameterType, result!))
-                    {
-                        return result;
-                    }
-                    else
-                    {
-                        throw new ArgumentException(
-                            $"Value '{stringValue}' for parameter '{parameterName}' was parsed but is not a defined member of '{parameterType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException(
-                        $"Value '{stringValue}' for parameter '{parameterName}' could not be parsed as '{parameterType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(parameterType))}");
-                }
-            }
-            throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{parameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
         }
 
         protected virtual void PrintParameters(object?[]? parameters)
