@@ -90,5 +90,29 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 ? span.Slice(lastSlashIndex + 1).ToString()
                 : span.ToString();
         }
+        public static object? ConvertParameterStringToEnum(object? value, Type enumType, string parameterName)
+        {
+            if (value is string stringValue && enumType.IsEnum)
+            {
+                if (Enum.TryParse(enumType, stringValue, ignoreCase: true, out var result))
+                {
+                    if (Enum.IsDefined(enumType, result!))
+                    {
+                        return result;
+                    }
+                    else
+                    {
+                        throw new ArgumentException(
+                            $"Value '{stringValue}' for parameter '{parameterName}' was parsed but is not a defined member of '{enumType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(enumType))}");
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"Value '{stringValue}' for parameter '{parameterName}' could not be parsed as '{enumType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(enumType))}");
+                }
+            }
+            throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{enumType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
+        }
     }
 }
