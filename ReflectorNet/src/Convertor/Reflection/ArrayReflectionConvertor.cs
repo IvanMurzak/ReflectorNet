@@ -42,7 +42,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (isGenericList)
                 return MAX_DEPTH + 1;
 
-            var isArray = typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && type != typeof(string);
+            if (type == typeof(string))
+                return 0;
+
+            var isArray = typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
             return isArray
                 ? MAX_DEPTH / 4
                 : 0;

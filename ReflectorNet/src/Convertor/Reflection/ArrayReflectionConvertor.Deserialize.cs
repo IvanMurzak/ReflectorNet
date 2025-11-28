@@ -8,7 +8,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -56,21 +55,21 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                             : "IEnumerable");
             }
 
-            // Try to deserialize the value as a SerializedMemberList
-            var serializedMemberList = data.valueJsonElement.Deserialize<SerializedMemberList>(reflector);
-            // TODO: Need to support 'null' value. For the case when LLM needs to set exactly 'null' value for an array or list.
-            if (serializedMemberList == null)
+            // Check if the value is actually an array
+            if (data.valueJsonElement == null || data.valueJsonElement.Value.ValueKind != JsonValueKind.Array)
             {
                 if (logger?.IsEnabled(LogLevel.Warning) == true)
                 {
-                    logger.LogWarning("{padding}{icon} Failed to deserialize 'value' json as '{typeName}'",
+                    logger.LogWarning("{padding}{icon} Failed to deserialize 'value' json as Array. Value is null or not an array.",
                         padding,
-                        Consts.Emoji.Warn,
-                        nameof(SerializedMemberList));
+                        Consts.Emoji.Warn);
                 }
-                stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize 'value' json as {nameof(SerializedMemberList)}.");
+                stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize 'value' json as Array.");
                 return null;
             }
+
+            var jsonArray = data.valueJsonElement.Value;
+            var length = jsonArray.GetArrayLength();
 
             if (type.IsArray)
             {
@@ -89,7 +88,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return null;
                 }
 
-                var array = Array.CreateInstance(elementType, serializedMemberList.Count);
+                var array = Array.CreateInstance(elementType, length);
                 if (array == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
@@ -103,11 +102,13 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return null;
                 }
 
-                for (int i = 0; i < serializedMemberList.Count; i++)
+                int i = 0;
+                foreach (var element in jsonArray.EnumerateArray())
                 {
-                    var element = serializedMemberList[i];
+                    var member = ParseElementToMember(element);
+
                     var deserializedElement = reflector.Deserialize(
-                        data: element,
+                        data: member,
                         fallbackType: elementType,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
@@ -117,6 +118,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     {
                         array.SetValue(deserializedElement, i);
                     }
+                    i++;
                 }
 
                 return array;
@@ -150,11 +152,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return null;
                 }
 
-                foreach (var element in serializedMemberList)
+                foreach (var element in jsonArray.EnumerateArray())
                 {
-                    // logger?.LogTrace("{padding}Deserializing element: {ElementName}, typeName: {TypeName}", padding, element.name, element.typeName);
+                    var member = ParseElementToMember(element);
+
                     var deserializedElement = reflector.Deserialize(
-                        element,
+                        member,
                         fallbackType: elementType,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
@@ -282,123 +285,101 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 name = name.ValueOrNull();
-                var parsedList = jsonElement.Deserialize<SerializedMemberList>(reflector);
 
-                if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace(parsedList == null
-                        ? $"{padding}Deserializing '{name}' enumerable with 'null' value."
-                        : $"{padding}Deserializing '{name}' enumerable with {parsedList.Count} items.");
-
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine(parsedList == null
-                        ? $"{padding}Deserializing '{name}' enumerable with 'null' value."
-                        : $"{padding}Deserializing '{name}' enumerable with {parsedList.Count} items.");
-
-                var itemType = TypeUtils.GetEnumerableItemType(type);
-
-                var success = true;
-                var enumerable = parsedList
-                    ?.Select((element, i) =>
-                    {
-                        // TODO: need to use reflector.TryDeserialize
-                        var parsedValue = reflector.Deserialize(
-                            data: element,
-                            fallbackType: itemType,
-                            depth: depth + 1,
-                            stringBuilder: stringBuilder,
-                            logger: logger
-                        );
-                        // if (!success)
-                        // {
-                        //     if (stringBuilder != null)
-                        //         stringBuilder.AppendLine($"{paddingNext}[Error] Enumerable[{i}] deserialization failed: {errorMessage}");
-                        //     return null;
-                        // }
-
-                        if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{paddingNext}Enumerable[{i}] deserialized successfully: {parsedValue?.GetType().GetTypeShortName()}");
-
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{paddingNext}Enumerable[{i}] deserialized successfully.");
-
-                        return parsedValue;
-                    });
-
-                if (!success)
+                if (jsonElement == null)
                 {
                     result = null;
+                    return true;
+                }
 
-                    if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Failed to deserialize '{name}': Some elements could not be deserialized.");
-
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Error] Failed to deserialize '{name}': Some elements could not be deserialized.");
-
+                if (jsonElement.Value.ValueKind != JsonValueKind.Array)
+                {
+                    result = null;
                     return false;
                 }
 
-                var elementType = TypeUtils.GetEnumerableItemType(type);
-                if (elementType == null)
+                var jsonArray = jsonElement.Value;
+                var count = jsonArray.GetArrayLength();
+
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{padding}Deserializing '{name}' enumerable with {count} items.");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}Deserializing '{name}' enumerable with {count} items.");
+
+                var itemType = TypeUtils.GetEnumerableItemType(type);
+                if (itemType == null)
                 {
                     result = null;
-
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError($"{padding}Failed to determine element type for '{name}' of type '{type.GetTypeShortName()}'.");
 
                     if (stringBuilder != null)
                         stringBuilder.AppendLine($"{padding}[Error] Failed to determine element type for '{name}'.");
-
                     return false;
+                }
+
+                // Create a properly typed List<T> instead of List<object?>
+                var listType = typeof(List<>).MakeGenericType(itemType);
+                var list = (IList?)Activator.CreateInstance(listType);
+                if (list == null)
+                {
+                    result = null;
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}Failed to create list instance for type '{type.GetTypeShortName()}'.");
+
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Error] Failed to create list instance for type '{type.GetTypeShortName()}'.");
+                    return false;
+                }
+
+                int i = 0;
+                foreach (var element in jsonArray.EnumerateArray())
+                {
+                    var member = ParseElementToMember(element);
+                    var parsedValue = reflector.Deserialize(
+                        data: member,
+                        fallbackType: itemType,
+                        depth: depth + 1,
+                        stringBuilder: stringBuilder,
+                        logger: logger
+                    );
+
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{paddingNext}Enumerable[{i}] deserialized successfully: {parsedValue?.GetType().GetTypeShortName()}");
+
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{paddingNext}Enumerable[{i}] deserialized successfully.");
+
+                    list.Add(parsedValue);
+                    i++;
                 }
 
                 if (type.IsArray)
                 {
-                    if (enumerable != null)
+                    var typedArray = Array.CreateInstance(itemType, list.Count);
+                    for (int j = 0; j < list.Count; j++)
                     {
-                        var typedArray = Array.CreateInstance(elementType, parsedList!.Count);
-                        var index = 0;
-                        foreach (var item in enumerable)
-                        {
-                            typedArray.SetValue(item, index++);
-                        }
-                        result = typedArray;
-
-                        if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding}Deserialized '{name}' as an array with {typedArray.Length} items.");
-
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {typedArray.Length} items.");
+                        typedArray.SetValue(list[j], j);
                     }
-                    else
-                    {
-                        var tempResult = enumerable?.ToArray();
-                        result = tempResult;
+                    result = typedArray;
 
-                        if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace(tempResult == null
-                                ? $"{padding}Deserialized '{name}' as 'null' array."
-                                : $"{padding}Deserialized '{name}' as an array with {tempResult!.Length} items.");
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{padding}Deserialized '{name}' as an array with {typedArray.Length} items.");
 
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine(tempResult == null
-                                ? $"{padding}[Success] Deserialized '{name}' as 'null' array."
-                                : $"{padding}[Success] Deserialized '{name}' as an array with {tempResult!.Length} items.");
-                    }
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {typedArray.Length} items.");
                 }
                 else
                 {
-                    var tempResult = enumerable?.ToList();
-                    result = tempResult;
+                    // Return the properly typed List<T>
+                    result = list;
 
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace(tempResult == null
-                            ? $"{padding}Deserialized '{name}' as 'null' list."
-                            : $"{padding}Deserialized '{name}' as a list with {tempResult.Count} items.");
+                        logger.LogTrace($"{padding}Deserialized '{name}' as a list with {list.Count} items.");
 
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine(tempResult == null
-                            ? $"{padding}[Success] Deserialized '{name}' as 'null' list."
-                            : $"{padding}[Success] Deserialized '{name}' as a list with {tempResult.Count} items.");
+                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as a list with {list.Count} items.");
                 }
 
                 return true;
@@ -415,6 +396,47 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Converts a JsonElement from an array into a SerializedMember for deserialization.
+        /// </summary>
+        /// <param name="element">The JSON element to parse</param>
+        /// <returns>
+        /// A SerializedMember containing the element's type information and value,
+        /// or a minimal SerializedMember with just the valueJsonElement if parsing fails.
+        /// </returns>
+        protected virtual SerializedMember ParseElementToMember(JsonElement element)
+        {
+            SerializedMember? member = null;
+            if (element.ValueKind == JsonValueKind.Object &&
+                (
+                    element.TryGetProperty(nameof(SerializedMember.typeName), out _) ||
+                    element.TryGetProperty(nameof(SerializedMember.fields), out _) ||
+                    element.TryGetProperty(nameof(SerializedMember.props), out _))
+                )
+            {
+                try
+                {
+                    member = System.Text.Json.JsonSerializer.Deserialize<SerializedMember>(element.GetRawText());
+                    if (member != null && element.TryGetProperty(SerializedMember.ValueName, out var valueProp))
+                    {
+                        member.valueJsonElement = valueProp;
+                    }
+                }
+                catch
+                {
+                    // Ignore deserialization errors here
+                }
+            }
+            if (member == null)
+            {
+                member = new SerializedMember
+                {
+                    valueJsonElement = element
+                };
+            }
+            return member;
         }
     }
 }
