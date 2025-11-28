@@ -21,19 +21,14 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
-    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-  </PropertyGroup>
-
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
