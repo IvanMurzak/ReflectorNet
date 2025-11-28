@@ -319,7 +319,20 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return false;
                 }
 
-                var list = new List<object?>();
+                // Create a properly typed List<T> instead of List<object?>
+                var listType = typeof(List<>).MakeGenericType(itemType);
+                var list = (IList?)Activator.CreateInstance(listType);
+                if (list == null)
+                {
+                    result = null;
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}Failed to create list instance for type '{type.GetTypeShortName()}'.");
+
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Error] Failed to create list instance for type '{type.GetTypeShortName()}'.");
+                    return false;
+                }
+
                 int i = 0;
                 foreach (var element in jsonArray.EnumerateArray())
                 {
@@ -359,8 +372,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 }
                 else
                 {
-                    // Note: This creates a List<object?>. If the target is List<T>, this might need adjustment
-                    // but TryDeserializeValueListInternal returns IEnumerable, so it's usually iterated or cast later.
+                    // Return the properly typed List<T>
                     result = list;
 
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
