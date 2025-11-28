@@ -386,6 +386,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
         }
 
+        /// <summary>
+        /// Converts a JsonElement from an array into a SerializedMember for deserialization.
+        /// </summary>
+        /// <param name="element">The JSON element to parse</param>
+        /// <returns>
+        /// A SerializedMember containing the element's type information and value,
+        /// or a minimal SerializedMember with just the valueJsonElement if parsing fails.
+        /// </returns>
         protected virtual SerializedMember ParseElementToMember(JsonElement element)
         {
             SerializedMember? member = null;
