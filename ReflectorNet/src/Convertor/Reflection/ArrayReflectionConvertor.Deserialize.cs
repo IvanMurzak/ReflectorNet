@@ -407,7 +407,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 try
                 {
                     member = System.Text.Json.JsonSerializer.Deserialize<SerializedMember>(element.GetRawText());
-                    if (member != null && element.TryGetProperty("value", out var valueProp))
+                    if (member != null && element.TryGetProperty(SerializedMember.ValueName, out var valueProp))
                     {
                         member.valueJsonElement = valueProp;
                     }
