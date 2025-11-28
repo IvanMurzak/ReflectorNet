@@ -357,3 +357,6 @@ src/coreclr/System.Private.CoreLib/common
 .dotnet-daily/
 run-stress-*
 test:.cs
+
+# Claude Code local settings
+.claude/settings.local.json
