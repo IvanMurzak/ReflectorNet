@@ -13,8 +13,9 @@ using System.Text.Json.Serialization;
 namespace com.IvanMurzak.ReflectorNet.Json
 {
     /// <summary>
-    /// JsonConverter that handles conversion from JSON string values to DateTime type.
+    /// JsonConverter that handles conversion from JSON string and number values to DateTime type.
     /// Supports nullable DateTime types and uses ISO 8601 format for writing.
+    /// Number values are treated as Unix time in milliseconds (UTC).
     /// </summary>
     public class DateTimeJsonConverter : JsonConverter<object>
     {
@@ -35,11 +36,11 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
-            // Handle numeric timestamps (Unix time)
+            // Handle numeric timestamps (Unix time in milliseconds)
             if (reader.TokenType == JsonTokenType.Number)
             {
-                var ticks = reader.GetInt64();
-                return new DateTime(ticks);
+                var unixTimeMilliseconds = reader.GetInt64();
+                return DateTimeOffset.FromUnixTimeMilliseconds(unixTimeMilliseconds).DateTime;
             }
 
             // Handle string tokens
@@ -54,7 +55,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
                 }
 
-                if (DateTime.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTimeResult))
+                if (DateTime.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeResult))
                     return dateTimeResult;
 
                 throw new JsonException($"Unable to convert '{stringValue}' to {typeof(DateTime).GetTypeName(pretty: true)}.");
@@ -65,7 +66,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            writer.WriteNumberValue(((DateTime)value).Ticks);
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
+
+            writer.WriteStringValue(((DateTime)value).ToString("o", CultureInfo.InvariantCulture));
         }
     }
 }
