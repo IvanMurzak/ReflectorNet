@@ -14,7 +14,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
 {
     /// <summary>
     /// JsonConverter that handles conversion from JSON string and number values to TimeSpan type.
-    /// Supports nullable TimeSpan types and uses ISO 8601 format for writing.
+    /// Supports nullable TimeSpan types and uses constant (invariant) format for writing.
     /// Number values are treated as ticks.
     /// </summary>
     public class TimeSpanJsonConverter : JsonConverter<object>
@@ -65,7 +65,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            writer.WriteNumberValue(((TimeSpan)value).Ticks);
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
+
+            writer.WriteStringValue(((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture));
         }
     }
 }

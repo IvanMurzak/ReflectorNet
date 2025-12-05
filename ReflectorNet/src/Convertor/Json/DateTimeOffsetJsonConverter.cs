@@ -13,8 +13,9 @@ using System.Text.Json.Serialization;
 namespace com.IvanMurzak.ReflectorNet.Json
 {
     /// <summary>
-    /// JsonConverter that handles conversion from JSON string values to DateTimeOffset type.
+    /// JsonConverter that handles conversion from JSON string and number values to DateTimeOffset type.
     /// Supports nullable DateTimeOffset types and uses ISO 8601 format for writing.
+    /// Number values are treated as Unix time in milliseconds.
     /// </summary>
     public class DateTimeOffsetJsonConverter : JsonConverter<object>
     {
@@ -35,11 +36,11 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
             }
 
-            // Handle numeric timestamps (Unix time)
+            // Handle numeric timestamps (Unix time in milliseconds)
             if (reader.TokenType == JsonTokenType.Number)
             {
-                var unixTime = reader.GetInt64();
-                return DateTimeOffset.FromUnixTimeMilliseconds(unixTime);
+                var unixTimeMilliseconds = reader.GetInt64();
+                return DateTimeOffset.FromUnixTimeMilliseconds(unixTimeMilliseconds);
             }
 
             // Handle string tokens
@@ -54,7 +55,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
                 }
 
-                if (DateTimeOffset.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTimeOffsetResult))
+                if (DateTimeOffset.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeOffsetResult))
                     return dateTimeOffsetResult;
 
                 throw new JsonException($"Unable to convert '{stringValue}' to {typeof(DateTimeOffset).GetTypeName(pretty: true)}.");
@@ -65,7 +66,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            writer.WriteNumberValue(((DateTimeOffset)value).ToUnixTimeMilliseconds());
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
+
+            writer.WriteStringValue(((DateTimeOffset)value).ToString("o", CultureInfo.InvariantCulture));
         }
     }
 }
