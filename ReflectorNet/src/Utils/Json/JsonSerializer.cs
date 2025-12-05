@@ -76,8 +76,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore 'null' field and properties
                 // DefaultIgnoreCondition = JsonIgnoreCondition.Never, // Include 'null' fields and properties
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                //ReferenceHandler = ReferenceHandler.Preserve,
+                // ReferenceHandler = ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null,
+                PropertyNameCaseInsensitive = true,
                 WriteIndented = true,
                 TypeInfoResolver = JsonTypeInfoResolver.Combine(
                 new DefaultJsonTypeInfoResolver()
