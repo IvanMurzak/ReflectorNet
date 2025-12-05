@@ -7,6 +7,7 @@
 
 using System;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using com.IvanMurzak.ReflectorNet.Json;
@@ -81,8 +82,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 PropertyNameCaseInsensitive = true,
                 WriteIndented = true,
                 TypeInfoResolver = JsonTypeInfoResolver.Combine(
-                new DefaultJsonTypeInfoResolver()
-            ),
+                    new DefaultJsonTypeInfoResolver()
+                ),
                 Converters =
                 {
                     // Individual primitive type converters
@@ -152,6 +153,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             jsonSerializerOptions.Converters.Clear();
         }
 
+        #region Serialize
+
         /// <summary>
         /// Serializes an object to a JSON string representation using the configured JsonSerializerOptions.
         /// This method provides comprehensive serialization with support for complex types, custom converters,
@@ -173,6 +176,47 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 options: options ?? jsonSerializerOptions);
 
         /// <summary>
+        /// Serializes an object to a JSON string with explicit type specification.
+        /// This overload is useful when the runtime type differs from the declared type
+        /// or when you need to control serialization based on a specific type's contract.
+        /// </summary>
+        /// <param name="value">The object to serialize. Can be null.</param>
+        /// <param name="inputType">The type to use for serialization contract resolution.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>A JSON string representation of the object.</returns>
+        public string Serialize(object? value, Type inputType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Serialize(
+                value: value,
+                inputType: inputType,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Serializes an object to a JsonDocument representation, providing a read-only JSON DOM
+        /// optimized for efficient querying and traversal without modification.
+        /// </summary>
+        /// <param name="value">The object to serialize. Can be null.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>A JsonDocument containing the serialized object structure.</returns>
+        public JsonDocument SerializeToDocument(object? value, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.SerializeToDocument(
+                value: value,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Serializes an object to a JsonDocument with explicit type specification,
+        /// providing a read-only JSON DOM with controlled type contract resolution.
+        /// </summary>
+        /// <param name="value">The object to serialize. Can be null.</param>
+        /// <param name="inputType">The type to use for serialization contract resolution.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>A JsonDocument containing the serialized object structure.</returns>
+        public JsonDocument SerializeToDocument(object? value, Type inputType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.SerializeToDocument(
+                value: value,
+                inputType: inputType,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
         /// Serializes an object to a JsonElement representation, providing a structured JSON DOM
         /// for programmatic manipulation and analysis. This method is useful when you need to
         /// work with the JSON structure directly rather than string representation.
@@ -184,35 +228,116 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             => System.Text.Json.JsonSerializer.SerializeToElement(data, options ?? jsonSerializerOptions);
 
         /// <summary>
-        /// Deserializes a JSON string to the specified generic type with comprehensive error handling
-        /// and type safety. This method provides strongly-typed deserialization with support for
-        /// custom converters and ReflectorNet-specific types.
+        /// Serializes an object to a JsonNode representation, providing a mutable JSON DOM
+        /// that can be programmatically modified before final serialization or further processing.
         /// </summary>
-        /// <typeparam name="T">The target type for deserialization.</typeparam>
-        /// <param name="json">The JSON string to deserialize.</param>
+        /// <param name="value">The object to serialize. Can be null.</param>
         /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
-        /// <returns>The deserialized object of type T, or null if deserialization fails or JSON represents null.</returns>
-        public T? Deserialize<T>(string json, JsonSerializerOptions? options = null)
-            => System.Text.Json.JsonSerializer.Deserialize<T>(
-                json: json,
+        /// <returns>A JsonNode containing the serialized object structure, or null if value is null.</returns>
+        public JsonNode? SerializeToNode(object? value, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.SerializeToNode(
+                value: value,
                 options: options ?? jsonSerializerOptions);
 
         /// <summary>
-        /// Deserializes a JsonElement to the specified generic type with intelligent null handling
-        /// and default value generation. This method integrates with Reflector's default value
-        /// system to provide appropriate fallbacks when JsonElement is null or invalid.
+        /// Serializes an object to a JsonNode with explicit type specification,
+        /// providing a mutable JSON DOM with controlled type contract resolution.
         /// </summary>
-        /// <typeparam name="T">The target type for deserialization.</typeparam>
-        /// <param name="reflector">The Reflector instance used for default value generation.</param>
-        /// <param name="jsonElement">The JsonElement to deserialize. Can be null.</param>
+        /// <param name="value">The object to serialize. Can be null.</param>
+        /// <param name="inputType">The type to use for serialization contract resolution.</param>
         /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
-        /// <returns>The deserialized object of type T, or the default value for T if JsonElement is null.</returns>
-        public T? Deserialize<T>(Reflector reflector, JsonElement? jsonElement, JsonSerializerOptions? options = null)
-            => jsonElement.HasValue
-                ? System.Text.Json.JsonSerializer.Deserialize<T>(
-                    element: jsonElement.Value,
-                    options: options ?? jsonSerializerOptions)
-                : reflector.GetDefaultValue<T>();
+        /// <returns>A JsonNode containing the serialized object structure, or null if value is null.</returns>
+        public JsonNode? SerializeToNode(object? value, Type inputType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.SerializeToNode(
+                value: value,
+                inputType: inputType,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Serializes an object to a UTF-8 encoded byte array, providing efficient binary
+        /// JSON representation suitable for network transmission or storage scenarios.
+        /// </summary>
+        /// <param name="value">The object to serialize. Can be null.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>A UTF-8 encoded byte array containing the JSON representation.</returns>
+        public byte[] SerializeToUtf8Bytes(object? value, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                value: value,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Serializes an object to a UTF-8 encoded byte array with explicit type specification,
+        /// providing efficient binary JSON representation with controlled type contract resolution.
+        /// </summary>
+        /// <param name="value">The object to serialize. Can be null.</param>
+        /// <param name="inputType">The type to use for serialization contract resolution.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>A UTF-8 encoded byte array containing the JSON representation.</returns>
+        public byte[] SerializeToUtf8Bytes(object? value, Type inputType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                value: value,
+                inputType: inputType,
+                options: options ?? jsonSerializerOptions);
+
+        #endregion
+
+        #region Deserialize
+
+        /// <summary>
+        /// Deserializes a JsonDocument to the specified type, providing deserialization
+        /// from a read-only JSON DOM structure.
+        /// </summary>
+        /// <param name="document">The JsonDocument to deserialize.</param>
+        /// <param name="returnType">The target Type for deserialization.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of the specified type.</returns>
+        public object? Deserialize(JsonDocument document, Type returnType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize(
+                document: document,
+                returnType: returnType,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Deserializes a JsonElement to the specified type, providing deserialization
+        /// from an immutable JSON DOM element with dynamic type resolution.
+        /// </summary>
+        /// <param name="element">The JsonElement to deserialize.</param>
+        /// <param name="returnType">The target Type for deserialization.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of the specified type.</returns>
+        public object? Deserialize(JsonElement element, Type returnType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize(
+                element: element,
+                returnType: returnType,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Deserializes a JsonNode to the specified type, providing deserialization
+        /// from a mutable JSON DOM structure.
+        /// </summary>
+        /// <param name="node">The JsonNode to deserialize. Can be null.</param>
+        /// <param name="returnType">The target Type for deserialization.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of the specified type.</returns>
+        public object? Deserialize(JsonNode? node, Type returnType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize(
+                node: node,
+                returnType: returnType,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Deserializes a UTF-8 encoded byte span to the specified type, providing efficient
+        /// binary deserialization without string allocation overhead.
+        /// </summary>
+        /// <param name="utf8Json">The UTF-8 encoded JSON bytes to deserialize.</param>
+        /// <param name="returnType">The target Type for deserialization.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of the specified type.</returns>
+        public object? Deserialize(ReadOnlySpan<byte> utf8Json, Type returnType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize(
+                utf8Json: utf8Json,
+                returnType: returnType,
+                options: options ?? jsonSerializerOptions);
 
         /// <summary>
         /// Deserializes a JsonElement to the specified type with intelligent null handling
@@ -233,6 +358,20 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 : reflector.GetDefaultValue(type);
 
         /// <summary>
+        /// Deserializes from a Utf8JsonReader to the specified type, providing efficient
+        /// streaming deserialization for large JSON documents or performance-critical scenarios.
+        /// </summary>
+        /// <param name="reader">The Utf8JsonReader positioned at the JSON content to deserialize.</param>
+        /// <param name="returnType">The target Type for deserialization.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of the specified type.</returns>
+        public object? Deserialize(ref Utf8JsonReader reader, Type returnType, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize(
+                reader: ref reader,
+                returnType: returnType,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
         /// Deserializes a JSON string to the specified type with dynamic type resolution.
         /// This method provides runtime type deserialization capabilities for scenarios
         /// where the target type is determined at runtime.
@@ -248,17 +387,86 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 options: options ?? jsonSerializerOptions);
 
         /// <summary>
-        /// Deserializes from a Utf8JsonReader to the specified type, providing efficient
-        /// streaming deserialization for large JSON documents or performance-critical scenarios.
+        /// Deserializes a JsonElement to the specified generic type with intelligent null handling
+        /// and default value generation. This method integrates with Reflector's default value
+        /// system to provide appropriate fallbacks when JsonElement is null or invalid.
         /// </summary>
-        /// <param name="reader">The Utf8JsonReader positioned at the JSON content to deserialize.</param>
-        /// <param name="returnType">The target Type for deserialization.</param>
+        /// <typeparam name="T">The target type for deserialization.</typeparam>
+        /// <param name="reflector">The Reflector instance used for default value generation.</param>
+        /// <param name="jsonElement">The JsonElement to deserialize. Can be null.</param>
         /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
-        /// <returns>The deserialized object of the specified type.</returns>
-        public object? Deserialize(ref Utf8JsonReader reader, Type returnType, JsonSerializerOptions? options = null)
-            => System.Text.Json.JsonSerializer.Deserialize(
-                reader: ref reader,
-                returnType: returnType,
+        /// <returns>The deserialized object of type T, or the default value for T if JsonElement is null.</returns>
+        public T? Deserialize<T>(Reflector reflector, JsonElement? jsonElement, JsonSerializerOptions? options = null)
+            => jsonElement.HasValue
+                ? System.Text.Json.JsonSerializer.Deserialize<T>(
+                    element: jsonElement.Value,
+                    options: options ?? jsonSerializerOptions)
+                : reflector.GetDefaultValue<T>();
+
+        /// <summary>
+        /// Deserializes a JSON string to the specified generic type with comprehensive error handling
+        /// and type safety. This method provides strongly-typed deserialization with support for
+        /// custom converters and ReflectorNet-specific types.
+        /// </summary>
+        /// <typeparam name="T">The target type for deserialization.</typeparam>
+        /// <param name="json">The JSON string to deserialize.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of type T, or null if deserialization fails or JSON represents null.</returns>
+        public T? Deserialize<T>(string json, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize<T>(
+                json: json,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Deserializes a JsonDocument to the specified generic type, providing strongly-typed
+        /// deserialization from a read-only JSON DOM structure.
+        /// </summary>
+        /// <typeparam name="TValue">The target type for deserialization.</typeparam>
+        /// <param name="document">The JsonDocument to deserialize.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of type TValue.</returns>
+        public TValue? Deserialize<TValue>(JsonDocument document, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize<TValue>(
+                document: document,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Deserializes a JsonElement to the specified generic type, providing strongly-typed
+        /// deserialization from an immutable JSON DOM element.
+        /// </summary>
+        /// <typeparam name="TValue">The target type for deserialization.</typeparam>
+        /// <param name="element">The JsonElement to deserialize.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of type TValue.</returns>
+        public TValue? Deserialize<TValue>(JsonElement element, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize<TValue>(
+                element: element,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Deserializes a JsonNode to the specified generic type, providing strongly-typed
+        /// deserialization from a mutable JSON DOM structure.
+        /// </summary>
+        /// <typeparam name="TValue">The target type for deserialization.</typeparam>
+        /// <param name="node">The JsonNode to deserialize. Can be null.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of type TValue.</returns>
+        public TValue? Deserialize<TValue>(JsonNode? node, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize<TValue>(
+                node: node,
+                options: options ?? jsonSerializerOptions);
+
+        /// <summary>
+        /// Deserializes a UTF-8 encoded byte span to the specified generic type, providing efficient
+        /// binary deserialization with strong typing and without string allocation overhead.
+        /// </summary>
+        /// <typeparam name="TValue">The target type for deserialization.</typeparam>
+        /// <param name="utf8Json">The UTF-8 encoded JSON bytes to deserialize.</param>
+        /// <param name="options">Optional JsonSerializerOptions to override default settings. If null, uses instance configuration.</param>
+        /// <returns>The deserialized object of type TValue.</returns>
+        public TValue? Deserialize<TValue>(ReadOnlySpan<byte> utf8Json, JsonSerializerOptions? options = null)
+            => System.Text.Json.JsonSerializer.Deserialize<TValue>(
+                utf8Json: utf8Json,
                 options: options ?? jsonSerializerOptions);
 
         /// <summary>
@@ -273,5 +481,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             => System.Text.Json.JsonSerializer.Deserialize<TValue>(
                 reader: ref reader,
                 options: options ?? jsonSerializerOptions);
+
+        #endregion
     }
 }
