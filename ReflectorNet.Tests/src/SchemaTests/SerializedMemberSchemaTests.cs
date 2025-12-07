@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
@@ -26,7 +22,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert - Check that schema was generated
             Assert.NotNull(schema);
-            
+
             // Get the value property schema
             var schemaObj = schema.AsObject();
             Assert.True(schemaObj.TryGetPropertyValue(JsonSchema.Properties, out var propertiesNode));
@@ -61,11 +57,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Act
             var serialized = reflector.Serialize(value, name: "testValue");
             var json = serialized.ToJson(reflector);
-            
+
             // Parse and validate JSON structure
             var jsonNode = JsonNode.Parse(json);
             Assert.NotNull(jsonNode);
-            
+
             var jsonObj = jsonNode!.AsObject();
             Assert.True(jsonObj.TryGetPropertyValue(SerializedMember.ValueName, out var valueNode));
             Assert.NotNull(valueNode);
@@ -74,7 +70,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var actualJsonType = GetJsonValueType(valueNode);
             _output.WriteLine($"Value: {value}, Expected type: {expectedJsonType}, Actual type: {actualJsonType}");
             _output.WriteLine($"Serialized JSON: {json}");
-            
+
             Assert.Equal(expectedJsonType, actualJsonType);
         }
 
@@ -87,19 +83,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Act
             var serialized = reflector.Serialize(null, typeof(string), name: "testValue");
             var json = serialized.ToJson(reflector);
-            
+
             // Parse and validate JSON structure
             var jsonNode = JsonNode.Parse(json);
             Assert.NotNull(jsonNode);
-            
+
             var jsonObj = jsonNode!.AsObject();
-            
+
             // For null values, the value property should be absent or null
             if (jsonObj.TryGetPropertyValue(SerializedMember.ValueName, out var valueNode))
             {
                 Assert.Null(valueNode);
             }
-            
+
             _output.WriteLine($"Serialized null value JSON: {json}");
         }
 
@@ -113,18 +109,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Act
             var serialized = reflector.Serialize(array, name: "testArray");
             var json = serialized.ToJson(reflector);
-            
+
             // Parse and validate JSON structure
             var jsonNode = JsonNode.Parse(json);
             Assert.NotNull(jsonNode);
-            
+
             var jsonObj = jsonNode!.AsObject();
             Assert.True(jsonObj.TryGetPropertyValue(SerializedMember.ValueName, out var valueNode));
             Assert.NotNull(valueNode);
 
             // The value should be a JSON array
             Assert.IsType<JsonArray>(valueNode);
-            
+
             _output.WriteLine($"Serialized array JSON: {json}");
         }
 
@@ -138,11 +134,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Act
             var serialized = reflector.Serialize(obj, name: "testObject");
             var json = serialized.ToJson(reflector);
-            
+
             // Parse and validate JSON structure
             var jsonNode = JsonNode.Parse(json);
             Assert.NotNull(jsonNode);
-            
+
             var jsonObj = jsonNode!.AsObject();
             Assert.True(jsonObj.TryGetPropertyValue(SerializedMember.ValueName, out var valueNode));
             Assert.NotNull(valueNode);
@@ -150,7 +146,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // For complex objects, the value is typically an empty object {}
             // and the actual data is in props/fields
             Assert.IsType<JsonObject>(valueNode);
-            
+
             _output.WriteLine($"Serialized object JSON: {json}");
         }
 
@@ -177,11 +173,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 // Assert
                 var originalJson = originalValue.ToJson(reflector);
                 var deserializedJson = deserialized.ToJson(reflector);
-                
+
                 _output.WriteLine($"Original: {originalValue} ({originalValue.GetType().Name})");
                 _output.WriteLine($"Original JSON: {originalJson}");
                 _output.WriteLine($"Deserialized JSON: {deserializedJson}");
-                
+
                 Assert.Equal(originalJson, deserializedJson);
             }
         }
@@ -207,10 +203,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         /// </summary>
         private bool IsNumericJsonValue(JsonValue value)
         {
-            return value.TryGetValue<int>(out _) || 
-                   value.TryGetValue<long>(out _) || 
+            return value.TryGetValue<int>(out _) ||
+                   value.TryGetValue<long>(out _) ||
                    value.TryGetValue<float>(out _) ||
-                   value.TryGetValue<double>(out _) || 
+                   value.TryGetValue<double>(out _) ||
                    value.TryGetValue<decimal>(out _) ||
                    value.TryGetValue<byte>(out _) ||
                    value.TryGetValue<short>(out _) ||
