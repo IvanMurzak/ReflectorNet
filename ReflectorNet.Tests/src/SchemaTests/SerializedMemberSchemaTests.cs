@@ -191,9 +191,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             {
                 JsonObject => "object",
                 JsonArray => "array",
-                JsonValue value when value.TryGetValue<string>(out _) => "string",
                 JsonValue value when value.TryGetValue<bool>(out _) => "boolean",
                 JsonValue value when IsNumericJsonValue(value) => "number",
+                JsonValue value when value.TryGetValue<string>(out _) => "string",
                 _ => "unknown"
             };
         }
