@@ -80,6 +80,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 // ReferenceHandler = ReferenceHandler.Preserve,
                 PropertyNamingPolicy = null,
                 PropertyNameCaseInsensitive = true,
+                IncludeFields = true, // Include public fields in serialization
                 WriteIndented = true,
                 TypeInfoResolver = JsonTypeInfoResolver.Combine(
                     new DefaultJsonTypeInfoResolver()

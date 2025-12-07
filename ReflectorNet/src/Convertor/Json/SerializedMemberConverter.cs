@@ -40,7 +40,6 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 },
                 [SerializedMember.ValueName] = new JsonObject
                 {
-                    [JsonSchema.Type] = JsonSchema.Object,
                     [JsonSchema.Description] = TypeUtils.GetDescription(
                         typeof(SerializedMember)
                         .GetMember(nameof(SerializedMember.valueJsonElement))
@@ -73,7 +72,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         .First())
                 }
             },
-            [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName },
+            [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName) },
             [JsonSchema.AdditionalProperties] = false
         };
         public static JsonNode SchemaRef => new JsonObject
