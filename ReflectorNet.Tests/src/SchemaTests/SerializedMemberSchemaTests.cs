@@ -44,7 +44,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(descriptionNode);
 
             _output.WriteLine($"✓ SerializedMember schema allows 'value' to be any JSON type");
-            _output.WriteLine($"Schema:\n{schema.ToJsonString(new JsonSerializerOptions { WriteIndented = true })}");
+            _output.WriteLine($"Schema:\n{schema.ToJsonString()}");
         }
 
         [Theory]
