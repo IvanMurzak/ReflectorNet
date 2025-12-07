@@ -197,10 +197,27 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 JsonArray => "array",
                 JsonValue value when value.TryGetValue<string>(out _) => "string",
                 JsonValue value when value.TryGetValue<bool>(out _) => "boolean",
-                JsonValue value when value.TryGetValue<int>(out _) || value.TryGetValue<long>(out _) || 
-                                     value.TryGetValue<double>(out _) || value.TryGetValue<decimal>(out _) => "number",
+                JsonValue value when IsNumericJsonValue(value) => "number",
                 _ => "unknown"
             };
+        }
+
+        /// <summary>
+        /// Helper method to check if a JsonValue represents a numeric type
+        /// </summary>
+        private bool IsNumericJsonValue(JsonValue value)
+        {
+            return value.TryGetValue<int>(out _) || 
+                   value.TryGetValue<long>(out _) || 
+                   value.TryGetValue<float>(out _) ||
+                   value.TryGetValue<double>(out _) || 
+                   value.TryGetValue<decimal>(out _) ||
+                   value.TryGetValue<byte>(out _) ||
+                   value.TryGetValue<short>(out _) ||
+                   value.TryGetValue<uint>(out _) ||
+                   value.TryGetValue<ulong>(out _) ||
+                   value.TryGetValue<ushort>(out _) ||
+                   value.TryGetValue<sbyte>(out _);
         }
 
         private class TestClass
