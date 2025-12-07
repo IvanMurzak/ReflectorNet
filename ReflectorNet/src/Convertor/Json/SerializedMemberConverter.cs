@@ -72,7 +72,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                         .First())
                 }
             },
-            [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName), SerializedMember.ValueName },
+            [JsonSchema.Required] = new JsonArray { nameof(SerializedMember.typeName) },
             [JsonSchema.AdditionalProperties] = false
         };
         public static JsonNode SchemaRef => new JsonObject
