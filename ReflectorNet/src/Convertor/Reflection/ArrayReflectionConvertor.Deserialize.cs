@@ -25,7 +25,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             string? fallbackName = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            DeserializationContext? context = null)
         {
             var padding = StringUtils.GetPadding(depth);
 
@@ -102,17 +103,22 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return null;
                 }
 
+                // Register the array early (before deserializing elements) so child references can resolve
+                context?.Register(array);
+
                 int i = 0;
                 foreach (var element in jsonArray.EnumerateArray())
                 {
                     var member = ParseElementToMember(element);
+                    member.name = $"[{i}]"; // Set array index as name for path tracking
 
                     var deserializedElement = reflector.Deserialize(
                         data: member,
                         fallbackType: elementType,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
-                        logger: logger);
+                        logger: logger,
+                        context: context);
 
                     if (deserializedElement != null)
                     {
@@ -152,18 +158,25 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return null;
                 }
 
+                // Register the list early (before deserializing elements) so child references can resolve
+                context?.Register(list);
+
+                int i = 0;
                 foreach (var element in jsonArray.EnumerateArray())
                 {
                     var member = ParseElementToMember(element);
+                    member.name = $"[{i}]"; // Set array index as name for path tracking
 
                     var deserializedElement = reflector.Deserialize(
                         member,
                         fallbackType: elementType,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
-                        logger: logger);
+                        logger: logger,
+                        context: context);
 
                     addMethod.Invoke(list, new[] { deserializedElement });
+                    i++;
                 }
 
                 logger?.LogInformation("{padding}Successfully created list of type='{typeName}'", padding, list.GetType().GetTypeName(pretty: true));
@@ -269,7 +282,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             string? name = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            DeserializationContext? context = null)
         {
             var padding = StringUtils.GetPadding(depth);
             var paddingNext = StringUtils.GetPadding(depth + 1);
@@ -333,16 +347,21 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     return false;
                 }
 
+                // Register the list early (before deserializing elements) so child references can resolve
+                context?.Register(list);
+
                 int i = 0;
                 foreach (var element in jsonArray.EnumerateArray())
                 {
                     var member = ParseElementToMember(element);
+                    member.name = $"[{i}]"; // Set array index as name for path tracking
                     var parsedValue = reflector.Deserialize(
                         data: member,
                         fallbackType: itemType,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
-                        logger: logger
+                        logger: logger,
+                        context: context
                     );
 
                     if (logger?.IsEnabled(LogLevel.Trace) == true)

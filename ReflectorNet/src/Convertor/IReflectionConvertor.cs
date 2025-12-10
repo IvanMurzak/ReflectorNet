@@ -27,7 +27,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             string? fallbackName = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
-            ILogger? logger = null);
+            ILogger? logger = null,
+            DeserializationContext? context = null);
 
         SerializedMember Serialize(
             Reflector reflector,

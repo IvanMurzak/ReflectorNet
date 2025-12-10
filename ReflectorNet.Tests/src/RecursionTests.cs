@@ -243,6 +243,115 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             Assert.Equal($"#/{nameof(RecursiveWrapper.Container)}/{nameof(RecursiveContainer.Items)}/[0]", refValue);
         }
 
+        // ==================== DESERIALIZATION TESTS ====================
+
+        [Fact]
+        public void Deserialize_RecursiveObject_ShouldRestoreReferences()
+        {
+            // Setup: Create cycle, serialize, deserialize, verify cycle restored
+            var node1 = new RecursiveNode { Name = "Node1" };
+            var node2 = new RecursiveNode { Name = "Node2" };
+            node1.Child = node2;
+            node2.Child = node1; // Cycle
+
+            var reflector = new Reflector();
+            var serialized = reflector.Serialize(node1);
+
+            _output.WriteLine("Serialized:");
+            _output.WriteLine(JsonSerializer.Serialize(serialized, new JsonSerializerOptions { WriteIndented = true }));
+
+            var deserialized = reflector.Deserialize<RecursiveNode>(serialized);
+
+            Assert.NotNull(deserialized);
+            Assert.Equal("Node1", deserialized.Name);
+            Assert.NotNull(deserialized.Child);
+            Assert.Equal("Node2", deserialized.Child.Name);
+            Assert.NotNull(deserialized.Child.Child);
+            Assert.Same(deserialized, deserialized.Child.Child); // Same reference!
+        }
+
+        [Fact]
+        public void Deserialize_SelfRecursive_ShouldRestoreReference()
+        {
+            var obj = new SelfRecursive();
+            obj.Self = obj;
+
+            var reflector = new Reflector();
+            var serialized = reflector.Serialize(obj);
+
+            _output.WriteLine("Serialized:");
+            _output.WriteLine(JsonSerializer.Serialize(serialized, new JsonSerializerOptions { WriteIndented = true }));
+
+            var deserialized = reflector.Deserialize<SelfRecursive>(serialized);
+
+            Assert.NotNull(deserialized);
+            Assert.Same(deserialized, deserialized.Self); // Same reference!
+        }
+
+        [Fact]
+        public void Deserialize_RecursiveList_ShouldRestoreReference()
+        {
+            var wrapper = new RecursiveWrapper();
+            var container = new RecursiveContainer();
+            wrapper.Container = container;
+            container.Items.Add(wrapper);
+
+            var reflector = new Reflector();
+            var serialized = reflector.Serialize(wrapper);
+
+            _output.WriteLine("Serialized:");
+            _output.WriteLine(JsonSerializer.Serialize(serialized, new JsonSerializerOptions { WriteIndented = true }));
+
+            var deserialized = reflector.Deserialize<RecursiveWrapper>(serialized);
+
+            Assert.NotNull(deserialized);
+            Assert.NotNull(deserialized.Container);
+            Assert.Single(deserialized.Container.Items);
+            Assert.Same(deserialized, deserialized.Container.Items[0]); // Same reference!
+        }
+
+        [Fact]
+        public void Deserialize_DeepRecursion_ShouldRestoreCorrectReference()
+        {
+            // Setup: root -> child1 -> child2 -> child3 -> child2 (cycle)
+            var root = new RecursiveNode { Name = "root" };
+            var child1 = new RecursiveNode { Name = "child1" };
+            var child2 = new RecursiveNode { Name = "child2" };
+            var child3 = new RecursiveNode { Name = "child3" };
+
+            root.Child = child1;
+            child1.Child = child2;
+            child2.Child = child3;
+            child3.Child = child2; // Cycle back to child2
+
+            var reflector = new Reflector();
+            var serialized = reflector.Serialize(root);
+
+            _output.WriteLine("Serialized:");
+            _output.WriteLine(JsonSerializer.Serialize(serialized, new JsonSerializerOptions { WriteIndented = true }));
+
+            var deserialized = reflector.Deserialize<RecursiveNode>(serialized);
+
+            Assert.NotNull(deserialized);
+            Assert.Equal("root", deserialized.Name);
+
+            var d_child1 = deserialized.Child;
+            Assert.NotNull(d_child1);
+            Assert.Equal("child1", d_child1.Name);
+
+            var d_child2 = d_child1.Child;
+            Assert.NotNull(d_child2);
+            Assert.Equal("child2", d_child2.Name);
+
+            var d_child3 = d_child2.Child;
+            Assert.NotNull(d_child3);
+            Assert.Equal("child3", d_child3.Name);
+
+            var d_ref = d_child3.Child;
+            Assert.NotNull(d_ref);
+            Assert.Same(d_child2, d_ref); // Should reference the same object
+        }
+
         private JsonElement GetPropertyFromJsonArray(JsonElement? array, string name)
         {
             if (array == null) throw new System.ArgumentNullException(nameof(array));
