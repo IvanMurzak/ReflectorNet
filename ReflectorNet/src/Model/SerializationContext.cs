@@ -15,12 +15,12 @@ namespace com.IvanMurzak.ReflectorNet.Model
     /// </summary>
     public class SerializationContext
     {
-        private readonly Dictionary<object, List<string>> _visited;
+        private readonly Dictionary<object, string> _visited;
         private readonly Stack<string> _pathStack;
 
         public SerializationContext()
         {
-            _visited = new Dictionary<object, List<string>>(new ReferenceEqualityComparer());
+            _visited = new Dictionary<object, string>(new ReferenceEqualityComparer());
             _pathStack = new Stack<string>();
             _pathStack.Push("#"); // Root
         }
@@ -44,9 +44,21 @@ namespace com.IvanMurzak.ReflectorNet.Model
                 return false;
             }
 
-            // Store the current path for this object (stack enumerates LIFO)
-            _visited[obj] = new List<string>(_pathStack);
+            // Compute and store the path string directly (more memory efficient than storing List<string>)
+            _visited[obj] = BuildCurrentPath();
             return true;
+        }
+
+        private string BuildCurrentPath()
+        {
+            if (_pathStack.Count == 1)
+                return "#";
+
+            // Stack enumerates LIFO, so reverse to get correct path order
+            var segments = new string[_pathStack.Count];
+            _pathStack.CopyTo(segments, 0);
+            System.Array.Reverse(segments);
+            return string.Join("/", segments);
         }
 
         /// <summary>
@@ -70,22 +82,14 @@ namespace com.IvanMurzak.ReflectorNet.Model
         /// <returns>The JSON Pointer string.</returns>
         public string GetPath(object obj)
         {
-            if (!_visited.TryGetValue(obj, out var pathSegments))
+            if (!_visited.TryGetValue(obj, out var path))
             {
                 throw new System.InvalidOperationException(
                     $"Object of type '{obj.GetType().GetTypeShortName()}' was not found in the serialization context. " +
                     "GetPath should only be called for objects that have been visited.");
             }
 
-            var segments = new List<string>(pathSegments);
-            segments.Reverse();
-
-            // If only root "#" exists, return it directly
-            if (segments.Count == 1 && segments[0] == "#")
-                return "#";
-
-            // Join segments: ["#", "Prop"] -> "#/Prop"
-            return string.Join("/", segments);
+            return path;
         }
 
         private class ReferenceEqualityComparer : IEqualityComparer<object>
