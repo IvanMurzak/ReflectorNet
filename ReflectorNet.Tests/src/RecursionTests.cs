@@ -147,23 +147,23 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             Assert.NotNull(child1Prop);
             Assert.Equal(child1.Name, child1Prop.props!.GetField(nameof(RecursiveNode.Name))?.valueJsonElement?.GetString());
 
-            // Child1 -> Child3
-            var child3Prop = child1Prop.props.GetField(nameof(RecursiveNode.Child));
+            // Child1 -> Child2
+            var child2Prop = child1Prop.props.GetField(nameof(RecursiveNode.Child));
+            Assert.NotNull(child2Prop);
+            Assert.Equal(child2.Name, child2Prop.props!.GetField(nameof(RecursiveNode.Name))?.valueJsonElement?.GetString());
+
+            // Child2 -> Child3
+            var child3Prop = child2Prop.props.GetField(nameof(RecursiveNode.Child));
             Assert.NotNull(child3Prop);
-            Assert.Equal(child2.Name, child3Prop.props!.GetField(nameof(RecursiveNode.Name))?.valueJsonElement?.GetString());
+            Assert.Equal(child3.Name, child3Prop.props!.GetField(nameof(RecursiveNode.Name))?.valueJsonElement?.GetString());
 
-            // Child3 -> Child4
-            var child4Prop = child3Prop.props.GetField(nameof(RecursiveNode.Child));
-            Assert.NotNull(child4Prop);
-            Assert.Equal(child3.Name, child4Prop.props!.GetField(nameof(RecursiveNode.Name))?.valueJsonElement?.GetString());
-
-            // Child4 -> Reference to Child3
-            var refProp = child4Prop.props.GetField(nameof(RecursiveNode.Child));
+            // Child3 -> Reference to Child2
+            var refProp = child3Prop.props.GetField(nameof(RecursiveNode.Child));
             Assert.NotNull(refProp);
             Assert.Equal(JsonSchema.Reference, refProp.typeName);
 
             var refValue = refProp.valueJsonElement?.GetProperty(JsonSchema.Ref).GetString();
-            // Path to Child3: Root -> Child -> Child
+            // Path to Child2: Root -> Child -> Child
             Assert.Equal($"#/{nameof(RecursiveNode.Child)}/{nameof(RecursiveNode.Child)}", refValue);
         }
 

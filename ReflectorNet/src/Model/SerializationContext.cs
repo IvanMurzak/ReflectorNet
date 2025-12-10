@@ -40,23 +40,11 @@ namespace com.IvanMurzak.ReflectorNet.Model
 
             if (_visited.ContainsKey(obj))
             {
-                // Cycle detected, do not add to visited again, but we still pushed the segment if any.
-                // Wait, if we return false, the caller should handle the cycle.
-                // But we modified the stack. The caller must ensure Exit is called or we should not modify stack if cycle?
-                // If cycle detected, we usually return immediately and don't traverse children.
-                // But we need to pop the stack if we pushed it.
-                // It's cleaner if the caller always calls Exit if Enter was called (or we handle it here).
-                // Let's stick to: Caller calls Enter. If false, caller handles ref. Caller calls Exit eventually?
-                // Actually, if Enter returns false, we usually return a reference and stop.
-                // So we should probably pop immediately if we are not going to proceed?
-                // Or better: The caller pattern is:
-                // try { context.Enter(); ... } finally { context.Exit(); }
-                // So Exit will be called.
+                // Cycle detected. Caller must still call Exit() to pop the segment from the stack.
                 return false;
             }
 
-            // Store the current path for this object
-            // Stack enumerates LIFO (Reverse of path)
+            // Store the current path for this object (stack enumerates LIFO)
             _visited[obj] = new List<string>(_pathStack);
             return true;
         }
@@ -82,20 +70,22 @@ namespace com.IvanMurzak.ReflectorNet.Model
         /// <returns>The JSON Pointer string.</returns>
         public string GetPath(object obj)
         {
-            if (_visited.TryGetValue(obj, out var pathSegments))
+            if (!_visited.TryGetValue(obj, out var pathSegments))
             {
-                var segments = new List<string>(pathSegments);
-                segments.Reverse();
-                // Join with /
-                // If segments are ["#", "Prop"], result "#/Prop"
-                // If segments are ["#"], result "#"
-                if (segments.Count == 1 && segments[0] == "#")
-                    return "#";
-
-                return string.Join("/", segments).Replace("#/", "#/");
-                // Actually string.Join("/", ["#", "A"]) -> "#/A". Correct.
+                throw new System.InvalidOperationException(
+                    $"Object of type '{obj.GetType().GetTypeShortName()}' was not found in the serialization context. " +
+                    "GetPath should only be called for objects that have been visited.");
             }
-            return "#";
+
+            var segments = new List<string>(pathSegments);
+            segments.Reverse();
+
+            // If only root "#" exists, return it directly
+            if (segments.Count == 1 && segments[0] == "#")
+                return "#";
+
+            // Join segments: ["#", "Prop"] -> "#/Prop"
+            return string.Join("/", segments);
         }
 
         private class ReferenceEqualityComparer : IEqualityComparer<object>
