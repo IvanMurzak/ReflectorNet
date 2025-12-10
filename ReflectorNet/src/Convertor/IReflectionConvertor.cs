@@ -20,22 +20,57 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
         int SerializationPriority(Type type, ILogger? logger = null);
 
+        object? Deserialize(
+            Reflector reflector,
+            SerializedMember data,
+            Type? fallbackType = null,
+            string? fallbackName = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null,
+            DeserializationContext? context = null);
 
-        object? Deserialize(Reflector reflector, SerializedMember data, Type? fallbackType = null, string? fallbackName = null, int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null);
-
-        SerializedMember Serialize(Reflector reflector, object? obj, Type? fallbackType = null, string? name = null, bool recursive = true,
+        SerializedMember Serialize(
+            Reflector reflector,
+            object? obj,
+            Type? fallbackType = null,
+            string? name = null,
+            bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            int depth = 0, StringBuilder? stringBuilder = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            ILogger? logger = null,
+            SerializationContext? context = null);
+
+        bool TryPopulate(
+            Reflector reflector,
+            ref object? obj,
+            SerializedMember data,
+            Type? fallbackType = null,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 
-        bool TryPopulate(Reflector reflector, ref object? obj, SerializedMember data, Type? fallbackType = null, int depth = 0, StringBuilder? stringBuilder = null,
+        bool SetField(
+            Reflector reflector,
+            ref object? obj,
+            Type type,
+            FieldInfo fieldInfo,
+            SerializedMember? value,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 
-        bool SetField(Reflector reflector, ref object? obj, Type type, FieldInfo fieldInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
-            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            ILogger? logger = null);
-        bool SetProperty(Reflector reflector, ref object? obj, Type type, PropertyInfo propertyInfo, SerializedMember? value, int depth = 0, StringBuilder? stringBuilder = null,
+        bool SetProperty(
+            Reflector reflector,
+            ref object? obj,
+            Type type,
+            PropertyInfo propertyInfo,
+            SerializedMember? value,
+            int depth = 0,
+            StringBuilder? stringBuilder = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 
@@ -44,6 +79,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
+
         IEnumerable<PropertyInfo>? GetSerializableProperties(
             Reflector reflector,
             Type objType,
@@ -55,6 +91,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
+
         IEnumerable<string> GetAdditionalSerializableProperties(
             Reflector reflector,
             Type objType,

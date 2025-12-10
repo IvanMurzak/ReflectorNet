@@ -34,7 +34,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             int depth = 0,
             StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            SerializationContext? context = null)
         {
             if (obj is Assembly assemblyObj)
             {
@@ -42,7 +43,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 return SerializedMember.FromValue(reflector, type, assemblyName, name: name);
             }
 
-            return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, stringBuilder, logger);
+            return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, stringBuilder, logger, context);
         }
 
         public override object? CreateInstance(Reflector reflector, Type type)

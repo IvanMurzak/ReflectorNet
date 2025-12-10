@@ -31,7 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         protected override SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             int depth = 0, StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null, SerializationContext? context = null)
         {
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);

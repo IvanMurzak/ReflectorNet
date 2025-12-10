@@ -57,7 +57,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             string? fallbackName = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            DeserializationContext? context = null)
         {
             if (!TryDeserializeValue(reflector,
                 serializedMember: data,
@@ -72,6 +73,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
 
             var padding = StringUtils.GetPadding(depth);
+
+            // Register the object early (before deserializing children) so child references can resolve
+            if (result != null && context != null)
+                context.Register(result);
 
             if (data.fields != null)
             {
@@ -94,7 +99,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         continue;
                     }
 
-                    var fieldValue = reflector.Deserialize(field, depth: depth + 1, stringBuilder: stringBuilder, logger: logger);
+                    var fieldValue = reflector.Deserialize(
+                        data: field,
+                        depth: depth + 1,
+                        stringBuilder: stringBuilder,
+                        logger: logger,
+                        context: context);
 
                     var fieldInfo = type!.GetField(field.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (fieldInfo == null)
@@ -135,7 +145,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         property,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
-                        logger: logger);
+                        logger: logger,
+                        context: context);
 
                     var propertyInfo = type!.GetProperty(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (propertyInfo == null)

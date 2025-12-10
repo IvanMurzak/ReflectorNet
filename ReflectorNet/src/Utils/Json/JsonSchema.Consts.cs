@@ -35,5 +35,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public const string RefValue = "#/$defs/";
         public const string SchemaDraft = "$schema";
         public const string SchemaDraftValue = "https://json-schema.org/draft/2020-12/schema";
+
+        public const string Reference = "Reference";
     }
 }

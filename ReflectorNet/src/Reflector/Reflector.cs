@@ -91,29 +91,49 @@ namespace com.IvanMurzak.ReflectorNet
             bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0, StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            SerializationContext? context = null)
         {
-            var type = TypeUtils.GetTypeWithObjectPriority(obj, fallbackType, out var error);
-            if (type == null)
-                throw new ArgumentException(error);
+            context ??= new SerializationContext();
 
-            var convertor = Convertors.GetConvertor(type);
-            if (convertor == null)
-                throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
+            if (obj != null && !context.Enter(obj, name))
+            {
+                var path = context.GetPath(obj);
+                return SerializedMember.FromReference(path, name);
+            }
 
-            if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
+            try
+            {
+                var type = TypeUtils.GetTypeWithObjectPriority(obj, fallbackType, out var error);
+                if (type == null)
+                    throw new ArgumentException(error);
 
-            return convertor.Serialize(
-                this,
-                obj,
-                fallbackType: type,
-                name: name,
-                recursive,
-                flags,
-                depth: depth,
-                stringBuilder: stringBuilder,
-                logger: logger);
+                var convertor = Convertors.GetConvertor(type);
+                if (convertor == null)
+                    throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
+
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
+
+                return convertor.Serialize(
+                    this,
+                    obj,
+                    fallbackType: type,
+                    name: name,
+                    recursive,
+                    flags,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    logger: logger,
+                    context: context);
+            }
+            finally
+            {
+                if (obj != null)
+                {
+                    context.Exit(obj, name);
+                }
+            }
         }
 
         /// <summary>
@@ -141,7 +161,8 @@ namespace com.IvanMurzak.ReflectorNet
             string? fallbackName = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
-            ILogger? logger = null) where T : class
+            ILogger? logger = null,
+            DeserializationContext? context = null) where T : class
         {
             return Deserialize(
                 data,
@@ -149,7 +170,8 @@ namespace com.IvanMurzak.ReflectorNet
                 fallbackName: fallbackName,
                 depth: depth,
                 stringBuilder: stringBuilder,
-                logger: logger) as T;
+                logger: logger,
+                context: context) as T;
         }
 
         /// <summary>
@@ -179,7 +201,8 @@ namespace com.IvanMurzak.ReflectorNet
             string? fallbackName = null,
             int depth = 0,
             StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            DeserializationContext? context = null)
         {
             if (data == null)
             {
@@ -192,31 +215,107 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             var padding = StringUtils.GetPadding(depth);
-            var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
-            if (type == null)
-            {
-                logger?.LogError($"{padding}{error}");
-                stringBuilder?.AppendLine($"{padding}[Error] {error}");
+            var name = StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name;
 
-                throw new ArgumentException(error);
+            // Create context at root level
+            context ??= new DeserializationContext();
+
+            // Check for reference type BEFORE normal deserialization
+            if (data.typeName == JsonSchema.Reference)
+            {
+                return ResolveReference(data, context, depth, stringBuilder, logger);
             }
 
-            var convertor = Convertors.GetConvertor(type);
-            if (convertor == null)
-                throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
+            // Enter the current path segment for tracking
+            context.Enter(name);
+
+            try
+            {
+                var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
+                if (type == null)
+                {
+                    logger?.LogError($"{padding}{error}");
+                    stringBuilder?.AppendLine($"{padding}[Error] {error}");
+
+                    throw new ArgumentException(error);
+                }
+
+                var convertor = Convertors.GetConvertor(type);
+                if (convertor == null)
+                    throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
+
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{name.ValueOrNull()}' convertor='{convertor.GetType().GetTypeShortName()}'");
+
+                var result = convertor.Deserialize(
+                    this,
+                    data,
+                    type,
+                    fallbackName,
+                    depth: depth + 1,
+                    stringBuilder: stringBuilder,
+                    logger: logger,
+                    context: context
+                );
+
+                return result;
+            }
+            finally
+            {
+                context.Exit(name);
+            }
+        }
+
+        private object? ResolveReference(
+            SerializedMember data,
+            DeserializationContext context,
+            int depth,
+            StringBuilder? stringBuilder,
+            ILogger? logger)
+        {
+            var padding = StringUtils.GetPadding(depth);
+
+            // Parse the $ref path from valueJsonElement
+            if (data.valueJsonElement == null)
+            {
+                if (logger?.IsEnabled(LogLevel.Warning) == true)
+                    logger.LogWarning($"{padding}{Consts.Emoji.Warn} Reference has no value");
+                stringBuilder?.AppendLine($"{padding}[Warning] Reference has no value");
+                return null;
+            }
+
+            if (!data.valueJsonElement.Value.TryGetProperty(JsonSchema.Ref, out var refElement))
+            {
+                if (logger?.IsEnabled(LogLevel.Warning) == true)
+                    logger.LogWarning($"{padding}{Consts.Emoji.Warn} Reference value missing {JsonSchema.Ref} property");
+                stringBuilder?.AppendLine($"{padding}[Warning] Reference value missing {JsonSchema.Ref} property");
+                return null;
+            }
+
+            var refPath = refElement.GetString();
+            if (string.IsNullOrEmpty(refPath))
+            {
+                if (logger?.IsEnabled(LogLevel.Warning) == true)
+                    logger.LogWarning($"{padding}{Consts.Emoji.Warn} Reference path is null or empty");
+                stringBuilder?.AppendLine($"{padding}[Warning] Reference path is null or empty");
+                return null;
+            }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}' convertor='{convertor.GetType().GetTypeShortName()}'");
+                logger.LogTrace($"{padding}{Consts.Emoji.Start} Resolving reference: {refPath}");
 
-            return convertor.Deserialize(
-                this,
-                data,
-                type,
-                fallbackName,
-                depth: depth + 1,
-                stringBuilder: stringBuilder,
-                logger: logger
-            );
+            if (context.TryResolve(refPath, out var resolved))
+            {
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Resolved reference to object of type: {resolved?.GetType().GetTypeShortName()}");
+                return resolved;
+            }
+
+            // Reference not yet resolved - this could happen with forward references
+            if (logger?.IsEnabled(LogLevel.Warning) == true)
+                logger.LogWarning($"{padding}{Consts.Emoji.Warn} Unable to resolve reference: {refPath}");
+            stringBuilder?.AppendLine($"{padding}[Warning] Unable to resolve reference: {refPath}");
+            return null;
         }
 
         /// <summary>

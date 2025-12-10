@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         public virtual SerializedMember Serialize(Reflector reflector, object? obj, Type? type = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0, StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null, SerializationContext? context = null)
         {
             return InternalSerialize(reflector, obj,
                 type: type ?? obj?.GetType() ?? typeof(T),
@@ -32,11 +32,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 flags: flags,
                 depth: depth,
                 stringBuilder: stringBuilder,
-                logger: logger);
+                logger: logger,
+                context: context);
         }
 
         protected virtual SerializedMemberList? SerializeFields(Reflector reflector, object obj, BindingFlags flags,
-            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null, SerializationContext? context = null)
         {
             var serializedFields = default(SerializedMemberList);
             var objType = obj.GetType();
@@ -60,14 +61,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     flags: flags,
                     depth: depth + 1,
                     stringBuilder: stringBuilder,
-                    logger: logger)
+                    logger: logger,
+                    context: context)
                 );
             }
             return serializedFields;
         }
 
         protected virtual SerializedMemberList? SerializeProperties(Reflector reflector, object obj, BindingFlags flags,
-            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null)
+            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null, SerializationContext? context = null)
         {
             var serializedProperties = default(SerializedMemberList);
             var objType = obj.GetType();
@@ -92,7 +94,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                         flags: flags,
                         depth: depth + 1,
                         stringBuilder: stringBuilder,
-                        logger: logger)
+                        logger: logger,
+                        context: context)
                     );
                 }
                 catch { /* skip inaccessible properties */ }
@@ -103,6 +106,6 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         protected abstract SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0, StringBuilder? stringBuilder = null,
-            ILogger? logger = null);
+            ILogger? logger = null, SerializationContext? context = null);
     }
 }
