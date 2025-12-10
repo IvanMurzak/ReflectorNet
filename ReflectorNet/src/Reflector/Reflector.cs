@@ -91,29 +91,49 @@ namespace com.IvanMurzak.ReflectorNet
             bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0, StringBuilder? stringBuilder = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            SerializationContext? context = null)
         {
-            var type = TypeUtils.GetTypeWithObjectPriority(obj, fallbackType, out var error);
-            if (type == null)
-                throw new ArgumentException(error);
+            context ??= new SerializationContext();
 
-            var convertor = Convertors.GetConvertor(type);
-            if (convertor == null)
-                throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
+            if (obj != null && !context.Enter(obj, name))
+            {
+                var path = context.GetPath(obj);
+                return SerializedMember.FromReference(path, name);
+            }
 
-            if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
+            try
+            {
+                var type = TypeUtils.GetTypeWithObjectPriority(obj, fallbackType, out var error);
+                if (type == null)
+                    throw new ArgumentException(error);
 
-            return convertor.Serialize(
-                this,
-                obj,
-                fallbackType: type,
-                name: name,
-                recursive,
-                flags,
-                depth: depth,
-                stringBuilder: stringBuilder,
-                logger: logger);
+                var convertor = Convertors.GetConvertor(type);
+                if (convertor == null)
+                    throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
+
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
+
+                return convertor.Serialize(
+                    this,
+                    obj,
+                    fallbackType: type,
+                    name: name,
+                    recursive,
+                    flags,
+                    depth: depth,
+                    stringBuilder: stringBuilder,
+                    logger: logger,
+                    context: context);
+            }
+            finally
+            {
+                if (obj != null)
+                {
+                    context.Exit(obj, name);
+                }
+            }
         }
 
         /// <summary>

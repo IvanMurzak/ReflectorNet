@@ -9,6 +9,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Utils;
 
@@ -51,6 +52,18 @@ namespace com.IvanMurzak.ReflectorNet.Model
         {
             this.name = name;
             return this;
+        }
+
+        public static SerializedMember FromReference(string path, string? name)
+        {
+            var jsonObject = new JsonObject { ["$ref"] = path };
+
+            return new SerializedMember
+            {
+                name = name,
+                typeName = "Reference",
+                valueJsonElement = jsonObject.ToJsonElement()
+            };
         }
 
         public SerializedMember? GetField(string name)
