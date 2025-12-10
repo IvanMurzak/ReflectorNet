@@ -56,12 +56,12 @@ namespace com.IvanMurzak.ReflectorNet.Model
 
         public static SerializedMember FromReference(string path, string? name)
         {
-            var jsonObject = new JsonObject { ["$ref"] = path };
+            var jsonObject = new JsonObject { [JsonSchema.Ref] = path };
 
             return new SerializedMember
             {
                 name = name,
-                typeName = "Reference",
+                typeName = JsonSchema.Reference,
                 valueJsonElement = jsonObject.ToJsonElement()
             };
         }
