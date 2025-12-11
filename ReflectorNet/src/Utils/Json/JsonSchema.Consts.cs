@@ -13,6 +13,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public const string Object = "object";
         public const string Description = "description";
         public const string Properties = "properties";
+        public const string Pattern = "pattern";
         public const string Items = "items";
         public const string Array = "array";
         public const string AnyOf = "anyOf";
