@@ -60,8 +60,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null,
             DeserializationContext? context = null)
         {
-            if (!TryDeserializeValue(reflector,
-                serializedMember: data,
+            if (!TryDeserializeValue(
+                reflector,
+                data: data,
                 result: out var result,
                 type: out var type,
                 fallbackType: fallbackType,
@@ -200,7 +201,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         /// - Maintains type safety throughout the deserialization process
         /// </summary>
         /// <param name="reflector">The Reflector instance used for type resolution and recursive operations.</param>
-        /// <param name="serializedMember">The SerializedMember containing the data to deserialize.</param>
+        /// <param name="data">The SerializedMember containing the data to deserialize.</param>
         /// <param name="result">Output parameter containing the deserialized object on success.</param>
         /// <param name="type">Output parameter containing the resolved target type.</param>
         /// <param name="fallbackType">Optional fallback type when type resolution from data fails.</param>
@@ -210,7 +211,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         /// <returns>True if deserialization succeeded, false otherwise.</returns>
         protected virtual bool TryDeserializeValue(
             Reflector reflector,
-            SerializedMember? serializedMember,
+            SerializedMember? data,
             out object? result,
             out Type? type,
             Type? fallbackType = null,
@@ -218,7 +219,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             StringBuilder? stringBuilder = null,
             ILogger? logger = null)
         {
-            if (serializedMember == null)
+            if (data == null)
             {
                 result = null;
                 type = null;
@@ -228,7 +229,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             var padding = StringUtils.GetPadding(depth);
 
             // Get the most appropriate type for deserialization
-            type = TypeUtils.GetTypeWithNamePriority(serializedMember, fallbackType, out var error);
+            type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
             if (type == null)
             {
                 result = null;
@@ -238,11 +239,11 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeShortName()}' name='{serializedMember.name.ValueOrNull()}'.");
+                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
 
             var success = TryDeserializeValueInternal(
                 reflector,
-                data: serializedMember,
+                data: data,
                 result: out result,
                 type: type,
                 depth: depth,

@@ -184,7 +184,27 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return fieldInfo != null ? GetFieldDescription(fieldInfo) : null;
         }
 
-        public static bool IsCastable(Type type, Type to)
+        /// <summary>
+        /// Checks if an object's runtime type is assignable to the target type.
+        /// This is a cross-platform alternative to Type.IsAssignableTo which is only available in .NET 5+.
+        /// </summary>
+        /// <param name="obj">The object to check (can be null)</param>
+        /// <param name="targetType">The target type to check assignability to</param>
+        /// <returns>True if the object can be assigned to the target type</returns>
+        public static bool IsAssignableTo(object? obj, Type targetType)
+        {
+            if (targetType == null)
+                return false;
+
+            // Null is assignable to any reference type or nullable value type
+            if (obj == null)
+                return !targetType.IsValueType || Nullable.GetUnderlyingType(targetType) != null;
+
+            // Check if the object's type is assignable to the target type
+            return targetType.IsAssignableFrom(obj.GetType());
+        }
+
+        public static bool IsCastable(Type? type, Type to)
         {
             if (type == null || to == null)
                 return false;

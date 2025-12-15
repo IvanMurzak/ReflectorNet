@@ -105,6 +105,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     new DecimalJsonConverter(),
                     new GuidJsonConverter(),
                     new TimeSpanJsonConverter(),
+                    new TypeJsonConverter(),
 
                     // Json converters
                     new JsonElementJsonConverter(),
