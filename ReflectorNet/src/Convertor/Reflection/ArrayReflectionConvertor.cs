@@ -169,20 +169,29 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
-            if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
+            // if (logger?.IsEnabled(LogLevel.Trace) == true)
+            //     logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
 
-            if (!TryDeserializeValue(reflector,
-                    serializedMember: value,
-                    type: out var parsedValue,
-                    result: out var type,
-                    fallbackType: fallbackType,
-                    depth: depth,
-                    stringBuilder: stringBuilder,
-                    logger: logger))
+            if (!TryDeserializeValue(
+                reflector,
+                data: value,
+                result: out var parsedValue,
+                type: out var type,
+                fallbackType: fallbackType,
+                depth: depth,
+                stringBuilder: stringBuilder,
+                logger: logger))
             {
                 return false;
             }
+
+            // Check if field type matches parsed value type
+            if (!TypeUtils.IsCastable(type, fieldInfo.FieldType))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to field type '{fieldInfo.FieldType.GetTypeName(pretty: false)}' for field '{fieldInfo.Name}'.");
+                return false;
+            }
+
             // TODO: Print previous and new value in stringBuilder
             fieldInfo.SetValue(obj, parsedValue);
             return true;
@@ -200,13 +209,20 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
-            if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeShortName()}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
+            // if (logger?.IsEnabled(LogLevel.Trace) == true)
+            //     logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeShortName()}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
+
+            // Check if property is writable
+            if (!propertyInfo.CanWrite)
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyInfo.Name}' is read-only.");
+                return false;
+            }
 
             if (!TryDeserializeValue(reflector,
-                serializedMember: value,
-                type: out var parsedValue,
-                result: out var type,
+                data: value,
+                result: out var parsedValue,
+                type: out var type,
                 fallbackType: fallbackType,
                 depth: depth,
                 stringBuilder: stringBuilder,
@@ -214,6 +230,14 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             {
                 return false;
             }
+
+            // Check if property type matches parsed value type
+            if (!TypeUtils.IsCastable(type, propertyInfo.PropertyType))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeName(pretty: false)}' for property '{propertyInfo.Name}'.");
+                return false;
+            }
+
             // TODO: Print previous and new value in stringBuilder
             propertyInfo.SetValue(obj, parsedValue);
             return true;
