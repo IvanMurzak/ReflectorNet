@@ -147,10 +147,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var padding = StringUtils.GetPadding(depth);
-            // if (logger?.IsEnabled(LogLevel.Trace) == true)
-            //     logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name}'. Converter='{GetType().GetTypeShortName()}'.");
-
             if (!TryDeserializeValue(
                 reflector,
                 data: value,

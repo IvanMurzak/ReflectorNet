@@ -247,7 +247,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogError($"{padding}Field name is null or empty in serialized data: '{fieldValue.name.ValueOrNull()}'. Skipping.");
 
                 if (logs != null)
-                    logs.Error($"{padding}{Error.FieldNameIsEmpty()}", depth);
+                    logs.Error(Error.FieldNameIsEmpty(), depth);
 
                 return false;
             }
@@ -318,8 +318,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         + $"\n{padding}"
                         + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
                         + $"\n{padding}"
-                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.", depth)
-                    );
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                        , depth);
 
                 return false;
             }
@@ -372,7 +372,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogInformation($"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified.");
 
                 if (logs != null)
-                    logs.Success($"[Success] Field '{fieldValue.name.ValueOrNull()}' modified.", depth);
+                    logs.Success($"Field '{fieldValue.name.ValueOrNull()}' modified.", depth);
 
                 return true;
             }
@@ -477,8 +477,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         + $"\n{padding}"
                         + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
                         + $"\n{padding}"
-                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.", depth)
-                    );
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                        , depth);
                 return false;
             }
 
@@ -500,7 +500,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogTrace($"{padding}Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 if (logs != null)
-                    logs.Info($"Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
+                    logs.Info($"Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
 
                 var currentValue = propInfo.GetValue(obj);
 
@@ -530,7 +530,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogInformation($"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified.");
 
                 if (logs != null)
-                    logs.Info($"[Success] Property '{propertyValue.name.ValueOrNull()}' modified.", depth);
+                    logs.Success($"Property '{propertyValue.name.ValueOrNull()}' modified.", depth);
 
                 return success;
             }

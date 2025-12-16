@@ -6,8 +6,6 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -42,8 +40,22 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     {
                         name = name,
                         typeName = type.GetTypeName(pretty: false) ?? string.Empty,
-                        fields = base.SerializeFields(reflector, obj, flags, depth: depth, logs: logs, logger: logger, context: context),
-                        props = base.SerializeProperties(reflector, obj, flags, depth: depth, logs: logs, logger: logger, context: context),
+                        fields = base.SerializeFields(
+                            reflector: reflector,
+                            obj: obj,
+                            flags: flags,
+                            depth: depth,
+                            logs: logs,
+                            logger: logger,
+                            context: context),
+                        props = base.SerializeProperties(
+                            reflector: reflector,
+                            obj: obj,
+                            flags: flags,
+                            depth: depth,
+                            logs: logs,
+                            logger: logger,
+                            context: context),
                         valueJsonElement = new JsonObject().ToJsonElement()
                     }
                     : SerializedMember.FromJson(type, obj.ToJson(reflector), name: name);
@@ -81,8 +93,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var padding = StringUtils.GetPadding(depth);
-
             if (!TryDeserializeValue(
                 reflector,
                 data: value,

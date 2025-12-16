@@ -33,14 +33,26 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// </summary>
         public override bool AllowCascadeSerialization => false;
 
-        public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
-            => _ignoreFields
+        public override IEnumerable<FieldInfo>? GetSerializableFields(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags,
+            ILogger? logger = null)
+        {
+            return  _ignoreFields
                 ? null
                 : base.GetSerializableFields(reflector, objType, flags, logger);
+        }
 
-        public override IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
-            => _ignoreProperties
+        public override IEnumerable<PropertyInfo>? GetSerializableProperties(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags,
+            ILogger? logger = null)
+        {
+            return _ignoreProperties
                 ? null
                 : base.GetSerializableProperties(reflector, objType, flags, logger);
+        }
     }
 }
