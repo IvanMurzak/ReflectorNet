@@ -31,38 +31,43 @@ namespace com.IvanMurzak.ReflectorNet.Model
     }
     public enum LogType
     {
-        Trce, Dbug, Info, Warn, Errr, Crit
+        Trace, Debug, Info, Success, Warning, Error, Critical
     }
     public static class LogTypeExtensions
     {
-        public static Logs Trace(this Logs logs, string message, int depth = 0)
+        public static Logs? Trace(this Logs? logs, string message, int depth = 0)
         {
-            logs.AddLast(new LogEntry() { Message = message, Type = LogType.Trce, Depth = depth });
+            logs?.AddLast(new LogEntry() { Message = message, Type = LogType.Trace, Depth = depth });
             return logs;
         }
-        public static Logs Debug(this Logs logs, string message, int depth = 0)
+        public static Logs? Debug(this Logs? logs, string message, int depth = 0)
         {
-            logs.AddLast(new LogEntry() { Message = message, Type = LogType.Dbug, Depth = depth });
+            logs?.AddLast(new LogEntry() { Message = message, Type = LogType.Debug, Depth = depth });
             return logs;
         }
-        public static Logs Info(this Logs logs, string message, int depth = 0)
+        public static Logs? Info(this Logs? logs, string message, int depth = 0)
         {
-            logs.AddLast(new LogEntry() { Message = message, Type = LogType.Info, Depth = depth });
+            logs?.AddLast(new LogEntry() { Message = message, Type = LogType.Info, Depth = depth });
             return logs;
         }
-        public static Logs Warn(this Logs logs, string message, int depth = 0)
+        public static Logs? Success(this Logs? logs, string message, int depth = 0)
         {
-            logs.AddLast(new LogEntry() { Message = message, Type = LogType.Warn, Depth = depth });
+            logs?.AddLast(new LogEntry() { Message = message, Type = LogType.Success, Depth = depth });
             return logs;
         }
-        public static Logs Error(this Logs logs, string message, int depth = 0)
+        public static Logs? Warning(this Logs? logs, string message, int depth = 0)
         {
-            logs.AddLast(new LogEntry() { Message = message, Type = LogType.Errr, Depth = depth });
+            logs?.AddLast(new LogEntry() { Message = message, Type = LogType.Warning, Depth = depth });
             return logs;
         }
-        public static Logs Critical(this Logs logs, string message, int depth = 0)
+        public static Logs? Error(this Logs? logs, string message, int depth = 0)
         {
-            logs.AddLast(new LogEntry() { Message = message, Type = LogType.Crit, Depth = depth });
+            logs?.AddLast(new LogEntry() { Message = message, Type = LogType.Error, Depth = depth });
+            return logs;
+        }
+        public static Logs? Critical(this Logs? logs, string message, int depth = 0)
+        {
+            logs?.AddLast(new LogEntry() { Message = message, Type = LogType.Critical, Depth = depth });
             return logs;
         }
     }

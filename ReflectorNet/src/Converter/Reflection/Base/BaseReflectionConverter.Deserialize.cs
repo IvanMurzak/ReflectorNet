@@ -6,7 +6,6 @@
  */
 
 using System;
-using System.Text;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -56,7 +55,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Type? fallbackType = null,
             string? fallbackName = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             DeserializationContext? context = null)
         {
@@ -67,7 +66,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 type: out var type,
                 fallbackType: fallbackType,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger))
             {
                 return result;
@@ -94,8 +93,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
 
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
+                        logs?.Warning($"Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.", depth);
 
                         continue;
                     }
@@ -103,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var fieldValue = reflector.Deserialize(
                         data: field,
                         depth: depth + 1,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger,
                         context: context);
 
@@ -113,8 +111,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field '{field.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
 
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Field '{field.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
+                        logs?.Warning($"Field '{field.name}' not found on type '{type.GetTypeName(pretty: false)}'.", depth);
 
                         continue;
                     }
@@ -136,8 +133,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
 
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
+                        logs?.Warning($"Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.", depth);
 
                         continue;
                     }
@@ -145,7 +141,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var propertyValue = reflector.Deserialize(
                         property,
                         depth: depth + 1,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger,
                         context: context);
 
@@ -155,8 +151,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
 
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
+                        logs?.Warning($"Property '{property.name}' not found on type '{type.GetTypeName(pretty: false)}'.", depth);
 
                         continue;
                     }
@@ -165,8 +160,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' on type '{type.GetTypeName(pretty: false)}' is read-only and cannot be set.");
 
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' on type '{type.GetTypeName(pretty: false)}' is read-only and cannot be set.");
+                        logs?.Warning($"Property '{property.name}' on type '{type.GetTypeName(pretty: false)}' is read-only and cannot be set.", depth);
 
                         continue;
                     }
@@ -216,7 +210,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             out Type? type,
             Type? fallbackType = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             if (data == null)
@@ -233,7 +227,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (type == null)
             {
                 result = null;
-                stringBuilder?.AppendLine($"{padding}[Error] {error}");
+                logs?.Error(error ?? "Unknown error", depth);
                 logger?.LogError($"{padding}{error}");
                 return false;
             }
@@ -247,7 +241,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 result: out result,
                 type: type,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger);
 
             if (success)
@@ -269,7 +263,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             out object? result,
             Type type,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
@@ -291,8 +285,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         if (logger?.IsEnabled(LogLevel.Error) == true)
                             logger.LogError($"{padding} 'value' is not an object. It is '{data.valueJsonElement?.ValueKind}'. Converter: {GetType().GetTypeShortName()}");
 
-                        if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Error] 'value' is not an object. Attempting to deserialize as SerializedMember.");
+                        logs?.Error("'value' is not an object. Attempting to deserialize as SerializedMember.", depth);
 
                         result = reflector.GetDefaultValue(type);
                         return false;
@@ -303,7 +296,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         type: type,
                         name: data.name,
                         depth: depth + 1,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger);
                     return true;
                 }
@@ -312,16 +305,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                         logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Warning] Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
+                    logs?.Warning($"Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{ex.Message}", depth);
                 }
                 catch (NotSupportedException ex)
                 {
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                         logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: false)}' for member '{data.name.ValueOrNull()}':\n{padding}{ex.Message}");
+                    logs?.Warning($"Unsupported type '{type.GetTypeName(pretty: false)}' for member '{data.name.ValueOrNull()}':\n{ex.Message}", depth);
                 }
 
                 result = reflector.GetDefaultValue(type);
@@ -339,7 +330,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         data: data,
                         type: type,
                         depth: depth,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger);
 
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
@@ -349,7 +340,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 }
                 catch (Exception ex)
                 {
-                    stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: false)}':\n{padding}{ex.Message}");
+                    logs?.Error($"Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: false)}':\n{ex.Message}", depth);
                     logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
                     result = reflector.GetDefaultValue(type);
                     return false;
@@ -362,7 +353,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             SerializedMember data,
             Type type,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             return reflector.JsonSerializer.Deserialize(

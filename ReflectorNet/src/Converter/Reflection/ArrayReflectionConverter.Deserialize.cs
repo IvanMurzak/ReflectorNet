@@ -8,7 +8,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -24,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Type? fallbackType = null,
             string? fallbackName = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             DeserializationContext? context = null)
         {
@@ -37,8 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (logger?.IsEnabled(LogLevel.Warning) == true)
                     logger.LogWarning($"{padding}{error}");
 
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Warning] {error}");
+                logs?.Warning(error ?? "", depth);
 
                 return null;
             }
@@ -65,7 +63,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         padding,
                         Consts.Emoji.Warn);
                 }
-                stringBuilder?.AppendLine($"{padding}[Warning] Failed to deserialize 'value' json as Array.");
+                logs?.Warning("Failed to deserialize 'value' json as Array.", depth);
                 return null;
             }
 
@@ -85,7 +83,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             Consts.Emoji.Warn,
                             type.GetTypeName(pretty: true));
                     }
-                    stringBuilder?.AppendLine($"{padding}[Warning] Failed to get element type for array type '{type.GetTypeName(pretty: true)}'.");
+                    logs?.Warning($"Failed to get element type for array type '{type.GetTypeName(pretty: true)}'.", depth);
                     return null;
                 }
 
@@ -99,7 +97,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             Consts.Emoji.Warn,
                             type.GetTypeName(pretty: true));
                     }
-                    stringBuilder?.AppendLine($"{padding}[Warning] Failed to create array instance for type '{type.GetTypeName(pretty: true)}'.");
+                    logs?.Warning($"Failed to create array instance for type '{type.GetTypeName(pretty: true)}'.", depth);
                     return null;
                 }
 
@@ -116,7 +114,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         data: member,
                         fallbackType: elementType,
                         depth: depth + 1,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger,
                         context: context);
 
@@ -171,7 +169,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         member,
                         fallbackType: elementType,
                         depth: depth + 1,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger,
                         context: context);
 
@@ -193,7 +191,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             out object? result,
             Type type,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             var padding = StringUtils.GetPadding(depth);
@@ -234,8 +232,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError($"{padding}{Consts.Emoji.Fail} Only array deserialization is supported in this Converter ({GetType().Name}).");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Error] Only array deserialization is supported in this Converter ({GetType().Name}).");
+                    logs?.Error($"Only array deserialization is supported in this Converter ({GetType().Name}).", depth);
 
                     return false;
                 }
@@ -247,7 +244,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     result: out var enumerableResult,
                     name: serializedMember.name,
                     depth: depth + 1,
-                    stringBuilder: stringBuilder,
+                    logs: logs,
                     logger: logger))
                 {
                     result = enumerableResult;
@@ -269,7 +266,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     result: out result,
                     type: type,
                     depth: depth,
-                    stringBuilder: stringBuilder,
+                    logs: logs,
                     logger: logger);
             }
         }
@@ -281,7 +278,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             out IEnumerable? result,
             string? name = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             DeserializationContext? context = null)
         {
@@ -318,8 +315,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
                     logger.LogTrace($"{padding}Deserializing '{name}' enumerable with {count} items.");
 
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}Deserializing '{name}' enumerable with {count} items.");
+                logs?.Info($"Deserializing '{name}' enumerable with {count} items.", depth);
 
                 var itemType = TypeUtils.GetEnumerableItemType(type);
                 if (itemType == null)
@@ -328,8 +324,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError($"{padding}Failed to determine element type for '{name}' of type '{type.GetTypeShortName()}'.");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Error] Failed to determine element type for '{name}'.");
+                    logs?.Error($"Failed to determine element type for '{name}'.", depth);
                     return false;
                 }
 
@@ -342,8 +337,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError($"{padding}Failed to create list instance for type '{type.GetTypeShortName()}'.");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Error] Failed to create list instance for type '{type.GetTypeShortName()}'.");
+                    logs?.Error($"Failed to create list instance for type '{type.GetTypeShortName()}'.", depth);
                     return false;
                 }
 
@@ -359,7 +353,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         data: member,
                         fallbackType: itemType,
                         depth: depth + 1,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger,
                         context: context
                     );
@@ -367,8 +361,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace($"{paddingNext}Enumerable[{i}] deserialized successfully: {parsedValue?.GetType().GetTypeShortName()}");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{paddingNext}Enumerable[{i}] deserialized successfully.");
+                    logs?.Info($"Enumerable[{i}] deserialized successfully.", depth + 1);
 
                     list.Add(parsedValue);
                     i++;
@@ -386,8 +379,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace($"{padding}Deserialized '{name}' as an array with {typedArray.Length} items.");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as an array with {typedArray.Length} items.");
+                    logs?.Success($"Deserialized '{name}' as an array with {typedArray.Length} items.", depth);
                 }
                 else
                 {
@@ -397,8 +389,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace($"{padding}Deserialized '{name}' as a list with {list.Count} items.");
 
-                    if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Success] Deserialized '{name}' as a list with {list.Count} items.");
+                    logs?.Success($"Deserialized '{name}' as a list with {list.Count} items.", depth);
                 }
 
                 return true;
@@ -410,8 +401,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}Failed to deserialize '{name}': {ex.Message}\n{ex.StackTrace}");
 
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Error] Failed to deserialize '{name}': {ex.Message}");
+                if (logs != null)
+                    logs.Error($"Failed to deserialize '{name}': {ex.Message}", depth);
 
                 return false;
             }

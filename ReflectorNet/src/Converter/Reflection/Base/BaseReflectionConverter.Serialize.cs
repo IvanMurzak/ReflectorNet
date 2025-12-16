@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +21,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         public virtual SerializedMember Serialize(Reflector reflector, object? obj, Type? type = null, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            int depth = 0, StringBuilder? stringBuilder = null,
+            int depth = 0, Logs? logs = null,
             ILogger? logger = null, SerializationContext? context = null)
         {
             return InternalSerialize(reflector, obj,
@@ -31,13 +30,13 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 recursive: recursive,
                 flags: flags,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger,
                 context: context);
         }
 
         protected virtual SerializedMemberList? SerializeFields(Reflector reflector, object obj, BindingFlags flags,
-            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null, SerializationContext? context = null)
+            int depth = 0, Logs? logs = null, ILogger? logger = null, SerializationContext? context = null)
         {
             var serializedFields = default(SerializedMemberList);
             var objType = obj.GetType();
@@ -60,7 +59,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     recursive: AllowCascadeFieldsConversion,
                     flags: flags,
                     depth: depth + 1,
-                    stringBuilder: stringBuilder,
+                    logs: logs,
                     logger: logger,
                     context: context)
                 );
@@ -69,7 +68,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         }
 
         protected virtual SerializedMemberList? SerializeProperties(Reflector reflector, object obj, BindingFlags flags,
-            int depth = 0, StringBuilder? stringBuilder = null, ILogger? logger = null, SerializationContext? context = null)
+            int depth = 0, Logs? logs = null, ILogger? logger = null, SerializationContext? context = null)
         {
             var serializedProperties = default(SerializedMemberList);
             var objType = obj.GetType();
@@ -93,7 +92,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         recursive: AllowCascadePropertiesConversion,
                         flags: flags,
                         depth: depth + 1,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger,
                         context: context)
                     );
@@ -105,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         protected abstract SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            int depth = 0, StringBuilder? stringBuilder = null,
+            int depth = 0, Logs? logs = null,
             ILogger? logger = null, SerializationContext? context = null);
     }
 }
