@@ -33,7 +33,7 @@ $ErrorActionPreference = "Stop"
 # Version file locations (relative to script root)
 $VersionFiles = @(
     @{
-        Path        = "ReflectorNet/ReflectorNet.csproj"
+        Path        = "/../ReflectorNet/ReflectorNet.csproj"
         Pattern     = '<Version>[\d\.]+</Version>'
         Replace     = '<Version>{VERSION}</Version>'
         Description = "Common csproj XML version"
@@ -59,9 +59,9 @@ function Test-SemanticVersion {
 
 function Get-CurrentVersion {
     # Extract current version from package.json
-    $packageJsonPath = Join-Path $PSScriptRoot "ReflectorNet/ReflectorNet.csproj"
+    $packageJsonPath = Join-Path $PSScriptRoot "/../ReflectorNet/ReflectorNet.csproj"
     if (-not (Test-Path $packageJsonPath)) {
-        throw "Could not find package.json at: $packageJsonPath"
+        throw "Could not find .csproj file at: $packageJsonPath"
     }
 
     $content = Get-Content $packageJsonPath -Raw
