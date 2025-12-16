@@ -1,8 +1,8 @@
-﻿using System.Text;
-using com.IvanMurzak.ReflectorNet.Utils;
+﻿using com.IvanMurzak.ReflectorNet.Utils;
 using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using com.IvanMurzak.ReflectorNet.OuterAssembly.Model;
+using com.IvanMurzak.ReflectorNet.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 {
@@ -22,11 +22,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             _output.WriteLine(string.Empty);
 
             var serializeLogger = new StringBuilderLogger();
-            var stringBuilder = new StringBuilder();
+            var logs = new Logs();
             var serialized = reflector.Serialize(sourceInstance,
                 fallbackType: sourceType,
                 name: nameof(sourceInstance),
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: serializeLogger);
 
             var serializedJson = serialized.ToJson(reflector);
@@ -38,17 +38,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             _output.WriteLine(string.Empty);
 
             _output.WriteLine("Serialize - AI output:");
-            _output.WriteLine(stringBuilder.ToString());
+            _output.WriteLine(logs.ToString());
             _output.WriteLine(string.Empty);
 
             _output.WriteLine("------------------------------------------------------");
             _output.WriteLine(string.Empty);
-            stringBuilder.Clear();
+            logs = new Logs();
 
             var deserializeLogger = new StringBuilderLogger();
             var deserializedInstance = reflector.Deserialize(serialized,
                 fallbackType: sourceType,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: deserializeLogger);
 
             var deserializedInstanceJson = deserializedInstance.ToJson(reflector);
@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             _output.WriteLine(string.Empty);
 
             _output.WriteLine("Deserialize - AI output:");
-            _output.WriteLine(stringBuilder.ToString());
+            _output.WriteLine(logs.ToString());
 
             // Assert
             Assert.NotNull(serialized);

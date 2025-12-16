@@ -186,7 +186,7 @@ public class WidgetConverter : GenericReflectionConverter<ThirdPartyWidget>
         bool recursive = true,
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
         int depth = 0,
-        StringBuilder? stringBuilder = null,
+        Logs? logs = null,
         ILogger? logger = null,
         SerializationContext? context = null)
     {
@@ -201,7 +201,7 @@ public class WidgetConverter : GenericReflectionConverter<ThirdPartyWidget>
             );
         }
 
-        return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, stringBuilder, logger, context);
+        return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, logs, logger, context);
     }
 
     // 4. Override CreateInstance if the type has no parameterless constructor

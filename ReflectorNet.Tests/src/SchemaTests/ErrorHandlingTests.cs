@@ -4,7 +4,6 @@ using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using System.Text.Json;
-using System.Text;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
@@ -59,13 +58,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Act & Assert - Test error handling in population
             object? testObject = default(GameObjectRef);
-            var stringBuilder = new StringBuilder();
-            var success = reflector.TryPopulate(ref testObject, invalidData, depth: 2, stringBuilder: stringBuilder);
+            var logs = new Logs();
+            var success = reflector.TryPopulate(ref testObject, invalidData, depth: 2, logs: logs);
 
             Assert.False(success);
-            var errorString = stringBuilder.ToString();
+            var errorString = logs.ToString();
             Assert.Contains($"Type '{invalidData.typeName}' not found", errorString);
-            // Check that indentation (depth) is applied
+            // Check that indentation (depth) is applied - Logs class uses 2 spaces per depth level
             Assert.StartsWith("    ", errorString); // 2 levels of depth = 4 spaces
 
             _output.WriteLine($"Error with depth formatting: {errorString}");

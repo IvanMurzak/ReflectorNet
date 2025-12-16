@@ -119,8 +119,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var schema = reflector.GetReturnSchema(methodInfo, justRef);
 
             _output.WriteLine($"Return schema for {methodName}:");
-            _output.WriteLine(schema?.ToString() ?? "null");
-            _output.WriteLine("");
+            _output.WriteLine(schema?.ToString() ?? StringUtils.Null);
+            _output.WriteLine(string.Empty);
 
             return schema;
         }

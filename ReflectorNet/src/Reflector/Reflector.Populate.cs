@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
@@ -40,7 +39,7 @@ namespace com.IvanMurzak.ReflectorNet
             SerializedMember data,
             Type? fallbackObjType = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
@@ -52,8 +51,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}Object population failed: {typeError}");
 
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Error] Object population failed: {typeError}");
+                logs?.Error($"Object population failed: {typeError}", depth);
 
                 return false;
             }
@@ -64,8 +62,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}No suitable converter found for type {objType.GetTypeName(pretty: false)}");
 
-                if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Error] No suitable converter found for type {objType.GetTypeName(pretty: false)}");
+                logs?.Error($"No suitable converter found for type {objType.GetTypeName(pretty: false)}", depth);
 
                 return false;
             }
@@ -79,7 +76,7 @@ namespace com.IvanMurzak.ReflectorNet
                 data: data,
                 fallbackType: objType,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 flags: flags,
                 logger: logger);
 

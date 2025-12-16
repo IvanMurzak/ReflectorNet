@@ -3,6 +3,7 @@ using com.IvanMurzak.ReflectorNet.Tests.Model;
 using Xunit.Abstractions;
 using System;
 using com.IvanMurzak.ReflectorNet.OuterAssembly.Model;
+using com.IvanMurzak.ReflectorNet.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 {
@@ -33,7 +34,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
                 obj: ref targetObject,
                 data: serialized,
                 fallbackObjType: type,
-                stringBuilder: new(),
+                logs: new Logs(),
                 logger: populateLogger);
 
             _output.WriteLine($"Population:\n{populateLogger}");

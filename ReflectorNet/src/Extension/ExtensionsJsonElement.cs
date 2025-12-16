@@ -6,7 +6,6 @@
  */
 
 using System;
-using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
@@ -32,14 +31,14 @@ namespace com.IvanMurzak.ReflectorNet
             Reflector reflector,
             string? name = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             return (T?)DeserializeValueSerializedMember(jsonElement, reflector,
                 type: typeof(T),
                 name: name,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger);
         }
         public static object? DeserializeValueSerializedMember(this JsonElement? jsonElement,
@@ -47,7 +46,7 @@ namespace com.IvanMurzak.ReflectorNet
             Type type,
             string? name = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             if (jsonElement == null)
@@ -74,7 +73,7 @@ namespace com.IvanMurzak.ReflectorNet
                 fallbackType: type,
                 fallbackName: name,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger);
         }
 

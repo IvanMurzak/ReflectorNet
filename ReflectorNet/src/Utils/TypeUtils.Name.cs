@@ -6,21 +6,20 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
-        const string Null = "null";
         public const string ArraySuffix = "_Array";
 
         public static string GetTypeName<T>(bool pretty = false) => GetTypeName(typeof(T), pretty);
         public static string GetTypeName(Type? type, bool pretty = false)
         {
             if (type == null)
-                return Null;
+                return StringUtils.Null;
 
             // Handle nullable types
             type = Nullable.GetUnderlyingType(type) ?? type;
 
             return pretty
-                ? type.FullName ?? Null
-                : type.AssemblyQualifiedName ?? Null;
+                ? type.FullName ?? StringUtils.Null
+                : type.AssemblyQualifiedName ?? StringUtils.Null;
         }
         public static string GetTypeId<T>() => GetTypeId(typeof(T));
         public static string GetTypeId(Type type)
@@ -144,7 +143,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static string GetTypeShortName(Type? type)
         {
             if (type == null)
-                return Null;
+                return StringUtils.Null;
 
             // Handle nullable types
             var underlyingNullableType = Nullable.GetUnderlyingType(type);
@@ -167,7 +166,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return $"{GetTypeShortName(elementType)}[]";
             }
 
-            return string.IsNullOrEmpty(type.Name) ? Null : type.Name;
+            return string.IsNullOrEmpty(type.Name) ? StringUtils.Null : type.Name;
         }
     }
 }

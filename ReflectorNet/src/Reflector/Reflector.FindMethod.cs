@@ -150,7 +150,7 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
         {
             // Prepare Namespace
-            filter.Namespace = filter.Namespace?.Trim()?.Replace("null", string.Empty);
+            filter.Namespace = filter.Namespace?.Trim()?.Replace(StringUtils.Null, string.Empty);
 
             var typesEnumerable = TypeUtils.AllTypes
                 .Where(type => type.IsVisible)

@@ -13,6 +13,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     public static class StringUtils
     {
         public const string Null = "null";
+        public const string NA = "N/A";
 
         static readonly ConcurrentDictionary<int, string> _paddingCache = new ConcurrentDictionary<int, string>();
 

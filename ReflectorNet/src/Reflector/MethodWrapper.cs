@@ -98,7 +98,7 @@ namespace com.IvanMurzak.ReflectorNet
             var finalParameters = BuildParameters(parameters);
 
             // _if (_logger?.IsEnabled(LogLevel.Debug) ?? false)
-            //     ? $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}({string.Join(", ", namedParameters!.Select(x => $"{x.Value?.GetType()?.Name ?? "null"} {x.Key}"))})"
+            //     ? $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}({string.Join(", ", namedParameters!.Select(x => $"{x.Value?.GetType()?.Name ?? StringUtils.Null} {x.Key}"))})"
             //     : $"Invoke method: {_methodInfo.ReturnType.Name} {_methodInfo.Name}()");
 
             PrintParameters(finalParameters);
@@ -426,9 +426,9 @@ namespace com.IvanMurzak.ReflectorNet
 
             for (var i = 0; i < maxLength; i++)
             {
-                var parameterType = i < methodParameters.Length ? methodParameters[i].ParameterType.ToString() : "N/A";
-                var parameterName = i < methodParameters.Length ? methodParameters[i].Name : "N/A";
-                var parameterValue = i < (parameters?.Length ?? 0) ? parameters?[i]?.ToString().ValueOrNull() : "null";
+                var parameterType = i < methodParameters.Length ? methodParameters[i].ParameterType.ToString() : StringUtils.NA;
+                var parameterName = i < methodParameters.Length ? methodParameters[i].Name : StringUtils.NA;
+                var parameterValue = i < (parameters?.Length ?? 0) ? parameters?[i]?.ToString().ValueOrNull() : StringUtils.Null;
 
                 result[i] = $"{parameterType} {parameterName} = {parameterValue}";
             }

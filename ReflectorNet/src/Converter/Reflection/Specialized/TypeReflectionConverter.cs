@@ -7,7 +7,6 @@
 
 using System;
 using System.Reflection;
-using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
@@ -33,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             SerializationContext? context = null)
         {
@@ -43,7 +42,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 return SerializedMember.FromValue(reflector, type, typeName, name: name);
             }
 
-            return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, stringBuilder, logger, context);
+            return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, logs, logger, context);
         }
 
         public override object? CreateInstance(Reflector reflector, Type type)
@@ -58,7 +57,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             out object? result,
             Type type,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             result = null;
@@ -96,7 +95,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Type type,
             System.Text.Json.JsonElement? value,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             if (!value.HasValue)

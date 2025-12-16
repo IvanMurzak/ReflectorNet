@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
 
@@ -26,7 +25,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Type? fallbackType = null,
             string? fallbackName = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             DeserializationContext? context = null);
 
@@ -38,7 +37,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             SerializationContext? context = null);
 
@@ -48,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             SerializedMember data,
             Type? fallbackType = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 
@@ -59,7 +58,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             FieldInfo fieldInfo,
             SerializedMember? value,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 
@@ -70,7 +69,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             PropertyInfo propertyInfo,
             SerializedMember? value,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null);
 

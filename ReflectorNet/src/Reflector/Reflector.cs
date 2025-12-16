@@ -9,7 +9,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
@@ -90,7 +89,7 @@ namespace com.IvanMurzak.ReflectorNet
             string? name = null,
             bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            int depth = 0, StringBuilder? stringBuilder = null,
+            int depth = 0, Logs? logs = null,
             ILogger? logger = null,
             SerializationContext? context = null)
         {
@@ -123,7 +122,7 @@ namespace com.IvanMurzak.ReflectorNet
                     recursive,
                     flags,
                     depth: depth,
-                    stringBuilder: stringBuilder,
+                    logs: logs,
                     logger: logger,
                     context: context);
             }
@@ -160,7 +159,7 @@ namespace com.IvanMurzak.ReflectorNet
             SerializedMember data,
             string? fallbackName = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             DeserializationContext? context = null) where T : class
         {
@@ -169,7 +168,7 @@ namespace com.IvanMurzak.ReflectorNet
                 fallbackType: typeof(T),
                 fallbackName: fallbackName,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger,
                 context: context) as T;
         }
@@ -200,7 +199,7 @@ namespace com.IvanMurzak.ReflectorNet
             Type? fallbackType = null,
             string? fallbackName = null,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             DeserializationContext? context = null)
         {
@@ -223,7 +222,7 @@ namespace com.IvanMurzak.ReflectorNet
             // Check for reference type BEFORE normal deserialization
             if (data.typeName == JsonSchema.Reference)
             {
-                return ResolveReference(data, context, depth, stringBuilder, logger);
+                return ResolveReference(data, context, depth, logs, logger);
             }
 
             // Enter the current path segment for tracking
@@ -235,7 +234,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (type == null)
                 {
                     logger?.LogError($"{padding}{error}");
-                    stringBuilder?.AppendLine($"{padding}[Error] {error}");
+                    logs?.Error(error ?? "Unknown error", depth);
 
                     throw new ArgumentException(error);
                 }
@@ -253,7 +252,7 @@ namespace com.IvanMurzak.ReflectorNet
                     type,
                     fallbackName,
                     depth: depth + 1,
-                    stringBuilder: stringBuilder,
+                    logs: logs,
                     logger: logger,
                     context: context
                 );
@@ -270,7 +269,7 @@ namespace com.IvanMurzak.ReflectorNet
             SerializedMember data,
             DeserializationContext context,
             int depth,
-            StringBuilder? stringBuilder,
+            Logs? logs,
             ILogger? logger)
         {
             var padding = StringUtils.GetPadding(depth);
@@ -280,7 +279,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 if (logger?.IsEnabled(LogLevel.Warning) == true)
                     logger.LogWarning($"{padding}{Consts.Emoji.Warn} Reference has no value");
-                stringBuilder?.AppendLine($"{padding}[Warning] Reference has no value");
+                logs?.Warning("Reference has no value", depth);
                 return null;
             }
 
@@ -288,7 +287,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 if (logger?.IsEnabled(LogLevel.Warning) == true)
                     logger.LogWarning($"{padding}{Consts.Emoji.Warn} Reference value missing {JsonSchema.Ref} property");
-                stringBuilder?.AppendLine($"{padding}[Warning] Reference value missing {JsonSchema.Ref} property");
+                logs?.Warning($"Reference value missing {JsonSchema.Ref} property", depth);
                 return null;
             }
 
@@ -297,7 +296,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 if (logger?.IsEnabled(LogLevel.Warning) == true)
                     logger.LogWarning($"{padding}{Consts.Emoji.Warn} Reference path is null or empty");
-                stringBuilder?.AppendLine($"{padding}[Warning] Reference path is null or empty");
+                logs?.Warning("Reference path is null or empty", depth);
                 return null;
             }
 
@@ -314,7 +313,7 @@ namespace com.IvanMurzak.ReflectorNet
             // Reference not yet resolved - this could happen with forward references
             if (logger?.IsEnabled(LogLevel.Warning) == true)
                 logger.LogWarning($"{padding}{Consts.Emoji.Warn} Unable to resolve reference: {refPath}");
-            stringBuilder?.AppendLine($"{padding}[Warning] Unable to resolve reference: {refPath}");
+            logs?.Warning($"Unable to resolve reference: {refPath}", depth);
             return null;
         }
 

@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -59,7 +58,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null,
             SerializationContext? context = null)
         {
@@ -84,7 +83,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         recursive: recursive,
                         flags: flags,
                         depth: depth,
-                        stringBuilder: stringBuilder,
+                        logs: logs,
                         logger: logger,
                         context: context));
                 }
@@ -113,7 +112,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Type type,
             JsonElement? value,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             ILogger? logger = null)
         {
             if (logger?.IsEnabled(LogLevel.Trace) == true)
@@ -125,14 +124,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 type: type,
                 result: out var parsedValue,
                 depth: depth + 1,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger))
             {
-                Print.FailedToSetNewValue(ref obj, type, depth, stringBuilder);
+                Print.FailedToSetNewValue(ref obj, type, depth, logs);
                 return false;
             }
 
-            Print.SetNewValueEnumerable(ref obj, ref parsedValue, type, depth, stringBuilder);
+            Print.SetNewValueEnumerable(ref obj, ref parsedValue, type, depth, logs);
             obj = parsedValue;
             return true;
         }
@@ -144,14 +143,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             FieldInfo fieldInfo,
             SerializedMember? value,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var padding = StringUtils.GetPadding(depth);
-            // if (logger?.IsEnabled(LogLevel.Trace) == true)
-            //     logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name}'. Converter='{GetType().GetTypeShortName()}'.");
-
             if (!TryDeserializeValue(
                 reflector,
                 data: value,
@@ -159,22 +154,22 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 type: out var type,
                 fallbackType: fallbackType,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
+                logs?.Error($"Failed to deserialize value for field '{fieldInfo.Name}'.", depth);
                 return false;
             }
 
             // Check if field type matches parsed value type
             if (!TypeUtils.IsCastable(type, fieldInfo.FieldType))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to field type '{fieldInfo.FieldType.GetTypeName(pretty: false)}' for field '{fieldInfo.Name}'.");
+                logs?.Error($"Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to field type '{fieldInfo.FieldType.GetTypeName(pretty: false)}' for field '{fieldInfo.Name}'.", depth);
                 return false;
             }
 
             fieldInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
+            logs?.Success($"Field '{fieldInfo.Name}' modified to '{parsedValue}'.", depth);
             return true;
         }
 
@@ -185,7 +180,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             PropertyInfo propertyInfo,
             SerializedMember? value,
             int depth = 0,
-            StringBuilder? stringBuilder = null,
+            Logs? logs = null,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
@@ -196,7 +191,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             // Check if property is writable
             if (!propertyInfo.CanWrite)
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyInfo.Name}' is read-only.");
+                logs?.Error($"Property '{propertyInfo.Name}' is read-only.", depth);
                 return false;
             }
 
@@ -206,22 +201,22 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 type: out var type,
                 fallbackType: fallbackType,
                 depth: depth,
-                stringBuilder: stringBuilder,
+                logs: logs,
                 logger: logger))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
+                logs?.Error($"Failed to deserialize value for property '{propertyInfo.Name}'.", depth);
                 return false;
             }
 
             // Check if property type matches parsed value type
             if (!TypeUtils.IsCastable(type, propertyInfo.PropertyType))
             {
-                stringBuilder?.AppendLine($"{padding}[Error] Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeName(pretty: false)}' for property '{propertyInfo.Name}'.");
+                logs?.Error($"Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeName(pretty: false)}' for property '{propertyInfo.Name}'.", depth);
                 return false;
             }
 
             propertyInfo.SetValue(obj, parsedValue);
-            stringBuilder?.AppendLine($"{padding}[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
+            logs?.Success($"Property '{propertyInfo.Name}' modified to '{parsedValue}'.", depth);
             return true;
         }
     }
