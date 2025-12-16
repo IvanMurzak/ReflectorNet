@@ -8,9 +8,9 @@
 using System;
 using System.Linq;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
+    public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         /// <summary>
         /// Creates a new instance of the specified type with intelligent constructor resolution and dependency handling.

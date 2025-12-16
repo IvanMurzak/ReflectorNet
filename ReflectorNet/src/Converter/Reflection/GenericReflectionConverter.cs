@@ -16,9 +16,9 @@ using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public partial class GenericReflectionConvertor<T> : NotArrayReflectionConvertor<T>
+    public partial class GenericReflectionConverter<T> : NotArrayReflectionConverter<T>
     {
         protected override SerializedMember InternalSerialize(
             Reflector reflector,
@@ -49,17 +49,9 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     }
                     : SerializedMember.FromJson(type, obj.ToJson(reflector), name: name);
             }
-            throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}' for convertor '{GetType().Name}'.");
+            throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}' for converter '{GetType().GetTypeShortName()}'.");
         }
-        public override IEnumerable<FieldInfo>? GetSerializableFields(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
-            => objType.GetFields(flags)
-                .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(field => field.IsPublic);
-
-        public override IEnumerable<PropertyInfo>? GetSerializableProperties(Reflector reflector, Type objType, BindingFlags flags, ILogger? logger = null)
-            => objType.GetProperties(flags)
-                .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(prop => prop.CanRead);
+        // GetSerializableFields and GetSerializableProperties inherited from BaseReflectionConverter
 
         protected override bool SetValue(
             Reflector reflector,

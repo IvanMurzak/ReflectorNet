@@ -36,13 +36,13 @@ ReflectorNet implements a sophisticated **Chain of Responsibility** pattern for 
 - Partial class split across multiple files for different concerns
 - Uses converter registry system for extensible type handling
 
-#### Converter System (`src/Convertor/`)
-- **IReflectionConvertor**: Interface defining converter contract
+#### Converter System (`src/Converter/`)
+- **IReflectionConverter**: Interface defining converter contract
 - **Chain of Responsibility**: Multiple specialized converters handle different types:
-  - `PrimitiveReflectionConvertor`: Built-in .NET types (int, string, DateTime, etc.)
-  - `GenericReflectionConvertor`: Custom classes and structs
-  - `ArrayReflectionConvertor`: Arrays and collections
-  - `BaseReflectionConvertor`: Abstract base with common functionality
+  - `PrimitiveReflectionConverter`: Built-in .NET types (int, string, DateTime, etc.)
+  - `GenericReflectionConverter`: Custom classes and structs
+  - `ArrayReflectionConverter`: Arrays and collections
+  - `BaseReflectionConverter`: Abstract base with common functionality
 
 #### Key Models (`src/Model/`)
 - **SerializedMember**: Type-preserving serialized object representation
@@ -96,7 +96,7 @@ Each converter implements `SerializationPriority(Type type)` returning a score (
 - Comprehensive validation at each operation level
 
 ### Extensibility
-- Custom converter registration via `Reflector.Convertors.Add()`
+- Custom converter registration via `Reflector.Converters.Add()`
 - Override priority scoring for specialized type handling
 - Pluggable serialization behavior for any .NET type
 

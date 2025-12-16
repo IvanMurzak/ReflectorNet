@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using com.IvanMurzak.ReflectorNet.Convertor;
+using com.IvanMurzak.ReflectorNet.Converter;
 
 namespace com.IvanMurzak.ReflectorNet
 {
@@ -28,16 +28,16 @@ namespace com.IvanMurzak.ReflectorNet
         /// 4. Returns the highest priority converter that can handle the type
         ///
         /// Default Converters:
-        /// - PrimitiveReflectionConvertor: Handles built-in .NET types (int, string, DateTime, etc.)
-        /// - GenericReflectionConvertor<object>: Handles custom classes and structs
-        /// - ArrayReflectionConvertor: Specialized handling for arrays and collections
+        /// - PrimitiveReflectionConverter: Handles built-in .NET types (int, string, DateTime, etc.)
+        /// - GenericReflectionConverter<object>: Handles custom classes and structs
+        /// - ArrayReflectionConverter: Specialized handling for arrays and collections
         ///
         /// This architecture ensures that the most appropriate converter is always selected
         /// while maintaining flexibility for custom type handling through converter registration.
         /// </summary>
         public class Registry
         {
-            ConcurrentBag<IReflectionConvertor> _serializers = new ConcurrentBag<IReflectionConvertor>();
+            ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
 
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.
@@ -47,13 +47,13 @@ namespace com.IvanMurzak.ReflectorNet
             public Registry()
             {
                 // Basics
-                Add(new PrimitiveReflectionConvertor());
-                Add(new ArrayReflectionConvertor());
-                Add(new GenericReflectionConvertor<object>());
+                Add(new PrimitiveReflectionConverter());
+                Add(new ArrayReflectionConverter());
+                Add(new GenericReflectionConverter<object>());
 
                 // Specialized converters for read-only system types
-                Add(new TypeReflectionConvertor());
-                Add(new AssemblyReflectionConvertor());
+                Add(new TypeReflectionConverter());
+                Add(new AssemblyReflectionConverter());
             }
 
             /// <summary>
@@ -61,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// converter selection operations based on its priority scoring for specific types.
             /// </summary>
             /// <param name="serializer">The converter to add to the registry. Null values are ignored.</param>
-            public void Add(IReflectionConvertor serializer)
+            public void Add(IReflectionConverter serializer)
             {
                 if (serializer == null)
                     return;
@@ -74,13 +74,13 @@ namespace com.IvanMurzak.ReflectorNet
             /// This operation creates a new ConcurrentBag excluding the removed converter.
             /// </summary>
             /// <typeparam name="T">The type of converter to remove.</typeparam>
-            public void Remove<T>() where T : IReflectionConvertor
+            public void Remove<T>() where T : IReflectionConverter
             {
                 var serializer = _serializers.FirstOrDefault(s => s is T);
                 if (serializer == null)
                     return;
 
-                _serializers = new ConcurrentBag<IReflectionConvertor>(_serializers.Where(s => s != serializer));
+                _serializers = new ConcurrentBag<IReflectionConverter>(_serializers.Where(s => s != serializer));
             }
 
             /// <summary>
@@ -88,7 +88,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// This method creates a snapshot of the current converter collection.
             /// </summary>
             /// <returns>A read-only list containing all registered converters.</returns>
-            public IReadOnlyList<IReflectionConvertor> GetAllSerializers() => _serializers.ToList();
+            public IReadOnlyList<IReflectionConverter> GetAllSerializers() => _serializers.ToList();
 
             /// <summary>
             /// Finds all converters that can handle the specified type, ordered by priority.
@@ -97,7 +97,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// </summary>
             /// <param name="type">The type to find converters for.</param>
             /// <returns>An enumerable of converters ordered by descending priority score.</returns>
-            IEnumerable<IReflectionConvertor> FindRelevantConvertors(Type type) => _serializers
+            IEnumerable<IReflectionConverter> FindRelevantConverters(Type type) => _serializers
                 .Select(s => (s, s.SerializationPriority(type)))
                 .Where(s => s.Item2 > 0)
                 .OrderByDescending(s => s.Item2)
@@ -110,9 +110,9 @@ namespace com.IvanMurzak.ReflectorNet
             /// </summary>
             /// <param name="type">The type to find a converter for.</param>
             /// <returns>The highest priority converter that can handle the type, or null if no suitable converter is found.</returns>
-            public IReflectionConvertor? GetConvertor(Type type)
+            public IReflectionConverter? GetConverter(Type type)
             {
-                return FindRelevantConvertors(type)
+                return FindRelevantConverters(type)
                     .FirstOrDefault();
             }
         }

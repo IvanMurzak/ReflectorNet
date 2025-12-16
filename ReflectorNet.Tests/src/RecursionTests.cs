@@ -206,14 +206,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests
 
             // Wrapper2 -> Container -> Items[0] (Wrapper3)
             // Note: wrapper2Prop is a JsonElement, we need to navigate its structure which mimics SerializedMember
-            // But wait, ArrayReflectionConvertor returns a SerializedMember with value as a list of SerializedMembers.
+            // But wait, ArrayReflectionConverter returns a SerializedMember with value as a list of SerializedMembers.
             // The "value" property of the SerializedMember for the list is the array.
             // The array elements are SerializedMembers.
 
             // Let's navigate using the SerializedMember structure if possible, but here we have JsonElement for the array items if we didn't deserialize back to SerializedMember.
             // Actually, Reflector.Serialize returns a SerializedMember.
             // For the list, the 'value' is a JsonElement which IS the array of SerializedMembers (serialized to JSON).
-            // Wait, let's check ArrayReflectionConvertor.
+            // Wait, let's check ArrayReflectionConverter.
             // It returns SerializedMember.FromValue(..., value: serializedList, ...).
             // serializedList is SerializedMemberList.
             // So the value IS a SerializedMemberList (which is a List<SerializedMember>).

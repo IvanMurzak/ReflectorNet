@@ -14,9 +14,9 @@ using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public partial class ArrayReflectionConvertor : BaseReflectionConvertor<Array>
+    public partial class ArrayReflectionConverter : BaseReflectionConverter<Array>
     {
         public override object? Deserialize(
             Reflector reflector,
@@ -200,7 +200,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
             {
-                logger.LogTrace("{padding}TryDeserializeValueInternal type='{typeName}', name='{name}', AllowCascadeSerialize={AllowCascadeSerialize}, Convertor='{ConvertorName}'",
+                logger.LogTrace("{padding}TryDeserializeValueInternal type='{typeName}', name='{name}', AllowCascadeSerialize={AllowCascadeSerialize}, Converter='{ConverterName}'",
                     padding,
                     type.GetTypeName(pretty: true),
                     serializedMember.name.ValueOrNull(),
@@ -216,7 +216,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     result = reflector.GetDefaultValue(type);
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                     {
-                        logger.LogWarning("{padding}{icon} 'value' is null for type='{typeName}', name='{name}'. Convertor='{ConvertorName}'",
+                        logger.LogWarning("{padding}{icon} 'value' is null for type='{typeName}', name='{name}'. Converter='{ConverterName}'",
                             padding,
                             Consts.Emoji.Warn,
                             type.GetTypeName(pretty: false),
@@ -232,10 +232,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     result = reflector.GetDefaultValue(type);
 
                     if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}{Consts.Emoji.Fail} Only array deserialization is supported in this Convertor ({GetType().Name}).");
+                        logger.LogError($"{padding}{Consts.Emoji.Fail} Only array deserialization is supported in this Converter ({GetType().Name}).");
 
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Error] Only array deserialization is supported in this Convertor ({GetType().Name}).");
+                        stringBuilder.AppendLine($"{padding}[Error] Only array deserialization is supported in this Converter ({GetType().Name}).");
 
                     return false;
                 }

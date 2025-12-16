@@ -137,15 +137,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 var defineContainsType = defines.ContainsKey(typeId);
 
                 var jsonConverter = reflector.JsonSerializerOptions.GetConverter(type);
-                if (jsonConverter is IJsonSchemaConverter schemeConvertor)
+                if (jsonConverter is IJsonSchemaConverter schemeConverter)
                 {
                     // Add placeholder to prevent infinite recursion
                     if (definesNeeded && !defineContainsType)
                         defines[typeId] = new JsonObject { [Type] = Object };
 
-                    schema = schemeConvertor.GetSchema();
+                    schema = schemeConverter.GetSchema();
 
-                    foreach (var defType in schemeConvertor.GetDefinedTypes())
+                    foreach (var defType in schemeConverter.GetDefinedTypes())
                     {
                         var defTypeId = defType.GetSchemaTypeId();
                         if (defines.ContainsKey(defTypeId))
@@ -274,9 +274,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             try
             {
                 var jsonConverter = reflector.JsonSerializerOptions.GetConverter(type);
-                if (jsonConverter is IJsonSchemaConverter schemeConvertor)
+                if (jsonConverter is IJsonSchemaConverter schemeConverter)
                 {
-                    schema = schemeConvertor.GetSchemaRef();
+                    schema = schemeConverter.GetSchemaRef();
                 }
                 else
                 {

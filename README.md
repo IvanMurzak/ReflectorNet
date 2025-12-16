@@ -115,23 +115,23 @@ ReflectorNet is built on a **Chain of Responsibility** pattern to handle the com
 ### Core Components
 
 *   **`Reflector`**: The orchestrator. It manages the registry of converters and exposes the high-level API.
-*   **`Registry`**: Holds a prioritized list of `IReflectionConvertor`s. When you serialize or deserialize, the registry finds the best converter for the specific type.
+*   **`Registry`**: Holds a prioritized list of `IReflectionConverter`s. When you serialize or deserialize, the registry finds the best converter for the specific type.
 *   **`SerializedMember`**: The universal data model. It represents any .NET object (primitive, class, array) in a serializable format that holds both value and type metadata.
 
 ### Built-in Converters
 
 ReflectorNet comes with a set of standard converters:
-1.  **`PrimitiveReflectionConvertor`**: Handles `int`, `string`, `bool`, `DateTime`, etc.
-2.  **`ArrayReflectionConvertor`**: Handles arrays (`T[]`) and generic lists (`List<T>`).
-3.  **`GenericReflectionConvertor<T>`**: The fallback for custom classes and structs.
-4.  **`TypeReflectionConvertor`** & **`AssemblyReflectionConvertor`**: Specialized handling for `System.Type` and `System.Reflection.Assembly`.
+1.  **`PrimitiveReflectionConverter`**: Handles `int`, `string`, `bool`, `DateTime`, etc.
+2.  **`ArrayReflectionConverter`**: Handles arrays (`T[]`) and generic lists (`List<T>`).
+3.  **`GenericReflectionConverter<T>`**: The fallback for custom classes and structs.
+4.  **`TypeReflectionConverter`** & **`AssemblyReflectionConverter`**: Specialized handling for `System.Type` and `System.Reflection.Assembly`.
 
 ### Extensibility
 
-You can create custom converters for your own types by implementing `IReflectionConvertor` or inheriting from `GenericReflectionConvertor<T>` and registering them:
+You can create custom converters for your own types by implementing `IReflectionConverter` or inheriting from `GenericReflectionConverter<T>` and registering them:
 
 ```csharp
-reflector.Convertors.Add(new MyCustomConvertor());
+reflector.Converters.Add(new MyCustomConverter());
 ```
 
 ## 🛠️ Advanced Features
@@ -153,8 +153,8 @@ ReflectorNet's power lies in its extensible **Converter System**. If you have "e
 
 #### How it Works
 
-1.  **Interface**: All converters implement `IReflectionConvertor`.
-2.  **Base Class**: Most custom converters should inherit from `BaseReflectionConvertor<T>` or `GenericReflectionConvertor<T>`.
+1.  **Interface**: All converters implement `IReflectionConverter`.
+2.  **Base Class**: Most custom converters should inherit from `BaseReflectionConverter<T>` or `GenericReflectionConverter<T>`.
 3.  **Priority**: ReflectorNet asks every registered converter: *"Can you handle this type, and how well?"* (via `SerializationPriority`). The one with the highest score wins.
     *   Exact match: Highest priority.
     *   Inheritance match: Lower priority (based on distance).
@@ -168,11 +168,11 @@ Here is an example of a converter for a hypothetical `ThirdPartyWidget` that sho
 <summary>Click to see the code example</summary>
 
 ```csharp
-using com.IvanMurzak.ReflectorNet.Convertor;
+using com.IvanMurzak.ReflectorNet.Converter;
 using com.IvanMurzak.ReflectorNet.Model;
 
-// 1. Inherit from GenericReflectionConvertor<T> for the target type
-public class WidgetConvertor : GenericReflectionConvertor<ThirdPartyWidget>
+// 1. Inherit from GenericReflectionConverter<T> for the target type
+public class WidgetConverter : GenericReflectionConverter<ThirdPartyWidget>
 {
     // 2. Override SerializationPriority if you need special matching logic
     // (The default implementation already handles inheritance distance perfectly)
@@ -212,14 +212,14 @@ public class WidgetConvertor : GenericReflectionConvertor<ThirdPartyWidget>
 }
 
 // 5. Register it
-reflector.Convertors.Add(new WidgetConvertor());
+reflector.Converters.Add(new WidgetConverter());
 ```
 
 </details>
 
 ### 📜 Custom JSON Schema Generation
 
-While `ReflectionConvertor` handles runtime object manipulation, you might also want to control how your types are described in the generated JSON Schema (used by LLMs to understand your data structure).
+While `ReflectionConverter` handles runtime object manipulation, you might also want to control how your types are described in the generated JSON Schema (used by LLMs to understand your data structure).
 
 ReflectorNet allows you to customize this by implementing the `IJsonSchemaConverter` interface. This is often done by inheriting from `JsonSchemaConverter<T>`, which combines standard JSON serialization with schema generation.
 
@@ -239,7 +239,7 @@ Suppose you have a `ThirdPartyWidget` that serializes to a string (e.g., "Widget
 ```csharp
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using com.IvanMurzak.ReflectorNet.Convertor.Json;
+using com.IvanMurzak.ReflectorNet.Converter.Json;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 // 1. Inherit from JsonSchemaConverter<T>
@@ -286,7 +286,7 @@ reflector.JsonSerializer.AddConverter(new WidgetSchemaConverter());
 
 </details>
 
-> **Note:** You can use `ReflectionConvertor` (for runtime logic) and `JsonSchemaConverter` (for schema/transport) together for the same type if needed.
+> **Note:** You can use `ReflectionConverter` (for runtime logic) and `JsonSchemaConverter` (for schema/transport) together for the same type if needed.
 
 ### Fuzzy Matching Levels
 

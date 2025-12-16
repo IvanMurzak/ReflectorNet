@@ -12,15 +12,15 @@ namespace com.IvanMurzak.ReflectorNet
             if (a.GetType() != b.GetType()) return false;
 
             var type = a.GetType();
-            var convertor = Convertors.GetConvertor(a.GetType());
+            var converter = Converters.GetConverter(a.GetType());
 
-            if (convertor == null)
+            if (converter == null)
             {
-                // No convertor found, use default equality check
+                // No converter found, use default equality check
                 return a.Equals(b);
             }
 
-            var fields = convertor.GetSerializableFields(this, type);
+            var fields = converter.GetSerializableFields(this, type);
             if (fields != null)
             {
                 foreach (var prop in fields)
@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet
                 }
             }
 
-            var properties = convertor.GetSerializableProperties(this, type);
+            var properties = converter.GetSerializableProperties(this, type);
             if (properties != null)
             {
                 foreach (var prop in properties)

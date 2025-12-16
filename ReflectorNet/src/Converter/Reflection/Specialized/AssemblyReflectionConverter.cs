@@ -12,16 +12,16 @@ using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
     /// <summary>
     /// Specialized converter for System.Reflection.Assembly that serializes assemblies as their
     /// full name and deserializes them back using Assembly.Load(). This ensures that Assembly
     /// instances can be serialized and deserialized without data loss while treating them as read-only.
     /// </summary>
-    public class AssemblyReflectionConvertor : IgnoreFieldsAndPropertiesReflectionConvertor<Assembly>
+    public class AssemblyReflectionConverter : IgnoreFieldsAndPropertiesReflectionConverter<Assembly>
     {
-        public AssemblyReflectionConvertor() : base(ignoreFields: true, ignoreProperties: true)
+        public AssemblyReflectionConverter() : base(ignoreFields: true, ignoreProperties: true)
         {
         }
 

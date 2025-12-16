@@ -12,16 +12,16 @@ using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
     /// <summary>
     /// Specialized converter for System.Type that serializes types as their fully qualified name
     /// and deserializes them back using TypeUtils.GetType(). This ensures that Type instances
     /// can be serialized and deserialized without data loss while treating them as read-only.
     /// </summary>
-    public class TypeReflectionConvertor : IgnoreFieldsAndPropertiesReflectionConvertor<Type>
+    public class TypeReflectionConverter : IgnoreFieldsAndPropertiesReflectionConverter<Type>
     {
-        public TypeReflectionConvertor() : base(ignoreFields: true, ignoreProperties: true)
+        public TypeReflectionConverter() : base(ignoreFields: true, ignoreProperties: true)
         {
         }
 

@@ -14,9 +14,9 @@ using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public partial class PrimitiveReflectionConvertor : NotArrayReflectionConvertor<object>
+    public partial class PrimitiveReflectionConverter : NotArrayReflectionConverter<object>
     {
         public override bool AllowCascadeSerialization => false;
 
@@ -65,8 +65,15 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 return false;
             }
 
-            // TODO: Print previous and new value in stringBuilder
+            // Check if field type matches parsed value type
+            if (!TypeUtils.IsCastable(type, fieldInfo.FieldType))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to field type '{fieldInfo.FieldType.GetTypeName(pretty: false)}' for field '{fieldInfo.Name}'.");
+                return false;
+            }
+
             fieldInfo.SetValue(obj, parsedValue);
+            stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -76,14 +83,28 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
 
+            // Check if property is writable
+            if (!propertyInfo.CanWrite)
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Property '{propertyInfo.Name}' is read-only.");
+                return false;
+            }
+
             if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, stringBuilder: stringBuilder, logger: logger))
             {
                 stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{value?.name.ValueOrNull()}'.");
                 return false;
             }
 
-            // TODO: Print previous and new value in stringBuilder
+            // Check if property type matches parsed value type
+            if (!TypeUtils.IsCastable(type, propertyInfo.PropertyType))
+            {
+                stringBuilder?.AppendLine($"{padding}[Error] Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeName(pretty: false)}' for property '{propertyInfo.Name}'.");
+                return false;
+            }
+
             propertyInfo.SetValue(obj, parsedValue);
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
     }

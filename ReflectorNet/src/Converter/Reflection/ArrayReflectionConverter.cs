@@ -15,9 +15,9 @@ using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public partial class ArrayReflectionConvertor : BaseReflectionConvertor<Array>
+    public partial class ArrayReflectionConverter : BaseReflectionConverter<Array>
     {
         protected virtual bool IsGenericList(Type type, out Type? elementType)
         {
@@ -105,27 +105,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
         }
 
-        public override IEnumerable<FieldInfo>? GetSerializableFields(
-            Reflector reflector,
-            Type objType,
-            BindingFlags flags,
-            ILogger? logger = null)
-        {
-            return objType.GetFields(flags)
-                .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(field => field.IsPublic);
-        }
-
-        public override IEnumerable<PropertyInfo>? GetSerializableProperties(
-            Reflector reflector,
-            Type objType,
-            BindingFlags flags,
-            ILogger? logger = null)
-        {
-            return objType.GetProperties(flags)
-                .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(prop => prop.CanRead);
-        }
+        // GetSerializableFields and GetSerializableProperties inherited from BaseReflectionConverter
 
         protected override bool SetValue(
             Reflector reflector,
@@ -137,7 +117,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             ILogger? logger = null)
         {
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{StringUtils.GetPadding(depth)}Set value type='{type.GetTypeShortName()}'. Convertor='{GetType().GetTypeShortName()}'.");
+                logger.LogTrace($"{StringUtils.GetPadding(depth)}Set value type='{type.GetTypeShortName()}'. Converter='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValueListInternal(
                 reflector,
@@ -170,7 +150,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             // if (logger?.IsEnabled(LogLevel.Trace) == true)
-            //     logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
+            //     logger.LogTrace($"{padding}Set field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name}'. Converter='{GetType().GetTypeShortName()}'.");
 
             if (!TryDeserializeValue(
                 reflector,
@@ -182,6 +162,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 stringBuilder: stringBuilder,
                 logger: logger))
             {
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for field '{fieldInfo.Name}'.");
                 return false;
             }
 
@@ -192,8 +173,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 return false;
             }
 
-            // TODO: Print previous and new value in stringBuilder
             fieldInfo.SetValue(obj, parsedValue);
+            stringBuilder?.AppendLine($"{padding}[Success] Field '{fieldInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
 
@@ -210,7 +191,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
         {
             var padding = StringUtils.GetPadding(depth);
             // if (logger?.IsEnabled(LogLevel.Trace) == true)
-            //     logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeShortName()}', name='{propertyInfo.Name}'. Convertor='{GetType().GetTypeShortName()}'.");
+            //     logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeShortName()}', name='{propertyInfo.Name}'. Converter='{GetType().GetTypeShortName()}'.");
 
             // Check if property is writable
             if (!propertyInfo.CanWrite)
@@ -228,6 +209,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 stringBuilder: stringBuilder,
                 logger: logger))
             {
+                stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value for property '{propertyInfo.Name}'.");
                 return false;
             }
 
@@ -238,8 +220,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 return false;
             }
 
-            // TODO: Print previous and new value in stringBuilder
             propertyInfo.SetValue(obj, parsedValue);
+            stringBuilder?.AppendLine($"{padding}[Success] Property '{propertyInfo.Name}' modified to '{parsedValue}'.");
             return true;
         }
     }
