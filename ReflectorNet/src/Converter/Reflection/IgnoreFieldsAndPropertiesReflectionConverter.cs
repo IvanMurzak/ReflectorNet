@@ -39,7 +39,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags,
             ILogger? logger = null)
         {
-            return  _ignoreFields
+            return _ignoreFields
                 ? null
                 : base.GetSerializableFields(reflector, objType, flags, logger);
         }

@@ -6,6 +6,7 @@
  */
 
 using System.Collections.Generic;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Model
 {
@@ -18,7 +19,10 @@ namespace com.IvanMurzak.ReflectorNet.Model
             var stringBuilder = new System.Text.StringBuilder();
 
             foreach (var log in this)
-                stringBuilder.AppendLine($"{new string(' ', log.Depth * DepthPadding)}[{log.Type}] {log.Message}");
+            {
+                var padding = StringUtils.GetPadding(log.Depth);
+                stringBuilder.AppendLine($"{padding}[{log.Type}] {log.Message.Replace("\n", $"\n{padding}")}");
+            }
 
             return stringBuilder.ToString();
         }

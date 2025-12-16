@@ -36,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (logger?.IsEnabled(LogLevel.Warning) == true)
                     logger.LogWarning($"{padding}{error}");
 
-                logs?.Warning(error ?? "", depth);
+                logs?.Warning(error ?? string.Empty, depth);
 
                 return null;
             }

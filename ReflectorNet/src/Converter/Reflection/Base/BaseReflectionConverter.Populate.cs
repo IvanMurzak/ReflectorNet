@@ -105,7 +105,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger.LogInformation($"{padding}[Success] Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```");
 
                         if (logs != null)
-                            logs.Success($"Value '{obj}' modified to\n{padding}```json\n{data.valueJsonElement}\n{padding}```", depth);
+                            logs.Success($"Value '{obj}' modified to\n```json\n{data.valueJsonElement}\n```", depth);
                     }
                     else
                     {
@@ -113,7 +113,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger.LogWarning($"{padding}Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```");
 
                         if (logs != null)
-                            logs.Warning($"Value '{obj}' was not modified to value \n{padding}```json\n{data.valueJsonElement}\n{padding}```", depth);
+                            logs.Warning($"Value '{obj}' was not modified to value \n```json\n{data.valueJsonElement}\n```", depth);
                     }
                 }
                 catch (Exception ex)
@@ -315,9 +315,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                 if (logs != null)
                     logs.Error($"Field '{fieldValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?"
-                        + $"\n{padding}"
+                        + $"\n"
                         + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
-                        + $"\n{padding}"
+                        + $"\n"
                         + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
                         , depth);
 
@@ -474,9 +474,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                 if (logs != null)
                     logs.Error($"Property '{propertyValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?"
-                        + $"\n{padding}"
+                        + $"\n"
                         + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
-                        + $"\n{padding}"
+                        + $"\n"
                         + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
                         , depth);
                 return false;
