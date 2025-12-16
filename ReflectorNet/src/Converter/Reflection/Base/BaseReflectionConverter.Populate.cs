@@ -15,9 +15,9 @@ using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using static com.IvanMurzak.ReflectorNet.Reflector;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
+    public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         public virtual bool TryPopulate(
             Reflector reflector,
@@ -65,10 +65,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 }
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeName(pretty: false)}'.");
+                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeName(pretty: true)}'.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Success] Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeName(pretty: false)}'.");
+                    stringBuilder.AppendLine($"{padding}[Success] Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeName(pretty: true)}'.");
 
                 return true;
             }
@@ -340,10 +340,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Populate field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
+                    logger.LogTrace($"{padding}Populate field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Info] Populate field type='{fieldInfo.FieldType.GetTypeName(pretty: false).ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
+                    stringBuilder.AppendLine($"{padding}[Info] Populate field type='{fieldInfo.FieldType.GetTypeName(pretty: false).ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 var currentValue = fieldInfo.GetValue(obj);
 
@@ -356,10 +356,26 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     flags: flags,
                     logger: logger);
 
-                if (success)
-                    fieldInfo.SetValue(obj, currentValue);
+                if (!success)
+                {
+                    if (logger?.IsEnabled(LogLevel.Warning) == true)
+                        logger.LogWarning($"{padding}Field '{fieldValue.name.ValueOrNull()}' was not modified.");
 
-                return success;
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Warning] Field '{fieldValue.name.ValueOrNull()}' was not modified.");
+
+                    return false;
+                }
+
+                fieldInfo.SetValue(obj, currentValue);
+
+                if (logger?.IsEnabled(LogLevel.Information) == true)
+                    logger.LogInformation($"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified.");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Success] Field '{fieldValue.name.ValueOrNull()}' modified.");
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -482,10 +498,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             try
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
+                    logger.LogTrace($"{padding}Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Info] Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Convertor='{GetType().GetTypeShortName()}'.");
+                    stringBuilder.AppendLine($"{padding}[Info] Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 var currentValue = propInfo.GetValue(obj);
 
@@ -498,8 +514,24 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     flags: flags,
                     logger: logger);
 
-                if (success)
-                    propInfo.SetValue(obj, currentValue);
+                if (!success)
+                {
+                    if (logger?.IsEnabled(LogLevel.Warning) == true)
+                        logger.LogWarning($"{padding}Property '{propertyValue.name.ValueOrNull()}' was not modified.");
+
+                    if (stringBuilder != null)
+                        stringBuilder.AppendLine($"{padding}[Warning] Property '{propertyValue.name.ValueOrNull()}' was not modified.");
+
+                    return false;
+                }
+
+                propInfo.SetValue(obj, currentValue);
+
+                if (logger?.IsEnabled(LogLevel.Information) == true)
+                    logger.LogInformation($"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified.");
+
+                if (stringBuilder != null)
+                    stringBuilder.AppendLine($"{padding}[Success] Property '{propertyValue.name.ValueOrNull()}' modified.");
 
                 return success;
             }

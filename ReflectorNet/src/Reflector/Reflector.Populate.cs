@@ -58,22 +58,22 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
             }
 
-            var convertor = Convertors.GetConvertor(objType);
-            if (convertor == null)
+            var converter = Converters.GetConverter(objType);
+            if (converter == null)
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}No suitable convertor found for type {objType.GetTypeName(pretty: false)}");
+                    logger.LogError($"{padding}No suitable converter found for type {objType.GetTypeName(pretty: false)}");
 
                 if (stringBuilder != null)
-                    stringBuilder.AppendLine($"{padding}[Error] No suitable convertor found for type {objType.GetTypeName(pretty: false)}");
+                    stringBuilder.AppendLine($"{padding}[Error] No suitable converter found for type {objType.GetTypeName(pretty: false)}");
 
                 return false;
             }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Populate. {convertor.GetType().GetTypeShortName()} used for type='{objType?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
+                logger.LogTrace($"{padding}Populate. {converter.GetType().GetTypeShortName()} used for type='{objType?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
 
-            var success = convertor.TryPopulate(
+            var success = converter.TryPopulate(
                 this,
                 ref obj,
                 data: data,

@@ -12,7 +12,7 @@ using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
     /// <summary>
     /// Abstract base class for reflection-based converters that handle serialization, deserialization, and population
@@ -36,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
     /// Higher priority converters are preferred when multiple converters can handle a type.
     /// </summary>
     /// <typeparam name="T">The base type that this converter is designed to handle.</typeparam>
-    public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
+    public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         protected const int MAX_DEPTH = 10000;
 
@@ -98,17 +98,33 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 : 0;
         }
 
-        public abstract IEnumerable<FieldInfo>? GetSerializableFields(
+        /// <summary>
+        /// Gets the serializable fields for the specified type.
+        /// Default implementation returns public fields that are not marked with [Obsolete].
+        /// Derived classes can override to customize field selection.
+        /// </summary>
+        public virtual IEnumerable<FieldInfo>? GetSerializableFields(
             Reflector reflector,
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            ILogger? logger = null);
+            ILogger? logger = null)
+            => objType.GetFields(flags)
+                .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
+                .Where(field => field.IsPublic);
 
-        public abstract IEnumerable<PropertyInfo>? GetSerializableProperties(
+        /// <summary>
+        /// Gets the serializable properties for the specified type.
+        /// Default implementation returns readable properties that are not marked with [Obsolete].
+        /// Derived classes can override to customize property selection.
+        /// </summary>
+        public virtual IEnumerable<PropertyInfo>? GetSerializableProperties(
             Reflector reflector,
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            ILogger? logger = null);
+            ILogger? logger = null)
+            => objType.GetProperties(flags)
+                .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
+                .Where(prop => prop.CanRead);
 
         public virtual IEnumerable<string> GetAdditionalSerializableFields(
             Reflector reflector,

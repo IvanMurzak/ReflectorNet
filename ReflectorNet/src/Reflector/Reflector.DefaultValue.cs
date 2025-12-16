@@ -52,11 +52,11 @@ namespace com.IvanMurzak.ReflectorNet
         {
             type = Nullable.GetUnderlyingType(type) ?? type;
 
-            var convertor = Convertors.GetConvertor(type);
-            if (convertor == null)
+            var converter = Converters.GetConverter(type);
+            if (converter == null)
                 throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for creating instance.");
 
-            return convertor.CreateInstance(this, type);
+            return converter.CreateInstance(this, type);
         }
 
         /// <summary>
@@ -103,11 +103,11 @@ namespace com.IvanMurzak.ReflectorNet
         {
             type = Nullable.GetUnderlyingType(type) ?? type;
 
-            var convertor = Convertors.GetConvertor(type);
-            if (convertor == null)
+            var converter = Converters.GetConverter(type);
+            if (converter == null)
                 throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for default value.");
 
-            return convertor.GetDefaultValue(this, type);
+            return converter.GetDefaultValue(this, type);
         }
     }
 }

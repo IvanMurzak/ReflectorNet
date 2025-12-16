@@ -50,11 +50,11 @@ namespace com.IvanMurzak.ReflectorNet
     /// </summary>
     public partial class Reflector
     {
-        public Registry Convertors { get; }
+        public Registry Converters { get; }
 
         public Reflector()
         {
-            Convertors = new Registry();
+            Converters = new Registry();
             jsonSerializer = new(this);
         }
 
@@ -108,14 +108,14 @@ namespace com.IvanMurzak.ReflectorNet
                 if (type == null)
                     throw new ArgumentException(error);
 
-                var convertor = Convertors.GetConvertor(type);
-                if (convertor == null)
+                var converter = Converters.GetConverter(type);
+                if (converter == null)
                     throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {convertor.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
+                    logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {converter.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
 
-                return convertor.Serialize(
+                return converter.Serialize(
                     this,
                     obj,
                     fallbackType: type,
@@ -240,14 +240,14 @@ namespace com.IvanMurzak.ReflectorNet
                     throw new ArgumentException(error);
                 }
 
-                var convertor = Convertors.GetConvertor(type);
-                if (convertor == null)
+                var converter = Converters.GetConverter(type);
+                if (converter == null)
                     throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{name.ValueOrNull()}' convertor='{convertor.GetType().GetTypeShortName()}'");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{name.ValueOrNull()}' converter='{converter.GetType().GetTypeShortName()}'");
 
-                var result = convertor.Deserialize(
+                var result = converter.Deserialize(
                     this,
                     data,
                     type,
@@ -345,7 +345,7 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return Convertors.GetConvertor(type)
+            return Converters.GetConverter(type)
                 ?.GetSerializableFields(this, type, flags, logger);
         }
 
@@ -376,7 +376,7 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return Convertors.GetConvertor(type)
+            return Converters.GetConverter(type)
                 ?.GetSerializableProperties(this, type, flags, logger);
         }
     }

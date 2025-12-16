@@ -199,14 +199,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var reflector = new Reflector();
 
             // Act - Add a custom converter (using existing one for test)
-            var primitiveConverter = new com.IvanMurzak.ReflectorNet.Convertor.PrimitiveReflectionConvertor();
-            reflector.Convertors.Add(primitiveConverter);
+            var primitiveConverter = new com.IvanMurzak.ReflectorNet.Converter.PrimitiveReflectionConverter();
+            reflector.Converters.Add(primitiveConverter);
 
             // Act - Remove converter by type
-            reflector.Convertors.Remove<com.IvanMurzak.ReflectorNet.Convertor.PrimitiveReflectionConvertor>();
+            reflector.Converters.Remove<com.IvanMurzak.ReflectorNet.Converter.PrimitiveReflectionConverter>();
 
             // Assert - Test that registry operations work
-            Assert.NotNull(reflector.Convertors);
+            Assert.NotNull(reflector.Converters);
 
             _output.WriteLine("Registry management test passed - converters can be added and removed");
         }

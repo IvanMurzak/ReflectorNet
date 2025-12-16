@@ -13,9 +13,9 @@ using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
+    public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         /// <summary>
         /// Performs comprehensive deserialization of SerializedMember data into strongly-typed objects.
@@ -85,7 +85,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     result ??= CreateInstance(reflector, type!);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type.GetTypeName(pretty: true)}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
 
                 foreach (var field in data.fields)
                 {
@@ -111,10 +111,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     if (fieldInfo == null)
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field '{field.name}' not found on type '{type.GetTypeShortName()}'.");
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field '{field.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
 
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Field '{field.name}' not found on type '{type.GetTypeShortName()}'.");
+                            stringBuilder.AppendLine($"{padding}[Warning] Field '{field.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
 
                         continue;
                     }
@@ -127,7 +127,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     result ??= CreateInstance(reflector, type!);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type.GetTypeShortName()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type.GetTypeName(pretty: true)}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
 
                 foreach (var property in data.props)
                 {
@@ -153,20 +153,20 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                     if (propertyInfo == null)
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' not found on type '{type.GetTypeShortName()}'.");
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
 
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' not found on type '{type.GetTypeShortName()}'.");
+                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
 
                         continue;
                     }
                     if (!propertyInfo.CanWrite)
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' on type '{type.GetTypeShortName()}' is read-only and cannot be set.");
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' on type '{type.GetTypeName(pretty: false)}' is read-only and cannot be set.");
 
                         if (stringBuilder != null)
-                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' on type '{type.GetTypeShortName()}' is read-only and cannot be set.");
+                            stringBuilder.AppendLine($"{padding}[Warning] Property '{property.name}' on type '{type.GetTypeName(pretty: false)}' is read-only and cannot be set.");
 
                         continue;
                     }
@@ -239,7 +239,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}'.");
+                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeName(pretty: true)}' name='{data.name.ValueOrNull()}'.");
 
             var success = TryDeserializeValueInternal(
                 reflector,
@@ -253,12 +253,12 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
             if (success)
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized '{type.GetTypeShortName()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized '{type.GetTypeName(pretty: true)}'.");
             }
             else
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization '{type.GetTypeShortName()}' failed. Converter: {GetType().GetTypeShortName()}");
+                    logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization '{type.GetTypeName(pretty: false)}' failed. Converter: {GetType().GetTypeShortName()}");
             }
 
             return success;
@@ -310,7 +310,7 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 catch (JsonException ex)
                 {
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
-                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
 
                     if (stringBuilder != null)
                         stringBuilder.AppendLine($"{padding}[Warning] Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
@@ -318,10 +318,10 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 catch (NotSupportedException ex)
                 {
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
-                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
 
                     if (stringBuilder != null)
-                        stringBuilder.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: true)}' for member '{data.name.ValueOrNull()}':\n{padding}{ex.Message}");
+                        stringBuilder.AppendLine($"{padding}[Warning] Unsupported type '{type.GetTypeName(pretty: false)}' for member '{data.name.ValueOrNull()}':\n{padding}{ex.Message}");
                 }
 
                 result = reflector.GetDefaultValue(type);
@@ -349,8 +349,8 @@ namespace com.IvanMurzak.ReflectorNet.Convertor
                 }
                 catch (Exception ex)
                 {
-                    stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{padding}{ex.Message}");
-                    logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeShortName()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    stringBuilder?.AppendLine($"{padding}[Error] Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: false)}':\n{padding}{ex.Message}");
+                    logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
                     result = reflector.GetDefaultValue(type);
                     return false;
                 }

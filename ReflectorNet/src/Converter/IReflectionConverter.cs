@@ -12,9 +12,9 @@ using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public interface IReflectionConvertor
+    public interface IReflectionConverter
     {
         bool AllowCascadeSerialization { get; }
 

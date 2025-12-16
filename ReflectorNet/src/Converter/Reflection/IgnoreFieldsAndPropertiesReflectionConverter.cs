@@ -10,18 +10,18 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
     /// <summary>
     /// Converter for types that should be serialized/deserialized without their fields and properties.
     /// This is useful for types that should be treated as read-only during serialization.
     /// </summary>
-    public class IgnoreFieldsAndPropertiesReflectionConvertor<T> : GenericReflectionConvertor<T>
+    public class IgnoreFieldsAndPropertiesReflectionConverter<T> : GenericReflectionConverter<T>
     {
         readonly bool _ignoreFields;
         readonly bool _ignoreProperties;
 
-        public IgnoreFieldsAndPropertiesReflectionConvertor(bool ignoreFields, bool ignoreProperties)
+        public IgnoreFieldsAndPropertiesReflectionConverter(bool ignoreFields, bool ignoreProperties)
         {
             _ignoreFields = ignoreFields;
             _ignoreProperties = ignoreProperties;

@@ -9,9 +9,9 @@ using System;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public abstract class NotArrayReflectionConvertor<T> : BaseReflectionConvertor<T>
+    public abstract class NotArrayReflectionConverter<T> : BaseReflectionConverter<T>
     {
         public override int SerializationPriority(Type type, ILogger? logger = null)
         {

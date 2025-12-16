@@ -13,9 +13,9 @@ using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
 
-namespace com.IvanMurzak.ReflectorNet.Convertor
+namespace com.IvanMurzak.ReflectorNet.Converter
 {
-    public abstract partial class BaseReflectionConvertor<T> : IReflectionConvertor
+    public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         protected virtual IEnumerable<string> GetIgnoredFields() => Enumerable.Empty<string>();
         protected virtual IEnumerable<string> GetIgnoredProperties() => Enumerable.Empty<string>();
