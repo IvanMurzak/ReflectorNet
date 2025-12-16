@@ -19,10 +19,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             var stringBuilder = new System.Text.StringBuilder();
 
             foreach (var log in this)
-            {
-                var padding = StringUtils.GetPadding(log.Depth);
-                stringBuilder.AppendLine($"{padding}[{log.Type}] {log.Message.Replace("\n", $"\n{padding}")}");
-            }
+                stringBuilder.AppendLine(log.ToString());
 
             return stringBuilder.ToString();
         }
@@ -32,6 +29,12 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public int Depth { get; set; } = 0;
         public string Message { get; set; } = string.Empty;
         public LogType Type { get; set; } = LogType.Info;
+
+        public override string ToString()
+        {
+            var padding = StringUtils.GetPadding(Depth);
+            return $"{padding}[{Type}] {Message.Replace("\n", $"\n{padding}")}";
+        }
     }
     public enum LogType
     {
