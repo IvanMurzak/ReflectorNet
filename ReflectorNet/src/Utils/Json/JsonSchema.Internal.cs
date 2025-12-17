@@ -108,6 +108,24 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             // Handle generic collections, arrays and IEnumerable (T[], List<T>, IEnumerable<T>, etc.)
             if (TypeUtils.IsIEnumerable(type))
             {
+                if (type.IsArray && type.GetArrayRank() > 1)
+                {
+                    var rank = type.GetArrayRank();
+                    var elementType = type.GetElementType();
+                    if (elementType != null)
+                    {
+                        var innerType = rank == 2
+                            ? elementType.MakeArrayType()
+                            : elementType.MakeArrayType(rank - 1);
+
+                        return new JsonObject
+                        {
+                            [Type] = Array,
+                            [Items] = GetSchema(reflector, innerType, defines: defines)
+                        };
+                    }
+                }
+
                 var itemType = TypeUtils.GetEnumerableItemType(type);
                 if (itemType != null)
                 {
