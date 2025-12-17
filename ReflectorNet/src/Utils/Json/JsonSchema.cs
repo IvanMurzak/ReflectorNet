@@ -235,7 +235,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 return new JsonObject()
                 {
-                    [Error] = $"Unexpected schema type for '{type.GetTypeId()}'. Json Schema type: {schema.GetType().GetTypeName()}"
+                    [Error] = $"Unexpected schema type for '{type.GetTypeId()}'. Json Schema type: {schema.GetType().GetTypeId()}"
                 };
             }
             return schema;
@@ -311,7 +311,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 return new JsonObject()
                 {
-                    [Error] = $"Unexpected schema type for '{type.GetTypeId()}'. Json Schema type: {schema.GetType().GetTypeName()}"
+                    [Error] = $"Unexpected schema type for '{type.GetTypeId()}'. Json Schema type: {schema.GetType().GetTypeId()}"
                 };
             }
             return schema;

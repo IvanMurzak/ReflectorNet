@@ -6,10 +6,21 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
-        public const string ArraySuffix = "[]"; // _Array
+        public const string ArraySuffix = "[]";
 
-        public static string GetTypeName<T>(bool pretty = false) => GetTypeName(typeof(T), pretty);
-        public static string GetTypeName(Type? type, bool pretty = false)
+        /// <summary>
+        /// Returns the sanitized type name.
+        /// 1. Unwraps nullable types.
+        /// 2. Returns FullName.
+        /// </summary>
+        public static string Sanitize<T>() => Sanitize(typeof(T));
+
+        /// <summary>
+        /// Returns the sanitized type name.
+        /// 1. Unwraps nullable types.
+        /// 2. Returns FullName.
+        /// </summary>
+        public static string Sanitize(Type? type)
         {
             if (type == null)
                 return StringUtils.Null;
@@ -17,9 +28,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             // Handle nullable types
             type = Nullable.GetUnderlyingType(type) ?? type;
 
-            return pretty
-                ? type.FullName ?? StringUtils.Null
-                : type.AssemblyQualifiedName ?? StringUtils.Null;
+            return type.FullName ?? StringUtils.Null;
         }
         public static string GetTypeId<T>() => GetTypeId(typeof(T));
         public static string GetTypeId(Type type)
@@ -35,7 +44,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             // Special case: string is technically IEnumerable<char> but shouldn't be treated as an array
             if (type == typeof(string))
-                return GetTypeName(type, pretty: true);
+                return Sanitize(type);
 
             if (type.IsNested)
             {
@@ -78,7 +87,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             // If type is a generic type, use its full name with generic arguments
             if (type.IsGenericType)
             {
-                var genericTypeName = type.GetGenericTypeDefinition().GetTypeName(pretty: true);
+                var genericTypeName = type.GetGenericTypeDefinition().Sanitize();
                 if (StringUtils.IsNullOrEmpty(genericTypeName))
                     throw new InvalidOperationException($"Generic type '{type}' does not have a full name.");
 
@@ -104,7 +113,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return $"{GetTypeId(elementType)}[{new string(',', rank - 1)}]";
             }
 
-            return GetTypeName(type, pretty: true);
+            return Sanitize(type);
         }
 
         public static string GetSchemaTypeId<T>() => GetSchemaTypeId(typeof(T));
@@ -118,7 +127,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             // Special case: string is technically IEnumerable<char> but shouldn't be treated as an array
             if (type == typeof(string))
-                return GetTypeName(type, pretty: true);
+                return Sanitize(type);
 
             // If type is a generic type, use its full name with generic arguments
             if (type.IsGenericType)
@@ -141,7 +150,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     }
                 }
 
-                var genericTypeName = type.GetGenericTypeDefinition().GetTypeName(pretty: true);
+                var genericTypeName = type.GetGenericTypeDefinition().Sanitize();
                 if (StringUtils.IsNullOrEmpty(genericTypeName))
                     throw new InvalidOperationException($"Generic type '{type}' does not have a full name.");
 
@@ -162,7 +171,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return $"{GetSchemaTypeId(elementType)}{ArraySuffix}";
             }
 
-            return GetTypeName(type, pretty: true);
+            return Sanitize(type);
         }
 
         public static bool IsNameMatch(Type? type, string? typeName)
@@ -190,10 +199,51 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (type == null)
                 return StringUtils.Null;
 
+            if (type.IsGenericParameter)
+                return type.Name;
+
             // Handle nullable types
             var underlyingNullableType = Nullable.GetUnderlyingType(type);
             if (underlyingNullableType != null)
                 return $"{GetTypeShortName(underlyingNullableType)}?";
+
+            if (type.IsNested)
+            {
+                var declaringType = type.DeclaringType;
+                if (declaringType != null)
+                {
+                    if (declaringType.IsGenericTypeDefinition && type.IsGenericType && !type.IsGenericTypeDefinition)
+                    {
+                        var allArgs = type.GetGenericArguments();
+                        var declArgs = declaringType.GetGenericArguments();
+                        if (allArgs.Length >= declArgs.Length)
+                        {
+                            var properDeclArgs = allArgs.Take(declArgs.Length).ToArray();
+                            declaringType = declaringType.MakeGenericType(properDeclArgs);
+                        }
+                    }
+
+                    var declaringTypeName = GetTypeShortName(declaringType);
+                    var name = type.Name;
+                    var tickIndex = name.IndexOf('`');
+                    if (tickIndex > 0)
+                        name = name.Substring(0, tickIndex);
+
+                    if (type.IsGenericType)
+                    {
+                        var totalArgs = type.GetGenericArguments();
+                        var outerArgsCount = declaringType.IsGenericType ? declaringType.GetGenericArguments().Length : 0;
+
+                        if (totalArgs.Length > outerArgsCount)
+                        {
+                            var localArgs = totalArgs.Skip(outerArgsCount).Select(GetTypeShortName);
+                            return $"{declaringTypeName}+{name}<{string.Join(", ", localArgs)}>";
+                        }
+                    }
+
+                    return $"{declaringTypeName}+{name}";
+                }
+            }
 
             if (type.IsGenericType)
             {
@@ -208,7 +258,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (type.IsArray)
             {
                 var elementType = type.GetElementType();
-                return $"{GetTypeShortName(elementType)}[]";
+                var rank = type.GetArrayRank();
+                if (rank == 1)
+                    return $"{GetTypeShortName(elementType)}[]";
+
+                return $"{GetTypeShortName(elementType)}[{new string(',', rank - 1).Replace(",", ", ")}]";
             }
 
             return string.IsNullOrEmpty(type.Name) ? StringUtils.Null : type.Name;

@@ -16,7 +16,13 @@ namespace com.IvanMurzak.ReflectorNet
         public static JsonNode? GetSchema(this Type type, Reflector reflector) => reflector.GetSchema(type);
         public static JsonNode? GetSchemaRef(this Type type, Reflector reflector) => reflector.GetSchemaRef(type);
         public static string GetTypeShortName(this Type? type) => TypeUtils.GetTypeShortName(type);
-        public static string GetTypeName(this Type? type, bool pretty = false) => TypeUtils.GetTypeName(type, pretty: pretty);
+
+        /// <summary>
+        /// Returns the sanitized type name.
+        /// 1. Unwraps nullable types.
+        /// 2. Returns FullName.
+        /// </summary>
+        public static string Sanitize(this Type? type) => TypeUtils.Sanitize(type);
         public static string GetTypeId(this Type type) => TypeUtils.GetTypeId(type);
         public static string GetSchemaTypeId(this Type type) => TypeUtils.GetSchemaTypeId(type);
         public static bool IsMatch(this Type? type, string? typeName) => TypeUtils.IsNameMatch(type, typeName);

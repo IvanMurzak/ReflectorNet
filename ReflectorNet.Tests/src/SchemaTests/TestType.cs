@@ -57,22 +57,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(1, genericTypes.Count(x => x == typeof(SerializedMember)));
         }
 
-        void TestTypeName(Type type)
+        void TestTypeSanitize(Type type)
         {
-            var typeName = TypeUtils.GetTypeName(type, pretty: false);
-            Assert.Equal(type, TypeUtils.GetType(typeName));
-
-            typeName = TypeUtils.GetTypeName(type, pretty: true);
+            var typeName = TypeUtils.Sanitize(type);
             Assert.Equal(type, TypeUtils.GetType(typeName));
         }
-
-
 
         [Fact]
         public void GetTypeName_OuterAssembly()
         {
-            TestTypeName(typeof(OuterAssembly.Model.ParentClass));
-            TestTypeName(typeof(OuterAssembly.Model.ParentClass.NestedClass));
+            TestTypeSanitize(typeof(OuterAssembly.Model.ParentClass));
+            TestTypeSanitize(typeof(OuterAssembly.Model.ParentClass.NestedClass));
         }
     }
 }
