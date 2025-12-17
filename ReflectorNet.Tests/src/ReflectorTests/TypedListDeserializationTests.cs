@@ -227,7 +227,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             // Assert
             Assert.NotNull(deserialized);
-            _output.WriteLine($"Deserialized type: {deserialized.GetType().FullName}");
+            _output.WriteLine($"Deserialized type: {deserialized.GetType().GetTypeId()}");
 
             // Critical: Should be List<int>, not List<object?>
             Assert.IsType<List<int>>(deserialized);

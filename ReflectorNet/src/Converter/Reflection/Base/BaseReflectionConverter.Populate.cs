@@ -55,19 +55,19 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.");
+                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeId()}'.");
 
                     if (logs != null)
-                        logs.Error($"Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeName(pretty: false)}'.", depth);
+                        logs.Error($"Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeId()}'.", depth);
 
                     return false;
                 }
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeName(pretty: true)}'.");
+                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeId()}'.");
 
                 if (logs != null)
-                    logs.Success($"Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeName(pretty: true)}'.", depth);
+                    logs.Success($"Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeId()}'.", depth);
 
                 return true;
             }
@@ -75,10 +75,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (!TypeUtils.IsCastable(obj.GetType(), objType))
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.");
+                    logger.LogError($"{padding}Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeId().ValueOrNull()}'.");
 
                 if (logs != null)
-                    logs.Error($"Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeName(pretty: false).ValueOrNull()}'.", depth);
+                    logs.Error($"Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeId().ValueOrNull()}'.", depth);
 
                 return false;
             }
@@ -342,7 +342,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogTrace($"{padding}Populate field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 if (logs != null)
-                    logs.Info($"Populate field type='{fieldInfo.FieldType.GetTypeName(pretty: false).ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
+                    logs.Info($"Populate field type='{fieldInfo.FieldType.GetTypeId().ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
 
                 var currentValue = fieldInfo.GetValue(obj);
 
@@ -497,10 +497,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             try
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
+                    logger.LogTrace($"{padding}Populate property type='{propInfo.PropertyType.GetTypeId().ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 if (logs != null)
-                    logs.Info($"Populate property type='{propInfo.PropertyType.GetTypeName(pretty: false).ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
+                    logs.Info($"Populate property type='{propInfo.PropertyType.GetTypeId().ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
 
                 var currentValue = propInfo.GetValue(obj);
 

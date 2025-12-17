@@ -27,10 +27,16 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 ? MAX_DEPTH + 1
                 : 0;
         }
-        protected override SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
+        protected override SerializedMember InternalSerialize(
+            Reflector reflector,
+            object? obj,
+            Type type,
+            string? name = null,
+            bool recursive = true,
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             int depth = 0, Logs? logs = null,
-            ILogger? logger = null, SerializationContext? context = null)
+            ILogger? logger = null,
+            SerializationContext? context = null)
         {
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);
@@ -56,7 +62,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return null;
         }
 
-        protected override bool SetValue(Reflector reflector, ref object? obj, Type type, JsonElement? value, int depth = 0, Logs? logs = null, ILogger? logger = null)
+        protected override bool SetValue(
+            Reflector reflector,
+            ref object? obj,
+            Type type,
+            JsonElement? value,
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null)
         {
             var parsedValue = value.Deserialize(type, reflector);
             Print.SetNewValue(ref obj, ref parsedValue, type, depth, logs, logger);
@@ -84,7 +97,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             // Check if field type matches parsed value type
             if (!TypeUtils.IsCastable(type, fieldInfo.FieldType))
             {
-                logs?.Error($"Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to field type '{fieldInfo.FieldType.GetTypeName(pretty: false)}' for field '{fieldInfo.Name}'.", depth);
+                logs?.Error($"Parsed value type '{type?.GetTypeId().ValueOrNull()}' is not assignable to field type '{fieldInfo.FieldType.GetTypeId()}' for field '{fieldInfo.Name}'.", depth);
                 return false;
             }
 
@@ -120,7 +133,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             // Check if property type matches parsed value type
             if (!TypeUtils.IsCastable(type, propertyInfo.PropertyType))
             {
-                logs?.Error($"Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeName(pretty: false)}' for property '{propertyInfo.Name}'.", depth);
+                logs?.Error($"Parsed value type '{type?.GetTypeId().ValueOrNull()}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeId()}' for property '{propertyInfo.Name}'.", depth);
                 return false;
             }
 

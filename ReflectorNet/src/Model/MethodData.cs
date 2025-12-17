@@ -42,12 +42,12 @@ namespace com.IvanMurzak.ReflectorNet.Model
         {
             IsStatic = methodInfo.IsStatic;
             IsPublic = methodInfo.IsPublic;
-            ReturnType = methodInfo.ReturnType.GetTypeName(pretty: false);
+            ReturnType = methodInfo.ReturnType.GetTypeId();
             ReturnSchema = methodInfo.ReturnType == typeof(void)
                 ? null
                 : justRef
-                ? reflector.GetSchemaRef(methodInfo.ReturnType)
-                : reflector.GetSchema(methodInfo.ReturnType);
+                    ? reflector.GetSchemaRef(methodInfo.ReturnType)
+                    : reflector.GetSchema(methodInfo.ReturnType);
             InputParametersSchema = methodInfo.GetParameters()
                 ?.Select(parameter => justRef
                     ? reflector.GetSchemaRef(parameter.ParameterType)

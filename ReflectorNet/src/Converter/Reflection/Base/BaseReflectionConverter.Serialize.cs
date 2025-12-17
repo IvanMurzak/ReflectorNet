@@ -19,10 +19,17 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         protected virtual IEnumerable<string> GetIgnoredFields() => Enumerable.Empty<string>();
         protected virtual IEnumerable<string> GetIgnoredProperties() => Enumerable.Empty<string>();
 
-        public virtual SerializedMember Serialize(Reflector reflector, object? obj, Type? type = null, string? name = null, bool recursive = true,
+        public virtual SerializedMember Serialize(
+            Reflector reflector,
+            object? obj,
+            Type? type = null,
+            string? name = null,
+            bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            int depth = 0, Logs? logs = null,
-            ILogger? logger = null, SerializationContext? context = null)
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null,
+            SerializationContext? context = null)
         {
             return InternalSerialize(reflector, obj,
                 type: type ?? obj?.GetType() ?? typeof(T),
@@ -35,8 +42,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 context: context);
         }
 
-        protected virtual SerializedMemberList? SerializeFields(Reflector reflector, object obj, BindingFlags flags,
-            int depth = 0, Logs? logs = null, ILogger? logger = null, SerializationContext? context = null)
+        protected virtual SerializedMemberList? SerializeFields(
+            Reflector reflector,
+            object obj,
+            BindingFlags flags,
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null,
+            SerializationContext? context = null)
         {
             var serializedFields = default(SerializedMemberList);
             var objType = obj.GetType();
@@ -67,8 +80,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return serializedFields;
         }
 
-        protected virtual SerializedMemberList? SerializeProperties(Reflector reflector, object obj, BindingFlags flags,
-            int depth = 0, Logs? logs = null, ILogger? logger = null, SerializationContext? context = null)
+        protected virtual SerializedMemberList? SerializeProperties(
+            Reflector reflector,
+            object obj,
+            BindingFlags flags,
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null,
+            SerializationContext? context = null)
         {
             var serializedProperties = default(SerializedMemberList);
             var objType = obj.GetType();
@@ -102,9 +121,16 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return serializedProperties;
         }
 
-        protected abstract SerializedMember InternalSerialize(Reflector reflector, object? obj, Type type, string? name = null, bool recursive = true,
+        protected abstract SerializedMember InternalSerialize(
+            Reflector reflector,
+            object? obj,
+            Type type,
+            string? name = null,
+            bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            int depth = 0, Logs? logs = null,
-            ILogger? logger = null, SerializationContext? context = null);
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null,
+            SerializationContext? context = null);
     }
 }

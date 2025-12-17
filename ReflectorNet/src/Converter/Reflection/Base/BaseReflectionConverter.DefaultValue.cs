@@ -87,7 +87,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 var elementType = type.GetElementType();
                 if (elementType == null)
-                    throw new ArgumentException($"Array type '{type.FullName}' has no element type.");
+                    throw new ArgumentException($"Array type '{type.GetTypeId()}' has no element type.");
 
                 return Array.CreateInstance(elementType, 0); // Create empty array
             }
@@ -96,7 +96,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (type.IsInterface || type.IsAbstract)
             {
                 // Cannot create instance of interface or abstract class
-                throw new InvalidOperationException($"Cannot create instance of type '{type.GetTypeName(pretty: false)}' because it is an interface or abstract class.");
+                throw new InvalidOperationException($"Cannot create instance of type '{type.GetTypeId()}' because it is an interface or abstract class.");
             }
 
             // Handle classes with parameterless constructors
@@ -128,7 +128,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             }
             catch
             {
-                throw new ArgumentException($"Type '{type.GetTypeName(pretty: false)}' does not have a constructor or is not a value type or primitive type.");
+                throw new ArgumentException($"Type '{type.GetTypeId()}' does not have a constructor or is not a value type or primitive type.");
             }
         }
 

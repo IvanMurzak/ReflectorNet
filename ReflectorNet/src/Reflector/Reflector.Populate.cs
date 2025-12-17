@@ -60,9 +60,9 @@ namespace com.IvanMurzak.ReflectorNet
             if (converter == null)
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}No suitable converter found for type {objType.GetTypeName(pretty: false)}");
+                    logger.LogError($"{padding}No suitable converter found for type '{objType.GetTypeId()}'");
 
-                logs?.Error($"No suitable converter found for type {objType.GetTypeName(pretty: false)}", depth);
+                logs?.Error($"No suitable converter found for type '{objType.GetTypeId()}'", depth);
 
                 return false;
             }

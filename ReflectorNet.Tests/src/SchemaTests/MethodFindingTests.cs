@@ -79,7 +79,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 MethodName = nameof(TestClass.SerializedMemberList_ReturnString),
                 InputParameters = new List<MethodRef.Parameter>
                 {
-                    new() { TypeName = typeof(SerializedMemberList).GetTypeName(pretty: false), Name = "gameObjectDiffs" }
+                    new() { TypeName = typeof(SerializedMemberList).GetTypeId(), Name = "gameObjectDiffs" }
                 }
             };
 

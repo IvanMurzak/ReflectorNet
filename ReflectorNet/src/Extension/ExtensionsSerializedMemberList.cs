@@ -84,7 +84,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (string.IsNullOrEmpty(parameter.typeName))
                 {
                     var methodParameter = methodParameters[i];
-                    var typeName = methodParameter?.ParameterType?.GetTypeName(pretty: false);
+                    var typeName = methodParameter?.ParameterType?.GetTypeId();
                     if (typeName == null)
                         continue;
                     parameter.typeName = typeName;

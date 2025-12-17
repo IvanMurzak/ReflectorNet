@@ -81,9 +81,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger.LogWarning("{padding}{icon} Failed to get element type for array type '{typeName}'",
                             padding,
                             Consts.Emoji.Warn,
-                            type.GetTypeName(pretty: true));
+                            type.GetTypeId());
                     }
-                    logs?.Warning($"Failed to get element type for array type '{type.GetTypeName(pretty: true)}'.", depth);
+                    logs?.Warning($"Failed to get element type for array type '{type.GetTypeId()}'.", depth);
                     return null;
                 }
 
@@ -95,9 +95,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger.LogWarning("{padding}{icon} Failed to create array instance for type '{typeName}'",
                             padding,
                             Consts.Emoji.Warn,
-                            type.GetTypeName(pretty: true));
+                            type.GetTypeId());
                     }
-                    logs?.Warning($"Failed to create array instance for type '{type.GetTypeName(pretty: true)}'.", depth);
+                    logs?.Warning($"Failed to create array instance for type '{type.GetTypeId()}'.", depth);
                     return null;
                 }
 
@@ -138,7 +138,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger.LogWarning("{padding}{icon} Failed to create list instance for type '{typeName}'",
                             padding,
                             Consts.Emoji.Warn,
-                            type.GetTypeName(pretty: true));
+                            type.GetTypeId());
                     }
                     return null;
                 }
@@ -151,7 +151,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger.LogError("{padding}{icon} Failed to find 'Add' method on list type='{typeName}'",
                             padding,
                             Consts.Emoji.Fail,
-                            type.GetTypeName(pretty: true));
+                            type.GetTypeId());
                     }
                     return null;
                 }
@@ -177,11 +177,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     i++;
                 }
 
-                logger?.LogInformation("{padding}Successfully created list of type='{typeName}'", padding, list.GetType().GetTypeName(pretty: true));
+                logger?.LogInformation("{padding}Successfully created list of type='{typeName}'", padding, list.GetType().GetTypeId());
                 return list;
             }
 
-            logger?.LogWarning("{padding}Type '{typeName}' is neither array nor generic list", padding, type.GetTypeName(pretty: true));
+            logger?.LogWarning("{padding}Type '{typeName}' is neither array nor generic list", padding, type.GetTypeId());
             return null;
         }
 
@@ -200,7 +200,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 logger.LogTrace("{padding}TryDeserializeValueInternal type='{typeName}', name='{name}', AllowCascadeSerialize={AllowCascadeSerialize}, Converter='{ConverterName}'",
                     padding,
-                    type.GetTypeName(pretty: true),
+                    type.GetTypeId(),
                     serializedMember.name.ValueOrNull(),
                     AllowCascadeSerialization,
                     GetType().Name);
@@ -217,7 +217,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger.LogWarning("{padding}{icon} 'value' is null for type='{typeName}', name='{name}'. Converter='{ConverterName}'",
                             padding,
                             Consts.Emoji.Warn,
-                            type.GetTypeName(pretty: false),
+                            type.GetTypeId(),
                             serializedMember.name.ValueOrNull(),
                             GetType().Name);
                     }

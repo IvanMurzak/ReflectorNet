@@ -33,14 +33,14 @@ namespace com.IvanMurzak.ReflectorNet
                 => "[Error] Property type is empty. It should be a valid property type.";
 
             public static string InvalidInstanceID(Type holderType, string? fieldName)
-                => $"[Error] Invalid instanceID '{fieldName.ValueOrNull()}' for '{holderType.GetTypeName(pretty: false)}'. It should be a valid field name.";
+                => $"[Error] Invalid instanceID '{fieldName.ValueOrNull()}' for '{holderType.GetTypeId()}'. It should be a valid field name.";
             public static string InvalidPropertyType(SerializedMember serializedProperty, PropertyInfo propertyInfo)
-                => $"[Error] Invalid property type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.PropertyType.GetTypeName(pretty: false)}' or extended from it.";
+                => $"[Error] Invalid property type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.PropertyType.GetTypeId()}' or extended from it.";
             public static string InvalidFieldType(SerializedMember serializedProperty, FieldInfo propertyInfo)
-                => $"[Error] Invalid field type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.FieldType.GetTypeName(pretty: false)}' or extended from it.";
+                => $"[Error] Invalid field type '{serializedProperty.typeName.ValueOrNull()}' for '{propertyInfo.Name}'. Expected '{propertyInfo.FieldType.GetTypeId()}' or extended from it.";
 
             public static string NotSupportedInRuntime(Type type)
-                => $"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' is not supported in runtime for now.";
+                => $"[Error] Type '{type.GetTypeId().ValueOrNull()}' is not supported in runtime for now.";
 
             public static string MoreThanOneMethodFound(Reflector reflector, List<MethodInfo> methods)
             {

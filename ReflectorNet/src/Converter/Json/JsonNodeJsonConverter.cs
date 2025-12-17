@@ -27,7 +27,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                throw new JsonException($"Cannot convert null to non-nullable type '{typeToConvert.GetTypeId()}'.");
             }
 
             if (reader.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
@@ -38,7 +38,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 return CreateJsonNode(clonedElement);
             }
 
-            throw new JsonException($"Expected Null, StartObject or StartArray token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
+            throw new JsonException($"Expected Null, StartObject or StartArray token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'");
         }
 
         public override void Write(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)

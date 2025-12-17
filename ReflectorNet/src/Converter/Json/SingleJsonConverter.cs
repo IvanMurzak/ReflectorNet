@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                throw new JsonException($"Cannot convert null to non-nullable type '{typeToConvert.GetTypeId()}'.");
             }
 
             // Handle direct number tokens
@@ -51,13 +51,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type '{typeToConvert.GetTypeId()}'.");
                 }
 
                 return ParseSingle(stringValue);
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
@@ -69,14 +69,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
         {
             if (float.TryParse(stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
                 return result;
-            throw new JsonException($"Unable to convert '{stringValue}' to {typeof(float).GetTypeName(pretty: true)}.");
+            throw new JsonException($"Unable to convert '{stringValue}' to {typeof(float).GetTypeId()}.");
         }
 
         private static float ConvertToFloat(double value)
         {
             if (value >= float.MinValue && value <= float.MaxValue)
                 return (float)value;
-            throw new JsonException($"Value {value} is out of range for {typeof(float).GetTypeName(pretty: true)}.");
+            throw new JsonException($"Value {value} is out of range for {typeof(float).GetTypeId()}.");
         }
     }
 }

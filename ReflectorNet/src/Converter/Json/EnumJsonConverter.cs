@@ -31,7 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                throw new JsonException($"Cannot convert null to non-nullable type '{typeToConvert.GetTypeId()}'.");
             }
 
             var underlyingType = Nullable.GetUnderlyingType(typeToConvert) ?? typeToConvert;
@@ -57,7 +57,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type '{typeToConvert.GetTypeId()}'.");
                 }
 
                 if (!Enum.TryParse(underlyingType, stringValue, ignoreCase: true, out var enumValue))
@@ -69,7 +69,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Unable to convert '{stringValue}' to enum {underlyingType.Name}. Valid values are: {string.Join(", ", Enum.GetNames(underlyingType))}");
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for enum type {typeToConvert.GetTypeName(pretty: true)}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for enum type '{typeToConvert.GetTypeId()}'");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)

@@ -163,7 +163,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 {
                     var genericArgs = TypeUtils.GetDictionaryGenericArguments(type);
                     if (genericArgs == null)
-                        throw new InvalidOperationException($"Unable to get generic arguments for dictionary type '{type.GetTypeName(pretty: false)}'.");
+                        throw new InvalidOperationException($"Unable to get generic arguments for dictionary type '{type.GetTypeId()}'.");
 
                     foreach (var genericArgument in genericArgs)
                     {
@@ -222,12 +222,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 // Handle exceptions and return null or an error message
                 return new JsonObject()
                 {
-                    [Error] = $"Failed to get schema for '{type.GetTypeName(pretty: false)}':\n{ex.Message}\n{ex.StackTrace}\n"
+                    [Error] = $"Failed to get schema for '{type.GetTypeId()}':\n{ex.Message}\n{ex.StackTrace}\n"
                 };
             }
 
             if (schema == null)
-                throw new InvalidOperationException($"Failed to get schema for type '{type.GetTypeName(pretty: false)}'.");
+                throw new InvalidOperationException($"Failed to get schema for type '{type.GetTypeId()}'.");
 
             PostprocessFields(schema);
 
@@ -235,7 +235,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 return new JsonObject()
                 {
-                    [Error] = $"Unexpected schema type for '{type.GetTypeName(pretty: false)}'. Json Schema type: {schema.GetType().GetTypeName()}"
+                    [Error] = $"Unexpected schema type for '{type.GetTypeId()}'. Json Schema type: {schema.GetType().GetTypeName()}"
                 };
             }
             return schema;
@@ -298,12 +298,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 // Handle exceptions and return null or an error message
                 return new JsonObject()
                 {
-                    [Error] = $"Failed to get schema for '{type.GetTypeName(pretty: false)}':\n{ex.Message}\n{ex.StackTrace}\n"
+                    [Error] = $"Failed to get schema for '{type.GetTypeId()}':\n{ex.Message}\n{ex.StackTrace}\n"
                 };
             }
 
             if (schema == null)
-                throw new InvalidOperationException($"Failed to get schema for type '{type.GetTypeName(pretty: false)}'.");
+                throw new InvalidOperationException($"Failed to get schema for type '{type.GetTypeId()}'.");
 
             PostprocessFields(schema);
 
@@ -311,7 +311,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 return new JsonObject()
                 {
-                    [Error] = $"Unexpected schema type for '{type.GetTypeName(pretty: false)}'. Json Schema type: {schema.GetType().GetTypeName()}"
+                    [Error] = $"Unexpected schema type for '{type.GetTypeId()}'. Json Schema type: {schema.GetType().GetTypeName()}"
                 };
             }
             return schema;

@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 return;
             }
 
-            writer.WriteStringValue(value.GetTypeName(pretty: false));
+            writer.WriteStringValue(value.GetTypeId());
         }
     }
 }

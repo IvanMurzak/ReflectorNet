@@ -31,7 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             var type = original?.GetType() ?? fallbackType;
 
-            _output.WriteLine($"### Test for type: {type?.GetTypeName(pretty: true) ?? "null"}\n");
+            _output.WriteLine($"### Test for type: {type?.GetTypeId() ?? "null"}\n");
             _output.WriteLine($"Serialization:\n{serializeLogger}");
 
             var deserializeLogger = new StringBuilderLogger();
@@ -49,12 +49,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             // For System.Type and System.Reflection.Assembly, we verify the essential identity information
             if (original is Type originalType && deserialized is Type deserializedType)
             {
-                _output.WriteLine($"Original Type: {originalType.FullName}");
-                _output.WriteLine($"Deserialized Type: {deserializedType.FullName}");
+                _output.WriteLine($"Original Type: {originalType.GetTypeId()}");
+                _output.WriteLine($"Deserialized Type: {deserializedType.GetTypeId()}");
                 _output.WriteLine($"Original Assembly: {originalType.Assembly.FullName}");
                 _output.WriteLine($"Deserialized Assembly: {deserializedType.Assembly.FullName}");
 
-                Assert.Equal(originalType.FullName, deserializedType.FullName);
+                Assert.Equal(originalType.GetTypeId(), deserializedType.GetTypeId());
                 Assert.Equal(originalType.Assembly.FullName, deserializedType.Assembly.FullName);
                 Assert.Equal(originalType, deserializedType);
             }

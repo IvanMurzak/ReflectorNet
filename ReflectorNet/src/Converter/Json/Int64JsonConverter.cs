@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                throw new JsonException($"Cannot convert null to non-nullable type '{typeToConvert.GetTypeId()}'.");
             }
 
             // Handle direct number tokens
@@ -51,13 +51,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                    throw new JsonException($"Cannot convert null string to non-nullable type '{typeToConvert.GetTypeId()}'.");
                 }
 
                 return ParseInt64(stringValue);
             }
 
-            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}");
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
@@ -69,14 +69,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
         {
             if (long.TryParse(stringValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
                 return result;
-            throw new JsonException($"Unable to convert '{stringValue}' to {typeof(long).GetTypeName(pretty: true)}.");
+            throw new JsonException($"Unable to convert '{stringValue}' to {typeof(long).GetTypeId()}.");
         }
 
         private static long ConvertToInt64(double value)
         {
             if (value >= long.MinValue && value <= long.MaxValue && value == Math.Floor(value))
                 return (long)value;
-            throw new JsonException($"Value {value} is out of range for {typeof(long).GetTypeName(pretty: true)}.");
+            throw new JsonException($"Value {value} is out of range for {typeof(long).GetTypeId()}.");
         }
     }
 }

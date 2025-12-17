@@ -31,7 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
                     return null;
 
-                throw new JsonException($"Cannot convert null to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.");
+                throw new JsonException($"Cannot convert null to non-nullable type '{typeToConvert.GetTypeId()}'.");
             }
 
             // Handle direct boolean tokens
@@ -54,16 +54,16 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type {typeToConvert.GetTypeName(pretty: true)}.\nInput value: null");
+                    throw new JsonException($"Cannot convert null string to non-nullable type '{typeToConvert.GetTypeId()}'.\nInput value: null");
                 }
 
                 if (bool.TryParse(stringValue, out var boolResult))
                     return boolResult;
 
-                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(bool).GetTypeName(pretty: true)}.\nInput value: {stringValue}");
+                throw new JsonException($"Unable to convert '{stringValue}' to '{typeof(bool).GetTypeId()}'.\nInput value: {stringValue}");
             }
 
-            throw new JsonException($"Expected string, boolean, or number token but got {reader.TokenType} for type {typeToConvert.GetTypeName(pretty: true)}.");
+            throw new JsonException($"Expected string, boolean, or number token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'.");
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)

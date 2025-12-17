@@ -38,7 +38,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         {
             if (obj is Type typeObj)
             {
-                var typeName = typeObj.GetTypeName(pretty: false);
+                // Use typeObj (the actual Type being serialized) not type (which is RuntimeType)
+                var typeName = typeObj.GetTypeId();
                 return SerializedMember.FromValue(reflector, type, typeName, name: name);
             }
 
