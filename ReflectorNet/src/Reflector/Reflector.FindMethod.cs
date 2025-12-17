@@ -100,7 +100,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (parameter.Name != methodRefParameter.Name)
                     return 1;
 
-                if (parameter.ParameterType.GetTypeName(pretty: false) != methodRefParameter.TypeName)
+                if (parameter.ParameterType.GetTypeId() != methodRefParameter.TypeName)
                     return 1;
             }
 

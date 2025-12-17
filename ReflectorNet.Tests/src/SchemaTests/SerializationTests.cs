@@ -27,7 +27,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(serialized);
-            Assert.Equal(typeof(GameObjectRef).GetTypeName(pretty: false), serialized.typeName);
+            Assert.Equal(typeof(GameObjectRef).GetTypeId(), serialized.typeName);
             Assert.NotNull(serialized.valueJsonElement);
             _output.WriteLine($"Serialized GameObjectRef: {serialized.ToJson(reflector)}");
         }
@@ -75,7 +75,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(serialized);
-            Assert.Equal(typeof(string[]).GetTypeName(pretty: false), serialized.typeName);
+            Assert.Equal(typeof(string[]).GetTypeId(), serialized.typeName);
             _output.WriteLine($"Serialized string array: {serialized.ToJson(reflector)}");
         }
 
@@ -111,7 +111,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(serialized);
-            Assert.Equal(typeof(GameObjectRef).GetTypeName(pretty: false), serialized.typeName);
+            Assert.Equal(typeof(GameObjectRef).GetTypeId(), serialized.typeName);
             Assert.Null(serialized.valueJsonElement);
             _output.WriteLine($"Serialized null value: {serialized.ToJson(reflector)}");
         }
@@ -125,7 +125,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Create a SerializedMember with null value
             var serialized = new SerializedMember
             {
-                typeName = typeof(GameObjectRef).GetTypeName(pretty: false)!,
+                typeName = typeof(GameObjectRef).GetTypeId()!,
                 valueJsonElement = null
             };
 
@@ -154,7 +154,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(serialized);
-            Assert.Equal(typeof(GameObjectRefList).GetTypeName(pretty: false), serialized.typeName);
+            Assert.Equal(typeof(GameObjectRefList).GetTypeId(), serialized.typeName);
             _output.WriteLine($"Serialized GameObjectRefList: {serialized.ToJson(reflector)}");
         }
 
@@ -200,7 +200,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Assert
             Assert.NotNull(serialized);
-            Assert.Equal(typeof(string[]).GetTypeName(pretty: false), serialized.typeName);
+            Assert.Equal(typeof(string[]).GetTypeId(), serialized.typeName);
             _output.WriteLine($"Serialized empty array: {serialized.ToJson(reflector)}");
         }
 
@@ -237,8 +237,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Assert
             Assert.NotNull(publicOnlySerialized);
             Assert.NotNull(allMembersSerialized);
-            Assert.Equal(typeof(TestClass).GetTypeName(pretty: false), publicOnlySerialized.typeName);
-            Assert.Equal(typeof(TestClass).GetTypeName(pretty: false), allMembersSerialized.typeName);
+            Assert.Equal(typeof(TestClass).GetTypeId(), publicOnlySerialized.typeName);
+            Assert.Equal(typeof(TestClass).GetTypeId(), allMembersSerialized.typeName);
 
             _output.WriteLine("BindingFlags serialization control test passed");
         }

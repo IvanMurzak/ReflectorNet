@@ -17,7 +17,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var type = typeof(SerializedMemberList);
             var genericTypes = TypeUtils.GetGenericTypes(type).ToList();
 
-            _output.WriteLine($"Generic types for {type.GetTypeName(pretty: true)}: {string.Join(", ", genericTypes.Select(t => t.GetTypeName(pretty: true)))}");
+            _output.WriteLine($"Generic types for {type.GetTypeId()}: {string.Join(", ", genericTypes.Select(t => t.GetTypeId()))}");
 
             Assert.NotEmpty(genericTypes);
 
@@ -31,7 +31,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var type = typeof(List<SerializedMemberList>);
             var genericTypes = TypeUtils.GetGenericTypes(type).ToList();
 
-            _output.WriteLine($"Generic types for {type.GetTypeName(pretty: true)}: {string.Join(", ", genericTypes.Select(t => t.GetTypeName(pretty: true)))}");
+            _output.WriteLine($"Generic types for {type.GetTypeId()}: {string.Join(", ", genericTypes.Select(t => t.GetTypeId()))}");
 
             Assert.NotEmpty(genericTypes);
 
@@ -48,7 +48,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var type = typeof(List<SerializedMember>);
             var genericTypes = TypeUtils.GetGenericTypes(type).ToList();
 
-            _output.WriteLine($"Generic types for {type.GetTypeName(pretty: true)}: {string.Join(", ", genericTypes.Select(t => t.GetTypeName(pretty: true)))}");
+            _output.WriteLine($"Generic types for {type.GetTypeId()}: {string.Join(", ", genericTypes.Select(t => t.GetTypeId()))}");
 
             Assert.NotEmpty(genericTypes);
 
@@ -57,22 +57,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(1, genericTypes.Count(x => x == typeof(SerializedMember)));
         }
 
-        void TestTypeName(Type type)
+        void TestTypeSanitize(Type type)
         {
-            var typeName = TypeUtils.GetTypeName(type, pretty: false);
-            Assert.Equal(type, TypeUtils.GetType(typeName));
-
-            typeName = TypeUtils.GetTypeName(type, pretty: true);
+            var typeName = TypeUtils.Sanitize(type);
             Assert.Equal(type, TypeUtils.GetType(typeName));
         }
-
-        
 
         [Fact]
         public void GetTypeName_OuterAssembly()
         {
-            TestTypeName(typeof(OuterAssembly.Model.ParentClass));
-            TestTypeName(typeof(OuterAssembly.Model.ParentClass.NestedClass));
+            TestTypeSanitize(typeof(OuterAssembly.Model.ParentClass));
+            TestTypeSanitize(typeof(OuterAssembly.Model.ParentClass.NestedClass));
         }
     }
 }

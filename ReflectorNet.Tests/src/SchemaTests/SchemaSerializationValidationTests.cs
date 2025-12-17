@@ -24,7 +24,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         /// </summary>
         private void ValidateTypeSchemaAndRoundTrip(Type type, object? instance, Reflector reflector)
         {
-            var typeName = type.GetTypeName(pretty: true);
+            var typeName = type.GetTypeId();
             _output.WriteLine($"=== Testing type: {typeName} ===");
 
             // Step 1: Generate schema and validate it has no errors

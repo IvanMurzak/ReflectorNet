@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -19,22 +20,453 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public static IEnumerable<Type> AllTypes => AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes());
 
+        // Cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
+        private static readonly ConcurrentDictionary<string, Type?> _typeCache = new ConcurrentDictionary<string, Type?>();
+
         public static Type? GetType(string? typeName)
         {
             if (string.IsNullOrWhiteSpace(typeName))
                 return null;
 
+            // Check cache first
+            if (_typeCache.TryGetValue(typeName, out var cachedType))
+                return cachedType;
+
             // First try built-in Type.GetType() which handles many formats
-            var type = Type.GetType(typeName, throwOnError: false);
+            Type? type = null;
+            try
+            {
+                type = Type.GetType(typeName, throwOnError: false);
+            }
+            catch
+            {
+                // Ignore exceptions (e.g. invalid assembly name) and try other resolution methods
+            }
+
             if (type != null)
+            {
+                _typeCache[typeName] = type;
                 return type;
+            }
+
+            // Try resolving array types (e.g., "Namespace.Type[]")
+            type = TryResolveArrayType(typeName);
+            if (type != null)
+            {
+                _typeCache[typeName] = type;
+                return type;
+            }
+
+            // Try resolving C#-style generic types (e.g., "Namespace.Generic<TypeArg>" or "Namespace.Generic<TypeArg1, TypeArg2>")
+            type = TryResolveCSharpGenericType(typeName);
+            if (type != null)
+            {
+                _typeCache[typeName] = type;
+                return type;
+            }
+
+            // Try resolving generic types (e.g., "Namespace.Generic`1[[TypeArg]]")
+            type = TryResolveClassicGenericType(typeName);
+            if (type != null)
+            {
+                _typeCache[typeName] = type;
+                return type;
+            }
 
             // If Type.GetType() fails, try to find the type in all loaded assemblies
             type = AllTypes.FirstOrDefault(t =>
                 typeName == t.FullName ||
-                typeName == t.AssemblyQualifiedName);
+                typeName == t.AssemblyQualifiedName ||
+                typeName == t.GetTypeId());
+
+            // Caching the result (even if null)
+            _typeCache[typeName] = type;
 
             return type;
+        }
+
+        /// <summary>
+        /// Attempts to resolve a simple (non-generic, non-array) type by name.
+        /// </summary>
+        private static Type? ResolveSimpleType(string name)
+        {
+            var type = Type.GetType(name, throwOnError: false);
+            if (type != null)
+                return type;
+
+            return AllTypes.FirstOrDefault(t =>
+                name == t.AssemblyQualifiedName ||
+                name == t.FullName ||
+                name == t.Name);
+        }
+
+        /// <summary>
+        /// Attempts to resolve array type names (e.g., "Namespace.Type[]").
+        /// </summary>
+        private static Type? TryResolveArrayType(string typeName)
+        {
+            if (!typeName.EndsWith("]"))
+                return null;
+
+            var lastOpenBracket = typeName.LastIndexOf('[');
+            if (lastOpenBracket < 0)
+                return null;
+
+            var suffix = typeName.Substring(lastOpenBracket);
+            // Check if content contains only commas
+            var content = suffix.Substring(1, suffix.Length - 2);
+            if (content.Length > 0 && content.Any(c => c != ','))
+                return null;
+
+            var commas = content.Length;
+            var elementTypeName = typeName.Substring(0, lastOpenBracket);
+            var elementType = GetType(elementTypeName);
+
+            if (elementType == null) return null;
+
+            return commas == 0
+                ? elementType.MakeArrayType()
+                : elementType.MakeArrayType(commas + 1);
+        }
+
+        /// <summary>
+        /// Attempts to resolve C#-style generic types.
+        /// Handles formats like: "Namespace.Generic&lt;TypeArg&gt;" or "Namespace.Generic&lt;TypeArg1, TypeArg2&gt;"
+        /// Also handles nested types: "Namespace.Generic&lt;TypeArg&gt;+Nested" or "Namespace.Generic&lt;TypeArg&gt;+Nested&lt;TypeArg2&gt;"
+        /// Space after comma is optional.
+        /// </summary>
+        private static Type? TryResolveCSharpGenericType(string typeName)
+        {
+            // Find the opening angle bracket
+            var openBracketIndex = typeName.IndexOf('<');
+            if (openBracketIndex < 0)
+                return null;
+
+            // Find the matching closing angle bracket
+            var closeBracketIndex = FindMatchingCloseBracket(typeName, openBracketIndex);
+            if (closeBracketIndex < 0)
+                return null;
+
+            // Extract the base type name (everything before '<')
+            var baseTypeName = typeName.Substring(0, openBracketIndex);
+            if (string.IsNullOrWhiteSpace(baseTypeName))
+                return null;
+
+            // Extract the type arguments string (between '<' and '>')
+            var typeArgsString = typeName.Substring(openBracketIndex + 1, closeBracketIndex - openBracketIndex - 1);
+
+            // Parse the type arguments
+            var typeArgNames = ParseCSharpGenericArguments(typeArgsString);
+            if (typeArgNames == null || typeArgNames.Length == 0)
+                return null;
+
+            // Construct the generic type definition name (e.g., "Namespace.Generic`2")
+            var genericDefName = $"{baseTypeName}`{typeArgNames.Length}";
+
+            // Resolve the generic type definition
+            var genericDef = ResolveSimpleType(genericDefName);
+            if (genericDef == null || !genericDef.IsGenericTypeDefinition)
+                return null;
+
+            // Resolve each type argument
+            var typeArgs = new Type[typeArgNames.Length];
+            for (int i = 0; i < typeArgNames.Length; i++)
+            {
+                var argType = GetType(typeArgNames[i].Trim());
+                if (argType == null)
+                    return null;
+                typeArgs[i] = argType;
+            }
+
+            Type? currentType;
+            try
+            {
+                currentType = genericDef.MakeGenericType(typeArgs);
+            }
+            catch
+            {
+                return null;
+            }
+
+            // Handle nested types appended after the generic arguments
+            var remaining = typeName.Substring(closeBracketIndex + 1);
+            while (!string.IsNullOrEmpty(remaining))
+            {
+                if (!remaining.StartsWith("+") && !remaining.StartsWith("."))
+                    return null;
+
+                remaining = remaining.Substring(1); // Remove separator
+
+                // Check for generic args
+                var open = remaining.IndexOf('<');
+                string nestedName;
+                Type[]? nestedArgs = null;
+                int nextRemainingIndex;
+
+                if (open > 0)
+                {
+                    var close = FindMatchingCloseBracket(remaining, open);
+                    if (close < 0) return null;
+
+                    nestedName = remaining.Substring(0, open);
+                    var argsStr = remaining.Substring(open + 1, close - open - 1);
+                    var argNames = ParseCSharpGenericArguments(argsStr);
+                    if (argNames == null) return null;
+
+                    nestedArgs = new Type[argNames.Length];
+                    for (int i = 0; i < argNames.Length; i++)
+                    {
+                        var tempType = GetType(argNames[i]?.Trim());
+                        if (tempType == null) return null;
+                        nestedArgs[i] = tempType;
+                    }
+
+                    nextRemainingIndex = close + 1;
+                }
+                else
+                {
+                    // No generic args, but check if there are more separators
+                    var nextSep = remaining.IndexOfAny(new[] { '+', '.' });
+                    if (nextSep > 0)
+                    {
+                        nestedName = remaining.Substring(0, nextSep);
+                        nextRemainingIndex = nextSep;
+                    }
+                    else
+                    {
+                        nestedName = remaining;
+                        nextRemainingIndex = remaining.Length;
+                    }
+                }
+
+                // Find nested type
+                Type? nestedType;
+                Type[] allArgs;
+
+                if (nestedArgs != null)
+                {
+                    nestedType = currentType.GetNestedType($"{nestedName}`{nestedArgs.Length}");
+                    if (nestedType == null) return null;
+
+                    if (currentType.IsGenericType && !currentType.IsGenericTypeDefinition)
+                    {
+                        var parentArgs = currentType.GetGenericArguments();
+                        allArgs = new Type[parentArgs.Length + nestedArgs.Length];
+                        Array.Copy(parentArgs, allArgs, parentArgs.Length);
+                        Array.Copy(nestedArgs, 0, allArgs, parentArgs.Length, nestedArgs.Length);
+                    }
+                    else
+                    {
+                        allArgs = nestedArgs;
+                    }
+                }
+                else
+                {
+                    nestedType = currentType.GetNestedType(nestedName);
+                    if (nestedType == null) return null;
+
+                    allArgs = currentType.IsGenericType && !currentType.IsGenericTypeDefinition
+                        ? currentType.GetGenericArguments()
+                        : Type.EmptyTypes;
+                }
+
+                if (nestedType.IsGenericTypeDefinition)
+                {
+                    try
+                    {
+                        currentType = nestedType.GetGenericArguments().Length == allArgs.Length
+                            ? nestedType.MakeGenericType(allArgs)
+                            : nestedType;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    currentType = nestedType;
+                }
+
+                remaining = remaining.Substring(nextRemainingIndex);
+            }
+
+            return currentType;
+        }
+
+        /// <summary>
+        /// Finds the matching closing angle bracket for an opening bracket.
+        /// Handles nested generic types properly.
+        /// </summary>
+        private static int FindMatchingCloseBracket(string typeName, int openIndex)
+        {
+            var depth = 0;
+            for (int i = openIndex; i < typeName.Length; i++)
+            {
+                if (typeName[i] == '<')
+                    depth++;
+                else if (typeName[i] == '>')
+                {
+                    depth--;
+                    if (depth == 0)
+                        return i;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Parses C#-style generic arguments from a string like "TypeArg1, TypeArg2" or "List&lt;int&gt;, string".
+        /// Handles nested generic types by tracking bracket depth.
+        /// </summary>
+        private static string[]? ParseCSharpGenericArguments(string argsString)
+        {
+            if (string.IsNullOrWhiteSpace(argsString))
+                return null;
+
+            var args = new List<string>();
+            var depth = 0;
+            var currentArg = new System.Text.StringBuilder();
+
+            for (int i = 0; i < argsString.Length; i++)
+            {
+                var c = argsString[i];
+
+                if (c == '<')
+                {
+                    depth++;
+                    currentArg.Append(c);
+                }
+                else if (c == '>')
+                {
+                    depth--;
+                    currentArg.Append(c);
+                }
+                else if (c == ',' && depth == 0)
+                {
+                    // Top-level comma - separator between type arguments
+                    var arg = currentArg.ToString().Trim();
+                    if (!string.IsNullOrEmpty(arg))
+                        args.Add(arg);
+                    currentArg.Clear();
+                }
+                else
+                {
+                    currentArg.Append(c);
+                }
+            }
+
+            // Add the last argument
+            var lastArg = currentArg.ToString().Trim();
+            if (!string.IsNullOrEmpty(lastArg))
+                args.Add(lastArg);
+
+            return args.Count > 0 ? args.ToArray() : null;
+        }
+
+        /// <summary>
+        /// Attempts to resolve constructed generic types by parsing and reconstructing them.
+        /// Handles formats like: "Namespace.Generic`1[[TypeArg, Assembly]]"
+        /// </summary>
+        private static Type? TryResolveClassicGenericType(string typeName)
+        {
+            // Find generic arity marker (backtick)
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex < 0)
+                return null;
+
+            // Find the start of generic arguments [[...]]
+            var argsStart = typeName.IndexOf("[[", backtickIndex);
+            if (argsStart < 0)
+                return null;
+
+            // Extract generic definition name (e.g., "Namespace.WrapperClass`1")
+            var genericDefName = typeName.Substring(0, argsStart);
+
+            // Resolve the generic type definition
+            var genericDef = ResolveSimpleType(genericDefName);
+            if (genericDef == null || !genericDef.IsGenericTypeDefinition)
+                return null;
+
+            // Parse and resolve type arguments
+            var typeArgs = ParseGenericArguments(typeName, argsStart);
+            if (typeArgs == null || typeArgs.Length != genericDef.GetGenericArguments().Length)
+                return null;
+
+            try
+            {
+                return genericDef.MakeGenericType(typeArgs);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses generic arguments from the [[Type1, Assembly], [Type2, Assembly]] format.
+        /// The format uses double brackets where:
+        /// - Outer [] wraps all type arguments
+        /// - Inner [] wraps each individual type argument
+        /// - Nested generic types have their own [[]] inside
+        /// </summary>
+        private static Type[]? ParseGenericArguments(string typeName, int startIndex)
+        {
+            var args = new List<Type>();
+            var depth = 0;
+            var currentArg = new System.Text.StringBuilder();
+
+            for (int i = startIndex; i < typeName.Length; i++)
+            {
+                var c = typeName[i];
+
+                if (c == '[')
+                {
+                    depth++;
+                    // Only append brackets for nested generics (depth > 2)
+                    // depth 1 = outer wrapper for all args
+                    // depth 2 = wrapper for individual type arg (don't include)
+                    // depth 3+ = nested generic brackets (include)
+                    if (depth > 2)
+                        currentArg.Append(c);
+                }
+                else if (c == ']')
+                {
+                    depth--;
+                    if (depth == 1)
+                    {
+                        // End of one type argument
+                        var argTypeName = currentArg.ToString().Trim();
+                        if (!string.IsNullOrEmpty(argTypeName))
+                        {
+                            var argType = GetType(argTypeName);
+                            if (argType == null)
+                                return null;
+                            args.Add(argType);
+                        }
+                        currentArg.Clear();
+                    }
+                    else if (depth > 1)
+                    {
+                        // Append closing brackets for nested generics
+                        currentArg.Append(c);
+                    }
+                    else if (depth == 0)
+                    {
+                        break; // End of all arguments
+                    }
+                }
+                else if (c == ',' && depth == 1)
+                {
+                    // Separator between type arguments at the top level - skip it
+                }
+                else if (depth > 1)
+                {
+                    currentArg.Append(c);
+                }
+            }
+
+            return args.Count > 0 ? args.ToArray() : null;
         }
 
         public static bool IsDictionary(Type type)

@@ -109,7 +109,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var converter = Converters.GetConverter(type);
                 if (converter == null)
-                    throw new ArgumentException($"[Error] Type '{type.GetTypeName(pretty: false).ValueOrNull()}' not supported for serialization.");
+                    throw new ArgumentException($"Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
                     logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {converter.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
@@ -241,7 +241,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var converter = Converters.GetConverter(type);
                 if (converter == null)
-                    throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for deserialization.");
+                    throw new ArgumentException($"[Error] Type '{type?.GetTypeId().ValueOrNull()}' not supported for deserialization.");
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
                     logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{name.ValueOrNull()}' converter='{converter.GetType().GetTypeShortName()}'");

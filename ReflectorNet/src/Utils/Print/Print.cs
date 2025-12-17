@@ -18,7 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     {
         public static void FailedToSetNewValue(ref object? obj, Type type, int depth = 0, Logs? logs = null, ILogger? logger = null)
         {
-            logs?.Error($"Failed to set new value for '{type.GetTypeName(pretty: false)}'.", depth);
+            logs?.Error($"Failed to set new value for '{type.GetTypeId()}'.", depth);
         }
         public static void SetNewValue<T>(ref object? obj, ref T? newValue, Type type, int depth = 0, Logs? logs = null, ILogger? logger = null)
         {
@@ -26,8 +26,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var newType = newValue?.GetType() ?? type;
 
             logs?.Success($@"Set value
-  was: type='{originalType.GetTypeName(pretty: false).ValueOrNull()}', value='{obj}'
-  new: type='{newType.GetTypeName(pretty: false).ValueOrNull()}', value='{newValue}'.", depth);
+  was: type='{originalType.GetTypeId().ValueOrNull()}', value='{obj}'
+  new: type='{newType.GetTypeId().ValueOrNull()}', value='{newValue}'.", depth);
         }
         public static void SetNewValueEnumerable(ref object? obj, ref IEnumerable? newValue, Type type, int depth = 0, Logs? logs = null, ILogger? logger = null)
         {
@@ -35,8 +35,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var newType = newValue?.GetType() ?? type;
 
             logs?.Success($@"Set array value
-  was: type='{originalType.GetTypeName(pretty: false).ValueOrNull()}', value='{obj}'
-  new: type='{newType.GetTypeName(pretty: false).ValueOrNull()}', value='{newValue}'.", depth);
+  was: type='{originalType.GetTypeId().ValueOrNull()}', value='{obj}'
+  new: type='{newType.GetTypeId().ValueOrNull()}', value='{newValue}'.", depth);
         }
         public static void SetNewValueEnumerable<T>(ref object? obj, ref IEnumerable<T>? newValue, Type type, int depth = 0, Logs? logs = null, ILogger? logger = null)
         {
@@ -44,18 +44,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var newType = newValue?.GetType() ?? type;
 
             logs?.Success($@"Set array value
-  was: type='{originalType.GetTypeName(pretty: false).ValueOrNull()}', value='{obj}'
-  new: type='{newType.GetTypeName(pretty: false).ValueOrNull()}', value='{newValue}'.", depth);
+  was: type='{originalType.GetTypeId().ValueOrNull()}', value='{obj}'
+  new: type='{newType.GetTypeId().ValueOrNull()}', value='{newValue}'.", depth);
         }
         public static void FailedToSetField(ref object? obj, Type type, FieldInfo fieldInfo, int depth = 0, Logs? logs = null, ILogger? logger = null)
         {
             logs?.Error($"Failed to set field '{fieldInfo.Name}'", depth);
-            logs?.Error($"Failed to set new value for '{type.GetTypeName(pretty: false)}'.", depth);
+            logs?.Error($"Failed to set new value for '{type.GetTypeId()}'.", depth);
         }
         public static void FailedToSetProperty(ref object? obj, Type type, PropertyInfo propertyInfo, int depth = 0, Logs? logs = null, ILogger? logger = null)
         {
             logs?.Error($"Failed to set property '{propertyInfo.Name}'", depth);
-            logs?.Error($"Failed to set new value for '{type.GetTypeName(pretty: false)}'.", depth);
+            logs?.Error($"Failed to set new value for '{type.GetTypeId()}'.", depth);
         }
     }
 }

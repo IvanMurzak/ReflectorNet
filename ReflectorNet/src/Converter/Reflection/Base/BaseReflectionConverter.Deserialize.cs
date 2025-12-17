@@ -84,7 +84,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     result ??= CreateInstance(reflector, type!);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type.GetTypeName(pretty: true)}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Field} Deserialize '{nameof(SerializedMember.fields)}' type='{type?.GetTypeId().ValueOrNull()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
 
                 foreach (var field in data.fields)
                 {
@@ -109,9 +109,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (fieldInfo == null)
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field '{field.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field '{field.name}' not found on type '{type.GetTypeId()}'.");
 
-                        logs?.Warning($"Field '{field.name}' not found on type '{type.GetTypeName(pretty: false)}'.", depth);
+                        logs?.Warning($"Field '{field.name}' not found on type '{type.GetTypeId()}'.", depth);
 
                         continue;
                     }
@@ -124,7 +124,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     result ??= CreateInstance(reflector, type!);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type.GetTypeName(pretty: true)}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Property} Deserialize '{nameof(SerializedMember.props)}' type='{type?.GetTypeId().ValueOrNull()}' name='{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'.");
 
                 foreach (var property in data.props)
                 {
@@ -149,18 +149,18 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (propertyInfo == null)
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' not found on type '{type.GetTypeName(pretty: false)}'.");
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' not found on type '{type.GetTypeId()}'.");
 
-                        logs?.Warning($"Property '{property.name}' not found on type '{type.GetTypeName(pretty: false)}'.", depth);
+                        logs?.Warning($"Property '{property.name}' not found on type '{type.GetTypeId()}'.", depth);
 
                         continue;
                     }
                     if (!propertyInfo.CanWrite)
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' on type '{type.GetTypeName(pretty: false)}' is read-only and cannot be set.");
+                            logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' on type '{type.GetTypeId()}' is read-only and cannot be set.");
 
-                        logs?.Warning($"Property '{property.name}' on type '{type.GetTypeName(pretty: false)}' is read-only and cannot be set.", depth);
+                        logs?.Warning($"Property '{property.name}' on type '{type.GetTypeId()}' is read-only and cannot be set.", depth);
 
                         continue;
                     }
@@ -233,7 +233,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeName(pretty: true)}' name='{data.name.ValueOrNull()}'.");
+                logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}'.");
 
             var success = TryDeserializeValueInternal(
                 reflector,
@@ -247,12 +247,12 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (success)
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized '{type.GetTypeName(pretty: true)}'.");
+                    logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized '{type.GetTypeId()}'.");
             }
             else
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization '{type.GetTypeName(pretty: false)}' failed. Converter: {GetType().GetTypeShortName()}");
+                    logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization '{type.GetTypeId()}' failed. Converter: {GetType().GetTypeShortName()}");
             }
 
             return success;
@@ -303,16 +303,16 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 catch (JsonException ex)
                 {
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
-                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
 
-                    logs?.Warning($"Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: true)}':\n{ex.Message}", depth);
+                    logs?.Warning($"Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}", depth);
                 }
                 catch (NotSupportedException ex)
                 {
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
-                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
 
-                    logs?.Warning($"Unsupported type '{type.GetTypeName(pretty: false)}' for member '{data.name.ValueOrNull()}':\n{ex.Message}", depth);
+                    logs?.Warning($"Unsupported type '{type.GetTypeId()}' for member '{data.name.ValueOrNull()}':\n{ex.Message}", depth);
                 }
 
                 result = reflector.GetDefaultValue(type);
@@ -340,8 +340,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 }
                 catch (Exception ex)
                 {
-                    logs?.Error($"Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeName(pretty: false)}':\n{ex.Message}", depth);
-                    logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeName(pretty: false)}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    logs?.Error($"Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}", depth);
+                    logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
                     result = reflector.GetDefaultValue(type);
                     return false;
                 }

@@ -54,7 +54,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             var converter = Converters.GetConverter(type);
             if (converter == null)
-                throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for creating instance.");
+                throw new ArgumentException($"[Error] Type '{type?.GetTypeId().ValueOrNull()}' not supported for creating instance.");
 
             return converter.CreateInstance(this, type);
         }
@@ -105,7 +105,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             var converter = Converters.GetConverter(type);
             if (converter == null)
-                throw new ArgumentException($"[Error] Type '{type?.GetTypeName(pretty: false).ValueOrNull()}' not supported for default value.");
+                throw new ArgumentException($"[Error] Type '{type?.GetTypeId().ValueOrNull()}' not supported for default value.");
 
             return converter.GetDefaultValue(this, type);
         }

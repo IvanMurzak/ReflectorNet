@@ -104,16 +104,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     else
                     {
                         throw new ArgumentException(
-                            $"Value '{stringValue}' for parameter '{parameterName}' was parsed but is not a defined member of '{enumType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(enumType))}");
+                            $"Value '{stringValue}' for parameter '{parameterName}' was parsed but is not a defined member of '{enumType.GetTypeId()}'. Valid values are: {string.Join(", ", Enum.GetNames(enumType))}");
                     }
                 }
                 else
                 {
                     throw new ArgumentException(
-                        $"Value '{stringValue}' for parameter '{parameterName}' could not be parsed as '{enumType.GetTypeName(pretty: true)}'. Valid values are: {string.Join(", ", Enum.GetNames(enumType))}");
+                        $"Value '{stringValue}' for parameter '{parameterName}' could not be parsed as '{enumType.GetTypeId()}'. Valid values are: {string.Join(", ", Enum.GetNames(enumType))}");
                 }
             }
-            throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{enumType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
+            throw new ArgumentException($"Parameter '{parameterName}' type mismatch. Expected '{enumType.GetTypeId()}', but got '{value?.GetType()}'.");
         }
     }
 }

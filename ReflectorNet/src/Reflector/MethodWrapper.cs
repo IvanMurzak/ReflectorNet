@@ -204,7 +204,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                 if (!methodParameter.ParameterType.IsInstanceOfType(parameter.Value))
                 {
-                    error = $"Parameter '{parameter.Key}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeName(pretty: true)}', but got '{parameter.Value.GetType()}'.";
+                    error = $"Parameter '{parameter.Key}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeId()}', but got '{parameter.Value.GetType()}'.";
                     return false;
                 }
             }
@@ -238,7 +238,7 @@ namespace com.IvanMurzak.ReflectorNet
                     continue;
 
                 if (!parameter.ParameterType.IsInstanceOfType(finalParameters[i]))
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName(pretty: true)}', but got '{finalParameters[i]?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeId()}', but got '{finalParameters[i]?.GetType()}'.");
             }
 
             return finalParameters;
@@ -295,7 +295,7 @@ namespace com.IvanMurzak.ReflectorNet
                     catch (Exception ex2)
                     {
                         // If all parsing attempts fail, throw ArgumentException as expected by tests
-                        throw new ArgumentException($"Unable to convert value to parameter '{methodParameter.Name}' of type '{methodParameter.ParameterType.GetTypeName(pretty: true)}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
+                        throw new ArgumentException($"Unable to convert value to parameter '{methodParameter.Name}' of type '{methodParameter.ParameterType.GetTypeId()}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
                     }
                 }
             }
@@ -310,7 +310,7 @@ namespace com.IvanMurzak.ReflectorNet
                     return StringUtils.ConvertParameterStringToEnum(value, underlyingType, methodParameter.Name!);
                 }
 
-                throw new ArgumentException($"Parameter '{methodParameter.Name}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
+                throw new ArgumentException($"Parameter '{methodParameter.Name}' type mismatch. Expected '{methodParameter.ParameterType.GetTypeId()}', but got '{value?.GetType()}'.");
             }
         }
 
@@ -334,7 +334,7 @@ namespace com.IvanMurzak.ReflectorNet
                     continue;
 
                 if (!parameter.ParameterType.IsInstanceOfType(finalParameters[i]))
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName(pretty: true)}', but got '{finalParameters[i]?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeId()}', but got '{finalParameters[i]?.GetType()}'.");
             }
 
             return finalParameters;
@@ -379,7 +379,7 @@ namespace com.IvanMurzak.ReflectorNet
                         catch (Exception ex2)
                         {
                             // If all parsing attempts fail, throw ArgumentException as expected by tests
-                            throw new ArgumentException($"Unable to convert value to parameter '{parameter.Name}' of type '{parameter.ParameterType.GetTypeName(pretty: true)}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
+                            throw new ArgumentException($"Unable to convert value to parameter '{parameter.Name}' of type '{parameter.ParameterType.GetTypeId()}'.\nInput value: {jsonElement}\nOriginal exception: {ex.Message}\nSecond exception: {ex2.Message}");
                         }
                     }
                 }
@@ -394,7 +394,7 @@ namespace com.IvanMurzak.ReflectorNet
                         return StringUtils.ConvertParameterStringToEnum(value, underlyingType, parameter.Name!);
                     }
 
-                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeName(pretty: true)}', but got '{value?.GetType()}'.");
+                    throw new ArgumentException($"Parameter '{parameter.Name}' type mismatch. Expected '{parameter.ParameterType.GetTypeId()}', but got '{value?.GetType()}'.");
                 }
             }
             else if (parameter.HasDefaultValue)

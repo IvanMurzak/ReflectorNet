@@ -25,7 +25,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             var type = original?.GetType() ?? fallbackType;
 
-            _output.WriteLine($"### Test for type: {type?.GetTypeName(pretty: true) ?? "null"}\n");
+            _output.WriteLine($"### Test for type: {type?.GetTypeId() ?? "null"}\n");
             _output.WriteLine($"Serialization:\n{serializeLogger}");
 
             var deserializeLogger = new StringBuilderLogger();

@@ -90,7 +90,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.NotNull(typeId);
             Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.Model.GameObjectRef", typeId);
 
-            _output.WriteLine($"Type: {testType.GetTypeName(pretty: false)}");
+            _output.WriteLine($"Type: {testType.GetTypeId()}");
             _output.WriteLine($"Schema: {schema}");
             _output.WriteLine($"TypeId: {typeId}");
         }
@@ -104,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var stringType = TypeUtils.GetType("System.String");
             Assert.Equal(typeof(string), stringType);
 
-            var gameObjectRefType = TypeUtils.GetType(typeof(GameObjectRef).GetTypeName(pretty: false)!);
+            var gameObjectRefType = TypeUtils.GetType(typeof(GameObjectRef).GetTypeId()!);
             Assert.Equal(typeof(GameObjectRef), gameObjectRefType);
 
             // Test default value generation
@@ -166,7 +166,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(nameof(TestClass.SerializedMemberList_ReturnString), methodDataRef.MethodName);
             Assert.Equal(methodInfo.IsPublic, methodDataRef.IsPublic);
             Assert.Equal(methodInfo.IsStatic, methodDataRef.IsStatic);
-            Assert.Equal(methodInfo.ReturnType.GetTypeName(pretty: false), methodDataRef.ReturnType);
+            Assert.Equal(methodInfo.ReturnType.GetTypeId(), methodDataRef.ReturnType);
             Assert.NotNull(methodDataRef.ReturnSchema);
             Assert.NotNull(methodDataRef.InputParametersSchema);
             Assert.Single(methodDataRef.InputParametersSchema); // SerializedMemberList parameter

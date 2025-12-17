@@ -39,7 +39,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     ? new SerializedMember()
                     {
                         name = name,
-                        typeName = type.GetTypeName(pretty: false) ?? string.Empty,
+                        typeName = type.GetTypeId() ?? string.Empty,
                         fields = base.SerializeFields(
                             reflector: reflector,
                             obj: obj,
@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     }
                     : SerializedMember.FromJson(type, obj.ToJson(reflector), name: name);
             }
-            throw new ArgumentException($"Unsupported type: '{type.GetTypeName(pretty: false)}' for converter '{GetType().GetTypeShortName()}'.");
+            throw new ArgumentException($"Unsupported type: '{type.GetTypeId()}' for converter '{GetType().GetTypeShortName()}'.");
         }
         // GetSerializableFields and GetSerializableProperties inherited from BaseReflectionConverter
 
@@ -110,7 +110,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             // Check if field type matches parsed value type
             if (!TypeUtils.IsCastable(type, fieldInfo.FieldType))
             {
-                logs?.Error($"Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to field type '{fieldInfo.FieldType.GetTypeName(pretty: false)}' for field '{fieldInfo.Name}'.", depth);
+                logs?.Error($"Parsed value type '{type?.GetTypeId().ValueOrNull()}' is not assignable to field type '{fieldInfo.FieldType.GetTypeId()}' for field '{fieldInfo.Name}'.", depth);
                 return false;
             }
 
@@ -158,7 +158,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             // Check if property type matches parsed value type
             if (!TypeUtils.IsCastable(type, propertyInfo.PropertyType))
             {
-                logs?.Error($"Parsed value type '{type.GetTypeName(pretty: false)}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeName(pretty: false)}' for property '{propertyInfo.Name}'.", depth);
+                logs?.Error($"Parsed value type '{type?.GetTypeId().ValueOrNull()}' is not assignable to property type '{propertyInfo.PropertyType.GetTypeId()}' for property '{propertyInfo.Name}'.", depth);
                 return false;
             }
 

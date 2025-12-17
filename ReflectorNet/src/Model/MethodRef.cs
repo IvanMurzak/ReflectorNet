@@ -62,7 +62,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public MethodRef(MethodInfo methodInfo)
         {
             Namespace = methodInfo.DeclaringType?.Namespace;
-            TypeName = methodInfo.DeclaringType?.Name ?? string.Empty;
+            TypeName = methodInfo.DeclaringType?.GetTypeShortName() ?? string.Empty;
             MethodName = methodInfo.Name;
             InputParameters = methodInfo.GetParameters()
                 ?.Select(parameter => new Parameter(parameter))
@@ -71,7 +71,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public MethodRef(PropertyInfo methodInfo)
         {
             Namespace = methodInfo.DeclaringType?.Namespace;
-            TypeName = methodInfo.DeclaringType?.Name ?? string.Empty;
+            TypeName = methodInfo.DeclaringType?.GetTypeShortName() ?? string.Empty;
             MethodName = methodInfo.Name;
             InputParameters = null;
         }
@@ -103,7 +103,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             }
             public Parameter(ParameterInfo parameter)
             {
-                TypeName = parameter.ParameterType.GetTypeName(pretty: false);
+                TypeName = parameter.ParameterType.GetTypeId();
                 Name = parameter.Name;
             }
             public override string ToString()
