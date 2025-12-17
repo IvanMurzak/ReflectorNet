@@ -79,7 +79,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 typeName == t.AssemblyQualifiedName ||
                 typeName == t.GetTypeId());
 
+            // Caching the result (even if null)
             _typeCache[typeName] = type;
+
             return type;
         }
 
@@ -122,10 +124,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             if (elementType == null) return null;
 
-            if (commas == 0)
-                return elementType.MakeArrayType();
-            else
-                return elementType.MakeArrayType(commas + 1);
+            return commas == 0
+                ? elementType.MakeArrayType()
+                : elementType.MakeArrayType(commas + 1);
         }
 
         /// <summary>
@@ -264,28 +265,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     nestedType = currentType.GetNestedType(nestedName);
                     if (nestedType == null) return null;
 
-                    if (currentType.IsGenericType && !currentType.IsGenericTypeDefinition)
-                    {
-                        allArgs = currentType.GetGenericArguments();
-                    }
-                    else
-                    {
-                        allArgs = Type.EmptyTypes;
-                    }
+                    allArgs = currentType.IsGenericType && !currentType.IsGenericTypeDefinition
+                        ? currentType.GetGenericArguments()
+                        : Type.EmptyTypes;
                 }
 
                 if (nestedType.IsGenericTypeDefinition)
                 {
                     try
                     {
-                        if (nestedType.GetGenericArguments().Length == allArgs.Length)
-                        {
-                            currentType = nestedType.MakeGenericType(allArgs);
-                        }
-                        else
-                        {
-                            currentType = nestedType;
-                        }
+                        currentType = nestedType.GetGenericArguments().Length == allArgs.Length
+                            ? nestedType.MakeGenericType(allArgs)
+                            : nestedType;
                     }
                     catch
                     {
