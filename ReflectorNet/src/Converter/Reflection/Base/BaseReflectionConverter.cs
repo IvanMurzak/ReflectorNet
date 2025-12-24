@@ -108,9 +108,12 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
-            => objType.GetFields(flags)
+        {
+            return objType.GetFields(flags)
                 .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
+                .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null)
                 .Where(field => field.IsPublic);
+        }
 
         /// <summary>
         /// Gets the serializable properties for the specified type.
@@ -122,9 +125,12 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
-            => objType.GetProperties(flags)
+        {
+            return objType.GetProperties(flags)
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
+                .Where(prop => prop.GetCustomAttribute<NonSerializedAttribute>() == null)
                 .Where(prop => prop.CanRead);
+        }
 
         public virtual IEnumerable<string> GetAdditionalSerializableFields(
             Reflector reflector,

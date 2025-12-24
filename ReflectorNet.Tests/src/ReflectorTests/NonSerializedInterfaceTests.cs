@@ -20,6 +20,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         public ICharacterController CharacterController;
     }
 
+    public class ClassWithNonSerializedProperty
+    {
+        public string Name;
+
+        [field: System.NonSerialized]
+        public ICharacterController CharacterController { get; set; }
+    }
+
     public class NonSerializedInterfaceTests : BaseTest
     {
         public NonSerializedInterfaceTests(ITestOutputHelper output) : base(output) { }
@@ -41,6 +49,23 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.NotNull(serialized);
             // Verify that the field is NOT present in the serialized data if it's NonSerialized
             // Or if ReflectorNet handles NonSerialized by ignoring it.
+        }
+
+        [Fact]
+        public void TestNonSerializedInterfaceProperty()
+        {
+            var instance = new ClassWithNonSerializedProperty
+            {
+                Name = "TestInstance",
+                CharacterController = null
+            };
+
+            var reflector = new Reflector();
+
+            // This should not throw
+            var serialized = reflector.Serialize(instance);
+
+            Assert.NotNull(serialized);
         }
     }
 }
