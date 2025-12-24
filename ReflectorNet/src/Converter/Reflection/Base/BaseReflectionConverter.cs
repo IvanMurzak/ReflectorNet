@@ -128,7 +128,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         {
             return objType.GetProperties(flags)
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(prop => prop.GetCustomAttribute<NonSerializedAttribute>() == null)
                 .Where(prop => prop.CanRead);
         }
 

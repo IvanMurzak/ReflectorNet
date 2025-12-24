@@ -62,20 +62,29 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 if (GetIgnoredFields().Contains(field.Name))
                     continue;
+                try
+                {
+                    var value = field.GetValue(obj);
+                    var fieldType = field.FieldType;
 
-                var value = field.GetValue(obj);
-                var fieldType = field.FieldType;
+                    var serialized = reflector.Serialize(value, fieldType,
+                        name: field.Name,
+                        recursive: AllowCascadeFieldsConversion,
+                        flags: flags,
+                        depth: depth + 1,
+                        logs: logs,
+                        logger: logger,
+                        context: context);
 
-                serializedFields ??= new SerializedMemberList();
-                serializedFields.Add(reflector.Serialize(value, fieldType,
-                    name: field.Name,
-                    recursive: AllowCascadeFieldsConversion,
-                    flags: flags,
-                    depth: depth + 1,
-                    logs: logs,
-                    logger: logger,
-                    context: context)
-                );
+                    serializedFields ??= new SerializedMemberList();
+                    serializedFields.Add(serialized);
+                }
+                catch (Exception ex)
+                {
+                    /* skip inaccessible fields */
+                    logger?.LogWarning(ex, "Failed to serialize field '{fieldName}' of type '{type}'. Exception: {exMessage}",
+                        field.Name, objType.GetTypeId(), ex.Message);
+                }
             }
             return serializedFields;
         }
@@ -105,18 +114,24 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var value = prop.GetValue(obj);
                     var propType = prop.PropertyType;
 
-                    serializedProperties ??= new SerializedMemberList();
-                    serializedProperties.Add(reflector.Serialize(value, propType,
+                    var serialized = reflector.Serialize(value, propType,
                         name: prop.Name,
                         recursive: AllowCascadePropertiesConversion,
                         flags: flags,
                         depth: depth + 1,
                         logs: logs,
                         logger: logger,
-                        context: context)
-                    );
+                        context: context);
+
+                    serializedProperties ??= new SerializedMemberList();
+                    serializedProperties.Add(serialized);
                 }
-                catch { /* skip inaccessible properties */ }
+                catch (Exception ex)
+                {
+                    /* skip inaccessible properties */
+                    logger?.LogWarning(ex, "Failed to serialize property '{propertyName}' of type '{type}'. Exception: {exMessage}",
+                        prop.Name, objType.GetTypeId(), ex.Message);
+                }
             }
             return serializedProperties;
         }
