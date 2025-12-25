@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
-using com.IvanMurzak.ReflectorNet;
 using Microsoft.Extensions.Logging;
 using com.IvanMurzak.ReflectorNet.Utils;
 

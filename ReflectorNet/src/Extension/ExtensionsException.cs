@@ -18,7 +18,9 @@ namespace com.IvanMurzak.ReflectorNet
         /// <returns>The deepest inner exception, or the exception itself if no inner exception exists.</returns>
         public static Exception GetDeepestInnerException(this Exception ex)
         {
-            return ex.InnerException == null ? ex : ex.InnerException.GetDeepestInnerException();
+            return ex.InnerException == null
+                ? ex
+                : ex.InnerException.GetDeepestInnerException();
         }
     }
 }
