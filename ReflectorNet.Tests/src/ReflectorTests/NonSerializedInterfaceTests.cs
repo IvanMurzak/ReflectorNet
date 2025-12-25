@@ -36,13 +36,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         public string? Description { get; set; }
     }
 
-    public class BaseClassWithNonSerializedProperty
+    public class BaseClassWithPropertyHavingNonSerializedBackingField
     {
         [field: System.NonSerialized]
         public string? BaseDescription { get; set; }
     }
 
-    public class DerivedClass : BaseClassWithNonSerializedProperty
+    public class DerivedClass : BaseClassWithPropertyHavingNonSerializedBackingField
     {
         public string? DerivedName;
     }

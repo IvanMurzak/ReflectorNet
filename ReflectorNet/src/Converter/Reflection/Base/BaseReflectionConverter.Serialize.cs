@@ -10,7 +10,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet;
 using Microsoft.Extensions.Logging;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Converter
 {
@@ -62,9 +64,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 if (GetIgnoredFields().Contains(field.Name))
                     continue;
+
+                object? value = null;
                 try
                 {
-                    var value = field.GetValue(obj);
+                    value = field.GetValue(obj);
                     var fieldType = field.FieldType;
 
                     var serialized = reflector.Serialize(value, fieldType,
@@ -81,9 +85,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 }
                 catch (Exception ex)
                 {
-                    /* skip inaccessible fields */
-                    logger?.LogWarning(ex, "Failed to serialize field '{fieldName}' of type '{type}'. Exception: {exMessage}",
-                        field.Name, objType.GetTypeId(), ex.Message);
+                    // skip inaccessible field
+                    logger?.LogWarning(ex.GetDeepestInnerException(), "Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Path: {path}",
+                         field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), value == null
+                            ? StringUtils.Null
+                            : context?.GetPath(value) ?? StringUtils.Null);
                 }
             }
             return serializedFields;
@@ -109,9 +115,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 if (GetIgnoredProperties().Contains(prop.Name))
                     continue;
+
+                object? value = null;
                 try
                 {
-                    var value = prop.GetValue(obj);
+                    value = prop.GetValue(obj);
                     var propType = prop.PropertyType;
 
                     var serialized = reflector.Serialize(value, propType,
@@ -128,9 +136,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 }
                 catch (Exception ex)
                 {
-                    /* skip inaccessible properties */
-                    logger?.LogWarning(ex, "Failed to serialize property '{propertyName}' of type '{type}'. Exception: {exMessage}",
-                        prop.Name, objType.GetTypeId(), ex.Message);
+                    // skip inaccessible property
+                    logger?.LogWarning(ex.GetDeepestInnerException(), "Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Path: {path}",
+                         prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), value == null
+                            ? StringUtils.Null
+                            : context?.GetPath(value) ?? StringUtils.Null);
                 }
             }
             return serializedProperties;
