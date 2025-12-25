@@ -85,7 +85,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 catch (Exception ex)
                 {
                     // skip inaccessible field
-                    logger?.LogWarning(ex.GetDeepestInnerException(), "Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Path: {path}",
+                    logger?.LogWarning(ex.GetBaseException(), "Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Path: {path}",
                          field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), value == null
                             ? StringUtils.Null
                             : context?.GetPath(value) ?? StringUtils.Null);
@@ -136,7 +136,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 catch (Exception ex)
                 {
                     // skip inaccessible property
-                    logger?.LogWarning(ex.GetDeepestInnerException(), "Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Path: {path}",
+                    logger?.LogWarning(ex.GetBaseException(), "Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Path: {path}",
                          prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), value == null
                             ? StringUtils.Null
                             : context?.GetPath(value) ?? StringUtils.Null);
