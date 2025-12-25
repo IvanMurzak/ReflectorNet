@@ -63,11 +63,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 if (GetIgnoredFields().Contains(field.Name))
                     continue;
-
-                object? value = null;
                 try
                 {
-                    value = field.GetValue(obj);
+                    var value = field.GetValue(obj);
                     var fieldType = field.FieldType;
 
                     var serialized = reflector.Serialize(value, fieldType,
@@ -86,9 +84,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 {
                     // skip inaccessible field
                     logger?.LogWarning(ex.GetBaseException(), "Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Path: {path}",
-                         field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), value == null
-                            ? StringUtils.Null
-                            : context?.GetPath(value) ?? StringUtils.Null);
+                         field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                 }
             }
             return serializedFields;
@@ -114,11 +110,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 if (GetIgnoredProperties().Contains(prop.Name))
                     continue;
-
-                object? value = null;
                 try
                 {
-                    value = prop.GetValue(obj);
+                    var value = prop.GetValue(obj);
                     var propType = prop.PropertyType;
 
                     var serialized = reflector.Serialize(value, propType,
@@ -137,9 +131,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 {
                     // skip inaccessible property
                     logger?.LogWarning(ex.GetBaseException(), "Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Path: {path}",
-                         prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), value == null
-                            ? StringUtils.Null
-                            : context?.GetPath(value) ?? StringUtils.Null);
+                         prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                 }
             }
             return serializedProperties;
