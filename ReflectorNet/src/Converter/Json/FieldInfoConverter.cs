@@ -45,7 +45,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (declaringType == null)
                 throw new JsonException($"Could not find type: {typeName}");
 
-            var field = declaringType.GetField(fieldName!);
+            var field = declaringType.GetField(
+                name: fieldName!,
+                bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static
+            );
             if (field == null)
                 throw new JsonException($"Could not find field: {fieldName} on type: {typeName}");
 
@@ -54,6 +57,11 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, FieldInfo value, JsonSerializerOptions options)
         {
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
             writer.WriteStartObject();
             writer.WriteString(Json.Name, value.Name);
             writer.WriteString(Json.DeclaringType, value.DeclaringType?.GetTypeId());

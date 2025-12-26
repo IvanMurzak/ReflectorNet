@@ -100,7 +100,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         /// <summary>
         /// Gets the serializable fields for the specified type.
-        /// Default implementation returns public fields that are not marked with [Obsolete].
+        /// Default implementation returns public fields that are not marked with [Obsolete] or [NonSerialized].
         /// Derived classes can override to customize field selection.
         /// </summary>
         public virtual IEnumerable<FieldInfo>? GetSerializableFields(

@@ -65,6 +65,11 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, ParameterInfo value, JsonSerializerOptions options)
         {
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
             writer.WriteStartObject();
             writer.WriteString(Json.Name, value.Name);
             writer.WriteString(Json.MemberType, value.Member.GetType().Name);

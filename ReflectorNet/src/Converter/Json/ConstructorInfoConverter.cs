@@ -55,7 +55,12 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (declaringType == null)
                 throw new JsonException($"Could not find type: {typeName}");
 
-            var constructor = declaringType.GetConstructor(parameterTypes.ToArray());
+            var constructor = declaringType.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                binder: null,
+                types: parameterTypes.ToArray(),
+                modifiers: null
+            );
             if (constructor == null)
                 throw new JsonException($"Could not find constructor on type: {typeName} with specified parameters.");
 
@@ -64,6 +69,11 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, ConstructorInfo value, JsonSerializerOptions options)
         {
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
             writer.WriteStartObject();
             writer.WriteString(Json.DeclaringType, value.DeclaringType?.GetTypeId());
 

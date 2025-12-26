@@ -25,7 +25,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Expected string token for TimeOnly, but got {reader.TokenType}");
 
             var stringValue = reader.GetString();
-            return TimeOnly.Parse(stringValue!);
+            if (stringValue is null)
+                throw new JsonException("Expected non-null string value for TimeOnly.");
+
+            if (TimeOnly.TryParseExact(stringValue, Format, null, System.Globalization.DateTimeStyles.None, out var result))
+                return result;
+
+            throw new JsonException($"Invalid TimeOnly value '{stringValue}'. Expected format: '{Format}'.");
         }
 
         public override void Write(Utf8JsonWriter writer, TimeOnly value, JsonSerializerOptions options)

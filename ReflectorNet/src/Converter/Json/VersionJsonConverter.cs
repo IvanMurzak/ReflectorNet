@@ -35,8 +35,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException($"Unable to parse '{stringValue}' as a Version.");
         }
 
-        public override void Write(Utf8JsonWriter writer, Version value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Version? value, JsonSerializerOptions options)
         {
+            if (value is null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
             writer.WriteStringValue(value.ToString());
         }
     }

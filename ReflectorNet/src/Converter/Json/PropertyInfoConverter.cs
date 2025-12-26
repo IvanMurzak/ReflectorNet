@@ -45,7 +45,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (declaringType == null)
                 throw new JsonException($"Could not find type: {typeName}");
 
-            var property = declaringType.GetProperty(propertyName!);
+            var property = declaringType.GetProperty(
+                name: propertyName!,
+                bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static
+            );
             if (property == null)
                 throw new JsonException($"Could not find property: {propertyName} on type: {typeName}");
 
@@ -54,6 +57,11 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override void Write(Utf8JsonWriter writer, PropertyInfo value, JsonSerializerOptions options)
         {
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
             writer.WriteStartObject();
             writer.WriteString(Json.Name, value.Name);
             writer.WriteString(Json.DeclaringType, value.DeclaringType?.GetTypeId());
