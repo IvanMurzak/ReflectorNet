@@ -17,13 +17,13 @@ Console.WriteLine($"Do nothing");
 var reflector = new Reflector();
 var methodInfo = typeof(Sample).GetMethod(nameof(Sample.Command));
 
-var argumentsSchema = reflector.GetArgumentsSchema(methodInfo);
-var outputSchema = reflector.GetReturnSchema(methodInfo);
+var argumentsSchema = reflector.GetArgumentsSchema(methodInfo!);
+var outputSchema = reflector.GetReturnSchema(methodInfo!);
 
 Console.WriteLine("Arguments Schema:");
 Console.WriteLine(argumentsSchema.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 Console.WriteLine("Output Schema:");
-Console.WriteLine(outputSchema.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+Console.WriteLine(outputSchema?.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 
 var schemaJson = reflector.GetSchema<GameState<PlayerProfile>>();
 
@@ -44,8 +44,8 @@ public class Data
 {
     public int? optionalInt;
     [Description("THIS IS THE DEMO DESCRIPTION.")]
-    public string address;
-    public List<Data> list; // recursive
+    public string address = null!;
+    public List<Data> list = null!; // recursive
 }
 
 public struct Result
@@ -74,15 +74,15 @@ public struct GeoPoint
 public class PlayerProfile
 {
     public Guid Id { get; set; }
-    public string Username { get; set; }
-    public string[] Badges { get; set; } // Array
-    public Dictionary<string, int> Stats { get; set; } // Dictionary
+    public string Username { get; set; } = null!;
+    public string[] Badges { get; set; } = null!; // Array
+    public Dictionary<string, int> Stats { get; set; } = null!; // Dictionary
 }
 
 // A generic wrapper (common in Game State or API responses)
 public class GameState<T>
 {
     public long Timestamp { get; set; }
-    public T Player { get; set; }
-    public List<GeoPoint> Checkpoints { get; set; } // List of Structs
+    public T Player { get; set; } = default!;
+    public List<GeoPoint> Checkpoints { get; set; } = null!; // List of Structs
 }

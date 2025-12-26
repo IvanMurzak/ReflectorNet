@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (reader.TokenType != JsonTokenType.StartObject)
                 throw new JsonException("Expected StartObject for IPEndPoint.");
 
-            IPAddress address = null;
+            IPAddress? address = null;
             int port = 0;
             bool addressSet = false;
             bool portSet = false;
@@ -65,8 +65,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    string propertyName = reader.GetString();
+                    var propertyName = reader.GetString();
                     reader.Read();
+
+                    if (propertyName == null)
+                    {
+                        reader.Skip();
+                        continue;
+                    }
 
                     if (string.Equals(propertyName, AddressProperty, StringComparison.OrdinalIgnoreCase))
                     {
@@ -85,7 +91,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 }
             }
 
-            if (!addressSet || !portSet)
+            if (!addressSet || !portSet || address == null)
                 throw new JsonException("IPEndPoint requires both 'address' and 'port' properties.");
 
             return new IPEndPoint(address, port);

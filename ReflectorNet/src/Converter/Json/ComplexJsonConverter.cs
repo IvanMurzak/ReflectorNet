@@ -57,8 +57,14 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    string propertyName = reader.GetString();
+                    var propertyName = reader.GetString();
                     reader.Read();
+
+                    if (propertyName == null)
+                    {
+                        reader.Skip();
+                        continue;
+                    }
 
                     if (string.Equals(propertyName, RealProperty, StringComparison.OrdinalIgnoreCase))
                     {
