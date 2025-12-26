@@ -743,5 +743,237 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
         }
 
         #endregion
+
+        #region JsonNode Base Type Tests
+
+        [Fact]
+        public void JsonNode_Serialize_AsObject_ShouldSucceed()
+        {
+            // Arrange
+            JsonNode node = new JsonObject { ["key"] = "value" };
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(node);
+            _output.WriteLine($"JsonNode as object: {json}");
+
+            // Assert
+            Assert.Contains("\"key\"", json);
+            Assert.Contains("value", json);
+        }
+
+        [Fact]
+        public void JsonNode_Serialize_AsArray_ShouldSucceed()
+        {
+            // Arrange
+            JsonNode node = new JsonArray { 1, 2, 3 };
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(node);
+            _output.WriteLine($"JsonNode as array: {json}");
+
+            // Assert
+            Assert.Contains("1", json);
+            Assert.Contains("2", json);
+            Assert.Contains("3", json);
+        }
+
+        [Fact]
+        public void JsonNode_Serialize_Null_ShouldSucceed()
+        {
+            // Arrange
+            JsonNode? node = null;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(node);
+            _output.WriteLine($"JsonNode null: {json}");
+
+            // Assert
+            Assert.Equal("null", json);
+        }
+
+        [Fact]
+        public void JsonNode_Deserialize_Object_ShouldReturnJsonObject()
+        {
+            // Arrange
+            var json = "{\"name\":\"test\"}";
+
+            // Act
+            var node = _reflector.JsonSerializer.Deserialize<JsonNode>(json);
+            _output.WriteLine($"JsonNode from object: {node?.GetType().Name}");
+
+            // Assert
+            Assert.NotNull(node);
+            Assert.IsType<JsonObject>(node);
+        }
+
+        [Fact]
+        public void JsonNode_Deserialize_Array_ShouldReturnJsonArray()
+        {
+            // Arrange
+            var json = "[1,2,3]";
+
+            // Act
+            var node = _reflector.JsonSerializer.Deserialize<JsonNode>(json);
+            _output.WriteLine($"JsonNode from array: {node?.GetType().Name}");
+
+            // Assert
+            Assert.NotNull(node);
+            Assert.IsType<JsonArray>(node);
+        }
+
+        [Fact]
+        public void JsonNode_RoundTrip_Object_ShouldPreserveData()
+        {
+            // Arrange
+            JsonNode original = new JsonObject
+            {
+                ["id"] = 123,
+                ["items"] = new JsonArray { "a", "b", "c" }
+            };
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(original);
+            var deserialized = _reflector.JsonSerializer.Deserialize<JsonNode>(json);
+            _output.WriteLine($"JsonNode roundtrip: {json}");
+
+            // Assert
+            Assert.NotNull(deserialized);
+            Assert.Equal(123, deserialized["id"]?.GetValue<int>());
+        }
+
+        [Fact]
+        public void JsonNode_RoundTrip_Array_ShouldPreserveData()
+        {
+            // Arrange
+            JsonNode original = new JsonArray { 10, 20, 30 };
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(original);
+            var deserialized = _reflector.JsonSerializer.Deserialize<JsonNode>(json);
+            _output.WriteLine($"JsonNode array roundtrip: {json}");
+
+            // Assert
+            Assert.NotNull(deserialized);
+            Assert.IsType<JsonArray>(deserialized);
+            Assert.Equal(3, ((JsonArray)deserialized).Count);
+        }
+
+        #endregion
+
+        #region JsonValue Tests
+
+        [Fact]
+        public void JsonValue_Serialize_String_ShouldSucceed()
+        {
+            // Arrange
+            var value = JsonValue.Create("hello world")!;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue string: {json}");
+
+            // Assert
+            Assert.Equal("\"hello world\"", json);
+        }
+
+        [Fact]
+        public void JsonValue_Serialize_Number_ShouldSucceed()
+        {
+            // Arrange
+            var value = JsonValue.Create(42)!;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue number: {json}");
+
+            // Assert
+            Assert.Equal("42", json);
+        }
+
+        [Fact]
+        public void JsonValue_Serialize_Double_ShouldSucceed()
+        {
+            // Arrange
+            var value = JsonValue.Create(3.14159)!;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue double: {json}");
+
+            // Assert
+            Assert.Contains("3.14159", json);
+        }
+
+        [Fact]
+        public void JsonValue_Serialize_Boolean_True_ShouldSucceed()
+        {
+            // Arrange
+            var value = JsonValue.Create(true)!;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue bool true: {json}");
+
+            // Assert
+            Assert.Equal("true", json);
+        }
+
+        [Fact]
+        public void JsonValue_Serialize_Boolean_False_ShouldSucceed()
+        {
+            // Arrange
+            var value = JsonValue.Create(false)!;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue bool false: {json}");
+
+            // Assert
+            Assert.Equal("false", json);
+        }
+
+        [Fact]
+        public void JsonValue_Serialize_Null_ShouldSucceed()
+        {
+            // Arrange
+            JsonValue? value = null;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue null: {json}");
+
+            // Assert
+            Assert.Equal("null", json);
+        }
+
+        [Fact]
+        public void JsonValue_Serialize_LargeNumber_ShouldSucceed()
+        {
+            // Arrange
+            var value = JsonValue.Create(9999999999999L)!;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue large number: {json}");
+
+            // Assert
+            Assert.Equal("9999999999999", json);
+        }
+
+        [Fact]
+        public void JsonValue_Serialize_NegativeNumber_ShouldSucceed()
+        {
+            // Arrange
+            var value = JsonValue.Create(-42)!;
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"JsonValue negative: {json}");
+
+            // Assert
+            Assert.Equal("-42", json);
+        }
+
+        #endregion
     }
 }
