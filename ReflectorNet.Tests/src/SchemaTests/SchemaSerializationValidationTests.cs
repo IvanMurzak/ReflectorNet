@@ -107,7 +107,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // SerializedMember has structure: { "name": "...", "typeName": "...", "value": ... }
             // We need to extract just the "value" field to compare against the schema
-            // Note: If value is null, the "value" field might be missing or null
+            // Note: If value == null, the "value" field might be missing or null
             JsonNode? valueNode = null;
             if (jsonNode is JsonObject jsonObject)
             {

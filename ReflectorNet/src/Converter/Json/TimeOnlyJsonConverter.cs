@@ -27,7 +27,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Expected string token for TimeOnly, but got {reader.TokenType}");
 
             var stringValue = reader.GetString();
-            if (stringValue is null)
+            if (stringValue == null)
                 throw new JsonException("Expected non-null string value for TimeOnly.");
 
             if (TimeOnly.TryParseExact(stringValue, Format, null, System.Globalization.DateTimeStyles.None, out var result))
