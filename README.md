@@ -102,10 +102,27 @@ var methodRef = new MethodRef
 string result = reflector.MethodCall(
     reflector,
     methodRef,
-    methodNameMatchLevel: 3 // Allow fuzzy matching
+    methodNameMatchLevel: 3, // Allow fuzzy matching
+    executeInMainThread: false // Set to false for console apps/services (no UI thread)
 );
 
 Console.WriteLine(result); // Output: [Success] 30
+```
+
+### 6. Method Inspection & Schema Generation
+
+Generate JSON schemas for types and methods to help LLMs understand your code structure.
+
+```csharp
+// 1. Get schema for a specific type
+var typeSchema = reflector.GetSchema<MyComplexClass>();
+
+// 2. Get schema for method arguments (ideal for LLM function calling definitions)
+var methodInfo = typeof(Calculator).GetMethod("Add");
+var argsSchema = reflector.GetArgumentsSchema(methodInfo);
+
+// 3. Get schema for method return value
+var returnSchema = reflector.GetReturnSchema(methodInfo);
 ```
 
 ## 🏗️ Architecture
