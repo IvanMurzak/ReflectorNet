@@ -33,19 +33,32 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 return UIntPtr.Zero;
             }
 
+            ulong value;
             if (reader.TokenType == JsonTokenType.Number)
             {
-                return new UIntPtr(reader.GetUInt64());
+                value = reader.GetUInt64();
             }
-
-            if (reader.TokenType == JsonTokenType.String)
+            else if (reader.TokenType == JsonTokenType.String)
             {
                 var stringValue = reader.GetString();
-                if (ulong.TryParse(stringValue, out var result))
-                    return new UIntPtr(result);
+                if (!ulong.TryParse(stringValue, out value))
+                    throw new JsonException($"Unable to parse '{stringValue}' as UIntPtr.");
+            }
+            else
+            {
+                throw new JsonException($"Expected number or string token for UIntPtr, but got {reader.TokenType}");
             }
 
-            throw new JsonException($"Expected number or string token for UIntPtr, but got {reader.TokenType}");
+            // Validate value fits in platform's UIntPtr size to avoid overflow
+            if (UIntPtr.Size == 4)
+            {
+                if (value > uint.MaxValue)
+                    throw new JsonException($"Value {value} is outside the range of UIntPtr on this 32-bit platform.");
+
+                return new UIntPtr((uint)value);
+            }
+
+            return new UIntPtr(value);
         }
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)

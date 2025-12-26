@@ -30,20 +30,16 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (string.IsNullOrWhiteSpace(assemblyName))
                 return null;
 
+            // Security: Only resolve assemblies already loaded in the AppDomain.
+            // We intentionally do NOT call Assembly.Load() to prevent loading
+            // arbitrary assemblies from untrusted JSON input.
             var assembly = AppDomain.CurrentDomain.GetAssemblies()
                 .FirstOrDefault(a => a.FullName == assemblyName || a.GetName().Name == assemblyName);
 
-            if (assembly != null)
-                return assembly;
+            if (assembly is null)
+                throw new JsonException($"Assembly '{assemblyName}' is not loaded. For security reasons, only already-loaded assemblies can be resolved.");
 
-            try
-            {
-                return Assembly.Load(assemblyName);
-            }
-            catch
-            {
-                throw new JsonException($"Unable to find or load assembly: {assemblyName}");
-            }
+            return assembly;
         }
 
         public override void Write(Utf8JsonWriter writer, Assembly? value, JsonSerializerOptions options)
