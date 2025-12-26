@@ -45,10 +45,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (reader.TokenType != JsonTokenType.StartObject)
                 throw new JsonException("Expected StartObject for Complex.");
 
-            double real = 0;
-            double imaginary = 0;
-            bool realSet = false;
-            bool imaginarySet = false;
+            var real = 0d;
+            var imaginary = 0d;
+            var realSet = false;
+            var imaginarySet = false;
 
             while (reader.Read())
             {

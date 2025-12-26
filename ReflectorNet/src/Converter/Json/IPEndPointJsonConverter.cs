@@ -54,9 +54,9 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException("Expected StartObject for IPEndPoint.");
 
             IPAddress? address = null;
-            int port = 0;
-            bool addressSet = false;
-            bool portSet = false;
+            var port = 0;
+            var addressSet = false;
+            var portSet = false;
 
             while (reader.Read())
             {
