@@ -11,7 +11,6 @@ using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
 using Microsoft.Extensions.Logging;
-using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Converter
 {
@@ -32,7 +31,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null)
         {
-            return InternalSerialize(reflector, obj,
+            return InternalSerialize(
+                reflector: reflector,
+                obj: obj,
                 type: type ?? obj?.GetType() ?? typeof(T),
                 name: name,
                 recursive: recursive,
@@ -68,7 +69,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var value = field.GetValue(obj);
                     var fieldType = field.FieldType;
 
-                    var serialized = reflector.Serialize(value, fieldType,
+                    var serialized = reflector.Serialize(
+                        obj: value,
+                        fallbackType: fieldType,
                         name: field.Name,
                         recursive: AllowCascadeFieldsConversion,
                         flags: flags,
@@ -115,7 +118,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var value = prop.GetValue(obj);
                     var propType = prop.PropertyType;
 
-                    var serialized = reflector.Serialize(value, propType,
+                    var serialized = reflector.Serialize(
+                        obj: value,
+                        fallbackType: propType,
                         name: prop.Name,
                         recursive: AllowCascadePropertiesConversion,
                         flags: flags,
