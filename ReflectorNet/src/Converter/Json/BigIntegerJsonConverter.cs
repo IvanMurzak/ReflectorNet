@@ -51,6 +51,10 @@ namespace com.IvanMurzak.ReflectorNet.Json
                     return result;
                 }
             }
+            else if (reader.TokenType == JsonTokenType.Null)
+            {
+                return default;
+            }
 
             throw new JsonException($"Expected string or number representing BigInteger.");
         }
