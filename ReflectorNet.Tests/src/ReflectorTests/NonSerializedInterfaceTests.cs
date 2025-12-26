@@ -28,7 +28,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         public ICharacterController? CharacterController;
     }
 
-    public class ClassWithNonSerializedProperty
+    public class ClassWithPropertyHavingNonSerializedBackingField
     {
         public string? Name;
 
@@ -110,7 +110,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         [Fact]
         public void TestNonSerializedInterfaceProperty()
         {
-            var instance = new ClassWithNonSerializedProperty
+            var instance = new ClassWithPropertyHavingNonSerializedBackingField
             {
                 Name = "TestInstance",
                 Description = "ShouldBeSerialized"
@@ -123,7 +123,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             Assert.NotNull(serialized);
 
-            var deserialized = reflector.Deserialize<ClassWithNonSerializedProperty>(serialized);
+            var deserialized = reflector.Deserialize<ClassWithPropertyHavingNonSerializedBackingField>(serialized);
             Assert.NotNull(deserialized);
             Assert.Equal("TestInstance", deserialized.Name);
             Assert.Equal("ShouldBeSerialized", deserialized.Description);
