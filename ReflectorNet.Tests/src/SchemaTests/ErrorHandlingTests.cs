@@ -16,11 +16,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             // Arrange
             var reflector = new Reflector();
-            var unsupportedObject = new IntPtr(123); // IntPtr is not typically serializable
+            var unsupportedType = typeof(int).MakeByRefType();
 
             // Act & Assert
             var exception = Assert.ThrowsAny<Exception>(() =>
-                reflector.Serialize(unsupportedObject));
+                reflector.Serialize(null, fallbackType: unsupportedType));
 
             Assert.Contains("not supported", exception.Message.ToLowerInvariant());
             _output.WriteLine($"Expected exception caught: {exception.Message}");
