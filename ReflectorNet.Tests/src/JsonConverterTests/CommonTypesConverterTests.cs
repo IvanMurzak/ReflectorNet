@@ -324,5 +324,55 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
         }
 
         #endregion
+
+        #region GuidJsonConverter Tests
+
+        [Fact]
+        public void Guid_Serialize_Value()
+        {
+            var value = Guid.Parse("12345678-1234-1234-1234-123456789abc");
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"Guid value: {json}");
+            Assert.Contains("12345678-1234-1234-1234-123456789abc", json);
+        }
+
+        [Fact]
+        public void Guid_Serialize_Empty()
+        {
+            var value = Guid.Empty;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"Guid empty: {json}");
+            Assert.Contains("00000000-0000-0000-0000-000000000000", json);
+        }
+
+        [Fact]
+        public void Guid_Deserialize_WithDashes()
+        {
+            var json = "\"abcdef12-3456-7890-abcd-ef1234567890\"";
+            var result = _reflector.JsonSerializer.Deserialize<Guid>(json);
+            _output.WriteLine($"Guid from dashes: {result}");
+            Assert.Equal(Guid.Parse("abcdef12-3456-7890-abcd-ef1234567890"), result);
+        }
+
+        [Fact]
+        public void Guid_Deserialize_Null_ToNullable()
+        {
+            var json = "null";
+            var result = _reflector.JsonSerializer.Deserialize<Guid?>(json);
+            _output.WriteLine($"Guid null: {result}");
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void Guid_RoundTrip()
+        {
+            var original = Guid.NewGuid();
+            var json = _reflector.JsonSerializer.Serialize(original);
+            var deserialized = _reflector.JsonSerializer.Deserialize<Guid>(json);
+            _output.WriteLine($"Guid roundtrip: {original} -> {json} -> {deserialized}");
+            Assert.Equal(original, deserialized);
+        }
+
+        #endregion
     }
 }

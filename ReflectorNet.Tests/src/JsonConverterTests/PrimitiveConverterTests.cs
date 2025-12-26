@@ -496,5 +496,173 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
 
         #endregion
 #endif
+
+        #region UInt16JsonConverter Tests
+
+        [Fact]
+        public void UInt16_Serialize_Value()
+        {
+            ushort value = 12345;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"UInt16 value: {json}");
+            Assert.Equal("12345", json);
+        }
+
+        [Fact]
+        public void UInt16_Serialize_Zero()
+        {
+            ushort value = 0;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"UInt16 zero: {json}");
+            Assert.Equal("0", json);
+        }
+
+        [Fact]
+        public void UInt16_Serialize_MaxValue()
+        {
+            ushort value = ushort.MaxValue;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"UInt16 max: {json}");
+            Assert.Equal("65535", json);
+        }
+
+        [Fact]
+        public void UInt16_Deserialize_FromNumber()
+        {
+            var json = "100";
+            var result = _reflector.JsonSerializer.Deserialize<ushort>(json);
+            _output.WriteLine($"UInt16 from number: {result}");
+            Assert.Equal((ushort)100, result);
+        }
+
+        [Fact]
+        public void UInt16_Deserialize_FromString()
+        {
+            var json = "\"200\"";
+            var result = _reflector.JsonSerializer.Deserialize<ushort>(json);
+            _output.WriteLine($"UInt16 from string: {result}");
+            Assert.Equal((ushort)200, result);
+        }
+
+        [Fact]
+        public void UInt16_Deserialize_Null_ToNullable()
+        {
+            var json = "null";
+            var result = _reflector.JsonSerializer.Deserialize<ushort?>(json);
+            _output.WriteLine($"UInt16 null: {result}");
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void UInt16_RoundTrip()
+        {
+            ushort original = 50000;
+            var json = _reflector.JsonSerializer.Serialize(original);
+            var deserialized = _reflector.JsonSerializer.Deserialize<ushort>(json);
+            _output.WriteLine($"UInt16 roundtrip: {original} -> {json} -> {deserialized}");
+            Assert.Equal(original, deserialized);
+        }
+
+        #endregion
+
+        #region UInt32JsonConverter Tests
+
+        [Fact]
+        public void UInt32_Serialize_Value()
+        {
+            uint value = 1234567890;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"UInt32 value: {json}");
+            Assert.Equal("1234567890", json);
+        }
+
+        [Fact]
+        public void UInt32_Serialize_MaxValue()
+        {
+            uint value = uint.MaxValue;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"UInt32 max: {json}");
+            Assert.Equal("4294967295", json);
+        }
+
+        [Fact]
+        public void UInt32_Deserialize_FromNumber()
+        {
+            var json = "999999";
+            var result = _reflector.JsonSerializer.Deserialize<uint>(json);
+            _output.WriteLine($"UInt32 from number: {result}");
+            Assert.Equal(999999u, result);
+        }
+
+        [Fact]
+        public void UInt32_Deserialize_FromString()
+        {
+            var json = "\"100000\"";
+            var result = _reflector.JsonSerializer.Deserialize<uint>(json);
+            _output.WriteLine($"UInt32 from string: {result}");
+            Assert.Equal(100000u, result);
+        }
+
+        [Fact]
+        public void UInt32_RoundTrip()
+        {
+            uint original = 3000000000;
+            var json = _reflector.JsonSerializer.Serialize(original);
+            var deserialized = _reflector.JsonSerializer.Deserialize<uint>(json);
+            _output.WriteLine($"UInt32 roundtrip: {original} -> {json} -> {deserialized}");
+            Assert.Equal(original, deserialized);
+        }
+
+        #endregion
+
+        #region UInt64JsonConverter Tests
+
+        [Fact]
+        public void UInt64_Serialize_Value()
+        {
+            ulong value = 12345678901234567890UL;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"UInt64 value: {json}");
+            Assert.Contains("12345678901234567890", json);
+        }
+
+        [Fact]
+        public void UInt64_Serialize_MaxValue()
+        {
+            ulong value = ulong.MaxValue;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"UInt64 max: {json}");
+            Assert.Contains("18446744073709551615", json);
+        }
+
+        [Fact]
+        public void UInt64_Deserialize_FromNumber()
+        {
+            var json = "999999999";
+            var result = _reflector.JsonSerializer.Deserialize<ulong>(json);
+            _output.WriteLine($"UInt64 from number: {result}");
+            Assert.Equal(999999999UL, result);
+        }
+
+        [Fact]
+        public void UInt64_Deserialize_FromString()
+        {
+            var json = "\"10000000000\"";
+            var result = _reflector.JsonSerializer.Deserialize<ulong>(json);
+            _output.WriteLine($"UInt64 from string: {result}");
+            Assert.Equal(10000000000UL, result);
+        }
+
+        [Fact]
+        public void UInt64_RoundTrip()
+        {
+            ulong original = 9999999999999UL;
+            var json = _reflector.JsonSerializer.Serialize(original);
+            var deserialized = _reflector.JsonSerializer.Deserialize<ulong>(json);
+            _output.WriteLine($"UInt64 roundtrip: {original} -> {json} -> {deserialized}");
+            Assert.Equal(original, deserialized);
+        }
+
+        #endregion
     }
 }

@@ -291,5 +291,52 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
         #endregion
 
 #endif
+
+        #region DateTimeJsonConverter Tests
+
+        [Fact]
+        public void DateTime_Serialize_Value()
+        {
+            var value = new DateTime(2024, 12, 25, 10, 30, 45, DateTimeKind.Utc);
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"DateTime value: {json}");
+            Assert.Contains("2024", json);
+            Assert.Contains("12", json);
+            Assert.Contains("25", json);
+        }
+
+        [Fact]
+        public void DateTime_Serialize_MinValue()
+        {
+            var value = DateTime.MinValue;
+            var json = _reflector.JsonSerializer.Serialize(value);
+            _output.WriteLine($"DateTime min: {json}");
+            Assert.Contains("0001", json);
+        }
+
+        [Fact]
+        public void DateTime_Deserialize_Iso8601()
+        {
+            var json = "\"2024-06-15T14:30:00Z\"";
+            var result = _reflector.JsonSerializer.Deserialize<DateTime>(json);
+            _output.WriteLine($"DateTime from ISO: {result}");
+            Assert.Equal(2024, result.Year);
+            Assert.Equal(6, result.Month);
+            Assert.Equal(15, result.Day);
+        }
+
+        [Fact]
+        public void DateTime_RoundTrip()
+        {
+            var original = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var json = _reflector.JsonSerializer.Serialize(original);
+            var deserialized = _reflector.JsonSerializer.Deserialize<DateTime>(json);
+            _output.WriteLine($"DateTime roundtrip: {original} -> {json} -> {deserialized}");
+            Assert.Equal(original.Year, deserialized.Year);
+            Assert.Equal(original.Month, deserialized.Month);
+            Assert.Equal(original.Day, deserialized.Day);
+        }
+
+        #endregion
     }
 }
