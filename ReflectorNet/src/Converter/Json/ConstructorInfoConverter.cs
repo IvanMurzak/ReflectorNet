@@ -14,22 +14,30 @@ using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Json
 {
-    public class MethodInfoConverter : JsonConverter<MethodInfo>
+    /// <summary>
+    /// JsonConverter that handles conversion between JSON objects and System.Reflection.ConstructorInfo.
+    /// </summary>
+    public class ConstructorInfoConverter : JsonConverter<ConstructorInfo>
     {
         static class Json
         {
-            public const string Name = "name";
             public const string DeclaringType = "declaringType";
             public const string Parameters = "parameters";
             public const string Type = "type";
         }
-        public override MethodInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+
+        public override ConstructorInfo? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
+            if (reader.TokenType == JsonTokenType.Null)
+                return null;
+
             using var doc = JsonDocument.ParseValue(ref reader);
             var root = doc.RootElement;
 
-            var typeName = root.GetProperty(Json.DeclaringType).GetString();
-            var methodName = root.GetProperty(Json.Name).GetString();
+            if (!root.TryGetProperty(Json.DeclaringType, out var declaringTypeElement))
+                throw new JsonException("ConstructorInfo JSON must contain 'declaringType'.");
+
+            var typeName = declaringTypeElement.GetString();
             var parameterTypes = new List<Type>();
 
             if (root.TryGetProperty(Json.Parameters, out var parametersElement))
@@ -47,16 +55,19 @@ namespace com.IvanMurzak.ReflectorNet.Json
             if (declaringType == null)
                 throw new JsonException($"Could not find type: {typeName}");
 
-            var method = string.IsNullOrEmpty(methodName)
-                ? null
-                : declaringType.GetMethod(methodName!, parameterTypes.ToArray());
-            if (method == null)
-                throw new JsonException($"Could not find method: {methodName} on type: {typeName}");
+            var constructor = declaringType.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                binder: null,
+                types: parameterTypes.ToArray(),
+                modifiers: null
+            );
+            if (constructor == null)
+                throw new JsonException($"Could not find constructor on type: {typeName} with specified parameters.");
 
-            return method;
+            return constructor;
         }
 
-        public override void Write(Utf8JsonWriter writer, MethodInfo? value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, ConstructorInfo? value, JsonSerializerOptions options)
         {
             if (value == null)
             {
@@ -64,7 +75,6 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 return;
             }
             writer.WriteStartObject();
-            writer.WriteString(Json.Name, value.Name);
             writer.WriteString(Json.DeclaringType, value.DeclaringType?.GetTypeId());
 
             writer.WritePropertyName(Json.Parameters);
@@ -72,7 +82,6 @@ namespace com.IvanMurzak.ReflectorNet.Json
             foreach (var param in value.GetParameters())
             {
                 writer.WriteStartObject();
-                writer.WriteString(Json.Name, param.Name);
                 writer.WriteString(Json.Type, param.ParameterType.GetTypeId());
                 writer.WriteEndObject();
             }

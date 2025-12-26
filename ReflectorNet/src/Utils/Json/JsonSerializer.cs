@@ -99,22 +99,48 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     new SingleJsonConverter(),
                     new DoubleJsonConverter(),
                     new BoolJsonConverter(),
+                    new CharJsonConverter(),
                     new EnumJsonConverter(),
+#if NET6_0_OR_GREATER
+                    new HalfJsonConverter(),
+#endif
+                    new IntPtrJsonConverter(),
+                    new UIntPtrJsonConverter(),
                     new DateTimeJsonConverter(),
                     new DateTimeOffsetJsonConverter(),
+#if NET6_0_OR_GREATER
+                    new DateOnlyJsonConverter(),
+                    new TimeOnlyJsonConverter(),
+#endif
                     new DecimalJsonConverter(),
                     new GuidJsonConverter(),
                     new TimeSpanJsonConverter(),
                     new TypeJsonConverter(),
+                    new UriJsonConverter(),
+                    new VersionJsonConverter(),
+                    new BigIntegerJsonConverter(),
+                    new ComplexJsonConverter(),
+                    new IPAddressJsonConverter(),
+                    new IPEndPointJsonConverter(),
 
                     // Json converters
                     new JsonElementJsonConverter(),
+                    new JsonNodeConverter(),
                     new JsonObjectJsonConverter(),
                     new JsonArrayJsonConverter(),
+                    new JsonValueJsonConverter(),
+
+                    // Reflection converters
+                    new AssemblyJsonConverter(),
+                    new ConstructorInfoConverter(),
+                    new FieldInfoConverter(),
+                    new MethodInfoConverter(),
+                    new PropertyInfoConverter(),
+                    new ParameterInfoConverter(),
 
                     // Other converters
+                    new ExceptionJsonConverter(),
                     new MethodDataConverter(),
-                    new MethodInfoConverter(),
                     new SerializedMemberConverter(reflector),
                     new SerializedMemberListConverter(reflector)
                 }

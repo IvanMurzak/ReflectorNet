@@ -143,7 +143,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException("Unexpected end of JSON while reading SerializedMember.");
         }
 
-        public override void Write(Utf8JsonWriter writer, SerializedMember value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, SerializedMember? value, JsonSerializerOptions options)
         {
             if (value == null)
             {

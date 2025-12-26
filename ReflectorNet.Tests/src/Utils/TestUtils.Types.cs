@@ -39,10 +39,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
                 typeof(TimeSpan),
                 typeof(Guid),
 
-                // typeof(CultureInfo),
-                // typeof(AssemblyName),
-                // typeof(Version),
-                // typeof(IntPtr),
+                typeof(IntPtr),
+                typeof(UIntPtr),
+                typeof(Version),
+                // typeof(CultureInfo),    // No converter yet
+                // typeof(AssemblyName),   // No converter yet
 
                 typeof(ParentClass),
                 typeof(ParentClass.NestedClass),

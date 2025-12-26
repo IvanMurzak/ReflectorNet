@@ -5,6 +5,7 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
  */
 
+#if NET6_0_OR_GREATER
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,20 +13,18 @@ using System.Text.Json.Serialization;
 namespace com.IvanMurzak.ReflectorNet.Json
 {
     /// <summary>
-    /// JsonConverter that handles conversion from JSON string values to Guid type.
-    /// Supports nullable Guid types.
+    /// JsonConverter that handles conversion between JSON numbers and System.Half.
     /// </summary>
-    public class GuidJsonConverter : JsonConverter<object>
+    public class HalfJsonConverter : JsonConverter<object>
     {
         public override bool CanConvert(Type typeToConvert)
         {
             var underlyingType = Nullable.GetUnderlyingType(typeToConvert) ?? typeToConvert;
-            return underlyingType == typeof(Guid);
+            return underlyingType == typeof(Half);
         }
 
         public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // Handle null values for nullable types
             if (reader.TokenType == JsonTokenType.Null)
             {
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
@@ -34,35 +33,30 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Cannot convert null to non-nullable type '{typeToConvert.GetTypeId()}'.");
             }
 
-            // Handle string tokens
+            if (reader.TokenType == JsonTokenType.Number)
+            {
+                return (Half)reader.GetDouble();
+            }
+
             if (reader.TokenType == JsonTokenType.String)
             {
                 var stringValue = reader.GetString();
-                if (stringValue == null)
-                {
-                    if (Nullable.GetUnderlyingType(typeToConvert) != null)
-                        return null;
-
-                    throw new JsonException($"Cannot convert null string to non-nullable type '{typeToConvert.GetTypeId()}'.");
-                }
-
-                if (Guid.TryParse(stringValue, out var guidResult))
-                    return guidResult;
-
-                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeId()}.");
+                if (Half.TryParse(stringValue, out var result))
+                    return result;
             }
 
-            throw new JsonException($"Expected string token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'");
+            throw new JsonException($"Expected number or string token for Half, but got {reader.TokenType}");
         }
 
-        public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             if (value == null)
             {
                 writer.WriteNullValue();
                 return;
             }
-            writer.WriteStringValue(((Guid)value).ToString());
+            writer.WriteNumberValue((float)(Half)value);
         }
     }
 }
+#endif

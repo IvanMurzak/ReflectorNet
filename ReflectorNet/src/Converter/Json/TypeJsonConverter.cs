@@ -52,7 +52,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException($"Expected string which represents System.Type in the format `System.Int32`");
         }
 
-        public override void Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Type? value, JsonSerializerOptions options)
         {
             if (value == null)
             {

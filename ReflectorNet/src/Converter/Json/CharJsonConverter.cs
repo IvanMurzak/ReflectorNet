@@ -12,20 +12,19 @@ using System.Text.Json.Serialization;
 namespace com.IvanMurzak.ReflectorNet.Json
 {
     /// <summary>
-    /// JsonConverter that handles conversion from JSON string values to Guid type.
-    /// Supports nullable Guid types.
+    /// JsonConverter that handles conversion between JSON values and char types.
+    /// Supports nullable char types and handles single-character strings.
     /// </summary>
-    public class GuidJsonConverter : JsonConverter<object>
+    public class CharJsonConverter : JsonConverter<object>
     {
         public override bool CanConvert(Type typeToConvert)
         {
             var underlyingType = Nullable.GetUnderlyingType(typeToConvert) ?? typeToConvert;
-            return underlyingType == typeof(Guid);
+            return underlyingType == typeof(char);
         }
 
         public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // Handle null values for nullable types
             if (reader.TokenType == JsonTokenType.Null)
             {
                 if (Nullable.GetUnderlyingType(typeToConvert) != null)
@@ -34,35 +33,39 @@ namespace com.IvanMurzak.ReflectorNet.Json
                 throw new JsonException($"Cannot convert null to non-nullable type '{typeToConvert.GetTypeId()}'.");
             }
 
-            // Handle string tokens
             if (reader.TokenType == JsonTokenType.String)
             {
                 var stringValue = reader.GetString();
-                if (stringValue == null)
+                if (string.IsNullOrEmpty(stringValue))
                 {
                     if (Nullable.GetUnderlyingType(typeToConvert) != null)
                         return null;
 
-                    throw new JsonException($"Cannot convert null string to non-nullable type '{typeToConvert.GetTypeId()}'.");
+                    return default(char);
                 }
 
-                if (Guid.TryParse(stringValue, out var guidResult))
-                    return guidResult;
+                if (stringValue.Length == 1)
+                    return stringValue[0];
 
-                throw new JsonException($"Unable to convert '{stringValue}' to {typeof(Guid).GetTypeId()}.");
+                throw new JsonException($"String must be exactly one character long to convert to char. Got: '{stringValue}'");
             }
 
-            throw new JsonException($"Expected string token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'");
+            if (reader.TokenType == JsonTokenType.Number)
+            {
+                return (char)reader.GetInt32();
+            }
+
+            throw new JsonException($"Expected string or number token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'.");
         }
 
-        public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             if (value == null)
             {
                 writer.WriteNullValue();
                 return;
             }
-            writer.WriteStringValue(((Guid)value).ToString());
+            writer.WriteStringValue(value.ToString());
         }
     }
 }
