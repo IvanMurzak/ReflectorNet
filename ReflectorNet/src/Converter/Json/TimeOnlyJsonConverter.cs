@@ -21,6 +21,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override TimeOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
+            if (reader.TokenType == JsonTokenType.Null)
+                throw new JsonException("Cannot convert null value to TimeOnly.");
             if (reader.TokenType != JsonTokenType.String)
                 throw new JsonException($"Expected string token for TimeOnly, but got {reader.TokenType}");
 

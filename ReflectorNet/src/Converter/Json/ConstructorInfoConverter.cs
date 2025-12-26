@@ -67,7 +67,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             return constructor;
         }
 
-        public override void Write(Utf8JsonWriter writer, ConstructorInfo value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, ConstructorInfo? value, JsonSerializerOptions options)
         {
             if (value == null)
             {

@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             return new Exception(message, innerException);
         }
 
-        public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Exception? value, JsonSerializerOptions options)
         {
             if (value == null)
             {

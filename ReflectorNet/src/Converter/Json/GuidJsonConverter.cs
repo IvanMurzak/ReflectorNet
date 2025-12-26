@@ -55,8 +55,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException($"Expected string token but got {reader.TokenType} for type '{typeToConvert.GetTypeId()}'");
         }
 
-        public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
         {
+            if (value is null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
             writer.WriteStringValue(((Guid)value).ToString());
         }
     }

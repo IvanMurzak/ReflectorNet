@@ -97,7 +97,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             return new IPEndPoint(address, port);
         }
 
-        public override void Write(Utf8JsonWriter writer, IPEndPoint value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, IPEndPoint? value, JsonSerializerOptions options)
         {
             if (value == null)
             {

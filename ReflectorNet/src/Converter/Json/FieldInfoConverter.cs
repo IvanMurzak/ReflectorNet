@@ -55,7 +55,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             return field;
         }
 
-        public override void Write(Utf8JsonWriter writer, FieldInfo value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, FieldInfo? value, JsonSerializerOptions options)
         {
             if (value == null)
             {

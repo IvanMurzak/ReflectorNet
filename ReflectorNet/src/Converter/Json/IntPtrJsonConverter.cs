@@ -47,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException($"Expected number or string token for IntPtr, but got {reader.TokenType}");
         }
 
-        public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
         {
             if (value is null)
             {

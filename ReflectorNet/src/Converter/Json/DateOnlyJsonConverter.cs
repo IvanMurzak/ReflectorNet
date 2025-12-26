@@ -21,6 +21,8 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
         public override DateOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
+            if (reader.TokenType == JsonTokenType.Null)
+                throw new JsonException("Cannot convert null to DateOnly.");
             if (reader.TokenType != JsonTokenType.String)
                 throw new JsonException($"Expected string token for DateOnly, but got {reader.TokenType}");
 

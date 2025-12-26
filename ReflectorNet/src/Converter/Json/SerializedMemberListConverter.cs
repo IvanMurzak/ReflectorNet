@@ -65,7 +65,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException("Unexpected end of array.");
         }
 
-        public override void Write(Utf8JsonWriter writer, SerializedMemberList value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, SerializedMemberList? value, JsonSerializerOptions options)
         {
             if (value == null)
             {

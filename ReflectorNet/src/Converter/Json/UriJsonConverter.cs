@@ -34,7 +34,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException($"Unable to parse '{stringValue}' as a Uri.");
         }
 
-        public override void Write(Utf8JsonWriter writer, Uri value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Uri? value, JsonSerializerOptions options)
         {
             if (value is null)
             {

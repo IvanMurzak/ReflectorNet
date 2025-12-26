@@ -49,7 +49,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
             throw new JsonException($"Invalid IPAddress format: {stringValue}");
         }
 
-        public override void Write(Utf8JsonWriter writer, IPAddress value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, IPAddress? value, JsonSerializerOptions options)
         {
             if (value == null)
             {
