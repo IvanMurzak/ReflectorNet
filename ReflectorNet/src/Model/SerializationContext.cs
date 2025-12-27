@@ -49,7 +49,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
             return true;
         }
 
-        private string BuildCurrentPath()
+        public string BuildCurrentPath()
         {
             if (_pathStack.Count == 1)
                 return "#";

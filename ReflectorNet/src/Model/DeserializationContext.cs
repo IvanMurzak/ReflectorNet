@@ -80,7 +80,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         /// <returns>The current path as a JSON Pointer string.</returns>
         public string GetCurrentPath() => BuildCurrentPath();
 
-        private string BuildCurrentPath()
+        public string BuildCurrentPath()
         {
             if (_pathStack.Count == 1)
                 return "#";
