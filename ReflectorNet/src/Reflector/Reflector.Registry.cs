@@ -38,6 +38,7 @@ namespace com.IvanMurzak.ReflectorNet
         public class Registry
         {
             ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
+            ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
 
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.
@@ -89,6 +90,44 @@ namespace com.IvanMurzak.ReflectorNet
             /// </summary>
             /// <returns>A read-only list containing all registered converters.</returns>
             public IReadOnlyList<IReflectionConverter> GetAllSerializers() => _serializers.ToList();
+
+            /// <summary>
+            /// Adds a type to the blacklist, preventing it from being processed by any converter.
+            /// </summary>
+            /// <param name="type"></param>
+            public void BlacklistType(Type type)
+            {
+                if (type == null)
+                    return;
+
+                _blacklistedTypes.TryAdd(type, 0);
+            }
+
+            /// <summary>
+            /// Checks if a type is blacklisted.
+            /// </summary>
+            /// <param name="type"></param>
+            /// <returns>True if the type is blacklisted; otherwise, false.</returns>
+            public bool IsTypeBlacklisted(Type type)
+            {
+                return _blacklistedTypes.ContainsKey(type);
+            }
+
+            /// <summary>
+            /// Removes a type from the blacklist.
+            /// </summary>
+            /// <param name="type"></param>
+            /// <returns></returns>
+            public bool RemoveBlacklistedType(Type type)
+            {
+                return _blacklistedTypes.TryRemove(type, out _);
+            }
+
+            /// <summary>
+            /// Returns a read-only list of all blacklisted types.
+            /// </summary>
+            /// <returns>A read-only list containing all blacklisted types.</returns>
+            public IReadOnlyList<Type> GetAllBlacklistedTypes() => _blacklistedTypes.Keys.ToList();
 
             /// <summary>
             /// Finds all converters that can handle the specified type, ordered by priority.

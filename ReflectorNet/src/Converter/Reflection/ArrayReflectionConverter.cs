@@ -76,6 +76,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                 foreach (var element in enumerable)
                 {
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace("{padding} Serializing item '{index}' of type '{type}' in '{objType}'.\nPath: {path}",
+                            StringUtils.GetPadding(depth), index, element?.GetType().GetTypeId() ?? elementType?.GetTypeId(), obj.GetType().GetTypeId(), context?.GetPath(obj));
+
                     serializedList.Add(reflector.Serialize(
                         element,
                         fallbackType: element?.GetType() ?? elementType,

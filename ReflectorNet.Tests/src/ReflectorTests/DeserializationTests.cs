@@ -51,10 +51,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             // Arrange
             var reflector = new Reflector();
             // var jsonElement = JsonSerializer.ToJsonElement(null);
-            var serializedMember = SerializedMember.FromValue(
-                reflector: reflector,
+            var serializedMember = SerializedMember.Null(
                 type: type,
-                value: null,
                 name: TypeUtils.GetTypeShortName(type));
 
             // Act

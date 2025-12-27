@@ -9,14 +9,13 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Model
 {
     [Serializable]
-    public class SerializedMember
+    public partial class SerializedMember
     {
         public const string ValueName = "value";
 
@@ -52,18 +51,6 @@ namespace com.IvanMurzak.ReflectorNet.Model
         {
             this.name = name;
             return this;
-        }
-
-        public static SerializedMember FromReference(string path, string? name)
-        {
-            var jsonObject = new JsonObject { [JsonSchema.Ref] = path };
-
-            return new SerializedMember
-            {
-                name = name,
-                typeName = JsonSchema.Reference,
-                valueJsonElement = jsonObject.ToJsonElement()
-            };
         }
 
         public SerializedMember? GetField(string name)
@@ -139,17 +126,5 @@ namespace com.IvanMurzak.ReflectorNet.Model
             valueJsonElement = jsonElement;
             return this;
         }
-
-        public static SerializedMember FromJson(Type type, JsonElement json, string? name = null)
-            => new SerializedMember(type, name).SetJsonValue(json);
-
-        public static SerializedMember FromJson(Type type, string? json, string? name = null)
-            => new SerializedMember(type, name).SetJsonValue(json);
-
-        public static SerializedMember FromValue(Reflector reflector, Type type, object? value, string? name = null)
-            => new SerializedMember(type, name).SetValue(reflector, value);
-
-        public static SerializedMember FromValue<T>(Reflector reflector, T? value, string? name = null)
-            => new SerializedMember(typeof(T), name).SetValue(reflector, value);
     }
 }

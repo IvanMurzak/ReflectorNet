@@ -107,12 +107,19 @@ namespace com.IvanMurzak.ReflectorNet
                 if (type == null)
                     throw new ArgumentException(error);
 
+                if (Converters.IsTypeBlacklisted(type))
+                {
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. Type '{type.GetTypeId()}' is blacklisted, skipping.");
+                    return SerializedMember.Null(type, name);
+                }
+
                 var converter = Converters.GetConverter(type);
                 if (converter == null)
-                    throw new ArgumentException($"Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
+                    throw new ArgumentException($"Failed to serialize '{name.ValueOrNull()}'. Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. {converter.GetType().GetTypeShortName()} used for type='{type.GetTypeShortName()}', name='{name.ValueOrNull()}'");
+                    logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize '{name.ValueOrNull()}' of type '{type.GetTypeId()}'. Converter: {converter.GetType().GetTypeShortName()}");
 
                 return converter.Serialize(
                     this,
@@ -237,6 +244,12 @@ namespace com.IvanMurzak.ReflectorNet
                     logs?.Error(error ?? "Unknown error", depth);
 
                     throw new ArgumentException(error);
+                }
+
+                if (Converters.IsTypeBlacklisted(type))
+                {
+                    logger?.LogTrace($"{padding} Deserialize. Type '{type.GetTypeShortName()}' is blacklisted, skipping.");
+                    return GetDefaultValue(type);
                 }
 
                 var converter = Converters.GetConverter(type);
