@@ -109,7 +109,8 @@ namespace com.IvanMurzak.ReflectorNet
             /// Checks if a type is blacklisted. This includes:
             /// - The type itself being blacklisted
             /// - The type extending from a blacklisted type
-            /// - Types implementing blacklisted interfaces
+            /// - Type implementing blacklisted interfaces
+            /// - Type implements generic interfaces with blacklisted type arguments
             /// - Arrays of blacklisted types (or types extending from blacklisted types)
             /// - Generics containing blacklisted type arguments (or types extending from blacklisted types)
             /// </summary>
@@ -155,7 +156,7 @@ namespace com.IvanMurzak.ReflectorNet
                 var baseType = type.BaseType;
                 while (baseType != null)
                 {
-                    if (_blacklistedTypes.ContainsKey(baseType))
+                    if (IsTypeBlacklistedInternal(baseType, visited))
                         return true;
                     baseType = baseType.BaseType;
                 }
@@ -164,22 +165,8 @@ namespace com.IvanMurzak.ReflectorNet
                 var interfaces = type.GetInterfaces();
                 for (int i = 0; i < interfaces.Length; i++)
                 {
-                    var interfaceType = interfaces[i];
-
-                    // Check if the interface itself is blacklisted
-                    if (_blacklistedTypes.ContainsKey(interfaceType))
+                    if (IsTypeBlacklistedInternal(interfaces[i], visited))
                         return true;
-
-                    // Check if any generic argument of the interface is blacklisted
-                    if (interfaceType.IsGenericType)
-                    {
-                        var genericArgs = interfaceType.GetGenericArguments();
-                        for (int j = 0; j < genericArgs.Length; j++)
-                        {
-                            if (IsTypeBlacklistedInternal(genericArgs[j], visited))
-                                return true;
-                        }
-                    }
                 }
 
                 // Check if it's an array and the element type is blacklisted

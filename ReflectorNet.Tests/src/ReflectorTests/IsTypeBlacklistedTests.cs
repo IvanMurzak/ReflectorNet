@@ -808,5 +808,37 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         }
 
         #endregion
+
+        #region Inheritance with Generics Tests
+
+        public class GenericBase<T> { }
+
+        // Case 1: Extended from a class that has a generic argument which is blacklisted
+        public class DerivedFromGenericWithBlacklistedArg : GenericBase<BlacklistedBaseClass> { }
+
+        // Case 3: Extended from a class that extends a class with blacklisted generic arg
+        public class DeeplyDerived : DerivedFromGenericWithBlacklistedArg { }
+
+        [Fact]
+        public void IsTypeBlacklisted_DerivedFromGenericWithBlacklistedArg_ReturnsTrue()
+        {
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromGenericWithBlacklistedArg)),
+                "DerivedFromGenericWithBlacklistedArg should be blacklisted because it inherits from GenericBase<BlacklistedBaseClass>");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_DeeplyDerivedFromGenericWithBlacklistedArg_ReturnsTrue()
+        {
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DeeplyDerived)),
+                "DeeplyDerived should be blacklisted because it inherits from DerivedFromGenericWithBlacklistedArg");
+        }
+
+        #endregion
     }
 }
