@@ -115,7 +115,16 @@ namespace com.IvanMurzak.ReflectorNet
             /// <returns>True if the type is blacklisted; otherwise, false.</returns>
             public bool IsTypeBlacklisted(Type type)
             {
+                return IsTypeBlacklistedInternal(type, new HashSet<Type>());
+            }
+
+            private bool IsTypeBlacklistedInternal(Type? type, HashSet<Type> visited)
+            {
                 if (type == null)
+                    return false;
+
+                // Prevent infinite recursion by tracking visited types
+                if (!visited.Add(type))
                     return false;
 
                 // Check if the exact type is blacklisted
@@ -132,22 +141,39 @@ namespace com.IvanMurzak.ReflectorNet
                 }
 
                 // Check if any implemented interface is blacklisted
-                if (type.GetInterfaces().Any(x => IsTypeBlacklisted(x)))
-                    return true;
+                foreach (var interfaceType in type.GetInterfaces())
+                {
+                    // Check if the interface itself is blacklisted
+                    if (_blacklistedTypes.ContainsKey(interfaceType))
+                        return true;
+
+                    // Check if any generic argument of the interface is blacklisted
+                    if (interfaceType.IsGenericType)
+                    {
+                        foreach (var typeArg in interfaceType.GetGenericArguments())
+                        {
+                            if (IsTypeBlacklistedInternal(typeArg, visited))
+                                return true;
+                        }
+                    }
+                }
 
                 // Check if it's an array and the element type is blacklisted
                 if (type.IsArray)
                 {
                     var elementType = type.GetElementType();
-                    if (elementType != null && IsTypeBlacklisted(elementType))
+                    if (elementType != null && IsTypeBlacklistedInternal(elementType, visited))
                         return true;
                 }
 
                 // Check if it's a generic type and any type argument is blacklisted
                 if (type.IsGenericType)
                 {
-                    if (type.GetGenericArguments().Any(IsTypeBlacklisted))
-                        return true;
+                    foreach (var typeArg in type.GetGenericArguments())
+                    {
+                        if (IsTypeBlacklistedInternal(typeArg, visited))
+                            return true;
+                    }
                 }
 
                 return false;

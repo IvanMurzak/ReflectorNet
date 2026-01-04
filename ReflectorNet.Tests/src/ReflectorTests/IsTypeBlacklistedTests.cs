@@ -22,6 +22,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         public interface IBlacklistedGenericInterface<T> { }
         public class ImplementsBlacklistedGenericInterface : IBlacklistedGenericInterface<string> { }
 
+        // Generic interface with blacklisted type argument testing
+        public interface IGenericInterface<T> { }
+        public class ImplementsGenericInterfaceWithBlacklisted : IGenericInterface<BlacklistedBaseClass> { }
+        public class ImplementsGenericInterfaceWithDerived : IGenericInterface<DerivedFromBlacklisted> { }
+        public class ImplementsGenericInterfaceWithNonBlacklisted : IGenericInterface<NonBlacklistedClass> { }
+
         // Non-blacklisted types for negative tests
         public class NonBlacklistedClass { }
         public class AnotherNonBlacklistedClass { }
@@ -209,6 +215,51 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             // Assert
             Assert.True(result);
             _output.WriteLine("MemoryStream (implements IDisposable) correctly detected as blacklisted");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ImplementsGenericInterfaceWithBlacklistedTypeArg_ReturnsTrue()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            // Act - Class implements IGenericInterface<BlacklistedBaseClass>
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(ImplementsGenericInterfaceWithBlacklisted));
+
+            // Assert
+            Assert.True(result);
+            _output.WriteLine("Type implementing generic interface with blacklisted type argument correctly returns true");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ImplementsGenericInterfaceWithDerivedBlacklistedTypeArg_ReturnsTrue()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            // Act - Class implements IGenericInterface<DerivedFromBlacklisted> where DerivedFromBlacklisted extends BlacklistedBaseClass
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(ImplementsGenericInterfaceWithDerived));
+
+            // Assert
+            Assert.True(result);
+            _output.WriteLine("Type implementing generic interface with derived blacklisted type argument correctly returns true");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ImplementsGenericInterfaceWithNonBlacklistedTypeArg_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            // Act - Class implements IGenericInterface<NonBlacklistedClass>
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(ImplementsGenericInterfaceWithNonBlacklisted));
+
+            // Assert
+            Assert.False(result);
+            _output.WriteLine("Type implementing generic interface with non-blacklisted type argument correctly returns false");
         }
 
         #endregion
