@@ -77,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // Ignore 'null' field and properties
                 // DefaultIgnoreCondition = JsonIgnoreCondition.Never, // Include 'null' fields and properties
-                // ReferenceHandler = ReferenceHandler.Preserve,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles, // Prevents StackOverflow from circular references
                 PropertyNamingPolicy = null,
                 PropertyNameCaseInsensitive = true,
                 IncludeFields = true, // Include public fields in serialization

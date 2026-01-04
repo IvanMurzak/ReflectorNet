@@ -104,13 +104,53 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             /// <summary>
-            /// Checks if a type is blacklisted.
+            /// Checks if a type is blacklisted. This includes:
+            /// - The type itself being blacklisted
+            /// - The type extending from a blacklisted type
+            /// - Types implementing blacklisted interfaces
+            /// - Arrays of blacklisted types (or types extending from blacklisted types)
+            /// - Generics containing blacklisted type arguments (or types extending from blacklisted types)
             /// </summary>
-            /// <param name="type"></param>
+            /// <param name="type">The type to check.</param>
             /// <returns>True if the type is blacklisted; otherwise, false.</returns>
             public bool IsTypeBlacklisted(Type type)
             {
-                return _blacklistedTypes.ContainsKey(type);
+                if (type == null)
+                    return false;
+
+                // Check if the exact type is blacklisted
+                if (_blacklistedTypes.ContainsKey(type))
+                    return true;
+
+                // Check if any base type in the inheritance chain is blacklisted
+                var baseType = type.BaseType;
+                while (baseType != null)
+                {
+                    if (_blacklistedTypes.ContainsKey(baseType))
+                        return true;
+                    baseType = baseType.BaseType;
+                }
+
+                // Check if any implemented interface is blacklisted
+                if (type.GetInterfaces().Any(x => _blacklistedTypes.ContainsKey(x)))
+                    return true;
+
+                // Check if it's an array and the element type is blacklisted
+                if (type.IsArray)
+                {
+                    var elementType = type.GetElementType();
+                    if (elementType != null && IsTypeBlacklisted(elementType))
+                        return true;
+                }
+
+                // Check if it's a generic type and any type argument is blacklisted
+                if (type.IsGenericType)
+                {
+                    if (type.GetGenericArguments().Any(x => IsTypeBlacklisted(x)))
+                        return true;
+                }
+
+                return false;
             }
 
             /// <summary>
