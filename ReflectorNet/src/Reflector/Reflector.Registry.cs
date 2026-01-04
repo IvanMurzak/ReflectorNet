@@ -107,6 +107,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// Checks if a type is blacklisted. This includes:
             /// - The type itself being blacklisted
             /// - The type extending from a blacklisted type
+            /// - Types implementing blacklisted interfaces
             /// - Arrays of blacklisted types (or types extending from blacklisted types)
             /// - Generics containing blacklisted type arguments (or types extending from blacklisted types)
             /// </summary>
@@ -131,11 +132,8 @@ namespace com.IvanMurzak.ReflectorNet
                 }
 
                 // Check if any implemented interface is blacklisted
-                foreach (var interfaceType in type.GetInterfaces())
-                {
-                    if (_blacklistedTypes.ContainsKey(interfaceType))
-                        return true;
-                }
+                if (type.GetInterfaces().Any(x => _blacklistedTypes.ContainsKey(x)))
+                    return true;
 
                 // Check if it's an array and the element type is blacklisted
                 if (type.IsArray)
@@ -148,11 +146,8 @@ namespace com.IvanMurzak.ReflectorNet
                 // Check if it's a generic type and any type argument is blacklisted
                 if (type.IsGenericType)
                 {
-                    foreach (var typeArg in type.GetGenericArguments())
-                    {
-                        if (IsTypeBlacklisted(typeArg))
-                            return true;
-                    }
+                    if (type.GetGenericArguments().Any(x => IsTypeBlacklisted(x)))
+                        return true;
                 }
 
                 return false;
