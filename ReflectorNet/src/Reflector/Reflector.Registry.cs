@@ -38,8 +38,8 @@ namespace com.IvanMurzak.ReflectorNet
         public class Registry
         {
             ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
-            ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
-            ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
+            readonly ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
+            readonly ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
 
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.
@@ -109,8 +109,8 @@ namespace com.IvanMurzak.ReflectorNet
             /// Checks if a type is blacklisted. This includes:
             /// - The type itself being blacklisted
             /// - The type extending from a blacklisted type
-            /// - Type implementing blacklisted interfaces
-            /// - Type implements generic interfaces with blacklisted type arguments
+            /// - Types implementing blacklisted interfaces
+            /// - Types implementing generic interfaces with blacklisted type arguments
             /// - Arrays of blacklisted types (or types extending from blacklisted types)
             /// - Generics containing blacklisted type arguments (or types extending from blacklisted types)
             /// </summary>
@@ -129,7 +129,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (_blacklistCache.TryGetValue(type, out var cached))
                     return cached;
 
-                // Compute and cache the result
+                // Compute and cache the result for more complex cases
                 var result = IsTypeBlacklistedInternal(type, new HashSet<Type>());
                 _blacklistCache.TryAdd(type, result);
                 return result;
