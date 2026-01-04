@@ -132,7 +132,7 @@ namespace com.IvanMurzak.ReflectorNet
                 }
 
                 // Check if any implemented interface is blacklisted
-                if (type.GetInterfaces().Any(x => _blacklistedTypes.ContainsKey(x)))
+                if (type.GetInterfaces().Any(x => IsTypeBlacklisted(x)))
                     return true;
 
                 // Check if it's an array and the element type is blacklisted
@@ -146,7 +146,7 @@ namespace com.IvanMurzak.ReflectorNet
                 // Check if it's a generic type and any type argument is blacklisted
                 if (type.IsGenericType)
                 {
-                    if (type.GetGenericArguments().Any(x => IsTypeBlacklisted(x)))
+                    if (type.GetGenericArguments().Any(IsTypeBlacklisted))
                         return true;
                 }
 
