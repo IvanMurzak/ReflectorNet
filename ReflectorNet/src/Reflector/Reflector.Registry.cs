@@ -37,6 +37,8 @@ namespace com.IvanMurzak.ReflectorNet
         /// </summary>
         public class Registry
         {
+            const int MaxBlacklistCacheSize = 1000;
+
             ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
             readonly ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
             readonly ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
@@ -131,6 +133,11 @@ namespace com.IvanMurzak.ReflectorNet
 
                 // Compute and cache the result for more complex cases
                 var result = IsTypeBlacklistedInternal(type, new HashSet<Type>());
+
+                // Clear cache if it exceeds the size limit to prevent unbounded memory growth
+                if (_blacklistCache.Count >= MaxBlacklistCacheSize)
+                    _blacklistCache.Clear();
+
                 _blacklistCache.TryAdd(type, result);
                 return result;
             }
