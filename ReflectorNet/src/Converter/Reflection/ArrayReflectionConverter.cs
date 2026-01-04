@@ -76,13 +76,23 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                 foreach (var element in enumerable)
                 {
+                    var thisElementType = element?.GetType();
+                    var currentType = thisElementType ?? elementType;
+
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding} Serializing item '{index}' of type '{type}' in '{objType}'.\nPath: {path}",
-                            StringUtils.GetPadding(depth), index, element?.GetType().GetTypeId() ?? elementType?.GetTypeId(), obj.GetType().GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth), index, currentType?.GetTypeId(), obj.GetType().GetTypeId(), context?.GetPath(obj));
+
+                    if (thisElementType != null && reflector.Converters.IsTypeBlacklisted(thisElementType))
+                    {
+                        serializedList.Add(null!);
+                        index++;
+                        continue;
+                    }
 
                     serializedList.Add(reflector.Serialize(
                         element,
-                        fallbackType: element?.GetType() ?? elementType,
+                        fallbackType: currentType,
                         name: $"[{index++}]",
                         recursive: recursive,
                         flags: flags,

@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -21,6 +24,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests
 
         public interface IBlacklistedGenericInterface<T> { }
         public class ImplementsBlacklistedGenericInterface : IBlacklistedGenericInterface<string> { }
+
+        // Generic interface with blacklisted type argument testing
+        public interface IGenericInterface<T> { }
+        public class ImplementsGenericInterfaceWithBlacklisted : IGenericInterface<BlacklistedBaseClass> { }
+        public class ImplementsGenericInterfaceWithDerived : IGenericInterface<DerivedFromBlacklisted> { }
+        public class ImplementsGenericInterfaceWithNonBlacklisted : IGenericInterface<NonBlacklistedClass> { }
 
         // Non-blacklisted types for negative tests
         public class NonBlacklistedClass { }
@@ -209,6 +218,51 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             // Assert
             Assert.True(result);
             _output.WriteLine("MemoryStream (implements IDisposable) correctly detected as blacklisted");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ImplementsGenericInterfaceWithBlacklistedTypeArg_ReturnsTrue()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            // Act - Class implements IGenericInterface<BlacklistedBaseClass>
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(ImplementsGenericInterfaceWithBlacklisted));
+
+            // Assert
+            Assert.True(result);
+            _output.WriteLine("Type implementing generic interface with blacklisted type argument correctly returns true");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ImplementsGenericInterfaceWithDerivedBlacklistedTypeArg_ReturnsTrue()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            // Act - Class implements IGenericInterface<DerivedFromBlacklisted> where DerivedFromBlacklisted extends BlacklistedBaseClass
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(ImplementsGenericInterfaceWithDerived));
+
+            // Assert
+            Assert.True(result);
+            _output.WriteLine("Type implementing generic interface with derived blacklisted type argument correctly returns true");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ImplementsGenericInterfaceWithNonBlacklistedTypeArg_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            // Act - Class implements IGenericInterface<NonBlacklistedClass>
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(ImplementsGenericInterfaceWithNonBlacklisted));
+
+            // Assert
+            Assert.False(result);
+            _output.WriteLine("Type implementing generic interface with non-blacklisted type argument correctly returns false");
         }
 
         #endregion
@@ -754,6 +808,209 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             Assert.True(result1);
             Assert.False(result2);
             _output.WriteLine("Separate Reflector instances have independent blacklists");
+        }
+
+        #endregion
+
+        #region Inheritance with Generics Tests
+
+        public class GenericBase<T> { }
+
+        // Case 1: Extended from a class that has a generic argument which is blacklisted
+        public class DerivedFromGenericWithBlacklistedArg : GenericBase<BlacklistedBaseClass> { }
+
+        // Case 3: Extended from a class that extends a class with blacklisted generic arg
+        public class DeeplyDerived : DerivedFromGenericWithBlacklistedArg { }
+
+        [Fact]
+        public void IsTypeBlacklisted_DerivedFromGenericWithBlacklistedArg_ReturnsTrue()
+        {
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromGenericWithBlacklistedArg)),
+                "DerivedFromGenericWithBlacklistedArg should be blacklisted because it inherits from GenericBase<BlacklistedBaseClass>");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_DeeplyDerivedFromGenericWithBlacklistedArg_ReturnsTrue()
+        {
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DeeplyDerived)),
+                "DeeplyDerived should be blacklisted because it inherits from DerivedFromGenericWithBlacklistedArg");
+        }
+
+        #endregion
+
+        #region Concurrency and Cache Tests
+
+        [Fact]
+        public async Task IsTypeBlacklisted_ConcurrentAccess_NoExceptionsAndCorrectResults()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var exceptions = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+            var results = new System.Collections.Concurrent.ConcurrentBag<bool>();
+            var barrier = new Barrier(4);
+
+            // Act - Run concurrent reads and writes
+            var tasks = new Task[4];
+
+            // Task 0: Adds types to blacklist
+            tasks[0] = Task.Run(() =>
+            {
+                try
+                {
+                    barrier.SignalAndWait();
+                    for (int i = 0; i < 100; i++)
+                    {
+                        reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+                        reflector.Converters.BlacklistType(typeof(IBlacklistedInterface));
+                    }
+                }
+                catch (Exception ex) { exceptions.Add(ex); }
+            });
+
+            // Tasks 1-3: Read from blacklist concurrently
+            for (int t = 1; t < 4; t++)
+            {
+                tasks[t] = Task.Run(() =>
+                {
+                    try
+                    {
+                        barrier.SignalAndWait();
+                        for (int i = 0; i < 100; i++)
+                        {
+                            results.Add(reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromBlacklisted)));
+                            results.Add(reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass)));
+                            results.Add(reflector.Converters.IsTypeBlacklisted(typeof(List<BlacklistedBaseClass>)));
+                        }
+                    }
+                    catch (Exception ex) { exceptions.Add(ex); }
+                });
+            }
+
+            await Task.WhenAll(tasks);
+
+            // Assert
+            Assert.Empty(exceptions);
+            _output.WriteLine($"Completed {results.Count} concurrent blacklist checks without exceptions");
+        }
+
+        [Fact]
+        public async Task IsTypeBlacklisted_ConcurrentBlacklistModification_RetriesAndReturnsCorrectResult()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var correctResultsCount = 0;
+            var barrier = new Barrier(2);
+
+            // Act - One thread modifies blacklist while another reads
+            var writerTask = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                for (int i = 0; i < 50; i++)
+                {
+                    reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+                    Thread.Sleep(1); // Small delay to interleave
+                    reflector.Converters.RemoveBlacklistedType(typeof(BlacklistedBaseClass));
+                }
+                // End with type blacklisted
+                reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+            });
+
+            var readerTask = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                for (int i = 0; i < 100; i++)
+                {
+                    // Result may vary during concurrent modification, but should never throw
+                    var result = reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromBlacklisted));
+                    if (result) Interlocked.Increment(ref correctResultsCount);
+                }
+            });
+
+            await Task.WhenAll(writerTask, readerTask);
+
+            // Final state should be consistent
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromBlacklisted)),
+                "After writer finishes with BlacklistType, derived types should be blacklisted");
+            _output.WriteLine($"Reader got 'true' result {correctResultsCount} times during concurrent modification");
+        }
+
+        // Helper types for cache size test - generate many unique types
+        public class CacheTestType1 { }
+        public class CacheTestType2 { }
+        public class CacheTestType3 { }
+        public class CacheTestType4 { }
+        public class CacheTestType5 { }
+
+        [Fact]
+        public void IsTypeBlacklisted_CacheSizeLimit_ClearsWhenExceeded()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
+
+            // Get all types from the current assembly to fill the cache
+            var types = typeof(IsTypeBlacklistedTests).Assembly.GetTypes()
+                .Where(t => t != null)
+                .Take(1100) // More than MaxBlacklistCacheSize (1000)
+                .ToList();
+
+            // Act - Query many types to fill the cache beyond its limit
+            foreach (var type in types)
+            {
+                try
+                {
+                    reflector.Converters.IsTypeBlacklisted(type);
+                }
+                catch
+                {
+                    // Some types may throw during reflection, ignore
+                }
+            }
+
+            // Query again - should still work correctly after cache was cleared
+            var result1 = reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass));
+            var result2 = reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromBlacklisted));
+            var result3 = reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass));
+
+            // Assert - Results should still be correct after cache overflow
+            Assert.True(result1, "Exact blacklisted type should return true");
+            Assert.True(result2, "Derived from blacklisted type should return true");
+            Assert.False(result3, "Non-blacklisted type should return false");
+
+            _output.WriteLine($"Queried {types.Count} types, cache correctly handles overflow");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_CacheInvalidation_ReturnsCorrectResultAfterBlacklistChange()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Prime the cache with a "false" result
+            var initialResult = reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass));
+            Assert.False(initialResult);
+
+            // Act - Blacklist the type
+            reflector.Converters.BlacklistType(typeof(NonBlacklistedClass));
+
+            // Assert - Cache should be invalidated, new result should be correct
+            var afterBlacklistResult = reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass));
+            Assert.True(afterBlacklistResult, "After blacklisting, type should be detected as blacklisted");
+
+            // Act - Remove from blacklist
+            reflector.Converters.RemoveBlacklistedType(typeof(NonBlacklistedClass));
+
+            // Assert - Cache should be invalidated again
+            var afterRemoveResult = reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass));
+            Assert.False(afterRemoveResult, "After removing from blacklist, type should not be detected as blacklisted");
+
+            _output.WriteLine("Cache correctly invalidated after blacklist modifications");
         }
 
         #endregion

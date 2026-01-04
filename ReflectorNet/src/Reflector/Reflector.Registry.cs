@@ -37,8 +37,13 @@ namespace com.IvanMurzak.ReflectorNet
         /// </summary>
         public class Registry
         {
+            const int MaxBlacklistCacheSize = 1000;
+
             ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
-            ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
+            readonly ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
+
+            // Not readonly: intentionally replaced (not cleared) for thread-safe cache invalidation
+            ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
 
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.
@@ -100,7 +105,8 @@ namespace com.IvanMurzak.ReflectorNet
                 if (type == null)
                     return;
 
-                _blacklistedTypes.TryAdd(type, 0);
+                if (_blacklistedTypes.TryAdd(type, 0))
+                    _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes
             }
 
             /// <summary>
@@ -108,6 +114,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// - The type itself being blacklisted
             /// - The type extending from a blacklisted type
             /// - Types implementing blacklisted interfaces
+            /// - Types implementing generic interfaces with blacklisted type arguments
             /// - Arrays of blacklisted types (or types extending from blacklisted types)
             /// - Generics containing blacklisted type arguments (or types extending from blacklisted types)
             /// </summary>
@@ -118,36 +125,82 @@ namespace com.IvanMurzak.ReflectorNet
                 if (type == null)
                     return false;
 
+                // Fast path: if no types are blacklisted, return false immediately
+                if (_blacklistedTypes.IsEmpty)
+                    return false;
+
+                while (true)
+                {
+                    // Capture current cache reference for invalidation detection
+                    var cache = _blacklistCache;
+
+                    // Check cache first
+                    if (cache.TryGetValue(type, out var cached))
+                        return cached;
+
+                    // Compute the result (pass cache reference to avoid stale reads during computation)
+                    var result = IsTypeBlacklistedInternal(type, new HashSet<Type>(), cache);
+
+                    // If cache was invalidated during computation, retry with fresh data
+                    if (!ReferenceEquals(_blacklistCache, cache))
+                        continue;
+
+                    // Handle size limit - replace cache if too large
+                    if (cache.Count >= MaxBlacklistCacheSize)
+                        _blacklistCache = new ConcurrentDictionary<Type, bool>();
+
+                    // Cache the result (safe even if cache was just replaced)
+                    _blacklistCache.TryAdd(type, result);
+                    return result;
+                }
+            }
+
+            private bool IsTypeBlacklistedInternal(Type? type, HashSet<Type> visited, ConcurrentDictionary<Type, bool> cache)
+            {
+                if (type == null)
+                    return false;
+
+                // Check cache first for recursive calls (uses captured reference for consistency)
+                if (cache.TryGetValue(type, out var cached))
+                    return cached;
+
+                // Prevent infinite recursion by tracking visited types
+                if (!visited.Add(type))
+                    return false;
+
                 // Check if the exact type is blacklisted
                 if (_blacklistedTypes.ContainsKey(type))
                     return true;
 
-                // Check if any base type in the inheritance chain is blacklisted
-                var baseType = type.BaseType;
-                while (baseType != null)
-                {
-                    if (_blacklistedTypes.ContainsKey(baseType))
-                        return true;
-                    baseType = baseType.BaseType;
-                }
+                // Check if base type is blacklisted (recursive call walks the full inheritance chain)
+                if (type.BaseType != null && IsTypeBlacklistedInternal(type.BaseType, visited, cache))
+                    return true;
 
                 // Check if any implemented interface is blacklisted
-                if (type.GetInterfaces().Any(x => IsTypeBlacklisted(x)))
-                    return true;
+                var interfaces = type.GetInterfaces();
+                for (int i = 0; i < interfaces.Length; i++)
+                {
+                    if (IsTypeBlacklistedInternal(interfaces[i], visited, cache))
+                        return true;
+                }
 
                 // Check if it's an array and the element type is blacklisted
                 if (type.IsArray)
                 {
                     var elementType = type.GetElementType();
-                    if (elementType != null && IsTypeBlacklisted(elementType))
+                    if (elementType != null && IsTypeBlacklistedInternal(elementType, visited, cache))
                         return true;
                 }
 
                 // Check if it's a generic type and any type argument is blacklisted
                 if (type.IsGenericType)
                 {
-                    if (type.GetGenericArguments().Any(IsTypeBlacklisted))
-                        return true;
+                    var genericArgs = type.GetGenericArguments();
+                    for (int i = 0; i < genericArgs.Length; i++)
+                    {
+                        if (IsTypeBlacklistedInternal(genericArgs[i], visited, cache))
+                            return true;
+                    }
                 }
 
                 return false;
@@ -160,7 +213,12 @@ namespace com.IvanMurzak.ReflectorNet
             /// <returns></returns>
             public bool RemoveBlacklistedType(Type type)
             {
-                return _blacklistedTypes.TryRemove(type, out _);
+                if (_blacklistedTypes.TryRemove(type, out _))
+                {
+                    _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes without racing on Clear()
+                    return true;
+                }
+                return false;
             }
 
             /// <summary>
