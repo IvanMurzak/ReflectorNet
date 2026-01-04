@@ -104,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet
                     return;
 
                 if (_blacklistedTypes.TryAdd(type, 0))
-                    _blacklistCache.Clear(); // Invalidate cache when blacklist changes
+                    _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes
             }
 
             /// <summary>
@@ -127,19 +127,30 @@ namespace com.IvanMurzak.ReflectorNet
                 if (_blacklistedTypes.IsEmpty)
                     return false;
 
-                // Check cache first
-                if (_blacklistCache.TryGetValue(type, out var cached))
-                    return cached;
+                while (true)
+                {
+                    // Capture current cache reference for invalidation detection
+                    var cache = _blacklistCache;
 
-                // Compute and cache the result for more complex cases
-                var result = IsTypeBlacklistedInternal(type, new HashSet<Type>());
+                    // Check cache first
+                    if (cache.TryGetValue(type, out var cached))
+                        return cached;
 
-                // Clear cache if it exceeds the size limit to prevent unbounded memory growth
-                if (_blacklistCache.Count >= MaxBlacklistCacheSize)
-                    _blacklistCache.Clear();
+                    // Compute the result
+                    var result = IsTypeBlacklistedInternal(type, new HashSet<Type>());
 
-                _blacklistCache.TryAdd(type, result);
-                return result;
+                    // If cache was invalidated during computation, retry with fresh data
+                    if (!ReferenceEquals(_blacklistCache, cache))
+                        continue;
+
+                    // Handle size limit - replace cache if too large
+                    if (cache.Count >= MaxBlacklistCacheSize)
+                        _blacklistCache = new ConcurrentDictionary<Type, bool>();
+
+                    // Cache the result (safe even if cache was just replaced)
+                    _blacklistCache.TryAdd(type, result);
+                    return result;
+                }
             }
 
             private bool IsTypeBlacklistedInternal(Type? type, HashSet<Type> visited)
