@@ -41,6 +41,8 @@ namespace com.IvanMurzak.ReflectorNet
 
             ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
             readonly ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
+
+            // Not readonly: intentionally replaced (not cleared) for thread-safe cache invalidation
             ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
 
             /// <summary>
@@ -136,8 +138,8 @@ namespace com.IvanMurzak.ReflectorNet
                     if (cache.TryGetValue(type, out var cached))
                         return cached;
 
-                    // Compute the result
-                    var result = IsTypeBlacklistedInternal(type, new HashSet<Type>());
+                    // Compute the result (pass cache reference to avoid stale reads during computation)
+                    var result = IsTypeBlacklistedInternal(type, new HashSet<Type>(), cache);
 
                     // If cache was invalidated during computation, retry with fresh data
                     if (!ReferenceEquals(_blacklistCache, cache))
@@ -153,13 +155,13 @@ namespace com.IvanMurzak.ReflectorNet
                 }
             }
 
-            private bool IsTypeBlacklistedInternal(Type? type, HashSet<Type> visited)
+            private bool IsTypeBlacklistedInternal(Type? type, HashSet<Type> visited, ConcurrentDictionary<Type, bool> cache)
             {
                 if (type == null)
                     return false;
 
-                // Check cache first for recursive calls
-                if (_blacklistCache.TryGetValue(type, out var cached))
+                // Check cache first for recursive calls (uses captured reference for consistency)
+                if (cache.TryGetValue(type, out var cached))
                     return cached;
 
                 // Prevent infinite recursion by tracking visited types
@@ -170,20 +172,15 @@ namespace com.IvanMurzak.ReflectorNet
                 if (_blacklistedTypes.ContainsKey(type))
                     return true;
 
-                // Check if any base type in the inheritance chain is blacklisted
-                var baseType = type.BaseType;
-                while (baseType != null)
-                {
-                    if (IsTypeBlacklistedInternal(baseType, visited))
-                        return true;
-                    baseType = baseType.BaseType;
-                }
+                // Check if base type is blacklisted (recursive call walks the full inheritance chain)
+                if (type.BaseType != null && IsTypeBlacklistedInternal(type.BaseType, visited, cache))
+                    return true;
 
                 // Check if any implemented interface is blacklisted
                 var interfaces = type.GetInterfaces();
                 for (int i = 0; i < interfaces.Length; i++)
                 {
-                    if (IsTypeBlacklistedInternal(interfaces[i], visited))
+                    if (IsTypeBlacklistedInternal(interfaces[i], visited, cache))
                         return true;
                 }
 
@@ -191,7 +188,7 @@ namespace com.IvanMurzak.ReflectorNet
                 if (type.IsArray)
                 {
                     var elementType = type.GetElementType();
-                    if (elementType != null && IsTypeBlacklistedInternal(elementType, visited))
+                    if (elementType != null && IsTypeBlacklistedInternal(elementType, visited, cache))
                         return true;
                 }
 
@@ -201,7 +198,7 @@ namespace com.IvanMurzak.ReflectorNet
                     var genericArgs = type.GetGenericArguments();
                     for (int i = 0; i < genericArgs.Length; i++)
                     {
-                        if (IsTypeBlacklistedInternal(genericArgs[i], visited))
+                        if (IsTypeBlacklistedInternal(genericArgs[i], visited, cache))
                             return true;
                     }
                 }
