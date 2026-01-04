@@ -41,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
             readonly ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
-            readonly ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
+            ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
 
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.
@@ -207,7 +207,7 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 if (_blacklistedTypes.TryRemove(type, out _))
                 {
-                    _blacklistCache.Clear(); // Invalidate cache when blacklist changes
+                    _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes without racing on Clear()
                     return true;
                 }
                 return false;
