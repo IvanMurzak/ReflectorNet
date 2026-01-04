@@ -39,6 +39,7 @@ namespace com.IvanMurzak.ReflectorNet
         {
             ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
             ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
+            ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
 
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.
@@ -100,7 +101,8 @@ namespace com.IvanMurzak.ReflectorNet
                 if (type == null)
                     return;
 
-                _blacklistedTypes.TryAdd(type, 0);
+                if (_blacklistedTypes.TryAdd(type, 0))
+                    _blacklistCache.Clear(); // Invalidate cache when blacklist changes
             }
 
             /// <summary>
@@ -115,13 +117,31 @@ namespace com.IvanMurzak.ReflectorNet
             /// <returns>True if the type is blacklisted; otherwise, false.</returns>
             public bool IsTypeBlacklisted(Type type)
             {
-                return IsTypeBlacklistedInternal(type, new HashSet<Type>());
+                if (type == null)
+                    return false;
+
+                // Fast path: if no types are blacklisted, return false immediately
+                if (_blacklistedTypes.IsEmpty)
+                    return false;
+
+                // Check cache first
+                if (_blacklistCache.TryGetValue(type, out var cached))
+                    return cached;
+
+                // Compute and cache the result
+                var result = IsTypeBlacklistedInternal(type, new HashSet<Type>());
+                _blacklistCache.TryAdd(type, result);
+                return result;
             }
 
             private bool IsTypeBlacklistedInternal(Type? type, HashSet<Type> visited)
             {
                 if (type == null)
                     return false;
+
+                // Check cache first for recursive calls
+                if (_blacklistCache.TryGetValue(type, out var cached))
+                    return cached;
 
                 // Prevent infinite recursion by tracking visited types
                 if (!visited.Add(type))
@@ -141,8 +161,11 @@ namespace com.IvanMurzak.ReflectorNet
                 }
 
                 // Check if any implemented interface is blacklisted
-                foreach (var interfaceType in type.GetInterfaces())
+                var interfaces = type.GetInterfaces();
+                for (int i = 0; i < interfaces.Length; i++)
                 {
+                    var interfaceType = interfaces[i];
+
                     // Check if the interface itself is blacklisted
                     if (_blacklistedTypes.ContainsKey(interfaceType))
                         return true;
@@ -150,9 +173,10 @@ namespace com.IvanMurzak.ReflectorNet
                     // Check if any generic argument of the interface is blacklisted
                     if (interfaceType.IsGenericType)
                     {
-                        foreach (var typeArg in interfaceType.GetGenericArguments())
+                        var genericArgs = interfaceType.GetGenericArguments();
+                        for (int j = 0; j < genericArgs.Length; j++)
                         {
-                            if (IsTypeBlacklistedInternal(typeArg, visited))
+                            if (IsTypeBlacklistedInternal(genericArgs[j], visited))
                                 return true;
                         }
                     }
@@ -169,9 +193,10 @@ namespace com.IvanMurzak.ReflectorNet
                 // Check if it's a generic type and any type argument is blacklisted
                 if (type.IsGenericType)
                 {
-                    foreach (var typeArg in type.GetGenericArguments())
+                    var genericArgs = type.GetGenericArguments();
+                    for (int i = 0; i < genericArgs.Length; i++)
                     {
-                        if (IsTypeBlacklistedInternal(typeArg, visited))
+                        if (IsTypeBlacklistedInternal(genericArgs[i], visited))
                             return true;
                     }
                 }
@@ -186,7 +211,12 @@ namespace com.IvanMurzak.ReflectorNet
             /// <returns></returns>
             public bool RemoveBlacklistedType(Type type)
             {
-                return _blacklistedTypes.TryRemove(type, out _);
+                if (_blacklistedTypes.TryRemove(type, out _))
+                {
+                    _blacklistCache.Clear(); // Invalidate cache when blacklist changes
+                    return true;
+                }
+                return false;
             }
 
             /// <summary>
