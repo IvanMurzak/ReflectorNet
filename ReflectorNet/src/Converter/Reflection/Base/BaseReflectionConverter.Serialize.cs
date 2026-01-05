@@ -80,21 +80,21 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (GetIgnoredFields().Contains(field.Name))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding} Skipping serialization of field '{fieldName}' in '{objType}' because it is ignored.\nPath: {path}",
+                        logger.LogTrace("{padding}Skipping serialization of field '{fieldName}' in '{objType}' because it is ignored.\nPath: {path}",
                             StringUtils.GetPadding(depth + 1), field.Name, objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 if (reflector.Converters.IsTypeBlacklisted(field.FieldType))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding} Skipping serialization of field '{fieldName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
+                        logger.LogTrace("{padding}Skipping serialization of field '{fieldName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
                             StringUtils.GetPadding(depth + 1), field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding} Serializing field '{fieldName}' of type '{type}' in '{objType}'.\nPath: {path}",
+                        logger.LogTrace("{padding}Serializing field '{fieldName}' of type '{type}' in '{objType}'.\nPath: {path}",
                             StringUtils.GetPadding(depth + 1), field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
 
                     var value = field.GetValue(obj);

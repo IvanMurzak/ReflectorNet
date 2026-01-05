@@ -110,7 +110,8 @@ namespace com.IvanMurzak.ReflectorNet
                 if (Converters.IsTypeBlacklisted(type))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize. Type '{type.GetTypeId()}' is blacklisted, skipping.");
+                        logger.LogTrace("{padding}Serialize. Type '{type}' is blacklisted, skipping.",
+                            StringUtils.GetPadding(depth), type.GetTypeId().ValueOrNull());
                     return SerializedMember.Null(type, name);
                 }
 
@@ -119,7 +120,8 @@ namespace com.IvanMurzak.ReflectorNet
                     throw new ArgumentException($"Failed to serialize '{name.ValueOrNull()}'. Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{StringUtils.GetPadding(depth)} Serialize '{name.ValueOrNull()}' of type '{type.GetTypeId()}'. Converter: {converter.GetType().GetTypeShortName()}");
+                    logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. Converter: {converter}",
+                        StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull(), converter.GetType().GetTypeShortName());
 
                 return converter.Serialize(
                     this,

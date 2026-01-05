@@ -63,14 +63,16 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             SerializationContext? context = null)
         {
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace("Serializing enumerable of type {Type} at depth {Depth}, recursive {recursive}.",
-                type.GetTypeId(), depth, recursive);
+                logger.LogTrace("{padding}Serializing enumerable of type {Type} at depth {Depth}, recursive {recursive}.",
+                    StringUtils.GetPadding(depth), type.GetTypeId(), depth, recursive);
 
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);
 
             if (recursive)
             {
+                depth++;
+
                 int index = 0;
                 var enumerable = (System.Collections.IEnumerable)obj;
                 var serializedList = new SerializedMemberList();
