@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
+// using System.Text.Json.Schema;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet
@@ -35,7 +35,9 @@ namespace com.IvanMurzak.ReflectorNet
         /// <typeparam name="T">The type for which to generate the JSON Schema.</typeparam>
         /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
         public JsonNode GetSchema<T>()
-            => jsonSchema.GetSchema<T>(this);
+        {
+            return GetSchema(typeof(T));
+        }
 
         /// <summary>
         /// Generates a JSON Schema representation for the specified generic type parameter.
@@ -54,7 +56,9 @@ namespace com.IvanMurzak.ReflectorNet
         /// <typeparam name="T">The type for which to generate the JSON Schema.</typeparam>
         /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
         public JsonNode GetSchemaRef<T>()
-            => jsonSchema.GetSchemaRef<T>(this);
+        {
+            return jsonSchema.GetSchemaRef<T>(this);
+        }
 
         /// <summary>
         /// Generates a JSON Schema representation for the specified type.
@@ -73,7 +77,13 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="type">The Type for which to generate the JSON Schema.</param>
         /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
         public JsonNode GetSchema(Type type)
-            => jsonSchema.GetSchema(this, type);
+        {
+            // var jsonConverter = JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(type));
+            // if (jsonConverter != null)
+            //     return JsonSerializerOptions.GetJsonSchemaAsNode(type);
+
+            return jsonSchema.GetSchema(this, type);
+        }
 
         /// <summary>
         /// Generates a JSON Schema representation for the specified type.

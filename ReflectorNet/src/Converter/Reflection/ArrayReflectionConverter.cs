@@ -121,7 +121,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 // Handle non-recursive serialization
                 return SerializedMember.FromJson(
                     type: type,
-                    json: obj.ToJson(reflector, logger: logger),
+                    json: obj.ToJson(reflector, depth: depth, logger: logger),
                     name: name);
             }
         }

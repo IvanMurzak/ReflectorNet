@@ -133,21 +133,21 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (GetIgnoredProperties().Contains(prop.Name))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding} Skipping serialization of property '{propertyName}' in '{objType}' because it is ignored.\nPath: {path}",
+                        logger.LogTrace("{padding}Skipping serialization of property '{propertyName}' in '{objType}' because it is ignored.\nPath: {path}",
                             StringUtils.GetPadding(depth + 1), prop.Name, objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 if (reflector.Converters.IsTypeBlacklisted(prop.PropertyType))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding} Skipping serialization of property '{propertyName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
+                        logger.LogTrace("{padding}Skipping serialization of property '{propertyName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
                             StringUtils.GetPadding(depth + 1), prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding} Serializing property '{propertyName}' of type '{type}' in '{objType}'.\nPath: {path}",
+                        logger.LogTrace("{padding}Serializing property '{propertyName}' of type '{type}' in '{objType}'.\nPath: {path}",
                             StringUtils.GetPadding(depth + 1), prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
 
                     var value = prop.GetValue(obj);

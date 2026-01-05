@@ -8,6 +8,7 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet
@@ -20,7 +21,7 @@ namespace com.IvanMurzak.ReflectorNet
                 logger.LogTrace("Converting object of type {Type} to JsonElement.",
                     data?.GetType().GetTypeId().ValueOrNull());
 
-            return JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
+            return System.Text.Json.JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
         }
 
         public static JsonElement? ToJsonElement(this JsonNode? node)
@@ -36,17 +37,18 @@ namespace com.IvanMurzak.ReflectorNet
             return document.RootElement.Clone();
         }
 
-        public static string ToJson(this object? value, Reflector? reflector, JsonSerializerOptions? options = null, ILogger? logger = null)
+        public static string? ToJson(this object? value, Reflector? reflector, JsonSerializerOptions? options = null, int depth = 0, ILogger? logger = null)
         {
             return ToJson(
                 value: value,
-                defaultValue: Utils.JsonSerializer.EmptyJsonObject, // Use empty JSON object as default value
+                defaultValue: null, // Use empty JSON object as default value
                 reflector: reflector,
                 options: options,
+                depth: depth,
                 logger: logger);
         }
 
-        public static string ToJson(this object? value, string defaultValue, Reflector? reflector, JsonSerializerOptions? options = null, ILogger? logger = null)
+        public static string? ToJson(this object? value, string? defaultValue, Reflector? reflector, JsonSerializerOptions? options = null, int depth = 0, ILogger? logger = null)
         {
             if (value == null)
                 return defaultValue;
@@ -55,10 +57,10 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("Cannot serialize JsonSerializer instance.", nameof(value));
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace("Serializing object of type {Type} to JSON string.",
-                    value.GetType().GetTypeId().ValueOrNull());
+                logger.LogTrace("{padding}Serializing object of type {type} to JSON string.",
+                    StringUtils.GetPadding(depth), value.GetType().GetTypeId().ValueOrNull());
 
-            return JsonSerializer.Serialize(
+            return System.Text.Json.JsonSerializer.Serialize(
                 value: value,
                 options: options ?? reflector?.JsonSerializerOptions);
         }

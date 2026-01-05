@@ -22,7 +22,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Reflector reflector,
             ref object? obj,
             SerializedMember data,
-            Type? fallbackType = null,
+            Type type,
             int depth = 0,
             Logs? logs = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -30,24 +30,12 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         {
             var padding = StringUtils.GetPadding(depth);
 
-            var objType = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var typeError) ?? obj?.GetType();
-            if (objType == null)
-            {
-                if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}Failed to determine type for object '{data.name.ValueOrNull()}'. {typeError}");
-
-                if (logs != null)
-                    logs.Error($"Failed to determine type for object '{data.name.ValueOrNull()}'. {typeError}", depth);
-
-                return false;
-            }
-
             if (obj == null)
             {
                 // obj = CreateInstance(reflector, objType);
                 obj = reflector.Deserialize(
                     data: data,
-                    fallbackType: objType,
+                    fallbackType: type,
                     depth: depth,
                     logs: logs,
                     logger: logger);
@@ -55,24 +43,24 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeId()}'.");
+                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{type.GetTypeId()}'.");
 
                     if (logs != null)
-                        logs.Error($"Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{objType.GetTypeId()}'.", depth);
+                        logs.Error($"Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{type.GetTypeId()}'.", depth);
 
                     return false;
                 }
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeId()}'.");
+                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' populated with type '{type.GetTypeId()}'.");
 
                 if (logs != null)
-                    logs.Success($"Object '{data.name.ValueOrNull()}' populated with type '{objType.GetTypeId()}'.", depth);
+                    logs.Success($"Object '{data.name.ValueOrNull()}' populated with type '{type.GetTypeId()}'.", depth);
 
                 return true;
             }
 
-            if (!TypeUtils.IsCastable(obj.GetType(), objType))
+            if (!TypeUtils.IsCastable(obj.GetType(), type))
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}Type mismatch: '{data.typeName}' vs '{obj.GetType().GetTypeId().ValueOrNull()}'.");
@@ -91,7 +79,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var success = SetValue(
                         reflector: reflector,
                         obj: ref obj,
-                        type: objType,
+                        type: type,
                         value: data.valueJsonElement,
                         depth: depth,
                         logs: logs,
@@ -136,7 +124,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var success = TryPopulateField(
                         reflector,
                         obj: ref obj,
-                        objType: objType,
+                        objType: type,
                         fieldValue: field,
                         depth: nextDepth,
                         logs: logs,
@@ -180,7 +168,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var success = TryPopulateProperty(
                         reflector,
                         obj: ref obj,
-                        objType: objType,
+                        objType: type,
                         propertyValue: property,
                         depth: nextDepth,
                         logs: logs,

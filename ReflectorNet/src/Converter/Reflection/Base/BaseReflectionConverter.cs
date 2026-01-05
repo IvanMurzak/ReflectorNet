@@ -112,7 +112,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return objType.GetFields(flags)
                 .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null)
-                .Where(field => field.IsPublic);
+                .Where(field => field.IsPublic)
+                .Where(field => GetIgnoredFields().Contains(field.Name) == false);
         }
 
         /// <summary>
@@ -128,7 +129,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         {
             return objType.GetProperties(flags)
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(prop => prop.CanRead);
+                .Where(prop => prop.CanRead)
+                .Where(prop => GetIgnoredProperties().Contains(prop.Name) == false);
         }
 
         public virtual IEnumerable<string> GetAdditionalSerializableFields(

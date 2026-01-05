@@ -101,6 +101,11 @@ namespace com.IvanMurzak.ReflectorNet.Model
             return this;
         }
 
+        public bool IsNull()
+        {
+            return valueJsonElement == null || (valueJsonElement.HasValue && valueJsonElement.Value.ValueKind == JsonValueKind.Null);
+        }
+
         public T? GetValue<T>(Reflector reflector) => valueJsonElement.Deserialize<T>(reflector);
 
         public SerializedMember SetValue(Reflector reflector, object? value)
