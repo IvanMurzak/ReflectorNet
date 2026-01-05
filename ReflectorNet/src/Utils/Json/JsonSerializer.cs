@@ -170,6 +170,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
+        /// Retrieves the list of currently registered JsonConverters in the serializer.
+        /// </summary>
+        public System.Collections.Generic.IList<JsonConverter> GetConverters()
+        {
+            return jsonSerializerOptions.Converters;
+        }
+
+        /// <summary>
         /// Removes all custom converters from the serializer, reverting to default .NET JSON serialization behavior.
         /// This method is useful for scenarios where you need to reset the serializer to a clean state or
         /// when troubleshooting converter-related issues.

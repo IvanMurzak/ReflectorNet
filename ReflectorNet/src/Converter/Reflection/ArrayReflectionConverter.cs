@@ -62,8 +62,26 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null)
         {
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace("Serializing enumerable of type {Type} at depth {Depth}, recursive {recursive}.",
+                type.GetTypeId(), depth, recursive);
+
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);
+
+            var jsonConverter = reflector.JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(type));
+            if (jsonConverter != null)
+            {
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace("Using custom JsonConverter '{Converter}' for type '{Type}'.",
+                        jsonConverter.GetType().GetTypeId(), type.GetTypeId());
+
+                return SerializedMember.FromJson(
+                    type: type,
+                    json: obj.ToJson(reflector, logger: logger),
+                    name: name);
+            }
+
 
             if (recursive)
             {
@@ -73,6 +91,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                 // Determine the element type for handling null elements
                 var elementType = TypeUtils.GetEnumerableItemType(type);
+
+                depth++;
 
                 foreach (var element in enumerable)
                 {
@@ -113,7 +133,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 // Handle non-recursive serialization
                 return SerializedMember.FromJson(
                     type: type,
-                    json: obj.ToJson(reflector),
+                    json: obj.ToJson(reflector, logger: logger),
                     name: name);
             }
         }
