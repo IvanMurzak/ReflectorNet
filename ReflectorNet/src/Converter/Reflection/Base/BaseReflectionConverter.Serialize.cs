@@ -65,13 +65,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             foreach (var field in fields)
             {
-                if (GetIgnoredFields().Contains(field.Name))
-                {
-                    if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding}Skipping serialization of field '{fieldName}' in '{objType}' because it is ignored.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), field.Name, objType.GetTypeId(), context?.GetPath(obj));
-                    continue;
-                }
                 if (reflector.Converters.IsTypeBlacklisted(field.FieldType))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
@@ -130,13 +123,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             foreach (var prop in properties)
             {
-                if (GetIgnoredProperties().Contains(prop.Name))
-                {
-                    if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding}Skipping serialization of property '{propertyName}' in '{objType}' because it is ignored.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), prop.Name, objType.GetTypeId(), context?.GetPath(obj));
-                    continue;
-                }
                 if (reflector.Converters.IsTypeBlacklisted(prop.PropertyType))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)

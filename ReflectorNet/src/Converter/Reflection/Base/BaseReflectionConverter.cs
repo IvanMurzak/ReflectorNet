@@ -103,7 +103,22 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// Default implementation returns public fields that are not marked with [Obsolete] or [NonSerialized].
         /// Derived classes can override to customize field selection.
         /// </summary>
-        public virtual IEnumerable<FieldInfo>? GetSerializableFields(
+        public IEnumerable<FieldInfo>? GetSerializableFields(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null)
+        {
+            return GetSerializableFieldsInternal(reflector, objType, flags, logger)
+                ?.Where(field => GetIgnoredFields().Contains(field.Name) == false);
+        }
+
+        /// <summary>
+        /// Gets the serializable fields for the specified type.
+        /// Default implementation returns public fields that are not marked with [Obsolete] or [NonSerialized].
+        /// Derived classes can override to customize field selection.
+        /// </summary>
+        protected virtual IEnumerable<FieldInfo>? GetSerializableFieldsInternal(
             Reflector reflector,
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -112,8 +127,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return objType.GetFields(flags)
                 .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null)
-                .Where(field => field.IsPublic)
-                .Where(field => GetIgnoredFields().Contains(field.Name) == false);
+                .Where(field => field.IsPublic);
         }
 
         /// <summary>
@@ -121,7 +135,22 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// Default implementation returns readable properties that are not marked with [Obsolete].
         /// Derived classes can override to customize property selection.
         /// </summary>
-        public virtual IEnumerable<PropertyInfo>? GetSerializableProperties(
+        public IEnumerable<PropertyInfo>? GetSerializableProperties(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null)
+        {
+            return GetSerializablePropertiesInternal(reflector, objType, flags, logger)
+                ?.Where(prop => GetIgnoredProperties().Contains(prop.Name) == false);
+        }
+
+        /// <summary>
+        /// Gets the serializable properties for the specified type.
+        /// Default implementation returns readable properties that are not marked with [Obsolete].
+        /// Derived classes can override to customize property selection.
+        /// </summary>
+        protected virtual IEnumerable<PropertyInfo>? GetSerializablePropertiesInternal(
             Reflector reflector,
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -129,8 +158,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         {
             return objType.GetProperties(flags)
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(prop => prop.CanRead)
-                .Where(prop => GetIgnoredProperties().Contains(prop.Name) == false);
+                .Where(prop => prop.CanRead);
         }
 
         public virtual IEnumerable<string> GetAdditionalSerializableFields(

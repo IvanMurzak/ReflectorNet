@@ -44,7 +44,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return SerializedMember.FromValue(reflector, type, obj, name: name);
         }
 
-        public override IEnumerable<FieldInfo>? GetSerializableFields(
+        protected override IEnumerable<FieldInfo>? GetSerializableFieldsInternal(
             Reflector reflector,
             Type objType,
             BindingFlags flags,
@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return null;
         }
 
-        public override IEnumerable<PropertyInfo>? GetSerializableProperties(
+        protected override IEnumerable<PropertyInfo>? GetSerializablePropertiesInternal(
             Reflector reflector,
             Type objType,
             BindingFlags flags,
