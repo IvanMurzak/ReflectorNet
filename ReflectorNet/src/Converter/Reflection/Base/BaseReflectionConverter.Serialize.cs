@@ -32,10 +32,24 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null)
         {
+            var actualType = type ?? obj?.GetType() ?? typeof(T);
+            var jsonConverter = reflector.JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(actualType));
+            if (jsonConverter != null)
+            {
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace("{padding} Using custom JsonConverter '{Converter}' for type '{Type}'.",
+                        StringUtils.GetPadding(depth), jsonConverter.GetType().GetTypeId().ValueOrNull(), actualType.GetTypeId().ValueOrNull());
+
+                return SerializedMember.FromJson(
+                    type: actualType,
+                    json: obj.ToJson(reflector, logger: logger),
+                    name: name);
+            }
+
             return InternalSerialize(
                 reflector: reflector,
                 obj: obj,
-                type: type ?? obj?.GetType() ?? typeof(T),
+                type: actualType,
                 name: name,
                 recursive: recursive,
                 flags: flags,

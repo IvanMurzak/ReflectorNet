@@ -69,20 +69,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (obj == null)
                 return SerializedMember.FromJson(type, json: null, name: name);
 
-            var jsonConverter = reflector.JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(type));
-            if (jsonConverter != null)
-            {
-                if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace("Using custom JsonConverter '{Converter}' for type '{Type}'.",
-                        jsonConverter.GetType().GetTypeId(), type.GetTypeId());
-
-                return SerializedMember.FromJson(
-                    type: type,
-                    json: obj.ToJson(reflector, logger: logger),
-                    name: name);
-            }
-
-
             if (recursive)
             {
                 int index = 0;
@@ -101,7 +87,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding} Serializing item '{index}' of type '{type}' in '{objType}'.\nPath: {path}",
-                            StringUtils.GetPadding(depth), index, currentType?.GetTypeId(), obj.GetType().GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth), index, currentType?.GetTypeId().ValueOrNull(), obj.GetType().GetTypeId().ValueOrNull(), context?.GetPath(obj));
 
                     if (thisElementType != null && reflector.Converters.IsTypeBlacklisted(thisElementType))
                     {
