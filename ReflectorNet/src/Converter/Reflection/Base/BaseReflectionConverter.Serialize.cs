@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         public virtual SerializedMember Serialize(
             Reflector reflector,
             object? obj,
-            Type? type = null,
+            Type? fallbackType = null,
             string? name = null,
             bool recursive = true,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null)
         {
-            var actualType = type ?? obj?.GetType() ?? typeof(T);
+            var actualType = fallbackType ?? obj?.GetType() ?? typeof(T);
 
             return InternalSerialize(
                 reflector: reflector,

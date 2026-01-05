@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-// using System.Text.Json.Schema;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet
@@ -78,10 +77,6 @@ namespace com.IvanMurzak.ReflectorNet
         /// <returns>A JsonNode containing the JSON Schema representation of the specified type.</returns>
         public JsonNode GetSchema(Type type)
         {
-            // var jsonConverter = JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(type));
-            // if (jsonConverter != null)
-            //     return JsonSerializerOptions.GetJsonSchemaAsNode(type);
-
             return jsonSchema.GetSchema(this, type);
         }
 
