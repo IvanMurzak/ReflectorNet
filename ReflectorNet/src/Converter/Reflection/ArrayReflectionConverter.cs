@@ -80,8 +80,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 // Determine the element type for handling null elements
                 var elementType = TypeUtils.GetEnumerableItemType(type);
 
-                depth++;
-
                 foreach (var element in enumerable)
                 {
                     var thisElementType = element?.GetType();

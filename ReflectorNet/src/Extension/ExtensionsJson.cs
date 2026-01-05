@@ -41,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet
         {
             return ToJson(
                 value: value,
-                defaultValue: null, // Use empty JSON object as default value
+                defaultValue: null, // Use null as default value
                 reflector: reflector,
                 options: options,
                 depth: depth,

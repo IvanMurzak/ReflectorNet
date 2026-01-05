@@ -103,7 +103,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
 
         public bool IsNull()
         {
-            return valueJsonElement == null || (valueJsonElement.HasValue && valueJsonElement.Value.ValueKind == JsonValueKind.Null);
+            return !valueJsonElement.HasValue || valueJsonElement.Value.ValueKind == JsonValueKind.Null;
         }
 
         public T? GetValue<T>(Reflector reflector) => valueJsonElement.Deserialize<T>(reflector);
