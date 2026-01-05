@@ -35,8 +35,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             var isStruct = type.IsValueType && !type.IsPrimitive && !type.IsEnum;
             if (type.IsClass || isStruct)
             {
-                return recursive
-                    ? new SerializedMember()
+                if (recursive)
+                {
+                    return new SerializedMember()
                     {
                         name = name,
                         typeName = type.GetTypeId() ?? string.Empty,
@@ -57,8 +58,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger: logger,
                             context: context),
                         valueJsonElement = new JsonObject().ToJsonElement()
-                    }
-                    : SerializedMember.FromJson(type, obj.ToJson(reflector), name: name);
+                    };
+                }
+                return SerializedMember.FromJson(type, obj.ToJson(reflector, logger: logger), name: name);
             }
             throw new ArgumentException($"Unsupported type: '{type.GetTypeId()}' for converter '{GetType().GetTypeShortName()}'.");
         }

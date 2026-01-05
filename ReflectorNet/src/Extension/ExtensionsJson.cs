@@ -8,13 +8,20 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsJson
     {
-        public static JsonElement ToJsonElement(this object data, Reflector? reflector, JsonSerializerOptions? options = null)
-            => JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
+        public static JsonElement ToJsonElement(this object data, Reflector? reflector, JsonSerializerOptions? options = null, ILogger? logger = null)
+        {
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace("Converting object of type {Type} to JsonElement.",
+                    data?.GetType().GetTypeId().ValueOrNull());
+
+            return JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
+        }
 
         public static JsonElement? ToJsonElement(this JsonNode? node)
         {
@@ -29,21 +36,17 @@ namespace com.IvanMurzak.ReflectorNet
             return document.RootElement.Clone();
         }
 
-        public static string ToJson(this object? value, Reflector? reflector, JsonSerializerOptions? options = null)
-            => ToJson(
+        public static string ToJson(this object? value, Reflector? reflector, JsonSerializerOptions? options = null, ILogger? logger = null)
+        {
+            return ToJson(
                 value: value,
                 defaultValue: Utils.JsonSerializer.EmptyJsonObject, // Use empty JSON object as default value
                 reflector: reflector,
-                options: options);
+                options: options,
+                logger: logger);
+        }
 
-        public static string ToJsonOrEmptyJsonObject(this object? value, Reflector? reflector, JsonSerializerOptions? options = null)
-            => ToJson(
-                value: value,
-                defaultValue: Utils.JsonSerializer.EmptyJsonObject,
-                reflector: reflector,
-                options: options);
-
-        public static string ToJson(this object? value, string defaultValue, Reflector? reflector, JsonSerializerOptions? options = null)
+        public static string ToJson(this object? value, string defaultValue, Reflector? reflector, JsonSerializerOptions? options = null, ILogger? logger = null)
         {
             if (value == null)
                 return defaultValue;
@@ -51,9 +54,13 @@ namespace com.IvanMurzak.ReflectorNet
             if (value is Utils.JsonSerializer)
                 throw new ArgumentException("Cannot serialize JsonSerializer instance.", nameof(value));
 
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace("Serializing object of type {Type} to JSON string.",
+                    value.GetType().GetTypeId().ValueOrNull());
+
             return JsonSerializer.Serialize(
                 value: value,
-                options: options ?? reflector?.JsonSerializerOptions ?? new JsonSerializerOptions());
+                options: options ?? reflector?.JsonSerializerOptions);
         }
     }
 }

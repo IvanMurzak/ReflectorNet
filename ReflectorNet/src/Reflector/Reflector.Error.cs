@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet
 {
@@ -42,10 +43,10 @@ namespace com.IvanMurzak.ReflectorNet
             public static string NotSupportedInRuntime(Type type)
                 => $"[Error] Type '{type.GetTypeId().ValueOrNull()}' is not supported in runtime for now.";
 
-            public static string MoreThanOneMethodFound(Reflector reflector, List<MethodInfo> methods)
+            public static string MoreThanOneMethodFound(Reflector reflector, List<MethodInfo> methods, ILogger? logger = null)
             {
                 var methodDataList = methods.Select(method => new MethodData(reflector, method));
-                var methodsString = methodDataList.ToJson(reflector, options: null);
+                var methodsString = methodDataList.ToJson(reflector, logger: logger);
 
                 return @$"[Error] Found more than one method. Only single method should be targeted. Please specify the method name more precisely.
 Found {methods.Count} method(s):
