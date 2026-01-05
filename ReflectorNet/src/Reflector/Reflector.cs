@@ -116,7 +116,7 @@ namespace com.IvanMurzak.ReflectorNet
                     return SerializedMember.Null(type, name);
                 }
 
-                var jsonConverter = JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(type));
+                var jsonConverter = JsonSerializer.GetJsonConverter(type);
                 if (jsonConverter != null)
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
@@ -269,7 +269,7 @@ namespace com.IvanMurzak.ReflectorNet
                     return GetDefaultValue(type);
                 }
 
-                var jsonConverter = JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(type));
+                var jsonConverter = JsonSerializer.GetJsonConverter(type);
                 if (jsonConverter != null)
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)

@@ -170,11 +170,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
-        /// Retrieves the list of currently registered JsonConverters in the serializer.
+        /// Retrieves the first registered JsonConverter that can handle the specified type.
         /// </summary>
-        public System.Collections.Generic.IList<JsonConverter> GetConverters()
+        public JsonConverter? GetJsonConverter(Type type)
         {
-            return jsonSerializerOptions.Converters;
+            foreach (var converter in jsonSerializerOptions.Converters)
+            {
+                if (converter.CanConvert(type))
+                    return converter;
+            }
+            return null;
         }
 
         /// <summary>
