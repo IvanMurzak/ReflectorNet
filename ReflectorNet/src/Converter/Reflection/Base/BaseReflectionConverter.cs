@@ -110,7 +110,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null)
         {
             return GetSerializableFieldsInternal(reflector, objType, flags, logger)
-                ?.Where(field => GetIgnoredFields().Contains(field.Name) == false);
+                ?.Where(field => !GetIgnoredFields().Contains(field.Name));
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null)
         {
             return GetSerializablePropertiesInternal(reflector, objType, flags, logger)
-                ?.Where(prop => GetIgnoredProperties().Contains(prop.Name) == false);
+                ?.Where(prop => !GetIgnoredProperties().Contains(prop.Name));
         }
 
         /// <summary>
