@@ -59,7 +59,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var json = serialized.ToJson(reflector);
 
             // Parse and validate JSON structure
-            var jsonNode = JsonNode.Parse(json);
+            var jsonNode = JsonNode.Parse(json!);
             Assert.NotNull(jsonNode);
 
             var jsonObj = jsonNode!.AsObject();
@@ -85,7 +85,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var json = serialized.ToJson(reflector);
 
             // Parse and validate JSON structure
-            var jsonNode = JsonNode.Parse(json);
+            var jsonNode = JsonNode.Parse(json!);
             Assert.NotNull(jsonNode);
 
             var jsonObj = jsonNode!.AsObject();
@@ -111,7 +111,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var json = serialized.ToJson(reflector);
 
             // Parse and validate JSON structure
-            var jsonNode = JsonNode.Parse(json);
+            var jsonNode = JsonNode.Parse(json!);
             Assert.NotNull(jsonNode);
 
             var jsonObj = jsonNode!.AsObject();
@@ -136,7 +136,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var json = serialized.ToJson(reflector);
 
             // Parse and validate JSON structure
-            var jsonNode = JsonNode.Parse(json);
+            var jsonNode = JsonNode.Parse(json!);
             Assert.NotNull(jsonNode);
 
             var jsonObj = jsonNode!.AsObject();

@@ -45,6 +45,14 @@ namespace com.IvanMurzak.ReflectorNet
         {
             var padding = StringUtils.GetPadding(depth);
 
+            if (obj == null && data.IsNull())
+            {
+                if (logger?.IsEnabled(LogLevel.Trace) == true)
+                    logger.LogTrace($"{padding}Object population skipped: both target object and data are null.");
+
+                return true;
+            }
+
             var objType = TypeUtils.GetTypeWithNamePriority(data, fallbackObjType, out var typeError) ?? obj?.GetType();
             if (objType == null)
             {
@@ -60,21 +68,21 @@ namespace com.IvanMurzak.ReflectorNet
             if (converter == null)
             {
                 if (logger?.IsEnabled(LogLevel.Error) == true)
-                    logger.LogError($"{padding}No suitable converter found for type '{objType.GetTypeId()}'");
+                    logger.LogError($"{padding}No suitable converter found for type '{objType.GetTypeId().ValueOrNull()}'");
 
-                logs?.Error($"No suitable converter found for type '{objType.GetTypeId()}'", depth);
+                logs?.Error($"No suitable converter found for type '{objType.GetTypeId().ValueOrNull()}'", depth);
 
                 return false;
             }
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace($"{padding}Populate. {converter.GetType().GetTypeShortName()} used for type='{objType?.GetTypeShortName()}', name='{data.name.ValueOrNull()}'");
+                logger.LogTrace($"{padding}Populate. {converter.GetType().GetTypeShortName()} used for type='{objType.GetTypeShortName().ValueOrNull()}', name='{data.name.ValueOrNull()}'");
 
             var success = converter.TryPopulate(
                 this,
                 ref obj,
                 data: data,
-                fallbackType: objType,
+                type: objType,
                 depth: depth,
                 logs: logs,
                 flags: flags,

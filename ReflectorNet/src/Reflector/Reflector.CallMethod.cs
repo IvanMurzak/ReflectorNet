@@ -147,7 +147,7 @@ namespace com.IvanMurzak.ReflectorNet
                     : methodWrapper.Invoke();
 
                 var result = task.Result;
-                return $"[Success] Execution result:\n```json\n{result.ToJson(reflector, logger: logger)}\n```";
+                return $"[Success] Execution result:\n```json\n{result.ToJson(reflector, depth: 0, logger: logger)}\n```";
             };
 
             if (executeInMainThread)

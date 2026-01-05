@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         valueJsonElement = new JsonObject().ToJsonElement()
                     };
                 }
-                return SerializedMember.FromJson(type, obj.ToJson(reflector, logger: logger), name: name);
+                return SerializedMember.FromJson(type, obj.ToJson(reflector, depth: depth, logger: logger), name: name);
             }
             throw new ArgumentException($"Unsupported type: '{type.GetTypeId()}' for converter '{GetType().GetTypeShortName()}'.");
         }

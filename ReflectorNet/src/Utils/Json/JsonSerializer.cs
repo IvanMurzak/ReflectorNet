@@ -170,6 +170,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
+        /// Retrieves the first registered JsonConverter that can handle the specified type.
+        /// </summary>
+        public JsonConverter? GetJsonConverter(Type type)
+        {
+            foreach (var converter in jsonSerializerOptions.Converters)
+            {
+                if (converter.CanConvert(type))
+                    return converter;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Removes all custom converters from the serializer, reverting to default .NET JSON serialization behavior.
         /// This method is useful for scenarios where you need to reset the serializer to a clean state or
         /// when troubleshooting converter-related issues.

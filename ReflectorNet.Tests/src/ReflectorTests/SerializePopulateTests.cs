@@ -30,12 +30,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var targetObject = reflector.CreateInstance(type);
 
             var populateLogger = new StringBuilderLogger();
-            var populateOutput = reflector.TryPopulate(
+            var success = reflector.TryPopulate(
                 obj: ref targetObject,
                 data: serialized,
                 fallbackObjType: type,
                 logs: new Logs(),
                 logger: populateLogger);
+
+            Assert.True(success);
 
             _output.WriteLine($"Population:\n{populateLogger}");
 
@@ -53,6 +55,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             _output.WriteLine($"Serialized JSON:\n{serialized.ToJson(reflector)}\n");
 
             Assert.Equal(originalJson, populatedJson);
+
+            _output.WriteLine($"============================\n");
         }
 
         [Fact]

@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -110,20 +111,34 @@ namespace com.IvanMurzak.ReflectorNet
                 if (Converters.IsTypeBlacklisted(type))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding}Serialize. Type '{type}' is blacklisted, skipping.",
-                            StringUtils.GetPadding(depth), type.GetTypeId().ValueOrNull());
+                        logger.LogTrace("{padding}Serialize skip for '{name}' of type '{type}', it is blacklisted type.",
+                            StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull());
                     return SerializedMember.Null(type, name);
                 }
 
-                var converter = Converters.GetConverter(type);
-                if (converter == null)
-                    throw new ArgumentException($"Failed to serialize '{name.ValueOrNull()}'. Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
+                var jsonConverter = JsonSerializer.GetJsonConverter(type);
+                if (jsonConverter != null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. JsonConverter: {converter}",
+                            StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull(), jsonConverter.GetType().GetTypeId().ValueOrNull());
+
+                    return SerializedMember.FromJson(
+                        type: type,
+                        json: obj.ToJson(this, depth: depth, logger: logger),
+                        name: name);
+                }
+
+                var reflectionConverter = Converters.GetConverter(type);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. Converter: {converter}",
-                        StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull(), converter.GetType().GetTypeShortName());
+                    logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. ReflectionConverter: {converter}",
+                        StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull(), reflectionConverter?.GetType().GetTypeShortName()?.ValueOrNull());
 
-                return converter.Serialize(
+                if (reflectionConverter == null)
+                    throw new ArgumentException($"Failed to serialize '{name.ValueOrNull()}'. Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
+
+                return reflectionConverter.Serialize(
                     this,
                     obj,
                     fallbackType: type,
@@ -254,6 +269,15 @@ namespace com.IvanMurzak.ReflectorNet
                     return GetDefaultValue(type);
                 }
 
+                var jsonConverter = JsonSerializer.GetJsonConverter(type);
+                if (jsonConverter != null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeShortName()}' name='{name.ValueOrNull()}' JsonConverter: {jsonConverter.GetType().GetTypeShortName()}");
+
+                    return data.valueJsonElement.Deserialize(type, this);
+                }
+
                 var converter = Converters.GetConverter(type);
                 if (converter == null)
                     throw new ArgumentException($"[Error] Type '{type?.GetTypeId().ValueOrNull()}' not supported for deserialization.");
@@ -350,8 +374,6 @@ namespace com.IvanMurzak.ReflectorNet
         /// </summary>
         /// <param name="type">The type to analyze for serializable fields.</param>
         /// <param name="flags">BindingFlags controlling which fields are considered (public, private, static, instance, etc.). Default includes public and non-public instance fields.</param>
-        /// <param name="depth">The current depth level in the object hierarchy, used for error message indentation. Default is 0.</param>
-        /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
         /// <param name="logger">Optional logger for tracing field discovery operations.</param>
         /// <returns>An enumerable of FieldInfo objects representing serializable fields, or null if no deserializer supports the type.</returns>
         public IEnumerable<FieldInfo>? GetSerializableFields(
@@ -381,8 +403,6 @@ namespace com.IvanMurzak.ReflectorNet
         /// </summary>
         /// <param name="type">The type to analyze for serializable properties.</param>
         /// <param name="flags">BindingFlags controlling which properties are considered (public, private, static, instance, etc.). Default includes public and non-public instance properties.</param>
-        /// <param name="depth">The current depth level in the object hierarchy, used for error message indentation. Default is 0.</param>
-        /// <param name="stringBuilder">Optional StringBuilder to accumulate error messages and status information. A new one is created if not provided.</param>
         /// <param name="logger">Optional logger for tracing property discovery operations.</param>
         /// <returns>An enumerable of PropertyInfo objects representing serializable properties, or null if no deserializer supports the type.</returns>
         public IEnumerable<PropertyInfo>? GetSerializableProperties(

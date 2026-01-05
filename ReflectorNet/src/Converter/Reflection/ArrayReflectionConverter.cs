@@ -87,7 +87,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding} Serializing item '{index}' of type '{type}' in '{objType}'.\nPath: {path}",
-                            StringUtils.GetPadding(depth), index, currentType?.GetTypeId(), obj.GetType().GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth), index, currentType?.GetTypeId().ValueOrNull(), obj.GetType().GetTypeId().ValueOrNull(), context?.GetPath(obj));
 
                     if (thisElementType != null && reflector.Converters.IsTypeBlacklisted(thisElementType))
                     {
@@ -119,7 +119,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 // Handle non-recursive serialization
                 return SerializedMember.FromJson(
                     type: type,
-                    json: obj.ToJson(reflector),
+                    json: obj.ToJson(reflector, depth: depth, logger: logger),
                     name: name);
             }
         }

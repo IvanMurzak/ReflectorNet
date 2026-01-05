@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Json;
 
@@ -44,6 +45,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     /// </summary>
     public partial class JsonSchema
     {
+        readonly JsonSchemaExporterOptions jsonSchemaExporterOptions = new JsonSchemaExporterOptions
+        {
+            TreatNullObliviousAsNonNullable = false
+        };
+
         /// <summary>
         /// Generates a comprehensive JSON Schema representation for the specified generic type.
         /// This method provides flexible schema generation supporting both full schema definitions

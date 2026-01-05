@@ -45,7 +45,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Reflector reflector,
             ref object? obj,
             SerializedMember data,
-            Type? fallbackType = null,
+            Type type,
             int depth = 0,
             Logs? logs = null,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,

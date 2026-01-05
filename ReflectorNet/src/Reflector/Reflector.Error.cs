@@ -46,7 +46,7 @@ namespace com.IvanMurzak.ReflectorNet
             public static string MoreThanOneMethodFound(Reflector reflector, List<MethodInfo> methods, ILogger? logger = null)
             {
                 var methodDataList = methods.Select(method => new MethodData(reflector, method));
-                var methodsString = methodDataList.ToJson(reflector, logger: logger);
+                var methodsString = methodDataList.ToJson(reflector, depth: 0, logger: logger);
 
                 return @$"[Error] Found more than one method. Only single method should be targeted. Please specify the method name more precisely.
 Found {methods.Count} method(s):
