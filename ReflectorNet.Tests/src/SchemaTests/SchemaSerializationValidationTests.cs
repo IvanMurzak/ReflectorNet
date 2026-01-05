@@ -103,7 +103,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             // Convert serialized object to JSON and extract the "value" field
             var json = serialized.ToJson(reflector);
-            var jsonNode = JsonNode.Parse(json);
+            var jsonNode = JsonNode.Parse(json!);
 
             // SerializedMember has structure: { "name": "...", "typeName": "...", "value": ... }
             // We need to extract just the "value" field to compare against the schema
