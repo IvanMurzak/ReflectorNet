@@ -22,7 +22,7 @@ namespace com.IvanMurzak.ReflectorNet.Json
         public static JsonNode Schema => new JsonObject
         {
             [JsonSchema.Type] = JsonSchema.String,
-            ["description"] = "A large integer represented as a string"
+            [JsonSchema.Description] = "A large integer represented as a string"
         };
 
         public static JsonNode SchemaRef => new JsonObject

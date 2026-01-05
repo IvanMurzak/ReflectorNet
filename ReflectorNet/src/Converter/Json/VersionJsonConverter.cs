@@ -7,7 +7,7 @@
 
 using System;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet.Json
@@ -15,8 +15,20 @@ namespace com.IvanMurzak.ReflectorNet.Json
     /// <summary>
     /// JsonConverter that handles conversion between JSON strings and System.Version.
     /// </summary>
-    public class VersionJsonConverter : JsonConverter<Version>
+    public class VersionJsonConverter : JsonSchemaConverter<Version>, IJsonSchemaConverter
     {
+        public static JsonNode Schema => new JsonObject
+        {
+            [JsonSchema.Type] = JsonSchema.String,
+        };
+        public static JsonNode SchemaRef => new JsonObject
+        {
+            [JsonSchema.Ref] = JsonSchema.RefValue + StaticId
+        };
+
+        public override JsonNode GetSchema() => Schema;
+        public override JsonNode GetSchemaRef() => SchemaRef;
+
         public override Version? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType == JsonTokenType.Null)
