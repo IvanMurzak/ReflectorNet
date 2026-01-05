@@ -16,7 +16,10 @@ namespace com.IvanMurzak.ReflectorNet
     {
         public static JsonElement ToJsonElement(this object data, Reflector? reflector, JsonSerializerOptions? options = null, ILogger? logger = null)
         {
-            logger?.LogTrace("Converting object of type {Type} to JsonElement.", data?.GetType().GetTypeId() ?? "null");
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace("Converting object of type {Type} to JsonElement.",
+                    data?.GetType().GetTypeId().ValueOrNull());
+
             return JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
         }
 
@@ -51,7 +54,9 @@ namespace com.IvanMurzak.ReflectorNet
             if (value is Utils.JsonSerializer)
                 throw new ArgumentException("Cannot serialize JsonSerializer instance.", nameof(value));
 
-            logger?.LogTrace("Serializing object of type {Type} to JSON string.", value.GetType().GetTypeId());
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace("Serializing object of type {Type} to JSON string.",
+                    value.GetType().GetTypeId().ValueOrNull());
 
             return JsonSerializer.Serialize(
                 value: value,
