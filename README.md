@@ -1,8 +1,9 @@
 # ReflectorNet
 
 [![NuGet](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&labelColor=333A41)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/)
-[![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue?logoColor=white&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet)
 [![netstandard2.1](https://img.shields.io/badge/.NET-netstandard2.1-blue?logoColor=white&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet)
+[![.NET 8.0](https://img.shields.io/badge/.NET-8.0-blue?logoColor=white&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet)
+[![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue?logoColor=white&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet)
 [![Tests](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml)
 
 [![Stars](https://img.shields.io/github/stars/IvanMurzak/ReflectorNet 'Stars')](https://github.com/IvanMurzak/ReflectorNet/stargazers)
