@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -110,20 +111,34 @@ namespace com.IvanMurzak.ReflectorNet
                 if (Converters.IsTypeBlacklisted(type))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding}Serialize. Type '{type}' is blacklisted, skipping.",
-                            StringUtils.GetPadding(depth), type.GetTypeId().ValueOrNull());
+                        logger.LogTrace("{padding}Serialize skip for '{name}' of type '{type}', it is blacklisted type.",
+                            StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull());
                     return SerializedMember.Null(type, name);
                 }
 
-                var converter = Converters.GetConverter(type);
-                if (converter == null)
-                    throw new ArgumentException($"Failed to serialize '{name.ValueOrNull()}'. Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
+                var jsonConverter = JsonSerializer.GetConverters().FirstOrDefault(c => c.CanConvert(type));
+                if (jsonConverter != null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. JsonConverter: {converter}",
+                            StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull(), jsonConverter.GetType().GetTypeId().ValueOrNull());
+
+                    return SerializedMember.FromJson(
+                        type: type,
+                        json: obj.ToJson(this, logger: logger),
+                        name: name);
+                }
+
+                var reflectionConverter = Converters.GetConverter(type);
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. Converter: {converter}",
-                        StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull(), converter.GetType().GetTypeShortName());
+                    logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. ReflectionConverter: {converter}",
+                        StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull(), reflectionConverter?.GetType().GetTypeShortName()?.ValueOrNull());
 
-                return converter.Serialize(
+                if (reflectionConverter == null)
+                    throw new ArgumentException($"Failed to serialize '{name.ValueOrNull()}'. Type '{type.GetTypeId().ValueOrNull()}' not supported for serialization.");
+
+                return reflectionConverter.Serialize(
                     this,
                     obj,
                     fallbackType: type,
