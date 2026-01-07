@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
@@ -35,11 +34,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags,
             ILogger? logger = null)
         {
-            // Filter out ITuple interface properties (indexer 'Item' and 'Length')
-            // These are explicit interface implementations that cause serialization issues
-            return base.GetSerializablePropertiesInternal(reflector, objType, flags, logger)
-                ?.Where(prop => prop.GetIndexParameters().Length == 0); // Filter out indexers
-                                                                        // ?.Where(prop => !prop.Name.StartsWith("System.Runtime.CompilerServices.ITuple.")); // Filter explicit interface implementations
+            // Delegate to base implementation; it already filters out indexer properties.
+            return base.GetSerializablePropertiesInternal(reflector, objType, flags, logger);
         }
     }
 }

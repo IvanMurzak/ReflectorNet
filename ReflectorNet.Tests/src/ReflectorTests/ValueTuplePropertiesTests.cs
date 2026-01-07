@@ -128,12 +128,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             // All ValueTuple properties should be fields, not properties
             // If there are indexer properties, they should be filtered out
-            foreach (var prop in allProperties)
+            foreach (var prop in allProperties.Where(p => p.GetIndexParameters().Length > 0))
             {
-                if (prop.GetIndexParameters().Length > 0)
-                {
-                    _output.WriteLine($"Indexer property found: {prop.Name} - THIS SHOULD BE FILTERED");
-                }
+                _output.WriteLine($"Indexer property found: {prop.Name} - THIS SHOULD BE FILTERED");
             }
         }
 
