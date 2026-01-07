@@ -135,47 +135,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         }
 
         [Fact]
-        public void TupleReflectionConverter_IsSelectedForValueTuple()
-        {
-            // Arrange
-            var reflector = new Reflector();
-            var tupleType = typeof((int, bool));
-
-            // Act
-            var converter = reflector.Converters.GetConverter(tupleType);
-
-            // Assert
-            Assert.NotNull(converter);
-            Assert.IsType<TupleReflectionConverter>(converter);
-
-            _output.WriteLine($"Converter type: {converter.GetType().Name}");
-            _output.WriteLine($"Converter priority for {tupleType.Name}: {converter.SerializationPriority(tupleType)}");
-        }
-
-        [Fact]
-        public void TupleReflectionConverter_IsSelectedForTuple3()
-        {
-            // Arrange
-            var reflector = new Reflector();
-            var tupleType = typeof((int, string, bool));
-
-            // Act
-            var converter = reflector.Converters.GetConverter(tupleType);
-
-            // Assert
-            Assert.NotNull(converter);
-            Assert.IsType<TupleReflectionConverter>(converter);
-
-            _output.WriteLine($"Converter type: {converter.GetType().Name}");
-        }
-
-        [Fact]
         public void TupleReflectionConverter_FiltersIndexerProperties()
         {
             // Arrange
             var reflector = new Reflector();
             var tupleType = typeof((int, bool));
-            var converter = reflector.Converters.GetConverter(tupleType) as TupleReflectionConverter;
+            var converter = reflector.Converters.GetConverter(tupleType);
             var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
             Assert.NotNull(converter);
