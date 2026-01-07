@@ -98,8 +98,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 catch (Exception ex)
                 {
                     // skip inaccessible field
-                    logger?.LogWarning(ex.GetBaseException(), "Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Path: {path}",
-                         field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                    logger?.LogWarning(ex.GetBaseException(), "{padding}Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Converter: {converter}. Path: {path}",
+                         StringUtils.GetPadding(depth + 1), field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
                 }
             }
             return serializedFields;
@@ -156,8 +156,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 catch (Exception ex)
                 {
                     // skip inaccessible property
-                    logger?.LogWarning(ex.GetBaseException(), "Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Path: {path}",
-                         prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                    logger?.LogWarning(ex.GetBaseException(), "{padding}Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Converter: {converter}. Path: {path}",
+                         StringUtils.GetPadding(depth + 1), prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
                 }
             }
             return serializedProperties;

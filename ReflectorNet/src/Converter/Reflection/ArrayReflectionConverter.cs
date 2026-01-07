@@ -204,10 +204,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            var padding = StringUtils.GetPadding(depth);
-            // if (logger?.IsEnabled(LogLevel.Trace) == true)
-            //     logger.LogTrace($"{padding}Set property type='{propertyInfo.PropertyType.GetTypeShortName()}', name='{propertyInfo.Name}'. Converter='{GetType().GetTypeShortName()}'.");
-
             // Check if property is writable
             if (!propertyInfo.CanWrite)
             {
