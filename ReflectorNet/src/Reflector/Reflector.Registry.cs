@@ -60,6 +60,9 @@ namespace com.IvanMurzak.ReflectorNet
                 // Specialized converters for read-only system types
                 Add(new TypeReflectionConverter());
                 Add(new AssemblyReflectionConverter());
+
+                // Specialized converter for ITuple types (ValueTuple, Tuple)
+                Add(new TupleReflectionConverter());
             }
 
             /// <summary>
