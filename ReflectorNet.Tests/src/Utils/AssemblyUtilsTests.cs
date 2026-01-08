@@ -573,9 +573,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             // Assert
             Assert.Equal(firstEnumeration.Count, secondEnumeration.Count);
-            // Second enumeration should be reasonably fast due to caching
-            Assert.True(sw.ElapsedMilliseconds < 1000,
-                $"Second enumeration took {sw.ElapsedMilliseconds}ms");
+            // Second enumeration should be fast due to caching (< 200ms is generous for cached data)
+            Assert.True(sw.ElapsedMilliseconds < 200,
+                $"Second enumeration took {sw.ElapsedMilliseconds}ms, expected < 200ms");
         }
 
         #endregion

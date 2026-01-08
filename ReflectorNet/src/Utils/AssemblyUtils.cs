@@ -63,8 +63,17 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <summary>
         /// Gets all types from an assembly with thread-safe caching.
         /// </summary>
+        /// <remarks>
+        /// This method handles exceptions gracefully to ensure robust type enumeration:
+        /// <list type="bullet">
+        /// <item><description><see cref="ReflectionTypeLoadException"/>: Returns only the types that loaded successfully.
+        /// This commonly occurs when an assembly references types from dependencies that are not loaded.</description></item>
+        /// <item><description>Other exceptions (e.g., <see cref="System.IO.FileNotFoundException"/>, <see cref="BadImageFormatException"/>):
+        /// Returns an empty array. These can occur with dynamic assemblies, native assemblies, or corrupted modules.</description></item>
+        /// </list>
+        /// </remarks>
         /// <param name="assembly">The assembly to get types from.</param>
-        /// <returns>Array of types from the assembly.</returns>
+        /// <returns>Array of types from the assembly. May be empty if the assembly cannot be inspected.</returns>
         public static Type[] GetAssemblyTypes(Assembly assembly)
         {
             return _assemblyTypesCache.GetOrAdd(assembly, asm =>
@@ -75,10 +84,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
+                    // Some types failed to load (e.g., missing dependencies).
+                    // Return the types that did load successfully.
                     return ex.Types.Where(t => t != null).ToArray()!;
                 }
                 catch
                 {
+                    // Other exceptions (FileNotFoundException, BadImageFormatException, etc.)
+                    // can occur with dynamic assemblies, native assemblies, or corrupted modules.
+                    // Return empty array to allow enumeration to continue with other assemblies.
                     return Array.Empty<Type>();
                 }
             });

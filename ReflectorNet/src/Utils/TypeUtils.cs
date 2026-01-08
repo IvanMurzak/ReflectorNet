@@ -23,11 +23,30 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         private static readonly ConcurrentDictionary<string, Type?> _typeCache = new();
 
         /// <summary>
-        /// Clears the type name cache.
+        /// Clears the type name resolution cache.
         /// </summary>
+        /// <remarks>
+        /// This only clears the type name to <see cref="Type"/> resolution cache in <see cref="TypeUtils"/>.
+        /// It does not clear the assembly types cache in <see cref="AssemblyUtils"/>.
+        /// To clear all reflection caches, use <see cref="ClearAllCaches"/> instead.
+        /// </remarks>
         public static void ClearTypeCache()
         {
             _typeCache.Clear();
+        }
+
+        /// <summary>
+        /// Clears all reflection-related caches, including both the type name resolution cache
+        /// and the assembly types cache.
+        /// </summary>
+        /// <remarks>
+        /// Use this method when you need to ensure completely fresh type enumeration,
+        /// such as after dynamically loading or unloading assemblies.
+        /// </remarks>
+        public static void ClearAllCaches()
+        {
+            _typeCache.Clear();
+            AssemblyUtils.ClearAssemblyTypesCache();
         }
 
         public static Type? GetType(string? typeName)
