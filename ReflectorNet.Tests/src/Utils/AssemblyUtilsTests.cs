@@ -51,7 +51,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         }
 
         [Fact]
-        public void GetAssemblyTypes_SameAssembly_ReturnsSameInstance()
+        public void GetAssemblyTypes_SameAssembly_ReturnsDifferentInstances()
         {
             // Arrange
             var assembly = typeof(AssemblyUtilsTests).Assembly;
@@ -60,8 +60,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var types1 = AssemblyUtils.GetAssemblyTypes(assembly);
             var types2 = AssemblyUtils.GetAssemblyTypes(assembly);
 
-            // Assert - should return the exact same array instance (cached)
-            Assert.Same(types1, types2);
+            // Assert - should return different array instances (no caching)
+            Assert.NotSame(types1, types2);
+            Assert.Equal(types1.Length, types2.Length);
         }
 
         [Fact]
@@ -347,7 +348,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         #region Thread Safety Tests
 
         [Fact]
-        public void GetAssemblyTypes_ConcurrentAccess_ReturnsSameInstance()
+        public void GetAssemblyTypes_ConcurrentAccess_ReturnsValidTypes()
         {
             // Arrange
             var assembly = typeof(AssemblyUtilsTests).Assembly;
@@ -361,10 +362,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
                 results[i] = AssemblyUtils.GetAssemblyTypes(assembly);
             });
 
-            // Assert - all should be the same instance
-            for (int i = 1; i < results.Length; i++)
+            // Assert - all should be valid and different instances
+            for (int i = 0; i < results.Length; i++)
             {
-                Assert.Same(results[0], results[i]);
+                Assert.NotNull(results[i]);
+                Assert.NotEmpty(results[i]);
+                if (i > 0)
+                {
+                    Assert.NotSame(results[0], results[i]);
+                }
             }
         }
 
@@ -492,138 +498,5 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
         #endregion
 
-        #region Caching Behavior Tests
-
-        [Fact]
-        public void GetAssemblyTypes_AfterMultipleCalls_MaintainsCache()
-        {
-            // Arrange
-            var assembly = typeof(AssemblyUtilsTests).Assembly;
-
-            // Act - call multiple times
-            var first = AssemblyUtils.GetAssemblyTypes(assembly);
-            var second = AssemblyUtils.GetAssemblyTypes(assembly);
-            var third = AssemblyUtils.GetAssemblyTypes(assembly);
-
-            // Assert - all should be the same cached instance
-            Assert.Same(first, second);
-            Assert.Same(second, third);
-        }
-
-        [Fact]
-        public void GetAssemblyTypes_DifferentAssemblies_HaveSeparateCacheEntries()
-        {
-            // Arrange
-            var testAssembly = typeof(AssemblyUtilsTests).Assembly;
-            var reflectorAssembly = typeof(AssemblyUtils).Assembly;
-            var systemAssembly = typeof(object).Assembly;
-
-            // Act
-            var testTypes = AssemblyUtils.GetAssemblyTypes(testAssembly);
-            var reflectorTypes = AssemblyUtils.GetAssemblyTypes(reflectorAssembly);
-            var systemTypes = AssemblyUtils.GetAssemblyTypes(systemAssembly);
-
-            // Assert - each should be cached separately
-            Assert.NotSame(testTypes, reflectorTypes);
-            Assert.NotSame(reflectorTypes, systemTypes);
-            Assert.NotSame(testTypes, systemTypes);
-
-            // Verify caching still works
-            Assert.Same(testTypes, AssemblyUtils.GetAssemblyTypes(testAssembly));
-            Assert.Same(reflectorTypes, AssemblyUtils.GetAssemblyTypes(reflectorAssembly));
-            Assert.Same(systemTypes, AssemblyUtils.GetAssemblyTypes(systemAssembly));
-        }
-
-        #endregion
     }
-
-    #region Performance Sanity Tests
-
-    /// <summary>
-    /// Collection definition that disables parallelization for cache-sensitive tests.
-    /// </summary>
-    [CollectionDefinition("CacheSensitive", DisableParallelization = true)]
-    public class CacheSensitiveCollection { }
-
-    /// <summary>
-    /// Tests that require isolated execution due to cache manipulation.
-    /// These tests run sequentially and not in parallel with other tests.
-    /// </summary>
-    [Collection("CacheSensitive")]
-    public class AssemblyUtilsCacheSensitiveTests
-    {
-        [Fact]
-        public void GetAssemblyTypes_CachedAccess_IsFast()
-        {
-            // Arrange
-            var assembly = typeof(AssemblyUtilsTests).Assembly;
-
-            // Warm up the cache
-            _ = AssemblyUtils.GetAssemblyTypes(assembly);
-
-            // Act - measure cached access time
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < 10000; i++)
-            {
-                _ = AssemblyUtils.GetAssemblyTypes(assembly);
-            }
-            sw.Stop();
-
-            // Assert - 10000 cached accesses should be very fast (< 100ms is generous)
-            Assert.True(sw.ElapsedMilliseconds < 100,
-                $"10000 cached accesses took {sw.ElapsedMilliseconds}ms, expected < 100ms");
-        }
-        [Fact]
-        public void AllTypes_CacheReturnsSameArrayInstances()
-        {
-            // Arrange - clear all caches to ensure a cold start
-            TypeUtils.ClearAllCaches();
-
-            // Get a few assemblies to test
-            var testAssembly = typeof(AssemblyUtilsCacheSensitiveTests).Assembly;
-            var reflectorAssembly = typeof(AssemblyUtils).Assembly;
-            var systemAssembly = typeof(object).Assembly;
-
-            // Act - call GetAssemblyTypes twice for each assembly
-            var testTypes1 = AssemblyUtils.GetAssemblyTypes(testAssembly);
-            var testTypes2 = AssemblyUtils.GetAssemblyTypes(testAssembly);
-
-            var reflectorTypes1 = AssemblyUtils.GetAssemblyTypes(reflectorAssembly);
-            var reflectorTypes2 = AssemblyUtils.GetAssemblyTypes(reflectorAssembly);
-
-            var systemTypes1 = AssemblyUtils.GetAssemblyTypes(systemAssembly);
-            var systemTypes2 = AssemblyUtils.GetAssemblyTypes(systemAssembly);
-
-            // Assert - same array instance should be returned (proves caching works)
-            Assert.Same(testTypes1, testTypes2);
-            Assert.Same(reflectorTypes1, reflectorTypes2);
-            Assert.Same(systemTypes1, systemTypes2);
-
-            // Assert - arrays should contain types
-            Assert.NotEmpty(testTypes1);
-            Assert.NotEmpty(reflectorTypes1);
-            Assert.NotEmpty(systemTypes1);
-        }
-
-        [Fact]
-        public void ClearAllCaches_InvalidatesCache()
-        {
-            // Arrange - ensure cache is populated
-            var assembly = typeof(AssemblyUtilsCacheSensitiveTests).Assembly;
-            var typesBefore = AssemblyUtils.GetAssemblyTypes(assembly);
-
-            // Act - clear caches
-            TypeUtils.ClearAllCaches();
-
-            // Get types again after clearing
-            var typesAfter = AssemblyUtils.GetAssemblyTypes(assembly);
-
-            // Assert - should be a different array instance (cache was cleared and repopulated)
-            // Note: Content should be the same, but it's a new array instance
-            Assert.NotSame(typesBefore, typesAfter);
-            Assert.Equal(typesBefore.Length, typesAfter.Length);
-        }
-    }
-
-    #endregion
 }

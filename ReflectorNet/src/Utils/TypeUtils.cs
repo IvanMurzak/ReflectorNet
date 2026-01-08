@@ -23,7 +23,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <remarks>
         /// This property delegates to <see cref="AssemblyUtils.AllTypes"/> and provides
         /// exception-safe enumeration of types across all loaded assemblies.
-        /// Results are cached per assembly for performance.
         /// </remarks>
         public static IEnumerable<Type> AllTypes => AssemblyUtils.AllTypes;
 
@@ -33,28 +32,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <summary>
         /// Clears the type name resolution cache.
         /// </summary>
-        /// <remarks>
-        /// This only clears the type name to <see cref="Type"/> resolution cache in <see cref="TypeUtils"/>.
-        /// It does not clear the assembly types cache in <see cref="AssemblyUtils"/>.
-        /// To clear all reflection caches, use <see cref="ClearAllCaches"/> instead.
-        /// </remarks>
         public static void ClearTypeCache()
         {
             _typeCache.Clear();
-        }
-
-        /// <summary>
-        /// Clears all reflection-related caches, including both the type name resolution cache
-        /// and the assembly types cache.
-        /// </summary>
-        /// <remarks>
-        /// Use this method when you need to ensure completely fresh type enumeration,
-        /// such as after dynamically loading or unloading assemblies.
-        /// </remarks>
-        public static void ClearAllCaches()
-        {
-            _typeCache.Clear();
-            AssemblyUtils.ClearAssemblyTypesCache();
         }
 
         /// <summary>

@@ -6,7 +6,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,9 +14,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static class AssemblyUtils
     {
-        // Thread-safe cache for types per assembly
-        private static readonly ConcurrentDictionary<Assembly, Type[]> _assemblyTypesCache = new();
-
         /// <summary>
         /// Gets all assemblies loaded in the current application domain with exception protection.
         /// </summary>
@@ -61,7 +57,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
-        /// Gets all types from an assembly with thread-safe caching.
+        /// Gets all types from an assembly.
         /// </summary>
         /// <remarks>
         /// This method handles exceptions gracefully to ensure robust type enumeration:
@@ -76,34 +72,23 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <returns>Array of types from the assembly. May be empty if the assembly cannot be inspected.</returns>
         public static Type[] GetAssemblyTypes(Assembly assembly)
         {
-            return _assemblyTypesCache.GetOrAdd(assembly, asm =>
+            try
             {
-                try
-                {
-                    return asm.GetTypes();
-                }
-                catch (ReflectionTypeLoadException ex)
-                {
-                    // Some types failed to load (e.g., missing dependencies).
-                    // Return the types that did load successfully.
-                    return ex.Types.Where(t => t != null).ToArray()!;
-                }
-                catch
-                {
-                    // Other exceptions (FileNotFoundException, BadImageFormatException, etc.)
-                    // can occur with dynamic assemblies, native assemblies, or corrupted modules.
-                    // Return empty array to allow enumeration to continue with other assemblies.
-                    return Array.Empty<Type>();
-                }
-            });
-        }
-
-        /// <summary>
-        /// Clears the assembly types cache.
-        /// </summary>
-        public static void ClearAssemblyTypesCache()
-        {
-            _assemblyTypesCache.Clear();
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                // Some types failed to load (e.g., missing dependencies).
+                // Return the types that did load successfully.
+                return ex.Types.Where(t => t != null).ToArray()!;
+            }
+            catch
+            {
+                // Other exceptions (FileNotFoundException, BadImageFormatException, etc.)
+                // can occur with dynamic assemblies, native assemblies, or corrupted modules.
+                // Return empty array to allow enumeration to continue with other assemblies.
+                return Array.Empty<Type>();
+            }
         }
     }
 }
