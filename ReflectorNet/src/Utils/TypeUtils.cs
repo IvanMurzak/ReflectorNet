@@ -17,11 +17,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
-        public static IEnumerable<Type> AllTypes => AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(assembly => assembly.GetTypes());
+        public static IEnumerable<Type> AllTypes => AssemblyUtils.AllTypes;
 
         // Cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
-        private static readonly ConcurrentDictionary<string, Type?> _typeCache = new ConcurrentDictionary<string, Type?>();
+        private static readonly ConcurrentDictionary<string, Type?> _typeCache = new();
+
+        /// <summary>
+        /// Clears the type name cache.
+        /// </summary>
+        public static void ClearTypeCache()
+        {
+            _typeCache.Clear();
+        }
 
         public static Type? GetType(string? typeName)
         {
@@ -74,7 +81,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
 
             // If Type.GetType() fails, try to find the type in all loaded assemblies
-            type = AllTypes.FirstOrDefault(t =>
+            type = AssemblyUtils.AllTypes.FirstOrDefault(t =>
                 typeName == t.FullName ||
                 typeName == t.AssemblyQualifiedName ||
                 typeName == t.GetTypeId());
@@ -94,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (type != null)
                 return type;
 
-            return AllTypes.FirstOrDefault(t =>
+            return AssemblyUtils.AllTypes.FirstOrDefault(t =>
                 name == t.AssemblyQualifiedName ||
                 name == t.FullName ||
                 name == t.Name);

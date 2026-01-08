@@ -9,7 +9,7 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public partial class Reflector
     {
-        public static IEnumerable<MethodInfo> AllMethods => TypeUtils.AllTypes
+        public static IEnumerable<MethodInfo> AllMethods => AssemblyUtils.AllTypes
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
             .Where(method => method.DeclaringType != null && !method.DeclaringType.IsAbstract);
 
@@ -152,7 +152,7 @@ namespace com.IvanMurzak.ReflectorNet
             // Prepare Namespace
             filter.Namespace = filter.Namespace?.Trim()?.Replace(StringUtils.Null, string.Empty);
 
-            var typesEnumerable = TypeUtils.AllTypes
+            var typesEnumerable = AssemblyUtils.AllTypes
                 .Where(type => type.IsVisible)
                 .Where(type => !type.IsInterface)
                 .Where(type => !type.IsAbstract || type.IsSealed)
