@@ -412,12 +412,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             {
                 counts[i] = AssemblyUtils.AllTypes.Count();
             });
-            // Assert - concurrent enumerations should produce similar counts,
-            // allowing for minor variations due to dynamic assembly loading
             for (int i = 1; i < counts.Length; i++)
             {
                 var diff = Math.Abs(counts[0] - counts[i]);
-                Assert.InRange(diff, 0, 50);
                 Assert.Equal(counts[0], counts[i]);
             }
         }
