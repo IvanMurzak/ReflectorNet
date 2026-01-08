@@ -353,14 +353,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             // Arrange
             var assembly = typeof(AssemblyUtilsTests).Assembly;
             var results = new Type[10][];
-            var barrier = new Barrier(10);
-
-            // Act - access from multiple threads simultaneously
-            Parallel.For(0, 10, i =>
+            using (var barrier = new Barrier(10))
             {
-                barrier.SignalAndWait(); // Ensure all threads start at the same time
-                results[i] = AssemblyUtils.GetAssemblyTypes(assembly);
-            });
+                // Act - access from multiple threads simultaneously
+                Parallel.For(0, 10, i =>
+                {
+                    barrier.SignalAndWait(); // Ensure all threads start at the same time
+                    results[i] = AssemblyUtils.GetAssemblyTypes(assembly);
+                });
+            }
 
             // Assert - all should be valid and different instances
             for (int i = 0; i < results.Length; i++)
@@ -411,10 +412,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             {
                 counts[i] = AssemblyUtils.AllTypes.Count();
             });
-
-            // Assert - all counts should be the same
+            // Assert - concurrent enumerations should produce similar counts,
+            // allowing for minor variations due to dynamic assembly loading
             for (int i = 1; i < counts.Length; i++)
             {
+                var diff = Math.Abs(counts[0] - counts[i]);
+                Assert.InRange(diff, 0, 50);
                 Assert.Equal(counts[0], counts[i]);
             }
         }

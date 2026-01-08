@@ -80,7 +80,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 // Some types failed to load (e.g., missing dependencies).
                 // Return the types that did load successfully.
-                return ex.Types.Where(t => t != null).ToArray()!;
+                return ex.Types
+                    ?.Where(t => t != null)
+                    .Select(x => x!)
+                    .ToArray() ?? Array.Empty<Type>();
             }
             catch
             {
