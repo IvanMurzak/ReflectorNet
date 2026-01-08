@@ -18,7 +18,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         // Thread-safe cache for types per assembly
         private static readonly ConcurrentDictionary<Assembly, Type[]> _assemblyTypesCache = new();
 
-        public static IEnumerable<Type> AllTypes
+        /// <summary>
+        /// Gets all assemblies loaded in the current application domain with exception protection.
+        /// </summary>
+        public static IEnumerable<Assembly> AllAssemblies
         {
             get
             {
@@ -34,10 +37,24 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
                 for (int i = 0; i < assemblies.Length; i++)
                 {
-                    var types = GetAssemblyTypes(assemblies[i]);
-                    for (int j = 0; j < types.Length; j++)
+                    yield return assemblies[i];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets all types from all loaded assemblies with exception protection.
+        /// </summary>
+        public static IEnumerable<Type> AllTypes
+        {
+            get
+            {
+                foreach (var assembly in AllAssemblies)
+                {
+                    var types = GetAssemblyTypes(assembly);
+                    for (int i = 0; i < types.Length; i++)
                     {
-                        yield return types[j];
+                        yield return types[i];
                     }
                 }
             }

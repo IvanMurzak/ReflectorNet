@@ -109,6 +109,138 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
         #endregion
 
+        #region AllAssemblies Tests
+
+        [Fact]
+        public void AllAssemblies_ReturnsAssemblies()
+        {
+            // Act
+            var allAssemblies = AssemblyUtils.AllAssemblies.ToList();
+
+            // Assert
+            Assert.NotEmpty(allAssemblies);
+        }
+
+        [Fact]
+        public void AllAssemblies_ContainsCurrentTestAssembly()
+        {
+            // Arrange
+            var testAssembly = typeof(AssemblyUtilsTests).Assembly;
+
+            // Act
+            var allAssemblies = AssemblyUtils.AllAssemblies.ToList();
+
+            // Assert
+            Assert.Contains(testAssembly, allAssemblies);
+        }
+
+        [Fact]
+        public void AllAssemblies_ContainsReflectorNetAssembly()
+        {
+            // Arrange
+            var reflectorAssembly = typeof(AssemblyUtils).Assembly;
+
+            // Act
+            var allAssemblies = AssemblyUtils.AllAssemblies.ToList();
+
+            // Assert
+            Assert.Contains(reflectorAssembly, allAssemblies);
+        }
+
+        [Fact]
+        public void AllAssemblies_ContainsCoreLibAssembly()
+        {
+            // Arrange
+            var coreLibAssembly = typeof(object).Assembly;
+
+            // Act
+            var allAssemblies = AssemblyUtils.AllAssemblies.ToList();
+
+            // Assert
+            Assert.Contains(coreLibAssembly, allAssemblies);
+        }
+
+        [Fact]
+        public void AllAssemblies_AllAssembliesAreNotNull()
+        {
+            // Act
+            var allAssemblies = AssemblyUtils.AllAssemblies.ToList();
+
+            // Assert
+            Assert.All(allAssemblies, a => Assert.NotNull(a));
+        }
+
+        [Fact]
+        public void AllAssemblies_MultipleEnumerations_Succeed()
+        {
+            // Act - enumerate multiple times
+            var count1 = AssemblyUtils.AllAssemblies.Count();
+            var count2 = AssemblyUtils.AllAssemblies.Count();
+
+            // Assert - both enumerations should return assemblies
+            // Note: counts may differ slightly if new assemblies are loaded between enumerations
+            Assert.True(count1 > 0, "First enumeration should return assemblies");
+            Assert.True(count2 > 0, "Second enumeration should return assemblies");
+            // The counts should be reasonably close (within 50 assemblies)
+            var difference = Math.Abs(count1 - count2);
+            Assert.True(difference <= 50,
+                $"Counts differ too much: {count1} vs {count2} (difference: {difference})");
+        }
+
+        [Fact]
+        public void AllAssemblies_CanIterateWithForeach()
+        {
+            // Act
+            var count = 0;
+            foreach (var assembly in AssemblyUtils.AllAssemblies)
+            {
+                Assert.NotNull(assembly);
+                count++;
+            }
+
+            // Assert
+            Assert.True(count > 0, "Should iterate at least one assembly");
+        }
+
+        [Fact]
+        public void AllAssemblies_ConcurrentEnumeration_Succeeds()
+        {
+            // Arrange
+            var counts = new int[5];
+
+            // Act - enumerate from multiple threads simultaneously
+            Parallel.For(0, 5, i =>
+            {
+                counts[i] = AssemblyUtils.AllAssemblies.Count();
+            });
+
+            // Assert - all counts should be positive
+            Assert.All(counts, c => Assert.True(c > 0));
+        }
+
+        [Fact]
+        public void AllAssemblies_ContainsMultipleAssemblies()
+        {
+            // Act
+            var allAssemblies = AssemblyUtils.AllAssemblies.ToList();
+
+            // Assert - should have multiple assemblies loaded
+            Assert.True(allAssemblies.Count > 5, $"Expected more than 5 assemblies, got {allAssemblies.Count}");
+        }
+
+        [Fact]
+        public void AllAssemblies_NoDuplicates()
+        {
+            // Act
+            var allAssemblies = AssemblyUtils.AllAssemblies.ToList();
+            var distinctCount = allAssemblies.Distinct().Count();
+
+            // Assert
+            Assert.Equal(allAssemblies.Count, distinctCount);
+        }
+
+        #endregion
+
         #region AllTypes Tests
 
         [Fact]
