@@ -552,7 +552,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
     [Collection("CacheSensitive")]
     public class AssemblyUtilsCacheSensitiveTests
     {
-
         [Fact]
         public void GetAssemblyTypes_CachedAccess_IsFast()
         {
@@ -575,32 +574,54 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
                 $"10000 cached accesses took {sw.ElapsedMilliseconds}ms, expected < 100ms");
         }
         [Fact]
-        public void AllTypes_SecondEnumeration_UsesCachedData()
+        public void AllTypes_CacheReturnsSameArrayInstances()
         {
             // Arrange - clear all caches to ensure a cold start
             TypeUtils.ClearAllCaches();
 
-            // Act - measure first enumeration (cold, no cache)
-            var swFirst = System.Diagnostics.Stopwatch.StartNew();
-            var firstEnumeration = AssemblyUtils.AllTypes.ToList();
-            swFirst.Stop();
+            // Get a few assemblies to test
+            var testAssembly = typeof(AssemblyUtilsCacheSensitiveTests).Assembly;
+            var reflectorAssembly = typeof(AssemblyUtils).Assembly;
+            var systemAssembly = typeof(object).Assembly;
 
-            // Act - measure second enumeration (warm, cached)
-            var swSecond = System.Diagnostics.Stopwatch.StartNew();
-            var secondEnumeration = AssemblyUtils.AllTypes.ToList();
-            swSecond.Stop();
+            // Act - call GetAssemblyTypes twice for each assembly
+            var testTypes1 = AssemblyUtils.GetAssemblyTypes(testAssembly);
+            var testTypes2 = AssemblyUtils.GetAssemblyTypes(testAssembly);
 
-            // Assert - counts may differ slightly if new assemblies are loaded between enumerations
-            // (e.g., by the test framework), so we allow some tolerance
-            var countDifference = Math.Abs(firstEnumeration.Count - secondEnumeration.Count);
-            var maxAllowedDifference = Math.Max(500, firstEnumeration.Count / 10);
-            Assert.True(countDifference <= maxAllowedDifference,
-                $"Counts differ too much: {firstEnumeration.Count} vs {secondEnumeration.Count} (difference: {countDifference})");
+            var reflectorTypes1 = AssemblyUtils.GetAssemblyTypes(reflectorAssembly);
+            var reflectorTypes2 = AssemblyUtils.GetAssemblyTypes(reflectorAssembly);
 
-            // Second enumeration should be faster due to caching (at least 1ms improvement)
-            var timeImprovement = swFirst.ElapsedMilliseconds - swSecond.ElapsedMilliseconds;
-            Assert.True(timeImprovement >= 1,
-                $"Caching should provide at least 1ms improvement. First: {swFirst.ElapsedMilliseconds}ms, Second: {swSecond.ElapsedMilliseconds}ms, Improvement: {timeImprovement}ms");
+            var systemTypes1 = AssemblyUtils.GetAssemblyTypes(systemAssembly);
+            var systemTypes2 = AssemblyUtils.GetAssemblyTypes(systemAssembly);
+
+            // Assert - same array instance should be returned (proves caching works)
+            Assert.Same(testTypes1, testTypes2);
+            Assert.Same(reflectorTypes1, reflectorTypes2);
+            Assert.Same(systemTypes1, systemTypes2);
+
+            // Assert - arrays should contain types
+            Assert.NotEmpty(testTypes1);
+            Assert.NotEmpty(reflectorTypes1);
+            Assert.NotEmpty(systemTypes1);
+        }
+
+        [Fact]
+        public void ClearAllCaches_InvalidatesCache()
+        {
+            // Arrange - ensure cache is populated
+            var assembly = typeof(AssemblyUtilsCacheSensitiveTests).Assembly;
+            var typesBefore = AssemblyUtils.GetAssemblyTypes(assembly);
+
+            // Act - clear caches
+            TypeUtils.ClearAllCaches();
+
+            // Get types again after clearing
+            var typesAfter = AssemblyUtils.GetAssemblyTypes(assembly);
+
+            // Assert - should be a different array instance (cache was cleared and repopulated)
+            // Note: Content should be the same, but it's a new array instance
+            Assert.NotSame(typesBefore, typesAfter);
+            Assert.Equal(typesBefore.Length, typesAfter.Length);
         }
     }
 
