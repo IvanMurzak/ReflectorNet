@@ -17,6 +17,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
+        /// <summary>
+        /// Gets all types from all loaded assemblies.
+        /// </summary>
+        /// <remarks>
+        /// This property delegates to <see cref="AssemblyUtils.AllTypes"/> and provides
+        /// exception-safe enumeration of types across all loaded assemblies.
+        /// Results are cached per assembly for performance.
+        /// </remarks>
         public static IEnumerable<Type> AllTypes => AssemblyUtils.AllTypes;
 
         // Cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
@@ -49,6 +57,23 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             AssemblyUtils.ClearAssemblyTypesCache();
         }
 
+        /// <summary>
+        /// Resolves a <see cref="Type"/> from its string representation.
+        /// </summary>
+        /// <remarks>
+        /// This method attempts to resolve types using multiple strategies in order:
+        /// <list type="number">
+        /// <item><description>Built-in <see cref="Type.GetType(string)"/></description></item>
+        /// <item><description>Array type resolution (e.g., "Namespace.Type[]", "int[,]")</description></item>
+        /// <item><description>C#-style generic types (e.g., "List&lt;int&gt;", "Dictionary&lt;string, int&gt;")</description></item>
+        /// <item><description>CLR-style generic types (e.g., "System.Collections.Generic.List`1[[System.Int32]]")</description></item>
+        /// <item><description>Search across all loaded assemblies by FullName, AssemblyQualifiedName, or TypeId</description></item>
+        /// </list>
+        /// Results are cached for performance. Use <see cref="ClearTypeCache"/> to clear the cache.
+        /// </remarks>
+        /// <param name="typeName">The type name to resolve. Can be a simple name, full name, assembly-qualified name,
+        /// or C#-style generic syntax.</param>
+        /// <returns>The resolved <see cref="Type"/>, or <c>null</c> if the type cannot be found.</returns>
         public static Type? GetType(string? typeName)
         {
             if (string.IsNullOrWhiteSpace(typeName))
@@ -495,6 +520,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return args.Count > 0 ? args.ToArray() : null;
         }
 
+        /// <summary>
+        /// Determines whether the specified type is a dictionary type.
+        /// </summary>
+        /// <param name="type">The type to check.</param>
+        /// <returns><c>true</c> if the type is <see cref="Dictionary{TKey, TValue}"/>,
+        /// <see cref="IDictionary{TKey, TValue}"/>, or implements <see cref="IDictionary{TKey, TValue}"/>.</returns>
         public static bool IsDictionary(Type type)
         {
             if (type.IsGenericType &&
@@ -508,6 +539,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 .Any(i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
         }
 
+        /// <summary>
+        /// Gets the key and value types from a dictionary type.
+        /// </summary>
+        /// <param name="type">The dictionary type to inspect.</param>
+        /// <returns>An array containing [TKey, TValue] types, or <c>null</c> if the type is not a dictionary.</returns>
         public static Type[]? GetDictionaryGenericArguments(Type type)
         {
             if (type.IsGenericType &&
@@ -523,6 +559,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return dictionaryInterface?.GetGenericArguments();
         }
 
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> on a type.
+        /// </summary>
+        /// <param name="type">The type to get the description from.</param>
+        /// <returns>The description string, or <c>null</c> if no description is found.
+        /// Falls back to the base type's description if the type itself has none.</returns>
         public static string? GetDescription(Type type)
         {
             return type
@@ -532,6 +574,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     ? GetDescription(type.BaseType!)
                     : null);
         }
+
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> on a parameter.
+        /// </summary>
+        /// <param name="parameterInfo">The parameter to get the description from.</param>
+        /// <returns>The description string, or <c>null</c> if no description is found.
+        /// Falls back to the parameter type's description if the parameter itself has none.</returns>
         public static string? GetDescription(ParameterInfo? parameterInfo)
         {
             return parameterInfo
@@ -541,6 +590,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     ? GetDescription(parameterInfo.ParameterType)
                     : null);
         }
+
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> on a member.
+        /// </summary>
+        /// <param name="memberInfo">The member to get the description from.</param>
+        /// <returns>The description string, or <c>null</c> if no description is found.
+        /// For fields and properties, falls back to the member type's description.</returns>
         public static string? GetDescription(MemberInfo? memberInfo)
         {
             if (memberInfo == null)
@@ -560,6 +616,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 _ => null
             };
         }
+
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> on a field.
+        /// </summary>
+        /// <param name="fieldInfo">The field to get the description from.</param>
+        /// <returns>The description string, or <c>null</c> if no description is found.
+        /// Falls back to the field type's description if the field itself has none.</returns>
         public static string? GetFieldDescription(FieldInfo? fieldInfo)
         {
             if (fieldInfo == null)
@@ -572,6 +635,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     ? GetDescription(fieldInfo.FieldType)
                     : null);
         }
+
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> on a property.
+        /// </summary>
+        /// <param name="propertyInfo">The property to get the description from.</param>
+        /// <returns>The description string, or <c>null</c> if no description is found.
+        /// Falls back to the property type's description if the property itself has none.</returns>
         public static string? GetPropertyDescription(PropertyInfo? propertyInfo)
         {
             if (propertyInfo == null)
@@ -584,12 +654,32 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     ? GetDescription(propertyInfo.PropertyType)
                     : null);
         }
+
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> on a property by name.
+        /// </summary>
+        /// <param name="type">The type containing the property.</param>
+        /// <param name="propertyName">The name of the property.</param>
+        /// <returns>The description string, or <c>null</c> if the property is not found or has no description.</returns>
         public static string? GetPropertyDescription(Type type, string propertyName)
         {
             var propertyInfo = type.GetProperty(propertyName);
             return propertyInfo != null ? GetPropertyDescription(propertyInfo) : null;
         }
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> using JSON schema exporter context.
+        /// </summary>
+        /// <remarks>
+        /// This method handles JSON naming policy transformations by attempting to match:
+        /// <list type="number">
+        /// <item><description>Exact name match</description></item>
+        /// <item><description>PascalCase conversion from camelCase</description></item>
+        /// <item><description>Case-insensitive match</description></item>
+        /// </list>
+        /// </remarks>
+        /// <param name="context">The JSON schema exporter context containing property information.</param>
+        /// <returns>The description string, or <c>null</c> if no description is found.</returns>
         public static string? GetPropertyDescription(System.Text.Json.Schema.JsonSchemaExporterContext context)
         {
             if (context.PropertyInfo == null || context.PropertyInfo.DeclaringType == null)
@@ -636,6 +726,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             return char.ToUpperInvariant(camelCase[0]) + camelCase.Substring(1);
         }
+
+        /// <summary>
+        /// Gets the description from a <see cref="DescriptionAttribute"/> on a field by name.
+        /// </summary>
+        /// <param name="type">The type containing the field.</param>
+        /// <param name="fieldName">The name of the field.</param>
+        /// <returns>The description string, or <c>null</c> if the field is not found or has no description.</returns>
         public static string? GetFieldDescription(Type type, string fieldName)
         {
             var fieldInfo = type.GetField(fieldName);
@@ -662,6 +759,21 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return targetType.IsAssignableFrom(obj.GetType());
         }
 
+        /// <summary>
+        /// Determines whether a type can be cast to another type.
+        /// </summary>
+        /// <remarks>
+        /// This method checks for:
+        /// <list type="bullet">
+        /// <item><description>Direct assignability (including inheritance)</description></item>
+        /// <item><description>Primitive type conversions</description></item>
+        /// <item><description>String to object conversion</description></item>
+        /// </list>
+        /// Nullable types are unwrapped before comparison.
+        /// </remarks>
+        /// <param name="type">The source type to cast from.</param>
+        /// <param name="to">The target type to cast to.</param>
+        /// <returns><c>true</c> if the cast is possible; otherwise, <c>false</c>.</returns>
         public static bool IsCastable(Type? type, Type to)
         {
             if (type == null || to == null)
@@ -688,6 +800,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return false;
         }
 
+        /// <summary>
+        /// Calculates the inheritance distance between two types.
+        /// </summary>
+        /// <param name="baseType">The base type (ancestor).</param>
+        /// <param name="targetType">The target type (descendant).</param>
+        /// <returns>The number of inheritance levels between the types, or -1 if <paramref name="targetType"/>
+        /// does not inherit from <paramref name="baseType"/>.</returns>
         public static int GetInheritanceDistance(Type baseType, Type targetType)
         {
             if (!baseType.IsAssignableFrom(targetType))
@@ -702,6 +821,17 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             return current == baseType ? distance : -1;
         }
+
+        /// <summary>
+        /// Determines whether a type is considered a primitive type for serialization purposes.
+        /// </summary>
+        /// <remarks>
+        /// This includes CLR primitives, enums, and common value types:
+        /// <see cref="string"/>, <see cref="decimal"/>, <see cref="DateTime"/>,
+        /// <see cref="DateTimeOffset"/>, <see cref="TimeSpan"/>, and <see cref="Guid"/>.
+        /// </remarks>
+        /// <param name="type">The type to check.</param>
+        /// <returns><c>true</c> if the type is a primitive or primitive-like type.</returns>
         public static bool IsPrimitive(Type type)
         {
             return type.IsPrimitive ||
@@ -713,6 +843,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                    type == typeof(TimeSpan) ||
                    type == typeof(Guid);
         }
+
+        /// <summary>
+        /// Recursively enumerates all generic type arguments from a type and its base types.
+        /// </summary>
+        /// <param name="type">The type to extract generic arguments from.</param>
+        /// <param name="visited">Optional set to track visited types and prevent infinite recursion.</param>
+        /// <returns>An enumerable of all generic type arguments found in the type hierarchy.</returns>
         public static IEnumerable<Type> GetGenericTypes(Type type, HashSet<int>? visited = null)
         {
             visited ??= new HashSet<int>();
@@ -748,6 +885,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             foreach (var baseGenericType in GetGenericTypes(type.BaseType, visited))
                 yield return baseGenericType;
         }
+
+        /// <summary>
+        /// Determines whether a type implements <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        /// <param name="type">The type to check.</param>
+        /// <returns><c>true</c> if the type is an array or implements <see cref="IEnumerable{T}"/>.</returns>
         public static bool IsIEnumerable(Type type)
         {
             if (type.IsArray)
@@ -759,6 +902,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return type.GetInterfaces()
                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         }
+
+        /// <summary>
+        /// Gets the element type of an enumerable or array type.
+        /// </summary>
+        /// <param name="type">The enumerable type to inspect.</param>
+        /// <returns>The element type (T in <see cref="IEnumerable{T}"/>), or <c>null</c> if the type is not enumerable.</returns>
         public static Type? GetEnumerableItemType(Type type)
         {
             if (type.IsArray)
@@ -794,6 +943,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
             return null;
         }
+
+        /// <summary>
+        /// Resolves a type with priority given to the object's runtime type.
+        /// </summary>
+        /// <param name="obj">The object whose runtime type to use (if not null).</param>
+        /// <param name="fallbackType">The fallback type to use if the object is null.</param>
+        /// <param name="error">Set to an error message if the type cannot be resolved; otherwise, <c>null</c>.</param>
+        /// <returns>The resolved type, or <c>null</c> if resolution fails.</returns>
         public static Type? GetTypeWithObjectPriority(object? obj, Type? fallbackType, out string? error)
         {
             var type = obj?.GetType() ?? fallbackType;
@@ -806,6 +963,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             error = null;
             return type;
         }
+
+        /// <summary>
+        /// Resolves a type with priority given to the <see cref="SerializedMember.typeName"/>.
+        /// </summary>
+        /// <param name="member">The serialized member containing the type name.</param>
+        /// <param name="fallbackType">The fallback type to use if the type name cannot be resolved.</param>
+        /// <param name="error">Set to an error message if the type cannot be resolved; otherwise, <c>null</c>.</param>
+        /// <returns>The resolved type, or <c>null</c> if resolution fails.</returns>
         public static Type? GetTypeWithNamePriority(SerializedMember? member, Type? fallbackType, out string? error)
         {
             if (StringUtils.IsNullOrEmpty(member?.typeName) && fallbackType == null)
@@ -829,6 +994,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             error = null;
             return type;
         }
+
+        /// <summary>
+        /// Resolves a type with priority given to the provided type parameter.
+        /// </summary>
+        /// <param name="type">The primary type to use (if not null).</param>
+        /// <param name="fallbackMember">The fallback serialized member to extract type name from.</param>
+        /// <param name="error">Set to an error message if the type cannot be resolved; otherwise, <c>null</c>.</param>
+        /// <returns>The resolved type, or <c>null</c> if resolution fails.</returns>
         public static Type? GetTypeWithValuePriority(Type? type, SerializedMember? fallbackMember, out string? error)
         {
             if (type == null)
