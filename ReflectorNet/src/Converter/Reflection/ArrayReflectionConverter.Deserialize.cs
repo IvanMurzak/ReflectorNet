@@ -177,11 +177,13 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     i++;
                 }
 
-                logger?.LogInformation("{padding}Successfully created list of type='{typeName}'", padding, list.GetType().GetTypeId());
+                if (logger?.IsEnabled(LogLevel.Information) == true)
+                    logger.LogInformation("{padding}Successfully created list of type='{typeName}'", padding, list.GetType().GetTypeId());
                 return list;
             }
 
-            logger?.LogWarning("{padding}Type '{typeName}' is neither array nor generic list", padding, type.GetTypeId());
+            if (logger?.IsEnabled(LogLevel.Warning) == true)
+                logger.LogWarning("{padding}Type '{typeName}' is neither array nor generic list", padding, type.GetTypeId());
             return null;
         }
 

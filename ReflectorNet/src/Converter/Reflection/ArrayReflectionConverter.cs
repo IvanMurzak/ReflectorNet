@@ -86,7 +86,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     var currentType = thisElementType ?? elementType;
 
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace("{padding} Serializing item '{index}' of type '{type}' in '{objType}'.\nPath: {path}",
+                        logger.LogTrace("{padding}Serializing item '{index}' of type '{type}' in '{objType}'.\nPath: {path}",
                             StringUtils.GetPadding(depth), index, currentType?.GetTypeId().ValueOrNull(), obj.GetType().GetTypeId().ValueOrNull(), context?.GetPath(obj));
 
                     if (thisElementType != null && reflector.Converters.IsTypeBlacklisted(thisElementType))

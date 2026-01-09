@@ -98,13 +98,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         continue;
                     }
 
-                    var fieldValue = reflector.Deserialize(
-                        data: field,
-                        depth: depth + 1,
-                        logs: logs,
-                        logger: logger,
-                        context: context);
-
                     var fieldInfo = type!.GetField(field.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (fieldInfo == null)
                     {
@@ -115,6 +108,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                         continue;
                     }
+
+                    var fieldValue = reflector.Deserialize(
+                        data: field,
+                        fallbackType: fieldInfo.FieldType,
+                        depth: depth + 1,
+                        logs: logs,
+                        logger: logger,
+                        context: context);
                     fieldInfo.SetValue(result, fieldValue);
                 }
             }
@@ -138,13 +139,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         continue;
                     }
 
-                    var propertyValue = reflector.Deserialize(
-                        property,
-                        depth: depth + 1,
-                        logs: logs,
-                        logger: logger,
-                        context: context);
-
                     var propertyInfo = type!.GetProperty(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (propertyInfo == null)
                     {
@@ -164,6 +158,15 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                         continue;
                     }
+
+                    var propertyValue = reflector.Deserialize(
+                        property,
+                        fallbackType: propertyInfo.PropertyType,
+                        depth: depth + 1,
+                        logs: logs,
+                        logger: logger,
+                        context: context);
+
                     propertyInfo.SetValue(result, propertyValue);
                 }
             }
@@ -228,7 +231,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 result = null;
                 logs?.Error(error ?? "Unknown error", depth);
-                logger?.LogError($"{padding}{error}");
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}{error}");
                 return false;
             }
 
@@ -275,7 +279,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (data.valueJsonElement == null)
                     {
                         if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding} 'value' is null. Converter: {GetType().GetTypeShortName()}");
+                            logger.LogTrace($"{padding}'value' is null. Converter: {GetType().GetTypeShortName()}");
 
                         result = GetDefaultValue(reflector, type);
                         return true;
@@ -283,7 +287,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (data.valueJsonElement.Value.ValueKind != JsonValueKind.Object)
                     {
                         if (logger?.IsEnabled(LogLevel.Error) == true)
-                            logger.LogError($"{padding} 'value' is not an object. It is '{data.valueJsonElement?.ValueKind}'. Converter: {GetType().GetTypeShortName()}");
+                            logger.LogError($"{padding}'value' is not an object. It is '{data.valueJsonElement?.ValueKind}'. Converter: {GetType().GetTypeShortName()}");
 
                         logs?.Error("'value' is not an object. Attempting to deserialize as SerializedMember.", depth);
 
@@ -323,7 +327,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace($"{padding} Deserialize as json. Converter: {GetType().GetTypeShortName()}");
+                        logger.LogTrace($"{padding}Deserialize as json. Converter: {GetType().GetTypeShortName()}");
 
                     result = DeserializeValueAsJsonElement(
                         reflector: reflector,
@@ -341,7 +345,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 catch (Exception ex)
                 {
                     logs?.Error($"Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}", depth);
-                    logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    if (logger?.IsEnabled(LogLevel.Critical) == true)
+                        logger.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
                     result = reflector.GetDefaultValue(type);
                     return false;
                 }
