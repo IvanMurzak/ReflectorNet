@@ -312,7 +312,7 @@ namespace com.IvanMurzak.ReflectorNet
                         if (logger?.IsEnabled(LogLevel.Error) == true)
                             logger.LogError($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter can handle interface types with not null values.");
 
-                        throw new ArgumentException($"Cannot deserialize interface type '{type.GetTypeId()}'");
+                        throw new TypeInstantiationException($"Cannot deserialize interface type '{type.GetTypeId()}'", type);
                     }
                     if (type.IsAbstract) // Abstract classes cannot be instantiated
                     {
@@ -322,7 +322,7 @@ namespace com.IvanMurzak.ReflectorNet
                         if (logger?.IsEnabled(LogLevel.Error) == true)
                             logger.LogError($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter can handle abstract types with not null values.");
 
-                        throw new ArgumentException($"Cannot deserialize abstract type '{type.GetTypeId()}'");
+                        throw new TypeInstantiationException($"Cannot deserialize abstract type '{type.GetTypeId()}'", type);
                     }
 
                     if (logger?.IsEnabled(LogLevel.Error) == true)

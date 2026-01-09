@@ -52,7 +52,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
         /// <summary>
         /// Test that deserializing a SerializedMember with interface typeName and non-null data
-        /// throws an ArgumentException because interfaces cannot be instantiated.
+        /// throws a TypeInstantiationException because interfaces cannot be instantiated.
         /// </summary>
         [Fact]
         public void Deserialize_InterfaceType_WithNonNullData_ThrowsException()
@@ -71,13 +71,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             _output.WriteLine($"Modified to interface type: {serialized.typeName}");
 
             // Act & Assert - Should throw because interfaces cannot be instantiated
-            var exception = Assert.Throws<ArgumentException>(() =>
+            var exception = Assert.Throws<TypeInstantiationException>(() =>
             {
                 reflector.Deserialize(serialized);
             });
 
             _output.WriteLine($"Exception message: {exception.Message}");
             Assert.Contains("interface", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(typeof(IDeserializableInterface), exception.TargetType);
         }
 
         /// <summary>
