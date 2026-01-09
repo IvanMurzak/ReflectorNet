@@ -98,13 +98,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         continue;
                     }
 
-                    var fieldValue = reflector.Deserialize(
-                        data: field,
-                        depth: depth + 1,
-                        logs: logs,
-                        logger: logger,
-                        context: context);
-
                     var fieldInfo = type!.GetField(field.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (fieldInfo == null)
                     {
@@ -115,6 +108,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                         continue;
                     }
+
+                    var fieldValue = reflector.Deserialize(
+                        data: field,
+                        fallbackType: fieldInfo.FieldType,
+                        depth: depth + 1,
+                        logs: logs,
+                        logger: logger,
+                        context: context);
                     fieldInfo.SetValue(result, fieldValue);
                 }
             }
@@ -138,13 +139,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         continue;
                     }
 
-                    var propertyValue = reflector.Deserialize(
-                        property,
-                        depth: depth + 1,
-                        logs: logs,
-                        logger: logger,
-                        context: context);
-
                     var propertyInfo = type!.GetProperty(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (propertyInfo == null)
                     {
@@ -164,6 +158,15 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                         continue;
                     }
+
+                    var propertyValue = reflector.Deserialize(
+                        property,
+                        fallbackType: propertyInfo.PropertyType,
+                        depth: depth + 1,
+                        logs: logs,
+                        logger: logger,
+                        context: context);
+
                     propertyInfo.SetValue(result, propertyValue);
                 }
             }
