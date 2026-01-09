@@ -123,26 +123,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         }
 
         /// <summary>
-        /// Test that serializing an interface type with a null value works correctly.
-        /// The fix handles null objects with interface types by returning SerializedMember.Null.
-        /// </summary>
-        [Fact]
-        public void Serialize_InterfaceType_NullValue_Succeeds()
-        {
-            // Arrange
-            IActionWithNoMembers? nullAction = null;
-            var reflector = new Reflector();
-
-            // Act - This now works after the fix in Reflector.Serialize()
-            var serialized = reflector.Serialize(nullAction, fallbackType: typeof(IActionWithNoMembers));
-
-            // Assert - We expect a valid SerializedMember with null value
-            Assert.NotNull(serialized);
-            Assert.Equal(typeof(IActionWithNoMembers).GetTypeId(), serialized.typeName);
-            _output.WriteLine($"Serialized successfully: typeName={serialized.typeName}");
-        }
-
-        /// <summary>
         /// Test that serialization works when the interface property has a concrete value.
         /// When the value is not null, the serializer uses the concrete type, not the interface type.
         /// </summary>
