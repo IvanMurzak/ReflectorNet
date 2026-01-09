@@ -122,7 +122,7 @@ namespace com.IvanMurzak.ReflectorNet
                     if (type.IsInterface) // Interfaces cannot be instantiated
                     {
                         if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. No converter can handle interface types with null values.",
+                            logger.LogTrace("{padding}Serialize null '{name}' of interface type '{type}'.",
                                 StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull());
 
                         return SerializedMember.Null(type, name);
@@ -130,7 +130,7 @@ namespace com.IvanMurzak.ReflectorNet
                     if (type.IsAbstract) // Abstract classes cannot be instantiated
                     {
                         if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace("{padding}Serialize '{name}' of type '{type}'. No converter can handle abstract types with null values.",
+                            logger.LogTrace("{padding}Serialize null '{name}' of abstract type '{type}'.",
                                 StringUtils.GetPadding(depth), name.ValueOrNull(), type.GetTypeId().ValueOrNull());
 
                         return SerializedMember.Null(type, name);
@@ -309,8 +309,8 @@ namespace com.IvanMurzak.ReflectorNet
                         if (data.IsNull())
                             return null; // return null for interface types when data is null
 
-                        if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter can handle interface types with null values.");
+                        if (logger?.IsEnabled(LogLevel.Error) == true)
+                            logger.LogError($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter can handle interface types with not null values.");
 
                         throw new ArgumentException($"Cannot deserialize interface type '{type.GetTypeId()}'");
                     }
@@ -319,14 +319,14 @@ namespace com.IvanMurzak.ReflectorNet
                         if (data.IsNull())
                             return null; // return null for abstract types when data is null
 
-                        if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter can handle abstract types with null values.");
+                        if (logger?.IsEnabled(LogLevel.Error) == true)
+                            logger.LogError($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter can handle abstract types with not null values.");
 
                         throw new ArgumentException($"Cannot deserialize abstract type '{type.GetTypeId()}'");
                     }
 
-                    if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter can handle null values.");
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{Consts.Emoji.Launch} Deserialize type='{type.GetTypeId()}' name='{name.ValueOrNull()}'. No converter found for type.");
 
                     throw new ArgumentException($"Type '{type.GetTypeId().ValueOrNull()}' not supported for deserialization.");
                 }
