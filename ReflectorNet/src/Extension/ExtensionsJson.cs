@@ -15,11 +15,11 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsJson
     {
-        public static JsonElement ToJsonElement(this object data, Reflector? reflector, JsonSerializerOptions? options = null, ILogger? logger = null)
+        public static JsonElement ToJsonElement(this object data, Reflector? reflector, JsonSerializerOptions? options = null, int depth = 0, ILogger? logger = null)
         {
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace("Converting object of type {Type} to JsonElement.",
-                    data?.GetType().GetTypeId().ValueOrNull());
+                logger.LogTrace("{padding}Converting object of type '{type}' to JsonElement.",
+                    StringUtils.GetPadding(depth), data?.GetType().GetTypeId().ValueOrNull());
 
             return System.Text.Json.JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
         }
@@ -57,7 +57,7 @@ namespace com.IvanMurzak.ReflectorNet
                 throw new ArgumentException("Cannot serialize JsonSerializer instance.", nameof(value));
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace("{padding}Serializing object of type {type} to JSON string.",
+                logger.LogTrace("{padding}Serializing object of type '{type}' to JSON string.",
                     StringUtils.GetPadding(depth), value.GetType().GetTypeId().ValueOrNull());
 
             return System.Text.Json.JsonSerializer.Serialize(

@@ -231,7 +231,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 result = null;
                 logs?.Error(error ?? "Unknown error", depth);
-                logger?.LogError($"{padding}{error}");
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{padding}{error}");
                 return false;
             }
 
@@ -344,7 +345,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 catch (Exception ex)
                 {
                     logs?.Error($"Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}", depth);
-                    logger?.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    if (logger?.IsEnabled(LogLevel.Critical) == true)
+                        logger.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
                     result = reflector.GetDefaultValue(type);
                     return false;
                 }

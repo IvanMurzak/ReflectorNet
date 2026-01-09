@@ -278,7 +278,8 @@ namespace com.IvanMurzak.ReflectorNet
                 var type = TypeUtils.GetTypeWithNamePriority(data, fallbackType, out var error);
                 if (type == null)
                 {
-                    logger?.LogError("{padding}{error}", padding, error ?? "Unknown error");
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError("{padding}{error}", padding, error ?? "Unknown error");
                     logs?.Error(error ?? "Unknown error", depth);
 
                     throw new ArgumentException(error);
