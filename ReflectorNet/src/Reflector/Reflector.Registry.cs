@@ -45,6 +45,10 @@ namespace com.IvanMurzak.ReflectorNet
             // Not readonly: intentionally replaced (not cleared) for thread-safe cache invalidation
             ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
 
+            // Cache for converter lookups: Type -> best converter for that type
+            // Not readonly: intentionally replaced when converters are added/removed for thread-safe cache invalidation
+            ConcurrentDictionary<Type, IReflectionConverter?> _converterCache = new ConcurrentDictionary<Type, IReflectionConverter?>();
+
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.
             /// The default converters are registered in order of increasing specificity to ensure
@@ -73,6 +77,8 @@ namespace com.IvanMurzak.ReflectorNet
                     return;
 
                 _serializers.Add(serializer);
+                // Invalidate converter cache when a new converter is added
+                _converterCache = new ConcurrentDictionary<Type, IReflectionConverter?>();
             }
 
             /// <summary>
@@ -87,6 +93,8 @@ namespace com.IvanMurzak.ReflectorNet
                     return;
 
                 _serializers = new ConcurrentBag<IReflectionConverter>(_serializers.Where(s => s != serializer));
+                // Invalidate converter cache when a converter is removed
+                _converterCache = new ConcurrentDictionary<Type, IReflectionConverter?>();
             }
 
             /// <summary>
@@ -244,13 +252,13 @@ namespace com.IvanMurzak.ReflectorNet
             /// Gets the highest priority converter that can handle the specified type.
             /// This method returns the most appropriate converter based on the priority
             /// scoring system implemented by each registered converter.
+            /// Results are cached for performance - cache is invalidated when converters are added/removed.
             /// </summary>
             /// <param name="type">The type to find a converter for.</param>
             /// <returns>The highest priority converter that can handle the type, or null if no suitable converter is found.</returns>
             public IReflectionConverter? GetConverter(Type type)
             {
-                return FindRelevantConverters(type)
-                    .FirstOrDefault();
+                return _converterCache.GetOrAdd(type, t => FindRelevantConverters(t).FirstOrDefault());
             }
         }
     }

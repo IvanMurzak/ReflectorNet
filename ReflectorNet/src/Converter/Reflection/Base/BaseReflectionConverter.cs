@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
     public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         protected const int MAX_DEPTH = 10000;
+
+        // Cache for serializable fields: (Type, BindingFlags) -> FieldInfo[]
+        // Static cache shared across all converter instances for maximum efficiency
+        private static readonly ConcurrentDictionary<(Type, BindingFlags), FieldInfo[]> _serializableFieldsCache = new();
+
+        // Cache for serializable properties: (Type, BindingFlags) -> PropertyInfo[]
+        // Static cache shared across all converter instances for maximum efficiency
+        private static readonly ConcurrentDictionary<(Type, BindingFlags), PropertyInfo[]> _serializablePropertiesCache = new();
 
         /// <summary>
         /// Gets a value indicating whether this converter supports direct value setting operations.
@@ -116,7 +125,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <summary>
         /// Gets the serializable fields for the specified type.
         /// Default implementation returns public fields that are not marked with [Obsolete] or [NonSerialized].
-        /// Derived classes can override to customize field selection.
+        /// Results are cached for performance. Derived classes can override to customize field selection.
         /// </summary>
         protected virtual IEnumerable<FieldInfo>? GetSerializableFieldsInternal(
             Reflector reflector,
@@ -124,10 +133,13 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return objType.GetFields(flags)
-                .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null)
-                .Where(field => field.IsPublic);
+            var cacheKey = (objType, flags);
+            return _serializableFieldsCache.GetOrAdd(cacheKey, key =>
+                key.Item1.GetFields(key.Item2)
+                    .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
+                    .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null)
+                    .Where(field => field.IsPublic)
+                    .ToArray());
         }
 
         /// <summary>
@@ -148,7 +160,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <summary>
         /// Gets the serializable properties for the specified type.
         /// Default implementation returns readable properties that are not marked with [Obsolete].
-        /// Derived classes can override to customize property selection.
+        /// Results are cached for performance. Derived classes can override to customize property selection.
         /// </summary>
         protected virtual IEnumerable<PropertyInfo>? GetSerializablePropertiesInternal(
             Reflector reflector,
@@ -156,10 +168,13 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return objType.GetProperties(flags)
-                .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(prop => prop.CanRead)
-                .Where(prop => prop.GetIndexParameters().Length == 0); // Filter out indexer properties
+            var cacheKey = (objType, flags);
+            return _serializablePropertiesCache.GetOrAdd(cacheKey, key =>
+                key.Item1.GetProperties(key.Item2)
+                    .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
+                    .Where(prop => prop.CanRead)
+                    .Where(prop => prop.GetIndexParameters().Length == 0) // Filter out indexer properties
+                    .ToArray());
         }
 
         public virtual IEnumerable<string> GetAdditionalSerializableFields(

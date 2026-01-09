@@ -6,6 +6,8 @@
  */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using System.Text.Json;
@@ -18,6 +20,60 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 {
     public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
+        // Cache for field lookups: (Type, BindingFlags, fieldName) -> FieldInfo?
+        private static readonly ConcurrentDictionary<(Type, BindingFlags, string), FieldInfo?> _fieldLookupCache = new();
+
+        // Cache for property lookups: (Type, BindingFlags, propertyName) -> PropertyInfo?
+        private static readonly ConcurrentDictionary<(Type, BindingFlags, string), PropertyInfo?> _propertyLookupCache = new();
+
+        // Cache for serializable member names (for error messages): (Type, BindingFlags) -> (fieldNames, propertyNames)
+        private static readonly ConcurrentDictionary<(Type, BindingFlags), (List<string> fieldNames, List<string> propertyNames)> _serializableMemberNamesCache = new();
+
+        /// <summary>
+        /// Gets a cached FieldInfo for the given type, flags, and field name.
+        /// </summary>
+        private static FieldInfo? GetCachedField(Type type, BindingFlags flags, string fieldName)
+        {
+            var cacheKey = (type, flags, fieldName);
+            return _fieldLookupCache.GetOrAdd(cacheKey, key => key.Item1.GetField(key.Item3, key.Item2));
+        }
+
+        /// <summary>
+        /// Gets a cached PropertyInfo for the given type, flags, and property name.
+        /// </summary>
+        private static PropertyInfo? GetCachedProperty(Type type, BindingFlags flags, string propertyName)
+        {
+            var cacheKey = (type, flags, propertyName);
+            return _propertyLookupCache.GetOrAdd(cacheKey, key => key.Item1.GetProperty(key.Item3, key.Item2));
+        }
+
+        /// <summary>
+        /// Gets cached serializable member names for error messages. This avoids repeated reflection calls
+        /// when fields/properties are not found during population.
+        /// </summary>
+        private (List<string> fieldNames, List<string> propertyNames) GetCachedSerializableMemberNames(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags,
+            ILogger? logger)
+        {
+            var cacheKey = (objType, flags);
+            return _serializableMemberNamesCache.GetOrAdd(cacheKey, key =>
+            {
+                var fields = GetSerializableFields(reflector, key.Item1, key.Item2, logger)
+                    ?.Select(f => f.Name)
+                    ?.Concat(GetAdditionalSerializableFields(reflector, key.Item1, key.Item2, logger))
+                    ?.ToList() ?? new List<string>();
+
+                var props = GetSerializableProperties(reflector, key.Item1, key.Item2, logger)
+                    ?.Select(f => f.Name)
+                    ?.Concat(GetAdditionalSerializableProperties(reflector, key.Item1, key.Item2, logger))
+                    ?.ToList() ?? new List<string>();
+
+                return (fields, props);
+            });
+        }
+
         public virtual bool TryPopulate(
             Reflector reflector,
             ref object? obj,
@@ -261,52 +317,30 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     return false;
                 }
             }
-            var fieldInfo = obj.GetType().GetField(fieldValue.name, flags);
+            var objType2 = obj.GetType();
+            var fieldInfo = GetCachedField(objType2, flags, fieldValue.name);
             if (fieldInfo == null)
             {
-                var fieldNames = GetSerializableFields(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger)
-                    ?.Select(f => f.Name)
-                    ?.Concat(GetAdditionalSerializableFields(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger))
-                    ?.ToList();
+                // Use cached serializable member names to avoid repeated reflection calls
+                var (fieldNames, propNames) = GetCachedSerializableMemberNames(reflector, objType2, flags, logger);
 
-                var propNames = GetSerializableProperties(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger)
-                    ?.Select(f => f.Name)
-                    ?.Concat(GetAdditionalSerializableProperties(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger))
-                    ?.ToList();
-
-                var fieldsCount = fieldNames?.Count ?? 0;
-                var propsCount = propNames?.Count ?? 0;
+                var fieldsCount = fieldNames.Count;
+                var propsCount = propNames.Count;
 
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}Field '{fieldValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?"
                         + $"\n{padding}"
-                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames)}" : "No available fields.")
                         + $"\n{padding}"
-                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames)}" : "No available properties.")
                     );
 
                 if (logs != null)
                     logs.Error($"Field '{fieldValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a field, maybe is it a property?"
                         + $"\n"
-                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames)}" : "No available fields.")
                         + $"\n"
-                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames)}" : "No available properties.")
                         , depth);
 
                 return false;
@@ -420,52 +454,30 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     return false;
                 }
             }
-            var propInfo = obj.GetType().GetProperty(propertyValue.name, flags);
+            var objType2 = obj.GetType();
+            var propInfo = GetCachedProperty(objType2, flags, propertyValue.name);
             if (propInfo == null)
             {
-                var fieldNames = GetSerializableFields(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger)
-                    ?.Select(f => f.Name)
-                    ?.Concat(GetAdditionalSerializableFields(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger))
-                    ?.ToList();
+                // Use cached serializable member names to avoid repeated reflection calls
+                var (fieldNames, propNames) = GetCachedSerializableMemberNames(reflector, objType2, flags, logger);
 
-                var propNames = GetSerializableProperties(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger)
-                    ?.Select(f => f.Name)
-                    ?.Concat(GetAdditionalSerializableProperties(
-                        reflector: reflector,
-                        objType: obj.GetType(),
-                        flags: flags,
-                        logger: logger))
-                    ?.ToList();
-
-                var fieldsCount = fieldNames?.Count ?? 0;
-                var propsCount = propNames?.Count ?? 0;
+                var fieldsCount = fieldNames.Count;
+                var propsCount = propNames.Count;
 
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}Property '{propertyValue.name.ValueOrNull()}' not found. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?"
                         + $"\n{padding}"
-                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames)}" : "No available properties.")
                         + $"\n{padding}"
-                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames)}" : "No available fields.")
                     );
 
                 if (logs != null)
                     logs.Error($"Property '{propertyValue.name.ValueOrNull()}'. Make sure the name is right, it is case sensitive. Make sure this is a property, maybe is it a field?"
                         + $"\n"
-                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames!)}" : "No available properties.")
+                        + (propsCount > 0 ? $"Available properties: {string.Join(", ", propNames)}" : "No available properties.")
                         + $"\n"
-                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames!)}" : "No available fields.")
+                        + (fieldsCount > 0 ? $"Available fields: {string.Join(", ", fieldNames)}" : "No available fields.")
                         , depth);
                 return false;
             }

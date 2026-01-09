@@ -29,12 +29,23 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         // Cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
         private static readonly ConcurrentDictionary<string, Type?> _typeCache = new();
 
+        // Cache for enumerable item types to avoid repeated interface/inheritance walks (thread-safe)
+        private static readonly ConcurrentDictionary<Type, Type?> _enumerableItemTypeCache = new();
+
         /// <summary>
         /// Clears the type name resolution cache.
         /// </summary>
         public static void ClearTypeCache()
         {
             _typeCache.Clear();
+        }
+
+        /// <summary>
+        /// Clears the enumerable item type cache.
+        /// </summary>
+        public static void ClearEnumerableItemTypeCache()
+        {
+            _enumerableItemTypeCache.Clear();
         }
 
         /// <summary>
@@ -885,10 +896,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         /// <summary>
         /// Gets the element type of an enumerable or array type.
+        /// Results are cached for performance when processing large collections.
         /// </summary>
         /// <param name="type">The enumerable type to inspect.</param>
         /// <returns>The element type (T in <see cref="IEnumerable{T}"/>), or <c>null</c> if the type is not enumerable.</returns>
         public static Type? GetEnumerableItemType(Type type)
+        {
+            return _enumerableItemTypeCache.GetOrAdd(type, GetEnumerableItemTypeInternal);
+        }
+
+        /// <summary>
+        /// Internal implementation of GetEnumerableItemType without caching.
+        /// </summary>
+        private static Type? GetEnumerableItemTypeInternal(Type type)
         {
             if (type.IsArray)
                 return type.GetElementType(); // For arrays, return the element type
