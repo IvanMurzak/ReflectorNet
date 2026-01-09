@@ -35,6 +35,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
+        /// <exception cref="TypeInstantiationException">Thrown when attempting to deserialize non-null data to an interface or abstract class type.</exception>
         public T? Deserialize<T>(
             SerializedMember data,
             string? fallbackName = null,
@@ -74,6 +75,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
+        /// <exception cref="TypeInstantiationException">Thrown when attempting to deserialize non-null data to an interface or abstract class type.</exception>
         public object? Deserialize(
             SerializedMember data,
             Type? fallbackType = null,
