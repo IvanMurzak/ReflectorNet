@@ -279,7 +279,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (data.valueJsonElement == null)
                     {
                         if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding} 'value' is null. Converter: {GetType().GetTypeShortName()}");
+                            logger.LogTrace($"{padding}'value' is null. Converter: {GetType().GetTypeShortName()}");
 
                         result = GetDefaultValue(reflector, type);
                         return true;
@@ -287,7 +287,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (data.valueJsonElement.Value.ValueKind != JsonValueKind.Object)
                     {
                         if (logger?.IsEnabled(LogLevel.Error) == true)
-                            logger.LogError($"{padding} 'value' is not an object. It is '{data.valueJsonElement?.ValueKind}'. Converter: {GetType().GetTypeShortName()}");
+                            logger.LogError($"{padding}'value' is not an object. It is '{data.valueJsonElement?.ValueKind}'. Converter: {GetType().GetTypeShortName()}");
 
                         logs?.Error("'value' is not an object. Attempting to deserialize as SerializedMember.", depth);
 
@@ -327,7 +327,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
-                        logger.LogTrace($"{padding} Deserialize as json. Converter: {GetType().GetTypeShortName()}");
+                        logger.LogTrace($"{padding}Deserialize as json. Converter: {GetType().GetTypeShortName()}");
 
                     result = DeserializeValueAsJsonElement(
                         reflector: reflector,
