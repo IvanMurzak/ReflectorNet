@@ -844,6 +844,335 @@ namespace com.IvanMurzak.ReflectorNet.Tests
 
         #endregion
 
+        #region Batch Blacklist Method Tests
+
+        [Fact]
+        public void BlacklistTypes_MultipleTypes_AllAreBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes(
+                typeof(BlacklistedBaseClass),
+                typeof(NonBlacklistedClass),
+                typeof(IBlacklistedInterface));
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when types are added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(IBlacklistedInterface)));
+            _output.WriteLine("All types from batch blacklist are correctly blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithNullValues_IgnoresNulls()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act - Include null values which should be ignored
+            var result = reflector.Converters.BlacklistTypes(
+                typeof(BlacklistedBaseClass),
+                null!,
+                typeof(NonBlacklistedClass));
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass)));
+            Assert.Equal(2, reflector.Converters.GetAllBlacklistedTypes().Count);
+            _output.WriteLine("Null values in batch blacklist are correctly ignored");
+        }
+
+        [Fact]
+        public void BlacklistTypes_EmptyArray_NoChange()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes(Array.Empty<Type>());
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when no types are added");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Empty batch blacklist results in no changes");
+        }
+
+        [Fact]
+        public void BlacklistTypes_DuplicateTypes_AddsOnlyOnce()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act - Add same type multiple times
+            var result = reflector.Converters.BlacklistTypes(
+                typeof(BlacklistedBaseClass),
+                typeof(BlacklistedBaseClass),
+                typeof(BlacklistedBaseClass));
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.Single(reflector.Converters.GetAllBlacklistedTypes());
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine("Duplicate types in batch are correctly deduplicated");
+        }
+
+        [Fact]
+        public void BlacklistTypes_DerivedTypesInBatch_AllDetected()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes(typeof(BlacklistedBaseClass));
+
+            // Assert - Derived types should also be blacklisted
+            Assert.True(result, "BlacklistTypes should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromBlacklisted)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DeeplyDerivedFromBlacklisted)));
+            _output.WriteLine("Derived types are correctly blacklisted after batch operation");
+        }
+
+        [Fact]
+        public void BlacklistTypes_AlreadyBlacklisted_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistTypes(typeof(BlacklistedBaseClass));
+
+            // Act - Try to add the same type again
+            var result = reflector.Converters.BlacklistTypes(typeof(BlacklistedBaseClass));
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when all types are already blacklisted");
+            _output.WriteLine("BlacklistTypes returns false when type already blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistTypes_OnlyNulls_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act - Only null values
+            var result = reflector.Converters.BlacklistTypes((Type)null!, (Type)null!);
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when only null values provided");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("BlacklistTypes returns false when only nulls provided");
+        }
+
+        #endregion
+
+        #region String-Based Blacklist Method Tests
+
+        [Fact]
+        public void BlacklistType_ByStringName_TypeIsBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType(typeFullName);
+
+            // Assert
+            Assert.True(result, "BlacklistType should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine($"Type blacklisted by string name '{typeFullName}' is correctly detected");
+        }
+
+        [Fact]
+        public void BlacklistType_ByStringName_SystemType_IsBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistType("System.String");
+
+            // Assert
+            Assert.True(result, "BlacklistType should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(string)));
+            _output.WriteLine("System.String blacklisted by string name is correctly detected");
+        }
+
+        [Fact]
+        public void BlacklistType_ByStringName_InvalidTypeName_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act - Should not throw for invalid type name
+            var result = reflector.Converters.BlacklistType("This.Type.Does.Not.Exist");
+
+            // Assert - No types should be blacklisted
+            Assert.False(result, "BlacklistType should return false for invalid type name");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Invalid type name returns false and is silently ignored");
+        }
+
+        [Fact]
+        public void BlacklistType_ByStringName_AlreadyBlacklisted_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType("System.String");
+
+            // Act - Try to add the same type again
+            var result = reflector.Converters.BlacklistType("System.String");
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false when type already blacklisted");
+            _output.WriteLine("BlacklistType returns false when type already blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_AllTypesAreBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes(
+                "System.String",
+                "System.Int32",
+                "System.DateTime");
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when types are added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(string)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(int)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DateTime)));
+            _output.WriteLine("Multiple types blacklisted by string names are correctly detected");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_MixedValidAndInvalid_OnlyValidAdded()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act - Mix of valid and invalid type names
+            var result = reflector.Converters.BlacklistTypes(
+                "System.String",
+                "This.Does.Not.Exist",
+                "System.Int32");
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.Equal(2, reflector.Converters.GetAllBlacklistedTypes().Count);
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(string)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(int)));
+            _output.WriteLine("Only valid type names from batch are blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_EmptyArray_NoChange()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes(Array.Empty<string>());
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when no types are added");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Empty string array batch results in no changes");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_DuplicateNames_AddsOnlyOnce()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes(
+                "System.String",
+                "System.String",
+                "System.String");
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.Single(reflector.Converters.GetAllBlacklistedTypes());
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(string)));
+            _output.WriteLine("Duplicate string names in batch are correctly deduplicated");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_GenericType_IsBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var listStringTypeName = typeof(List<string>).FullName!;
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes(listStringTypeName);
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(List<string>)));
+            _output.WriteLine($"Generic type '{listStringTypeName}' blacklisted by string name is correctly detected");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_CacheInvalidation_WorksCorrectly()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Prime cache with false result
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(string)));
+
+            // Act
+            var result = reflector.Converters.BlacklistTypes("System.String");
+
+            // Assert - Cache should be invalidated
+            Assert.True(result, "BlacklistTypes should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(string)));
+            _output.WriteLine("Cache is correctly invalidated after string-based batch blacklist");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_AllInvalid_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act - All invalid type names
+            var result = reflector.Converters.BlacklistTypes(
+                "This.Does.Not.Exist",
+                "Neither.Does.This");
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when no types could be resolved");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("BlacklistTypes returns false when all type names are invalid");
+        }
+
+        [Fact]
+        public void BlacklistTypes_ByStringNames_AlreadyBlacklisted_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistTypes("System.String", "System.Int32");
+
+            // Act - Try to add the same types again
+            var result = reflector.Converters.BlacklistTypes("System.String", "System.Int32");
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when all types already blacklisted");
+            _output.WriteLine("BlacklistTypes returns false when all types already blacklisted");
+        }
+
+        #endregion
+
         #region Concurrency and Cache Tests
 
         [Fact]
