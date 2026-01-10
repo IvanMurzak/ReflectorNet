@@ -20,10 +20,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 {
     public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
-        // Cache for serializable member names (for error messages): (Type, BindingFlags) -> (fieldNames, propertyNames)
-        // Instance-based cache because it relies on virtual methods (GetSerializableFields, GetSerializableProperties, etc.)
-        private readonly ConcurrentDictionary<(Type, BindingFlags), (List<string> fieldNames, List<string> propertyNames)> _serializableMemberNamesCache = new();
-
         /// <summary>
         /// Gets cached serializable member names for error messages. This avoids repeated reflection calls
         /// when fields/properties are not found during population.

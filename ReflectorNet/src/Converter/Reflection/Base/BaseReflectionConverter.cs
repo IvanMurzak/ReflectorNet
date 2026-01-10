@@ -40,14 +40,20 @@ namespace com.IvanMurzak.ReflectorNet.Converter
     public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         protected const int MAX_DEPTH = 10000;
+        protected const int CACHE_CAPACITY = 10000;
 
         // Cache for serializable fields: (Type, BindingFlags) -> FieldInfo[]
         // Instance-based cache to support derived classes with different GetSerializableFieldsInternal implementations
-        private readonly ConcurrentDictionary<(Type, BindingFlags), FieldInfo[]> _serializableFieldsCache = new();
+        private readonly LruCache<(Type, BindingFlags), FieldInfo[]> _serializableFieldsCache = new(CACHE_CAPACITY);
 
         // Cache for serializable properties: (Type, BindingFlags) -> PropertyInfo[]
         // Instance-based cache to support derived classes with different GetSerializablePropertiesInternal implementations
-        private readonly ConcurrentDictionary<(Type, BindingFlags), PropertyInfo[]> _serializablePropertiesCache = new();
+        private readonly LruCache<(Type, BindingFlags), PropertyInfo[]> _serializablePropertiesCache = new(CACHE_CAPACITY);
+
+        // Cache for serializable member names (for error messages): (Type, BindingFlags) -> (fieldNames, propertyNames)
+        // Instance-based cache because it relies on virtual methods (GetSerializableFields, GetSerializableProperties, etc.)
+        private readonly LruCache<(Type, BindingFlags), (List<string> fieldNames, List<string> propertyNames)> _serializableMemberNamesCache = new(CACHE_CAPACITY);
+
 
         /// <summary>
         /// Clears the reflection metadata caches used by this converter instance.
@@ -60,11 +66,13 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// </remarks>
         public void ClearReflectionCache(ILogger? logger = null)
         {
-            logger?.LogDebug("Clearing reflection caches: {_serializableFieldsCacheCount} field entries, {_serializablePropertiesCacheCount} property entries.",
+            logger?.LogDebug("Clearing reflection caches: {_serializableFieldsCacheCount} field entries, {_serializablePropertiesCacheCount} property entries, {_serializableMemberNamesCacheCount} member name entries.",
                 _serializableFieldsCache.Count,
-                _serializablePropertiesCache.Count);
+                _serializablePropertiesCache.Count,
+                _serializableMemberNamesCache.Count);
             _serializableFieldsCache.Clear();
             _serializablePropertiesCache.Clear();
+            _serializableMemberNamesCache.Clear();
         }
 
         /// <summary>

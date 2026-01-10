@@ -22,8 +22,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
         // Test entity to reflect upon
         private class TestEntity
         {
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
             public int PublicField;
+#pragma warning restore CS0649
+#pragma warning disable CS0169 // The field is never used
             private int PrivateField;
+#pragma warning restore CS0169
             public int PublicProp { get; set; }
             private int PrivateProp { get; set; }
         }
@@ -31,7 +35,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
         // Concrete implementation of the abstract base class
         private class TestableReflectionConverter : BaseReflectionConverter<TestEntity>
         {
-            protected override SerializedMember? InternalSerialize(
+            protected override SerializedMember InternalSerialize(
                 Reflector reflector,
                 object? obj,
                 Type type,
@@ -43,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
                 ILogger? logger,
                 SerializationContext? context)
             {
-                return null;
+                return new SerializedMember();
             }
 
             protected override bool SetValue(
@@ -100,7 +104,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
 
             // Verify cache is populated
             var cache = GetFieldCache(converter);
-            Assert.Single(cache);
+            Assert.Equal(1, cache.Count);
             Assert.True(cache.ContainsKey((type, bindingFlags)));
 
             // Second call - should retrieve from cache
@@ -125,7 +129,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
 
             // Verify cache is populated
             var cache = GetPropertyCache(converter);
-            Assert.Single(cache);
+            Assert.Equal(1, cache.Count);
             Assert.True(cache.ContainsKey((type, bindingFlags)));
 
             // Second call - should retrieve from cache
@@ -192,32 +196,32 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
             // Verify populated
             var fieldCache = GetFieldCache(converter);
             var propCache = GetPropertyCache(converter);
-            Assert.NotEmpty(fieldCache);
-            Assert.NotEmpty(propCache);
+            Assert.Equal(1, fieldCache.Count);
+            Assert.Equal(1, propCache.Count);
 
             // Act
             converter.ClearReflectionCache();
 
             // Assert
-            Assert.Empty(fieldCache);
-            Assert.Empty(propCache);
+            Assert.Equal(0, fieldCache.Count);
+            Assert.Equal(0, propCache.Count);
         }
 
         // Helper methods to access private caches via reflection
-        private ConcurrentDictionary<(Type, BindingFlags), FieldInfo[]> GetFieldCache(object converter)
+        private LruCache<(Type, BindingFlags), FieldInfo[]> GetFieldCache(object converter)
         {
             var field = typeof(BaseReflectionConverter<TestEntity>)
                 .GetField("_serializableFieldsCache", BindingFlags.NonPublic | BindingFlags.Instance);
             if (field == null) throw new InvalidOperationException("Field _serializableFieldsCache not found");
-            return (ConcurrentDictionary<(Type, BindingFlags), FieldInfo[]>)field.GetValue(converter)!;
+            return (LruCache<(Type, BindingFlags), FieldInfo[]>)field.GetValue(converter)!;
         }
 
-        private ConcurrentDictionary<(Type, BindingFlags), PropertyInfo[]> GetPropertyCache(object converter)
+        private LruCache<(Type, BindingFlags), PropertyInfo[]> GetPropertyCache(object converter)
         {
             var field = typeof(BaseReflectionConverter<TestEntity>)
                 .GetField("_serializablePropertiesCache", BindingFlags.NonPublic | BindingFlags.Instance);
             if (field == null) throw new InvalidOperationException("Field _serializablePropertiesCache not found");
-            return (ConcurrentDictionary<(Type, BindingFlags), PropertyInfo[]>)field.GetValue(converter)!;
+            return (LruCache<(Type, BindingFlags), PropertyInfo[]>)field.GetValue(converter)!;
         }
     }
 }

@@ -91,7 +91,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             cache[3] = "Three"; // [3, 2, 1]
 
             // Access 1 via indexer. It becomes MRU.
-            var val = cache[1]; // [1, 3, 2]
+            _ = cache[1]; // [1, 3, 2]
 
             // Add 4. 2 should be evicted (as it is now LRU).
             cache[4] = "Four"; // [4, 1, 3]
@@ -164,7 +164,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             cache[2] = "Two"; // [2, 1]
 
             // GetOrAdd 3. Should evict 1.
-            var val = cache.GetOrAdd(3, k => "Three"); // [3, 2]
+            _ = cache.GetOrAdd(3, k => "Three"); // [3, 2]
 
             Assert.Equal(2, cache.Count);
             Assert.False(cache.ContainsKey(1));
@@ -197,7 +197,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var cache = new LruCache<int, string>(10);
             Assert.Throws<KeyNotFoundException>(() =>
             {
-                var val = cache[99];
+                _ = cache[99];
             });
         }
 
