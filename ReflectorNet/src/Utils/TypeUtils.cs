@@ -47,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </summary>
         public static void ClearTypeCache(ILogger? logger = null)
         {
-            logger?.LogDebug("Clearing type resolution cache with {_typeCacheCount} entries (capacity: {_typeCacheCapacity}).",
+            logger?.LogDebug("Clearing type resolution cache with {count} entries (capacity: {capacity}).",
                 _typeCache.Count, _typeCache.Capacity);
             _typeCache.Clear();
         }
@@ -57,7 +57,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </summary>
         public static void ClearEnumerableItemTypeCache(ILogger? logger = null)
         {
-            logger?.LogDebug("Clearing enumerable item type cache with {_enumerableItemTypeCacheCount} entries (capacity: {_enumerableItemTypeCacheCapacity}).",
+            logger?.LogDebug("Clearing enumerable item type cache with {count} entries (capacity: {capacity}).",
                 _enumerableItemTypeCache.Count, _enumerableItemTypeCache.Capacity);
             _enumerableItemTypeCache.Clear();
         }
