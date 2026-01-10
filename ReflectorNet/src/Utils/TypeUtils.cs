@@ -6,17 +6,27 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
+using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
+        /// <summary>
+        /// Maximum capacity for the type name resolution cache.
+        /// </summary>
+        public const int TypeCacheCapacity = 1000;
+
+        /// <summary>
+        /// Maximum capacity for the enumerable item type cache.
+        /// </summary>
+        public const int EnumerableItemTypeCacheCapacity = 500;
+
         /// <summary>
         /// Gets all types from all loaded assemblies.
         /// </summary>
@@ -26,15 +36,30 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </remarks>
         public static IEnumerable<Type> AllTypes => AssemblyUtils.AllTypes;
 
-        // Cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
-        private static readonly ConcurrentDictionary<string, Type?> _typeCache = new();
+        // LRU cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
+        private static readonly LruCache<string, Type?> _typeCache = new(TypeCacheCapacity);
+
+        // LRU cache for enumerable item types to avoid repeated interface/inheritance walks (thread-safe)
+        private static readonly LruCache<Type, Type?> _enumerableItemTypeCache = new(EnumerableItemTypeCacheCapacity);
 
         /// <summary>
         /// Clears the type name resolution cache.
         /// </summary>
-        public static void ClearTypeCache()
+        public static void ClearTypeCache(ILogger? logger = null)
         {
+            logger?.LogDebug("Clearing type resolution cache with {count} entries (capacity: {capacity}).",
+                _typeCache.Count, _typeCache.Capacity);
             _typeCache.Clear();
+        }
+
+        /// <summary>
+        /// Clears the enumerable item type cache.
+        /// </summary>
+        public static void ClearEnumerableItemTypeCache(ILogger? logger = null)
+        {
+            logger?.LogDebug("Clearing enumerable item type cache with {count} entries (capacity: {capacity}).",
+                _enumerableItemTypeCache.Count, _enumerableItemTypeCache.Capacity);
+            _enumerableItemTypeCache.Clear();
         }
 
         /// <summary>
@@ -885,10 +910,20 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         /// <summary>
         /// Gets the element type of an enumerable or array type.
+        /// Results are cached for performance when processing large collections.
+        /// Use <see cref="ClearEnumerableItemTypeCache"/> to clear the cache if needed.
         /// </summary>
         /// <param name="type">The enumerable type to inspect.</param>
         /// <returns>The element type (T in <see cref="IEnumerable{T}"/>), or <c>null</c> if the type is not enumerable.</returns>
         public static Type? GetEnumerableItemType(Type type)
+        {
+            return _enumerableItemTypeCache.GetOrAdd(type, GetEnumerableItemTypeInternal);
+        }
+
+        /// <summary>
+        /// Internal implementation of GetEnumerableItemType without caching.
+        /// </summary>
+        private static Type? GetEnumerableItemTypeInternal(Type type)
         {
             if (type.IsArray)
                 return type.GetElementType(); // For arrays, return the element type

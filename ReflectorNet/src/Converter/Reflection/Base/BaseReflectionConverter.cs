@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,40 @@ namespace com.IvanMurzak.ReflectorNet.Converter
     public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
         protected const int MAX_DEPTH = 10000;
+        protected const int CACHE_CAPACITY = 10000;
+
+        // Cache for serializable fields: (Type, BindingFlags) -> FieldInfo[]
+        // Instance-based cache to support derived classes with different GetSerializableFieldsInternal implementations
+        private readonly LruCache<(Type, BindingFlags), FieldInfo[]> _serializableFieldsCache = new(CACHE_CAPACITY);
+
+        // Cache for serializable properties: (Type, BindingFlags) -> PropertyInfo[]
+        // Instance-based cache to support derived classes with different GetSerializablePropertiesInternal implementations
+        private readonly LruCache<(Type, BindingFlags), PropertyInfo[]> _serializablePropertiesCache = new(CACHE_CAPACITY);
+
+        // Cache for serializable member names (for error messages): (Type, BindingFlags) -> (fieldNames, propertyNames)
+        // Instance-based cache because it relies on virtual methods (GetSerializableFields, GetSerializableProperties, etc.)
+        private readonly LruCache<(Type, BindingFlags), (List<string> fieldNames, List<string> propertyNames)> _serializableMemberNamesCache = new(CACHE_CAPACITY);
+
+
+        /// <summary>
+        /// Clears the reflection metadata caches used by this converter instance.
+        /// </summary>
+        /// <remarks>
+        /// This method is provided for API consistency with other caching utilities such as
+        /// <see cref="TypeUtils.ClearTypeCache"/> and
+        /// <see cref="TypeUtils.ClearEnumerableItemTypeCache"/>, and allows callers to
+        /// explicitly release cached reflection data in long-running or memory-sensitive scenarios.
+        /// </remarks>
+        public void ClearReflectionCache(ILogger? logger = null)
+        {
+            logger?.LogDebug("Clearing reflection caches: {_serializableFieldsCacheCount} field entries, {_serializablePropertiesCacheCount} property entries, {_serializableMemberNamesCacheCount} member name entries.",
+                _serializableFieldsCache.Count,
+                _serializablePropertiesCache.Count,
+                _serializableMemberNamesCache.Count);
+            _serializableFieldsCache.Clear();
+            _serializablePropertiesCache.Clear();
+            _serializableMemberNamesCache.Clear();
+        }
 
         /// <summary>
         /// Gets a value indicating whether this converter supports direct value setting operations.
@@ -100,17 +135,30 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         /// <summary>
         /// Gets the serializable fields for the specified type.
-        /// Default implementation returns public fields that are not marked with [Obsolete] or [NonSerialized].
-        /// Derived classes can override to customize field selection.
+        /// Results are cached for performance. Uses <see cref="GetSerializableFieldsInternal"/>
+        /// which can be overridden by derived classes to customize field selection.
+        /// The <see cref="GetIgnoredFields"/> filter is applied and baked into the cache.
         /// </summary>
+        /// <remarks>
+        /// Results are cached to improve performance for repeated lookups of the same type.
+        /// Use <see cref="ClearReflectionCache"/> to clear the cache if needed.
+        /// </remarks>
         public IEnumerable<FieldInfo>? GetSerializableFields(
             Reflector reflector,
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return GetSerializableFieldsInternal(reflector, objType, flags, logger)
-                ?.Where(field => !GetIgnoredFields().Contains(field.Name));
+            var cacheKey = (objType, flags);
+            var cached = _serializableFieldsCache.GetOrAdd(cacheKey, key =>
+            {
+                var ignoredFields = GetIgnoredFields();
+                return GetSerializableFieldsInternal(reflector, key.Item1, key.Item2, logger)
+                    ?.Where(field => !ignoredFields.Contains(field.Name))
+                    .ToArray() ?? Array.Empty<FieldInfo>();
+            });
+
+            return cached.Length > 0 ? cached : null;
         }
 
         /// <summary>
@@ -132,17 +180,30 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         /// <summary>
         /// Gets the serializable properties for the specified type.
-        /// Default implementation returns readable properties that are not marked with [Obsolete].
-        /// Derived classes can override to customize property selection.
+        /// Results are cached for performance. Uses <see cref="GetSerializablePropertiesInternal"/>
+        /// which can be overridden by derived classes to customize property selection.
+        /// The <see cref="GetIgnoredProperties"/> filter is applied and baked into the cache.
         /// </summary>
+        /// <remarks>
+        /// Results are cached to improve performance for repeated lookups of the same type.
+        /// Use <see cref="ClearReflectionCache"/> to clear the cache if needed.
+        /// </remarks>
         public IEnumerable<PropertyInfo>? GetSerializableProperties(
             Reflector reflector,
             Type objType,
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return GetSerializablePropertiesInternal(reflector, objType, flags, logger)
-                ?.Where(prop => !GetIgnoredProperties().Contains(prop.Name));
+            var cacheKey = (objType, flags);
+            var cached = _serializablePropertiesCache.GetOrAdd(cacheKey, key =>
+            {
+                var ignoredProperties = GetIgnoredProperties();
+                return GetSerializablePropertiesInternal(reflector, key.Item1, key.Item2, logger)
+                    ?.Where(prop => !ignoredProperties.Contains(prop.Name))
+                    .ToArray() ?? Array.Empty<PropertyInfo>();
+            });
+
+            return cached.Length > 0 ? cached : null;
         }
 
         /// <summary>
