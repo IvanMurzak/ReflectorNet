@@ -20,32 +20,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 {
     public abstract partial class BaseReflectionConverter<T> : IReflectionConverter
     {
-        // Cache for field lookups: (Type, BindingFlags, fieldName) -> FieldInfo?
-        private static readonly ConcurrentDictionary<(Type, BindingFlags, string), FieldInfo?> _fieldLookupCache = new();
-
-        // Cache for property lookups: (Type, BindingFlags, propertyName) -> PropertyInfo?
-        private static readonly ConcurrentDictionary<(Type, BindingFlags, string), PropertyInfo?> _propertyLookupCache = new();
-
         // Cache for serializable member names (for error messages): (Type, BindingFlags) -> (fieldNames, propertyNames)
-        private static readonly ConcurrentDictionary<(Type, BindingFlags), (List<string> fieldNames, List<string> propertyNames)> _serializableMemberNamesCache = new();
-
-        /// <summary>
-        /// Gets a cached FieldInfo for the given type, flags, and field name.
-        /// </summary>
-        private static FieldInfo? GetCachedField(Type type, BindingFlags flags, string fieldName)
-        {
-            var cacheKey = (type, flags, fieldName);
-            return _fieldLookupCache.GetOrAdd(cacheKey, key => key.Item1.GetField(key.Item3, key.Item2));
-        }
-
-        /// <summary>
-        /// Gets a cached PropertyInfo for the given type, flags, and property name.
-        /// </summary>
-        private static PropertyInfo? GetCachedProperty(Type type, BindingFlags flags, string propertyName)
-        {
-            var cacheKey = (type, flags, propertyName);
-            return _propertyLookupCache.GetOrAdd(cacheKey, key => key.Item1.GetProperty(key.Item3, key.Item2));
-        }
+        // Instance-based cache because it relies on virtual methods (GetSerializableFields, GetSerializableProperties, etc.)
+        private readonly ConcurrentDictionary<(Type, BindingFlags), (List<string> fieldNames, List<string> propertyNames)> _serializableMemberNamesCache = new();
 
         /// <summary>
         /// Gets cached serializable member names for error messages. This avoids repeated reflection calls
@@ -179,7 +156,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 {
                     var success = TryPopulateField(
                         reflector,
-                        obj: ref obj,
+                        obj: ref obj!,
                         objType: type,
                         fieldValue: field,
                         depth: nextDepth,
@@ -223,7 +200,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 {
                     var success = TryPopulateProperty(
                         reflector,
-                        obj: ref obj,
+                        obj: ref obj!,
                         objType: type,
                         propertyValue: property,
                         depth: nextDepth,
@@ -275,7 +252,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         protected virtual bool TryPopulateField(
             Reflector reflector,
-            ref object? obj,
+            ref object obj,
             Type objType,
             SerializedMember fieldValue,
             int depth = 0,
@@ -296,33 +273,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 return false;
             }
 
-            if (obj == null)
-            {
-                // obj = CreateInstance(reflector, objType);
-                obj = reflector.Deserialize(
-                    data: fieldValue,
-                    fallbackType: objType,
-                    depth: depth,
-                    logs: logs,
-                    logger: logger);
-
-                if (obj == null)
-                {
-                    if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Field '{fieldValue.name.ValueOrNull()}' modification failed: Object is null.");
-
-                    if (logs != null)
-                        logs.Error($"Field '{fieldValue.name.ValueOrNull()}' modification failed: Object is null.", depth);
-
-                    return false;
-                }
-            }
-            var objType2 = obj.GetType();
-            var fieldInfo = GetCachedField(objType2, flags, fieldValue.name);
+            var fieldInfo = TypeMemberUtils.GetField(objType, flags, fieldValue.name);
             if (fieldInfo == null)
             {
                 // Use cached serializable member names to avoid repeated reflection calls
-                var (fieldNames, propNames) = GetCachedSerializableMemberNames(reflector, objType2, flags, logger);
+                var (fieldNames, propNames) = GetCachedSerializableMemberNames(reflector, objType, flags, logger);
 
                 var fieldsCount = fieldNames.Count;
                 var propsCount = propNames.Count;
@@ -412,7 +367,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         protected virtual bool TryPopulateProperty(
             Reflector reflector,
-            ref object? obj,
+            ref object obj,
             Type objType,
             SerializedMember propertyValue,
             int depth = 0,
@@ -433,33 +388,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 return false;
             }
 
-            if (obj == null)
-            {
-                // obj = CreateInstance(reflector, objType);
-                obj = reflector.Deserialize(
-                    data: propertyValue,
-                    fallbackType: objType,
-                    depth: depth,
-                    logs: logs,
-                    logger: logger);
-
-                if (obj == null)
-                {
-                    if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Property '{propertyValue.name.ValueOrNull()}' modification failed: Object is null.");
-
-                    if (logs != null)
-                        logs.Error($"Property '{propertyValue.name.ValueOrNull()}' modification failed: Object is null.", depth);
-
-                    return false;
-                }
-            }
-            var objType2 = obj.GetType();
-            var propInfo = GetCachedProperty(objType2, flags, propertyValue.name);
+            var propInfo = TypeMemberUtils.GetProperty(objType, flags, propertyValue.name);
             if (propInfo == null)
             {
                 // Use cached serializable member names to avoid repeated reflection calls
-                var (fieldNames, propNames) = GetCachedSerializableMemberNames(reflector, objType2, flags, logger);
+                var (fieldNames, propNames) = GetCachedSerializableMemberNames(reflector, objType, flags, logger);
 
                 var fieldsCount = fieldNames.Count;
                 var propsCount = propNames.Count;

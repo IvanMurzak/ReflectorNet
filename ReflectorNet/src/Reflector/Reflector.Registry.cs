@@ -39,15 +39,15 @@ namespace com.IvanMurzak.ReflectorNet
         {
             const int MaxBlacklistCacheSize = 1000;
 
-            ConcurrentBag<IReflectionConverter> _serializers = new ConcurrentBag<IReflectionConverter>();
-            readonly ConcurrentDictionary<Type, byte> _blacklistedTypes = new ConcurrentDictionary<Type, byte>();
+            ConcurrentBag<IReflectionConverter> _serializers = new();
+            readonly ConcurrentDictionary<Type, byte> _blacklistedTypes = new();
 
             // Not readonly: intentionally replaced (not cleared) for thread-safe cache invalidation
-            ConcurrentDictionary<Type, bool> _blacklistCache = new ConcurrentDictionary<Type, bool>();
+            ConcurrentDictionary<Type, bool> _blacklistCache = new();
 
             // Cache for converter lookups: Type -> best converter for that type
             // Not readonly: intentionally replaced when converters are added/removed for thread-safe cache invalidation
-            ConcurrentDictionary<Type, IReflectionConverter?> _converterCache = new ConcurrentDictionary<Type, IReflectionConverter?>();
+            ConcurrentDictionary<Type, IReflectionConverter?> _converterCache = new();
 
             /// <summary>
             /// Initializes a new Registry instance with default converters for common .NET types.

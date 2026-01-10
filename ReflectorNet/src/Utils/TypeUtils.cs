@@ -900,6 +900,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </summary>
         /// <param name="type">The enumerable type to inspect.</param>
         /// <returns>The element type (T in <see cref="IEnumerable{T}"/>), or <c>null</c> if the type is not enumerable.</returns>
+        /// <remarks>
+        /// Results are cached to improve performance for repeated lookups of the same type.
+        /// Use <see cref="ClearEnumerableItemTypeCache"/> to clear the cache if needed.
+        /// </remarks>
         public static Type? GetEnumerableItemType(Type type)
         {
             return _enumerableItemTypeCache.GetOrAdd(type, GetEnumerableItemTypeInternal);
