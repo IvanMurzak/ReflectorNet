@@ -6,7 +6,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 
@@ -21,15 +20,25 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     /// The caches are static and shared across all callers. This is safe because the underlying
     /// reflection operations (<see cref="Type.GetField(string, BindingFlags)"/> and
     /// <see cref="Type.GetProperty(string, BindingFlags)"/>) are deterministic and don't depend
-    /// on caller context.
+    /// on caller context. Uses LRU eviction to prevent unbounded memory growth.
     /// </remarks>
     public static class TypeMemberUtils
     {
-        // Cache for field lookups: (Type, BindingFlags, fieldName) -> FieldInfo?
-        private static readonly ConcurrentDictionary<(Type, BindingFlags, string), FieldInfo?> _fieldCache = new();
+        /// <summary>
+        /// Maximum capacity for the field lookup cache.
+        /// </summary>
+        public const int FieldCacheCapacity = 10000;
 
-        // Cache for property lookups: (Type, BindingFlags, propertyName) -> PropertyInfo?
-        private static readonly ConcurrentDictionary<(Type, BindingFlags, string), PropertyInfo?> _propertyCache = new();
+        /// <summary>
+        /// Maximum capacity for the property lookup cache.
+        /// </summary>
+        public const int PropertyCacheCapacity = 10000;
+
+        // LRU cache for field lookups: (Type, BindingFlags, fieldName) -> FieldInfo?
+        private static readonly LruCache<(Type, BindingFlags, string), FieldInfo?> _fieldCache = new(FieldCacheCapacity);
+
+        // LRU cache for property lookups: (Type, BindingFlags, propertyName) -> PropertyInfo?
+        private static readonly LruCache<(Type, BindingFlags, string), PropertyInfo?> _propertyCache = new(PropertyCacheCapacity);
 
         /// <summary>
         /// Gets a cached <see cref="FieldInfo"/> for the specified type, binding flags, and field name.
@@ -73,7 +82,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </remarks>
         public static void ClearFieldCache(ILogger? logger = null)
         {
-            logger?.LogDebug("Clearing field lookup cache with {_fieldCacheCount} entries.", _fieldCache.Count);
+            logger?.LogDebug("Clearing field lookup cache with {_fieldCacheCount} entries (capacity: {_fieldCacheCapacity}).",
+                _fieldCache.Count, _fieldCache.Capacity);
             _fieldCache.Clear();
         }
 
@@ -85,7 +95,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </remarks>
         public static void ClearPropertyCache(ILogger? logger = null)
         {
-            logger?.LogDebug("Clearing property lookup cache with {_propertyCacheCount} entries.", _propertyCache.Count);
+            logger?.LogDebug("Clearing property lookup cache with {_propertyCacheCount} entries (capacity: {_propertyCacheCapacity}).",
+                _propertyCache.Count, _propertyCache.Capacity);
             _propertyCache.Clear();
         }
 

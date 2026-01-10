@@ -6,7 +6,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -19,6 +18,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     public static partial class TypeUtils
     {
         /// <summary>
+        /// Maximum capacity for the type name resolution cache.
+        /// </summary>
+        public const int TypeCacheCapacity = 1000;
+
+        /// <summary>
+        /// Maximum capacity for the enumerable item type cache.
+        /// </summary>
+        public const int EnumerableItemTypeCacheCapacity = 500;
+
+        /// <summary>
         /// Gets all types from all loaded assemblies.
         /// </summary>
         /// <remarks>
@@ -27,18 +36,19 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </remarks>
         public static IEnumerable<Type> AllTypes => AssemblyUtils.AllTypes;
 
-        // Cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
-        private static readonly ConcurrentDictionary<string, Type?> _typeCache = new();
+        // LRU cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
+        private static readonly LruCache<string, Type?> _typeCache = new(TypeCacheCapacity);
 
-        // Cache for enumerable item types to avoid repeated interface/inheritance walks (thread-safe)
-        private static readonly ConcurrentDictionary<Type, Type?> _enumerableItemTypeCache = new();
+        // LRU cache for enumerable item types to avoid repeated interface/inheritance walks (thread-safe)
+        private static readonly LruCache<Type, Type?> _enumerableItemTypeCache = new(EnumerableItemTypeCacheCapacity);
 
         /// <summary>
         /// Clears the type name resolution cache.
         /// </summary>
         public static void ClearTypeCache(ILogger? logger = null)
         {
-            logger?.LogDebug("Clearing type resolution cache with {_typeCacheCount} entries.", _typeCache.Count);
+            logger?.LogDebug("Clearing type resolution cache with {_typeCacheCount} entries (capacity: {_typeCacheCapacity}).",
+                _typeCache.Count, _typeCache.Capacity);
             _typeCache.Clear();
         }
 
@@ -47,7 +57,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </summary>
         public static void ClearEnumerableItemTypeCache(ILogger? logger = null)
         {
-            logger?.LogDebug("Clearing enumerable item type cache with {_enumerableItemTypeCacheCount} entries.", _enumerableItemTypeCache.Count);
+            logger?.LogDebug("Clearing enumerable item type cache with {_enumerableItemTypeCacheCount} entries (capacity: {_enumerableItemTypeCacheCapacity}).",
+                _enumerableItemTypeCache.Count, _enumerableItemTypeCache.Capacity);
             _enumerableItemTypeCache.Clear();
         }
 
