@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
+using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
@@ -35,16 +36,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <summary>
         /// Clears the type name resolution cache.
         /// </summary>
-        public static void ClearTypeCache()
+        public static void ClearTypeCache(ILogger? logger = null)
         {
+            logger?.LogDebug("Clearing type resolution cache with {_typeCacheCount} entries.", _typeCache.Count);
             _typeCache.Clear();
         }
 
         /// <summary>
         /// Clears the enumerable item type cache.
         /// </summary>
-        public static void ClearEnumerableItemTypeCache()
+        public static void ClearEnumerableItemTypeCache(ILogger? logger = null)
         {
+            logger?.LogDebug("Clearing enumerable item type cache with {_enumerableItemTypeCacheCount} entries.", _enumerableItemTypeCache.Count);
             _enumerableItemTypeCache.Clear();
         }
 
@@ -897,13 +900,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <summary>
         /// Gets the element type of an enumerable or array type.
         /// Results are cached for performance when processing large collections.
+        /// Use <see cref="ClearEnumerableItemTypeCache"/> to clear the cache if needed.
         /// </summary>
         /// <param name="type">The enumerable type to inspect.</param>
         /// <returns>The element type (T in <see cref="IEnumerable{T}"/>), or <c>null</c> if the type is not enumerable.</returns>
-        /// <remarks>
-        /// Results are cached to improve performance for repeated lookups of the same type.
-        /// Use <see cref="ClearEnumerableItemTypeCache"/> to clear the cache if needed.
-        /// </remarks>
         public static Type? GetEnumerableItemType(Type type)
         {
             return _enumerableItemTypeCache.GetOrAdd(type, GetEnumerableItemTypeInternal);

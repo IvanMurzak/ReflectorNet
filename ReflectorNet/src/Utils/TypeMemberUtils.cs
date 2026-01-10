@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
@@ -70,8 +71,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <remarks>
         /// Call this method to release cached field metadata in long-running or memory-sensitive scenarios.
         /// </remarks>
-        public static void ClearFieldCache()
+        public static void ClearFieldCache(ILogger? logger = null)
         {
+            logger?.LogDebug("Clearing field lookup cache with {_fieldCacheCount} entries.", _fieldCache.Count);
             _fieldCache.Clear();
         }
 
@@ -81,8 +83,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <remarks>
         /// Call this method to release cached property metadata in long-running or memory-sensitive scenarios.
         /// </remarks>
-        public static void ClearPropertyCache()
+        public static void ClearPropertyCache(ILogger? logger = null)
         {
+            logger?.LogDebug("Clearing property lookup cache with {_propertyCacheCount} entries.", _propertyCache.Count);
             _propertyCache.Clear();
         }
 
@@ -92,10 +95,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <remarks>
         /// Call this method to release all cached member metadata in long-running or memory-sensitive scenarios.
         /// </remarks>
-        public static void ClearAllCaches()
+        public static void ClearAllCaches(ILogger? logger = null)
         {
-            _fieldCache.Clear();
-            _propertyCache.Clear();
+            ClearFieldCache(logger);
+            ClearPropertyCache(logger);
         }
     }
 }

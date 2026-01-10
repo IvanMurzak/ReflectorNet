@@ -58,8 +58,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <see cref="TypeUtils.ClearEnumerableItemTypeCache"/>, and allows callers to
         /// explicitly release cached reflection data in long-running or memory-sensitive scenarios.
         /// </remarks>
-        public void ClearReflectionCache()
+        public void ClearReflectionCache(ILogger? logger = null)
         {
+            logger?.LogDebug("Clearing reflection caches: {_serializableFieldsCacheCount} field entries, {_serializablePropertiesCacheCount} property entries.",
+                _serializableFieldsCache.Count,
+                _serializablePropertiesCache.Count);
             _serializableFieldsCache.Clear();
             _serializablePropertiesCache.Clear();
         }
