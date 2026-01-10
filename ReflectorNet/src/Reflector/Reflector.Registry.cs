@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using com.IvanMurzak.ReflectorNet.Converter;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 namespace com.IvanMurzak.ReflectorNet
 {
@@ -114,6 +115,54 @@ namespace com.IvanMurzak.ReflectorNet
                     return;
 
                 if (_blacklistedTypes.TryAdd(type, 0))
+                    _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes
+            }
+
+            /// <summary>
+            /// Adds multiple types to the blacklist, preventing them from being processed by any converter.
+            /// The blacklist cache is only invalidated if at least one new type was added.
+            /// </summary>
+            /// <param name="types">The types to add to the blacklist. Null values are ignored.</param>
+            public void BlacklistTypes(params Type[] types)
+            {
+                var changed = false;
+                foreach (var type in types)
+                {
+                    if (type != null && _blacklistedTypes.TryAdd(type, 0))
+                        changed = true;
+                }
+                if (changed)
+                    _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes
+            }
+
+            /// <summary>
+            /// Adds a type to the blacklist by its full name, preventing it from being processed by any converter.
+            /// The type is resolved using <see cref="TypeUtils.GetType(string)"/>.
+            /// </summary>
+            /// <param name="typeFullName">The full name of the type to blacklist (e.g., "System.String").</param>
+            public void BlacklistType(string typeFullName)
+            {
+                var type = TypeUtils.GetType(typeFullName);
+                if (type != null)
+                    BlacklistType(type);
+            }
+
+            /// <summary>
+            /// Adds multiple types to the blacklist by their full names, preventing them from being processed by any converter.
+            /// Types are resolved using <see cref="TypeUtils.GetType(string)"/>. The blacklist cache is only invalidated
+            /// if at least one new type was successfully resolved and added.
+            /// </summary>
+            /// <param name="typeFullNames">The full names of the types to blacklist (e.g., "System.String", "System.Int32").</param>
+            public void BlacklistTypes(params string[] typeFullNames)
+            {
+                var changed = false;
+                foreach (var typeFullName in typeFullNames)
+                {
+                    var type = TypeUtils.GetType(typeFullName);
+                    if (type != null && _blacklistedTypes.TryAdd(type, 0))
+                        changed = true;
+                }
+                if (changed)
                     _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes
             }
 
