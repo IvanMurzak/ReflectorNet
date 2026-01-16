@@ -44,7 +44,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         private static bool IsObsolete(JsonPropertyInfo propertyInfo)
         {
             var ap = propertyInfo.AttributeProvider;
-            if (ap is null) return false;
+            if (ap is null)
+                return false;
 
             if (ap.IsDefined(typeof(ObsoleteAttribute), inherit: true))
                 return true;
