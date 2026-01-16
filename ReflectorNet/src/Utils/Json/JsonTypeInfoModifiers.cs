@@ -56,8 +56,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return true;
 
             if (ap is PropertyInfo p)
-                return (p.GetMethod?.IsDefined(typeof(ObsoleteAttribute), true) ?? false)
-                    || (p.SetMethod?.IsDefined(typeof(ObsoleteAttribute), true) ?? false);
+                return (p.GetMethod?.IsDefined(typeof(ObsoleteAttribute), inherit: true) ?? false)
+                    || (p.SetMethod?.IsDefined(typeof(ObsoleteAttribute), inherit: true) ?? false);
 
             return false;
         }
