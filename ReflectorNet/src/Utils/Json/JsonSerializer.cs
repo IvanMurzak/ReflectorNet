@@ -84,7 +84,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 IncludeFields = true, // Include public fields in serialization
                 WriteIndented = true,
                 TypeInfoResolver = JsonTypeInfoResolver.Combine(
-                    new DefaultJsonTypeInfoResolver()
+                    new DefaultJsonTypeInfoResolver
+                    {
+                        Modifiers = { JsonTypeInfoModifiers.ExcludeObsoleteMembers }
+                    }
                 ),
                 Converters =
                 {

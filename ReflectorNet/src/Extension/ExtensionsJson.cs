@@ -15,15 +15,6 @@ namespace com.IvanMurzak.ReflectorNet
 {
     public static class ExtensionsJson
     {
-        public static JsonElement ToJsonElement(this object data, Reflector? reflector, JsonSerializerOptions? options = null, int depth = 0, ILogger? logger = null)
-        {
-            if (logger?.IsEnabled(LogLevel.Trace) == true)
-                logger.LogTrace("{padding}Converting object of type '{type}' to JsonElement.",
-                    StringUtils.GetPadding(depth), data?.GetType().GetTypeId().ValueOrNull());
-
-            return System.Text.Json.JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
-        }
-
         public static JsonElement? ToJsonElement(this JsonNode? node)
         {
             if (node == null)
@@ -37,7 +28,26 @@ namespace com.IvanMurzak.ReflectorNet
             return document.RootElement.Clone();
         }
 
-        public static string? ToJson(this object? value, Reflector? reflector, JsonSerializerOptions? options = null, int depth = 0, ILogger? logger = null)
+        public static JsonElement ToJsonElement(
+            this object data,
+            Reflector? reflector,
+            JsonSerializerOptions? options = null,
+            int depth = 0,
+            ILogger? logger = null)
+        {
+            if (logger?.IsEnabled(LogLevel.Trace) == true)
+                logger.LogTrace("{padding}Converting object of type '{type}' to JsonElement.",
+                    StringUtils.GetPadding(depth), data?.GetType().GetTypeId().ValueOrNull());
+
+            return System.Text.Json.JsonSerializer.SerializeToElement(data, options ?? reflector?.JsonSerializerOptions);
+        }
+
+        public static string? ToJson(
+            this object? value,
+            Reflector? reflector,
+            JsonSerializerOptions? options = null,
+            int depth = 0,
+            ILogger? logger = null)
         {
             return ToJson(
                 value: value,
@@ -48,7 +58,13 @@ namespace com.IvanMurzak.ReflectorNet
                 logger: logger);
         }
 
-        public static string? ToJson(this object? value, string? defaultValue, Reflector? reflector, JsonSerializerOptions? options = null, int depth = 0, ILogger? logger = null)
+        public static string? ToJson(
+            this object? value,
+            string? defaultValue,
+            Reflector? reflector,
+            JsonSerializerOptions? options = null,
+            int depth = 0,
+            ILogger? logger = null)
         {
             if (value == null)
                 return defaultValue;
