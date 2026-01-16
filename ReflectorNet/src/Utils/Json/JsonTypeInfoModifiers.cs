@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Serialization.Metadata;
 
@@ -19,8 +20,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     {
         /// <summary>
         /// A type info modifier that excludes properties and fields marked with <see cref="ObsoleteAttribute"/>
-        /// from JSON serialization. This modifier sets <see cref="JsonPropertyInfo.ShouldSerialize"/> to return
-        /// false for any property whose underlying member has the <see cref="ObsoleteAttribute"/>.
+        /// from JSON serialization. This modifier removes obsolete properties entirely from the type info,
+        /// ensuring the getter/setter are never called during serialization.
         /// </summary>
         /// <param name="typeInfo">The JsonTypeInfo to modify.</param>
         public static void ExcludeObsoleteMembers(JsonTypeInfo typeInfo)
@@ -28,13 +29,17 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (typeInfo.Kind != JsonTypeInfoKind.Object)
                 return;
 
+            // Collect obsolete properties first (can't modify collection while iterating)
+            var obsoleteProperties = new List<JsonPropertyInfo>();
             foreach (var propertyInfo in typeInfo.Properties)
             {
                 if (IsObsolete(propertyInfo))
-                {
-                    propertyInfo.ShouldSerialize = static (_, _) => false;
-                }
+                    obsoleteProperties.Add(propertyInfo);
             }
+
+            // Remove obsolete properties from the collection
+            foreach (var obsoleteProperty in obsoleteProperties)
+                typeInfo.Properties.Remove(obsoleteProperty);
         }
 
         /// <summary>
@@ -43,13 +48,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </summary>
         private static bool IsObsolete(JsonPropertyInfo propertyInfo)
         {
-            var attributeProvider = propertyInfo.AttributeProvider;
+            var ap = propertyInfo.AttributeProvider;
+            if (ap is null) return false;
 
-            if (attributeProvider is PropertyInfo propInfo)
-                return propInfo.GetCustomAttribute<ObsoleteAttribute>() != null;
+            if (ap.IsDefined(typeof(ObsoleteAttribute), inherit: true))
+                return true;
 
-            if (attributeProvider is FieldInfo fieldInfo)
-                return fieldInfo.GetCustomAttribute<ObsoleteAttribute>() != null;
+            if (ap is PropertyInfo p)
+                return (p.GetMethod?.IsDefined(typeof(ObsoleteAttribute), true) ?? false)
+                    || (p.SetMethod?.IsDefined(typeof(ObsoleteAttribute), true) ?? false);
 
             return false;
         }

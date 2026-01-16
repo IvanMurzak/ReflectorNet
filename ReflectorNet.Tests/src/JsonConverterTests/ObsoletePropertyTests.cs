@@ -22,8 +22,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
         {
             public string? ActiveProperty { get; set; }
 
-            [Obsolete]
-            public string? ObsoleteProperty { get; set; }
+            [Obsolete("birth0 property is deprecated. Use AddSubEmitter, RemoveSubEmitter, SetSubEmitterSystem and GetSubEmitterSystem instead.", false)]
+            public string? ObsoleteProperty
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+                set
+                {
+                    throw new NotImplementedException();
+                }
+            }
         }
 
         public class ClassWithObsoleteField
@@ -109,11 +119,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
         [Fact]
         public void Serialize_ExcludesObsoleteProperty()
         {
-            // Arrange
+            // Arrange - note: ObsoleteProperty throws on get/set, so we don't set it
+            // This test verifies that the serializer never accesses the obsolete property
             var instance = new ClassWithObsoleteProperty
             {
-                ActiveProperty = "active",
-                ObsoleteProperty = "obsolete"
+                ActiveProperty = "active"
             };
 
             // Act
