@@ -70,6 +70,38 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
 
         #endregion
 
+        #region Test Model Structs
+
+        public struct StructWithObsoleteProperty
+        {
+            public string? ActiveProperty { get; set; }
+
+            [Obsolete]
+            public string? ObsoleteProperty { get; set; }
+        }
+
+        public struct StructWithObsoleteField
+        {
+            public string? ActiveField;
+
+            [Obsolete]
+            public string? ObsoleteField;
+        }
+
+        public struct StructWithMixedObsoleteMembers
+        {
+            public string? ActiveProperty { get; set; }
+            public string? ActiveField;
+
+            [Obsolete]
+            public string? ObsoleteProperty { get; set; }
+
+            [Obsolete]
+            public string? ObsoleteField;
+        }
+
+        #endregion
+
         #region Tests
 #pragma warning disable CS0612 // Type or member is obsolete
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -177,6 +209,67 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
             Assert.Contains("Nested", json);
             Assert.Contains("ActiveValue", json);
             Assert.DoesNotContain("ObsoleteValue", json);
+        }
+
+        [Fact]
+        public void Serialize_Struct_ExcludesObsoleteProperty()
+        {
+            // Arrange
+            var instance = new StructWithObsoleteProperty
+            {
+                ActiveProperty = "active",
+                ObsoleteProperty = "obsolete"
+            };
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(instance);
+            _output.WriteLine($"Serialized JSON: {json}");
+
+            // Assert
+            Assert.Contains("ActiveProperty", json);
+            Assert.DoesNotContain("ObsoleteProperty", json);
+        }
+
+        [Fact]
+        public void Serialize_Struct_ExcludesObsoleteField()
+        {
+            // Arrange
+            var instance = new StructWithObsoleteField
+            {
+                ActiveField = "active",
+                ObsoleteField = "obsolete"
+            };
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(instance);
+            _output.WriteLine($"Serialized JSON: {json}");
+
+            // Assert
+            Assert.Contains("ActiveField", json);
+            Assert.DoesNotContain("ObsoleteField", json);
+        }
+
+        [Fact]
+        public void Serialize_Struct_ExcludesMixedObsoleteMembers()
+        {
+            // Arrange
+            var instance = new StructWithMixedObsoleteMembers
+            {
+                ActiveProperty = "active prop",
+                ActiveField = "active field",
+                ObsoleteProperty = "obsolete prop",
+                ObsoleteField = "obsolete field"
+            };
+
+            // Act
+            var json = _reflector.JsonSerializer.Serialize(instance);
+            _output.WriteLine($"Serialized JSON: {json}");
+
+            // Assert
+            Assert.Contains("ActiveProperty", json);
+            Assert.Contains("ActiveField", json);
+            Assert.DoesNotContain("ObsoleteProperty", json);
+            Assert.DoesNotContain("ObsoleteField", json);
         }
 
         #endregion
