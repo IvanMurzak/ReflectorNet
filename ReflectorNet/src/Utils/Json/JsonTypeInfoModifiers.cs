@@ -6,7 +6,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Serialization.Metadata;
 
@@ -30,17 +29,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (typeInfo.Kind != JsonTypeInfoKind.Object)
                 return;
 
-            // Collect obsolete properties first (can't modify collection while iterating)
-            var obsoleteProperties = new List<JsonPropertyInfo>();
-            foreach (var propertyInfo in typeInfo.Properties)
+            // Iterate backwards to allow in-place removal without allocation
+            for (var i = typeInfo.Properties.Count - 1; i >= 0; i--)
             {
-                if (IsObsolete(propertyInfo))
-                    obsoleteProperties.Add(propertyInfo);
+                if (IsObsolete(typeInfo.Properties[i]))
+                    typeInfo.Properties.RemoveAt(i);
             }
-
-            // Remove obsolete properties from the collection
-            foreach (var obsoleteProperty in obsoleteProperties)
-                typeInfo.Properties.Remove(obsoleteProperty);
         }
 
         /// <summary>
