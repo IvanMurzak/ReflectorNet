@@ -22,7 +22,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.JsonConverterTests
         {
             public string? ActiveProperty { get; set; }
 
-            [Obsolete("birth0 property is deprecated. Use AddSubEmitter, RemoveSubEmitter, SetSubEmitterSystem and GetSubEmitterSystem instead.", false)]
+            [Obsolete("This property is deprecated, use ActiveProperty instead.", false)]
             public string? ObsoleteProperty
             {
                 get

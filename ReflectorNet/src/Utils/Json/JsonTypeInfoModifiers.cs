@@ -20,8 +20,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     {
         /// <summary>
         /// A type info modifier that excludes properties and fields marked with <see cref="ObsoleteAttribute"/>
-        /// from JSON serialization. This modifier removes obsolete properties entirely from the type info,
-        /// ensuring the getter/setter are never called during serialization.
+        /// from JSON serialization. This modifier removes obsolete properties from the type metadata used
+        /// during serialization, so the corresponding getters/setters are not invoked when writing JSON.
+        /// It does not alter deserialization behavior.
         /// </summary>
         /// <param name="typeInfo">The JsonTypeInfo to modify.</param>
         public static void ExcludeObsoleteMembers(JsonTypeInfo typeInfo)
