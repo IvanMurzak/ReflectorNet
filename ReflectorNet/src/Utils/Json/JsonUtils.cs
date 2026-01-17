@@ -1,14 +1,14 @@
+/*
+* ReflectorNet
+* Author: Ivan Murzak (https://github.com/IvanMurzak)
+* Copyright (c) 2025 Ivan Murzak
+* Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
+*/
+
 using System.Text.Json;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
-    /*
-     * ReflectorNet
-     * Author: Ivan Murzak (https://github.com/IvanMurzak)
-     * Copyright (c) 2025 Ivan Murzak
-     * Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
-     */
-
     public static class JsonUtils
     {
         public static bool TryUnstringifyJson(JsonElement jsonElement, out JsonElement? result)
@@ -16,9 +16,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (jsonElement.ValueKind == JsonValueKind.String)
             {
                 var str = jsonElement.GetString() ?? string.Empty;
-
-                result = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(str);
-                return true;
+                try
+                {
+                    result = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(str);
+                    return true;
+                }
+                catch (JsonException)
+                {
+                    // Ignore, value is not a stringified JSON
+                }
             }
             result = null;
             return false;
