@@ -268,17 +268,10 @@ namespace com.IvanMurzak.ReflectorNet
                 if (!isPrimitive)
                 {
                     // Handle stringified json
-                    try
+                    if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
                     {
-                        if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
-                        {
-                            value = unstringifiedJson;
-                            jsonElement = unstringifiedJson!.Value;
-                        }
-                    }
-                    catch (JsonException)
-                    {
-                        // Ignore, value is not a stringified JSON
+                        value = unstringifiedJson;
+                        jsonElement = unstringifiedJson!.Value;
                     }
                 }
                 try
@@ -359,17 +352,10 @@ namespace com.IvanMurzak.ReflectorNet
                     if (!isPrimitive)
                     {
                         // Handle stringified json
-                        try
+                        if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
                         {
-                            if (JsonUtils.TryUnstringifyJson(jsonElement, out var unstringifiedJson))
-                            {
-                                value = unstringifiedJson;
-                                jsonElement = unstringifiedJson!.Value;
-                            }
-                        }
-                        catch (JsonException)
-                        {
-                            // Ignore, value is not a stringified JSON
+                            value = unstringifiedJson;
+                            jsonElement = unstringifiedJson!.Value;
                         }
                     }
                     try

@@ -16,9 +16,15 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (jsonElement.ValueKind == JsonValueKind.String)
             {
                 var str = jsonElement.GetString() ?? string.Empty;
-
-                result = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(str);
-                return true;
+                try
+                {
+                    result = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(str);
+                    return true;
+                }
+                catch (JsonException)
+                {
+                    // Ignore, value is not a stringified JSON
+                }
             }
             result = null;
             return false;
