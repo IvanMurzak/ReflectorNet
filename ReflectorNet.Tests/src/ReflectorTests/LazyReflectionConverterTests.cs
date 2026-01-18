@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using com.IvanMurzak.ReflectorNet.Converter;
+using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
+using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -78,10 +83,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var converter = new LazyReflectionConverter(typeName, ignoredProperties: ignoredProps);
             var reflector = new Reflector();
 
-            // Register manually to ensure it's used (though since it has high priority it should be picked up if added to registry)
-            // But here we can use the converter directly to test its internal logic via helper or just check what properties it returns
-
-            // Let's use it via Reflector to simulate full integration
+            // Register manually to ensure it's used
             reflector.Converters.Add(converter);
 
             var obj = new TestTarget();
@@ -107,6 +109,51 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             Assert.Throws<ArgumentException>(() => new LazyReflectionConverter(null!));
             Assert.Throws<ArgumentException>(() => new LazyReflectionConverter(""));
             Assert.Throws<ArgumentException>(() => new LazyReflectionConverter("   "));
+        }
+
+        [Fact]
+        public void Serialize_DelegatesToBackingConverter()
+        {
+            // Arrange
+            var typeName = typeof(TestTarget).FullName!;
+            var mockConverter = new MockConverter();
+            var converter = new LazyReflectionConverter(typeName, backingConverter: mockConverter);
+            var reflector = new Reflector();
+            reflector.Converters.Add(converter);
+
+            var obj = new TestTarget { Name = "Delegated" };
+
+            // Act
+            var serialized = reflector.Serialize(obj);
+
+            // Assert
+            Assert.True(mockConverter.WasCalled);
+            Assert.Equal("\"MOCKED\"", serialized.valueJsonElement?.ToString());
+        }
+
+        class MockConverter : GenericReflectionConverter<TestTarget>
+        {
+            public bool WasCalled { get; private set; }
+
+            protected override SerializedMember InternalSerialize(
+                Reflector reflector,
+                object? obj,
+                Type type,
+                string? name = null,
+                bool recursive = true,
+                System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic,
+                int depth = 0,
+                Logs? logs = null,
+                ILogger? logger = null,
+                SerializationContext? context = null)
+            {
+                WasCalled = true;
+                return SerializedMember.FromJson(type, new JsonObject().ToJsonElement().Value, name);
+            }
+
+            // Override wrapper method to return known JSON if needed, but InternalSerialize is enough since default Serialize calls it.
+            // But verify return value. SerializedMember.FromJson with empty JsonObject/JsonElement?
+            // To make verification easier, let's just assert WasCalled.
         }
     }
 }

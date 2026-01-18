@@ -7,6 +7,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -22,6 +24,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         private readonly string _targetTypeName;
         private readonly HashSet<string> _ignoredProperties;
         private readonly HashSet<string> _ignoredFields;
+        private readonly IReflectionConverter? _backingConverter;
         private Type? _targetType;
         private bool _typeResolved;
 
@@ -31,7 +34,12 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <param name="targetTypeName">The full name of the type to handle.</param>
         /// <param name="ignoredProperties">Optional list of property names to ignore during serialization.</param>
         /// <param name="ignoredFields">Optional list of field names to ignore during serialization.</param>
-        public LazyReflectionConverter(string targetTypeName, IEnumerable<string>? ignoredProperties = null, IEnumerable<string>? ignoredFields = null)
+        /// <param name="backingConverter">Optional converter to delegate serialization to.</param>
+        public LazyReflectionConverter(
+            string targetTypeName,
+            IEnumerable<string>? ignoredProperties = null,
+            IEnumerable<string>? ignoredFields = null,
+            IReflectionConverter? backingConverter = null)
         {
             if (string.IsNullOrWhiteSpace(targetTypeName))
                 throw new ArgumentException("Target type name cannot be null or empty.", nameof(targetTypeName));
@@ -43,6 +51,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             _ignoredFields = ignoredFields != null
                 ? new HashSet<string>(ignoredFields)
                 : new HashSet<string>();
+            _backingConverter = backingConverter;
         }
 
         private Type? GetTargetType()
@@ -73,6 +82,46 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             return distance >= 0
                 ? MAX_DEPTH - distance
                 : 0;
+        }
+
+        protected override SerializedMember InternalSerialize(
+            Reflector reflector,
+            object? obj,
+            Type type,
+            string? name = null,
+            bool recursive = true,
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null,
+            SerializationContext? context = null)
+        {
+            if (_backingConverter != null)
+            {
+                return _backingConverter.Serialize(
+                    reflector: reflector,
+                    obj: obj,
+                    fallbackType: type,
+                    name: name,
+                    recursive: recursive,
+                    flags: flags,
+                    depth: depth,
+                    logs: logs,
+                    logger: logger,
+                    context: context);
+            }
+
+            return base.InternalSerialize(
+                reflector: reflector,
+                obj: obj,
+                type: type,
+                name: name,
+                recursive: recursive,
+                flags: flags,
+                depth: depth,
+                logs: logs,
+                logger: logger,
+                context: context);
         }
 
         protected override IEnumerable<string> GetIgnoredProperties()
