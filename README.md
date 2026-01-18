@@ -235,6 +235,49 @@ reflector.Converters.Add(new WidgetConverter());
 
 </details>
 
+#### Lazy Loading & Optional Dependencies
+
+Sometimes you need to handle types that might not be present at runtime (e.g., optional plugins or platform-specific referencing like `UnityEngine.Collider` which is only available inside Unity). If you reference these types directly in your code, your application might crash if the assembly is missing.
+
+`LazyReflectionConverter` solves this by resolving the type by its **string name** at runtime. If the type is found, it works; if not, it gracefully steps aside.
+
+**Basic Usage:**
+
+```csharp
+// Only active if "Some.Optional.Library.SuperWidget" exists at runtime
+var lazyConverter = new LazyReflectionConverter("Some.Optional.Library.SuperWidget");
+
+reflector.Converters.Add(lazyConverter);
+```
+
+**Advanced Usage: Delegation & Ignoring Members**
+
+You can also use `LazyReflectionConverter` to wrap your own custom converters. This allows you to apply your custom logic *only when the type exists*, without taking a hard dependency on it.
+
+```csharp
+// 1. Create your custom converter (assuming it can compile without the hard dependency, e.g. using generics or object)
+// Or, if you have a converter that specific to a type but you want to lazy load it:
+var myCustomLogic = new MySpecialConverter(); // Implements IReflectionConverter
+
+// 2. Wrap it in LazyReflectionConverter
+var lazyDelegate = new LazyReflectionConverter(
+    "UnityEngine.Collider",
+    backingConverter: myCustomLogic
+);
+
+reflector.Converters.Add(lazyDelegate);
+```
+
+You can also simply ignore specific properties or fields without writing a full custom converter:
+
+```csharp
+// Ignore "heavyData" property if the type exists
+var simpleLazy = new LazyReflectionConverter(
+    "My.Optional.Type",
+    ignoredProperties: new[] { "heavyData" }
+);
+```
+
 ### 📜 Custom JSON Schema Generation
 
 While `ReflectionConverter` handles runtime object manipulation, you might also want to control how your types are described in the generated JSON Schema (used by LLMs to understand your data structure).
