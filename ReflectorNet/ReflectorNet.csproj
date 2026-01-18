@@ -9,7 +9,7 @@
 
     <!-- NuGet Package Information -->
     <PackageId>com.IvanMurzak.ReflectorNet</PackageId>
-    <Version>3.7.1</Version>
+    <Version>3.8.0</Version>
     <Authors>Ivan Murzak</Authors>
     <Copyright>Copyright © Ivan Murzak 2025</Copyright>
     <Description>ReflectorNet is an advanced .NET reflection toolkit designed for AI-driven scenarios. Effortlessly search for C# methods using natural language queries, invoke any method by supplying arguments as JSON, and receive results as JSON. The library also provides a powerful API to inspect, modify, and manage in-memory object instances dynamically via JSON data. Ideal for automation, testing, and AI integration workflows.</Description>
