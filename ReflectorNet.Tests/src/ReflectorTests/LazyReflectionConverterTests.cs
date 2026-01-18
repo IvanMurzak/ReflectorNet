@@ -74,12 +74,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var converter = new LazyReflectionConverter(typeName);
 
             // Act
-            var priority = converter.SerializationPriority(typeof(DerivedTestTarget));
+            var exactMatchPriority = converter.SerializationPriority(typeof(TestTarget));
+            var derivedPriority = converter.SerializationPriority(typeof(DerivedTestTarget));
 
             // Assert
-            Assert.True(priority > 0, "Priority should be positive for derived type");
-            Assert.True(priority < 10001, "Priority for derived type should be less than exact match (MAX_DEPTH + 1)");
-            _output.WriteLine($"Priority for derived type: {priority}");
+            Assert.True(exactMatchPriority > 0, "Priority should be positive for exact type");
+            Assert.True(derivedPriority > 0, "Priority should be positive for derived type");
+            Assert.True(derivedPriority < exactMatchPriority, "Priority for derived type should be less than priority for exact type");
+            _output.WriteLine($"Priority for exact type: {exactMatchPriority}, derived type: {derivedPriority}");
         }
 
         [Fact]
