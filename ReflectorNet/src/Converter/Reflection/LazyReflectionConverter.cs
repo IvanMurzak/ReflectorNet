@@ -52,10 +52,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 ? new HashSet<string>(ignoredFields)
                 : new HashSet<string>();
 
-            var hasIgnoredMembers = _ignoredProperties.Count > 0 || _ignoredFields.Count > 0;
-            if (backingConverter != null && hasIgnoredMembers)
-                throw new ArgumentException("Cannot specify ignoredProperties or ignoredFields when using a backingConverter. The backing converter handles serialization entirely.", nameof(backingConverter));
-
             _backingConverter = backingConverter;
             _targetType = new Lazy<Type?>(() => TypeUtils.GetType(_targetTypeName));
         }
