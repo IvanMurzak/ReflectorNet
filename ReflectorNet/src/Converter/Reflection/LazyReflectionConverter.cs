@@ -117,14 +117,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 context: context);
         }
 
-        protected override IEnumerable<string> GetIgnoredProperties()
-        {
-            return _ignoredProperties;
-        }
+        protected override IEnumerable<string> GetIgnoredProperties() => _ignoredProperties
 
-        protected override IEnumerable<string> GetIgnoredFields()
-        {
-            return _ignoredFields;
-        }
+        protected override IEnumerable<string> GetIgnoredFields() => _ignoredFields
     }
 }
