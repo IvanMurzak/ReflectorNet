@@ -151,45 +151,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         }
 
         [Fact]
-        public void Constructor_BackingConverterWithIgnoredMembers_ThrowsArgumentException()
-        {
-            var typeName = typeof(TestTarget).FullName!;
-            var mockConverter = new MockConverter();
-
-            // BackingConverter with ignoredProperties should throw
-            Assert.Throws<ArgumentException>(() => new LazyReflectionConverter(
-                typeName,
-                ignoredProperties: new[] { "Secret" },
-                backingConverter: mockConverter));
-
-            // BackingConverter with ignoredFields should throw
-            Assert.Throws<ArgumentException>(() => new LazyReflectionConverter(
-                typeName,
-                ignoredFields: new[] { "Secret" },
-                backingConverter: mockConverter));
-
-            // BackingConverter with both should throw
-            Assert.Throws<ArgumentException>(() => new LazyReflectionConverter(
-                typeName,
-                ignoredProperties: new[] { "Secret" },
-                ignoredFields: new[] { "Field" },
-                backingConverter: mockConverter));
-
-            // Empty arrays should NOT throw (they're functionally equivalent to null)
-            var converter1 = new LazyReflectionConverter(
-                typeName,
-                ignoredProperties: Array.Empty<string>(),
-                backingConverter: mockConverter);
-            Assert.NotNull(converter1);
-
-            var converter2 = new LazyReflectionConverter(
-                typeName,
-                ignoredFields: Array.Empty<string>(),
-                backingConverter: mockConverter);
-            Assert.NotNull(converter2);
-        }
-
-        [Fact]
         public void Serialize_DelegatesToBackingConverter()
         {
             // Arrange

@@ -31,10 +31,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// Initializes a new instance of the <see cref="LazyReflectionConverter"/> class.
         /// </summary>
         /// <param name="targetTypeName">The full name of the type to handle.</param>
-        /// <param name="ignoredProperties">Optional list of property names to ignore during serialization. Cannot be used with <paramref name="backingConverter"/>.</param>
-        /// <param name="ignoredFields">Optional list of field names to ignore during serialization. Cannot be used with <paramref name="backingConverter"/>.</param>
-        /// <param name="backingConverter">Optional converter to delegate serialization to. Cannot be used with <paramref name="ignoredProperties"/> or <paramref name="ignoredFields"/>.</param>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="targetTypeName"/> is null or empty, or when <paramref name="backingConverter"/> is provided together with <paramref name="ignoredProperties"/> or <paramref name="ignoredFields"/>.</exception>
+        /// <param name="ignoredProperties">Optional list of property names to ignore during serialization.</param>
+        /// <param name="ignoredFields">Optional list of field names to ignore during serialization.</param>
+        /// <param name="backingConverter">Optional converter to delegate serialization to.</param>
         public LazyReflectionConverter(
             string targetTypeName,
             IEnumerable<string>? ignoredProperties = null,
