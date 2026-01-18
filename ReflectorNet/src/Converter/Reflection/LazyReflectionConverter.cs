@@ -31,9 +31,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// Initializes a new instance of the <see cref="LazyReflectionConverter"/> class.
         /// </summary>
         /// <param name="targetTypeName">The full name of the type to handle.</param>
-        /// <param name="ignoredProperties">Optional list of property names to ignore during serialization.</param>
-        /// <param name="ignoredFields">Optional list of field names to ignore during serialization.</param>
-        /// <param name="backingConverter">Optional converter to delegate serialization to.</param>
+        /// <param name="ignoredProperties">Optional list of property names to ignore during serialization. Cannot be used with <paramref name="backingConverter"/>.</param>
+        /// <param name="ignoredFields">Optional list of field names to ignore during serialization. Cannot be used with <paramref name="backingConverter"/>.</param>
+        /// <param name="backingConverter">Optional converter to delegate serialization to. Cannot be used with <paramref name="ignoredProperties"/> or <paramref name="ignoredFields"/>.</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="targetTypeName"/> is null or empty, or when <paramref name="backingConverter"/> is provided together with <paramref name="ignoredProperties"/> or <paramref name="ignoredFields"/>.</exception>
         public LazyReflectionConverter(
             string targetTypeName,
             IEnumerable<string>? ignoredProperties = null,
@@ -50,6 +51,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             _ignoredFields = ignoredFields != null
                 ? new HashSet<string>(ignoredFields)
                 : new HashSet<string>();
+
+            var hasIgnoredMembers = _ignoredProperties.Count > 0 || _ignoredFields.Count > 0;
+            if (backingConverter != null && hasIgnoredMembers)
+                throw new ArgumentException("Cannot specify ignoredProperties or ignoredFields when using a backingConverter. The backing converter handles serialization entirely.", nameof(backingConverter));
+
             _backingConverter = backingConverter;
             _targetType = new Lazy<Type?>(() => TypeUtils.GetType(_targetTypeName));
         }
