@@ -25,8 +25,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         private readonly HashSet<string> _ignoredProperties;
         private readonly HashSet<string> _ignoredFields;
         private readonly IReflectionConverter? _backingConverter;
-        private Type? _targetType;
-        private bool _typeResolved;
+        private readonly Lazy<Type?> _targetType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LazyReflectionConverter"/> class.
@@ -52,17 +51,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 ? new HashSet<string>(ignoredFields)
                 : new HashSet<string>();
             _backingConverter = backingConverter;
+            _targetType = new Lazy<Type?>(() => TypeUtils.GetType(_targetTypeName));
         }
 
-        private Type? GetTargetType()
-        {
-            if (!_typeResolved)
-            {
-                _targetType = TypeUtils.GetType(_targetTypeName);
-                _typeResolved = true;
-            }
-            return _targetType;
-        }
+        private Type? GetTargetType() => _targetType.Value;
 
         public override int SerializationPriority(Type type, ILogger? logger = null)
         {

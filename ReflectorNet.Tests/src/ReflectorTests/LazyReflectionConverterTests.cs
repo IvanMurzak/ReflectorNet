@@ -28,6 +28,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             public string Extra { get; set; } = "Extra";
         }
 
+        // Test class with fields for "ignoredFields" scenario
+        public class TestTargetWithFields
+        {
+            public string Name = "Test";
+            public int Value = 42;
+            public string SecretField = "Hidden";
+        }
+
         [Fact]
         public void SerializationPriority_TypeExists_ReturnsHighPriority()
         {
@@ -71,7 +79,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             // Assert
             Assert.True(priority > 0, "Priority should be positive for derived type");
             Assert.True(priority < 10001, "Priority for derived type should be less than exact match (MAX_DEPTH + 1)");
-             _output.WriteLine($"Priority for derived type: {priority}");
+            _output.WriteLine($"Priority for derived type: {priority}");
         }
 
         [Fact]
@@ -101,6 +109,35 @@ namespace com.IvanMurzak.ReflectorNet.Tests
 
             // Check that "Secret" is missing
             Assert.DoesNotContain(serialized.props, p => p.name == "Secret");
+        }
+
+        [Fact]
+        public void Serialize_IgnoresConfiguredFields()
+        {
+            // Arrange
+            var typeName = typeof(TestTargetWithFields).FullName!;
+            var ignoredFields = new[] { "SecretField" };
+            var converter = new LazyReflectionConverter(typeName, ignoredFields: ignoredFields);
+            var reflector = new Reflector();
+
+            // Register manually to ensure it's used
+            reflector.Converters.Add(converter);
+
+            var obj = new TestTargetWithFields();
+
+            // Act
+            var serialized = reflector.Serialize(obj);
+
+            // Assert
+            Assert.NotNull(serialized);
+            Assert.NotNull(serialized.fields);
+
+            // Check that "Name" and "Value" fields are present
+            Assert.Contains(serialized.fields, f => f.name == "Name");
+            Assert.Contains(serialized.fields, f => f.name == "Value");
+
+            // Check that "SecretField" is missing
+            Assert.DoesNotContain(serialized.fields, f => f.name == "SecretField");
         }
 
         [Fact]
@@ -150,10 +187,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests
                 WasCalled = true;
                 return SerializedMember.FromJson(type, "{}", name);
             }
-
-            // Override wrapper method to return known JSON if needed, but InternalSerialize is enough since default Serialize calls it.
-            // But verify return value. SerializedMember.FromJson with empty JsonObject/JsonElement?
-            // To make verification easier, let's just assert WasCalled.
         }
     }
 }
