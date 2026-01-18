@@ -128,7 +128,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
 
             // Assert
             Assert.True(mockConverter.WasCalled);
-            Assert.Equal("\"MOCKED\"", serialized.valueJsonElement?.ToString());
+            Assert.Equal("{}", serialized.valueJsonElement?.ToString());
         }
 
         class MockConverter : GenericReflectionConverter<TestTarget>
@@ -148,7 +148,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
                 SerializationContext? context = null)
             {
                 WasCalled = true;
-                return SerializedMember.FromJson(type, new JsonObject().ToJsonElement().Value, name);
+                return SerializedMember.FromJson(type, "{}", name);
             }
 
             // Override wrapper method to return known JSON if needed, but InternalSerialize is enough since default Serialize calls it.
