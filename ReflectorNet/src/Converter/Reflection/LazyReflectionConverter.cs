@@ -26,6 +26,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         private readonly IReflectionConverter? _backingConverter;
         private readonly Lazy<Type?> _targetType;
 
+        public override bool AllowSetValue => _backingConverter?.AllowSetValue ?? base.AllowSetValue;
+        public override bool AllowCascadeSerialization => _backingConverter?.AllowCascadeSerialization ?? base.AllowCascadeSerialization;
+        public override bool AllowCascadeFieldsConversion => _backingConverter?.AllowCascadeFieldsConversion ?? base.AllowCascadeFieldsConversion;
+        public override bool AllowCascadePropertiesConversion => _backingConverter?.AllowCascadePropertiesConversion ?? base.AllowCascadePropertiesConversion;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LazyReflectionConverter"/> class.
         /// </summary>

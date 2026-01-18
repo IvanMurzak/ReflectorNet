@@ -15,7 +15,33 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 {
     public interface IReflectionConverter
     {
+        /// <summary>
+        /// Gets a value indicating whether this converter supports direct value setting operations.
+        /// When true, the converter can handle primitive-style value assignments.
+        /// When false, the converter only supports field and property-based population.
+        /// </summary>
+        bool AllowSetValue { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether this converter supports cascading serialization operations.
+        /// When true, nested objects and collections are recursively serialized.
+        /// When false, only shallow serialization is performed.
+        /// </summary>
         bool AllowCascadeSerialization { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether this converter should recursively convert field values.
+        /// When true, field values that are complex objects are serialized recursively.
+        /// When false, field values are serialized as simple JSON representations.
+        /// </summary>
+        bool AllowCascadeFieldsConversion { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether this converter should recursively convert property values.
+        /// When true, property values that are complex objects are serialized recursively.
+        /// When false, property values are serialized as simple JSON representations.
+        /// </summary>
+        bool AllowCascadePropertiesConversion { get; }
 
         int SerializationPriority(Type type, ILogger? logger = null);
 
