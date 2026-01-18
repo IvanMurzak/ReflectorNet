@@ -18,7 +18,36 @@ namespace com.IvanMurzak.ReflectorNet.Converter
     /// This is useful for optional dependencies where the target type might not be present at runtime.
     /// If the type is not found, this converter will remain inactive (priority 0).
     /// </summary>
-    public class LazyReflectionConverter : GenericReflectionConverter<object>
+    public class LazyGenericReflectionConverter : LazyGenericReflectionConverter<object>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LazyGenericReflectionConverter"/> class.
+        /// </summary>
+        /// <param name="targetTypeName">The full name of the type to handle.</param>
+        /// <param name="ignoredProperties">Optional list of property names to ignore during serialization.</param>
+        /// <param name="ignoredFields">Optional list of field names to ignore during serialization.</param>
+        /// <param name="backingConverter">Optional converter to delegate serialization to.</param>
+        public LazyGenericReflectionConverter(
+            string targetTypeName,
+            IEnumerable<string>? ignoredProperties = null,
+            IEnumerable<string>? ignoredFields = null,
+            IReflectionConverter? backingConverter = null)
+            : base(
+                  targetTypeName: targetTypeName,
+                  ignoredProperties: ignoredProperties,
+                  ignoredFields: ignoredFields,
+                  backingConverter: backingConverter)
+        {
+            // empty
+        }
+    }
+
+    /// <summary>
+    /// A reflection converter that resolves its target type lazily by name.
+    /// This is useful for optional dependencies where the target type might not be present at runtime.
+    /// If the type is not found, this converter will remain inactive (priority 0).
+    /// </summary>
+    public class LazyGenericReflectionConverter<T> : GenericReflectionConverter<T>
     {
         private readonly string _targetTypeName;
         private readonly HashSet<string> _ignoredProperties;
@@ -26,14 +55,19 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         private readonly IReflectionConverter? _backingConverter;
         private readonly Lazy<Type?> _targetType;
 
+        public override bool AllowSetValue => _backingConverter?.AllowSetValue ?? base.AllowSetValue;
+        public override bool AllowCascadeSerialization => _backingConverter?.AllowCascadeSerialization ?? base.AllowCascadeSerialization;
+        public override bool AllowCascadeFieldsConversion => _backingConverter?.AllowCascadeFieldsConversion ?? base.AllowCascadeFieldsConversion;
+        public override bool AllowCascadePropertiesConversion => _backingConverter?.AllowCascadePropertiesConversion ?? base.AllowCascadePropertiesConversion;
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="LazyReflectionConverter"/> class.
+        /// Initializes a new instance of the <see cref="LazyGenericReflectionConverter"/> class.
         /// </summary>
         /// <param name="targetTypeName">The full name of the type to handle.</param>
         /// <param name="ignoredProperties">Optional list of property names to ignore during serialization.</param>
         /// <param name="ignoredFields">Optional list of field names to ignore during serialization.</param>
         /// <param name="backingConverter">Optional converter to delegate serialization to.</param>
-        public LazyReflectionConverter(
+        public LazyGenericReflectionConverter(
             string targetTypeName,
             IEnumerable<string>? ignoredProperties = null,
             IEnumerable<string>? ignoredFields = null,
