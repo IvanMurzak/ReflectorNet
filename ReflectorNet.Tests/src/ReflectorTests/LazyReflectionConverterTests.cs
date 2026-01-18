@@ -41,7 +41,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         {
             // Arrange
             var typeName = typeof(TestTarget).FullName!;
-            var converter = new LazyReflectionConverter(typeName);
+            var converter = new LazyGenericReflectionConverter(typeName);
 
             // Act
             var priority = converter.SerializationPriority(typeof(TestTarget));
@@ -56,7 +56,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         {
             // Arrange
             var typeName = "System.NonExistentType.ShouldNotExist";
-            var converter = new LazyReflectionConverter(typeName);
+            var converter = new LazyGenericReflectionConverter(typeName);
 
             // Act
             var priority = converter.SerializationPriority(typeof(TestTarget));
@@ -71,7 +71,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         {
             // Arrange
             var typeName = typeof(TestTarget).FullName!;
-            var converter = new LazyReflectionConverter(typeName);
+            var converter = new LazyGenericReflectionConverter(typeName);
 
             // Act
             var exactMatchPriority = converter.SerializationPriority(typeof(TestTarget));
@@ -90,7 +90,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             // Arrange
             var typeName = typeof(TestTarget).FullName!;
             var ignoredProps = new[] { "Secret" };
-            var converter = new LazyReflectionConverter(typeName, ignoredProperties: ignoredProps);
+            var converter = new LazyGenericReflectionConverter(typeName, ignoredProperties: ignoredProps);
             var reflector = new Reflector();
 
             // Register manually to ensure it's used
@@ -119,7 +119,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             // Arrange
             var typeName = typeof(TestTargetWithFields).FullName!;
             var ignoredFields = new[] { "SecretField" };
-            var converter = new LazyReflectionConverter(typeName, ignoredFields: ignoredFields);
+            var converter = new LazyGenericReflectionConverter(typeName, ignoredFields: ignoredFields);
             var reflector = new Reflector();
 
             // Register manually to ensure it's used
@@ -145,9 +145,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         [Fact]
         public void Constructor_NullOrEmptyTypeName_ThrowsArgumentException()
         {
-            Assert.Throws<ArgumentException>(() => new LazyReflectionConverter(null!));
-            Assert.Throws<ArgumentException>(() => new LazyReflectionConverter(""));
-            Assert.Throws<ArgumentException>(() => new LazyReflectionConverter("   "));
+            Assert.Throws<ArgumentException>(() => new LazyGenericReflectionConverter(null!));
+            Assert.Throws<ArgumentException>(() => new LazyGenericReflectionConverter(""));
+            Assert.Throws<ArgumentException>(() => new LazyGenericReflectionConverter("   "));
         }
 
         [Fact]
@@ -156,7 +156,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             // Arrange
             var typeName = typeof(TestTarget).FullName!;
             var mockConverter = new MockConverter();
-            var converter = new LazyReflectionConverter(typeName, backingConverter: mockConverter);
+            var converter = new LazyGenericReflectionConverter(typeName, backingConverter: mockConverter);
             var reflector = new Reflector();
             reflector.Converters.Add(converter);
 
@@ -183,7 +183,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var mockConverter = new MockConverter(); // Serializes everything normally because it returns all properties
 
             // Should ignore "Secret" even though delegated
-            var converter = new LazyReflectionConverter(
+            var converter = new LazyGenericReflectionConverter(
                 typeName,
                 backingConverter: mockConverter,
                 ignoredProperties: new[] { "Secret" });
@@ -210,16 +210,16 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         [Fact]
         public void Constructor_BackingConverterWithIgnoredMembers_Succeeds()
         {
-             // This verifies the fix: we no longer throw exception for this combination
-             var typeName = typeof(TestTarget).FullName!;
-             var mockConverter = new MockConverter();
+            // This verifies the fix: we no longer throw exception for this combination
+            var typeName = typeof(TestTarget).FullName!;
+            var mockConverter = new MockConverter();
 
-             var converter = new LazyReflectionConverter(
-                 typeName,
-                 ignoredProperties: new[] { "Test" },
-                 backingConverter: mockConverter);
+            var converter = new LazyGenericReflectionConverter(
+                typeName,
+                ignoredProperties: new[] { "Test" },
+                backingConverter: mockConverter);
 
-             Assert.NotNull(converter);
+            Assert.NotNull(converter);
         }
 
         class MockConverter : GenericReflectionConverter<TestTarget>
