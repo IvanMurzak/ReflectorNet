@@ -166,28 +166,74 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var serialized = reflector.Serialize(obj);
 
             // Assert
-            Assert.True(mockConverter.WasCalled);
-            Assert.Equal("{}", serialized.valueJsonElement?.ToString());
+            Assert.True(mockConverter.MetadataWasAccessed, "Backing converter metadata should be accessed.");
+
+            // "Name" should be present as normal serialization happens using the metadata
+            Assert.NotNull(serialized.props);
+            Assert.Contains(serialized.props, p => p.name == "Name");
+            // "Value" should also be present since we are using TestTarget
+            Assert.Contains(serialized.props, p => p.name == "Value");
+        }
+
+        [Fact]
+        public void Serialize_DelegatesAndFilters()
+        {
+            // Arrange
+            var typeName = typeof(TestTarget).FullName!;
+            var mockConverter = new MockConverter(); // Serializes everything normally because it returns all properties
+
+            // Should ignore "Secret" even though delegated
+            var converter = new LazyReflectionConverter(
+                typeName,
+                backingConverter: mockConverter,
+                ignoredProperties: new[] { "Secret" });
+
+            var reflector = new Reflector();
+            reflector.Converters.Add(converter);
+
+            var obj = new TestTarget { Name = "Filtered", Secret = "ShouldBeGone" };
+
+            // Act
+            var serialized = reflector.Serialize(obj);
+
+            // Assert
+            Assert.True(mockConverter.MetadataWasAccessed, "Backing converter metadata should be accessed.");
+            Assert.NotNull(serialized.props);
+
+            // "Name" should remain
+            Assert.Contains(serialized.props, p => p.name == "Name");
+
+            // "Secret" should be removed by LazyReflectionConverter filtering logic
+            Assert.DoesNotContain(serialized.props, p => p.name == "Secret");
+        }
+
+        [Fact]
+        public void Constructor_BackingConverterWithIgnoredMembers_Succeeds()
+        {
+             // This verifies the fix: we no longer throw exception for this combination
+             var typeName = typeof(TestTarget).FullName!;
+             var mockConverter = new MockConverter();
+
+             var converter = new LazyReflectionConverter(
+                 typeName,
+                 ignoredProperties: new[] { "Test" },
+                 backingConverter: mockConverter);
+
+             Assert.NotNull(converter);
         }
 
         class MockConverter : GenericReflectionConverter<TestTarget>
         {
-            public bool WasCalled { get; private set; }
+            public bool MetadataWasAccessed { get; private set; }
 
-            protected override SerializedMember InternalSerialize(
+            protected override IEnumerable<System.Reflection.PropertyInfo>? GetSerializablePropertiesInternal(
                 Reflector reflector,
-                object? obj,
-                Type type,
-                string? name = null,
-                bool recursive = true,
+                Type objType,
                 System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic,
-                int depth = 0,
-                Logs? logs = null,
-                ILogger? logger = null,
-                SerializationContext? context = null)
+                ILogger? logger = null)
             {
-                WasCalled = true;
-                return SerializedMember.FromJson(type, "{}", name);
+                MetadataWasAccessed = true;
+                return base.GetSerializablePropertiesInternal(reflector, objType, flags, logger);
             }
         }
     }

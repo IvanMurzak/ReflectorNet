@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -55,11 +54,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             _targetType = new Lazy<Type?>(() => TypeUtils.GetType(_targetTypeName));
         }
 
-        private Type? GetTargetType() => _targetType.Value;
-
         public override int SerializationPriority(Type type, ILogger? logger = null)
         {
-            var targetType = GetTargetType();
+            var targetType = _targetType.Value;
 
             // If the target type cannot be resolved, this converter is inactive.
             if (targetType == null)
@@ -77,48 +74,50 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 : 0;
         }
 
-        protected override SerializedMember InternalSerialize(
+        protected override IEnumerable<PropertyInfo>? GetSerializablePropertiesInternal(
             Reflector reflector,
-            object? obj,
-            Type type,
-            string? name = null,
-            bool recursive = true,
-            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-            int depth = 0,
-            Logs? logs = null,
-            ILogger? logger = null,
-            SerializationContext? context = null)
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null)
         {
             if (_backingConverter != null)
             {
-                return _backingConverter.Serialize(
-                    reflector: reflector,
-                    obj: obj,
-                    fallbackType: type,
-                    name: name,
-                    recursive: recursive,
-                    flags: flags,
-                    depth: depth,
-                    logs: logs,
-                    logger: logger,
-                    context: context);
+                return _backingConverter.GetSerializableProperties(reflector, objType, flags, logger);
             }
 
-            return base.InternalSerialize(
-                reflector: reflector,
-                obj: obj,
-                type: type,
-                name: name,
-                recursive: recursive,
-                flags: flags,
-                depth: depth,
-                logs: logs,
-                logger: logger,
-                context: context);
+            return base.GetSerializablePropertiesInternal(reflector, objType, flags, logger);
         }
 
-        protected override IEnumerable<string> GetIgnoredProperties() => _ignoredProperties;
+        protected override IEnumerable<FieldInfo>? GetSerializableFieldsInternal(
+            Reflector reflector,
+            Type objType,
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            ILogger? logger = null)
+        {
+            if (_backingConverter != null)
+            {
+                return _backingConverter.GetSerializableFields(reflector, objType, flags, logger);
+            }
 
-        protected override IEnumerable<string> GetIgnoredFields() => _ignoredFields;
+            return base.GetSerializableFieldsInternal(reflector, objType, flags, logger);
+        }
+
+        protected override IEnumerable<string> GetIgnoredProperties()
+        {
+            foreach (var prop in base.GetIgnoredProperties())
+                yield return prop;
+
+            foreach (var prop in _ignoredProperties)
+                yield return prop;
+        }
+
+        protected override IEnumerable<string> GetIgnoredFields()
+        {
+            foreach (var field in base.GetIgnoredFields())
+                yield return field;
+
+            foreach (var field in _ignoredFields)
+                yield return field;
+        }
     }
 }
