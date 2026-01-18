@@ -218,8 +218,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null)
         {
             return objType.GetProperties(flags)
-                .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.CanRead)
+                .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.GetIndexParameters().Length == 0); // Filter out indexer properties
         }
 
