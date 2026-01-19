@@ -260,9 +260,18 @@ namespace com.IvanMurzak.ReflectorNet
                         return true;
                 }
 
-                // Check if it's a generic type and any type argument is blacklisted
+                // Check if it's a generic type
                 if (type.IsGenericType)
                 {
+                    // Check if the generic type definition is blacklisted (e.g., List<> blacklisted means List<int> is also blacklisted)
+                    if (!type.IsGenericTypeDefinition)
+                    {
+                        var genericDefinition = type.GetGenericTypeDefinition();
+                        if (_blacklistedTypes.ContainsKey(genericDefinition))
+                            return true;
+                    }
+
+                    // Check if any type argument is blacklisted
                     var genericArgs = type.GetGenericArguments();
                     for (int i = 0; i < genericArgs.Length; i++)
                     {
