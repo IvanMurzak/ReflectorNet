@@ -207,6 +207,177 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
             Assert.Equal(0, propCache.Count);
         }
 
+        #region Pointer Access Tests
+
+        // Test entity with pointer fields and properties
+        private unsafe class TestEntityWithPointers
+        {
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
+            public int PublicField;
+            public int* PointerField;
+            public void* VoidPointerField;
+#pragma warning restore CS0649
+            public int PublicProp { get; set; }
+            public unsafe int* PointerProp { get; set; }
+            public unsafe void* VoidPointerProp { get; set; }
+        }
+
+        // Converter that allows pointer access (default behavior)
+        private class PointerAllowedConverter : BaseReflectionConverter<TestEntityWithPointers>
+        {
+            public override bool AllowPointerFieldsAccess => true;
+            public override bool AllowPointerPropertiesAccess => true;
+
+            protected override SerializedMember InternalSerialize(
+                Reflector reflector, object? obj, Type type, string? name, bool recursive,
+                BindingFlags flags, int depth, Logs? logs, ILogger? logger, SerializationContext? context)
+                => new SerializedMember();
+
+            protected override bool SetValue(
+                Reflector reflector, ref object? instance, Type type, JsonElement? element,
+                int depth, Logs? logs, ILogger? logger)
+                => true;
+
+            public override bool SetField(
+                Reflector reflector, ref object? instance, Type type, FieldInfo field,
+                SerializedMember? member, int depth, Logs? logs, BindingFlags flags, ILogger? logger)
+                => true;
+
+            public override bool SetProperty(
+                Reflector reflector, ref object? instance, Type type, PropertyInfo prop,
+                SerializedMember? member, int depth, Logs? logs, BindingFlags flags, ILogger? logger)
+                => true;
+        }
+
+        // Converter that disallows pointer access
+        private class PointerDisallowedConverter : BaseReflectionConverter<TestEntityWithPointers>
+        {
+            public override bool AllowPointerFieldsAccess => false;
+            public override bool AllowPointerPropertiesAccess => false;
+
+            protected override SerializedMember InternalSerialize(
+                Reflector reflector, object? obj, Type type, string? name, bool recursive,
+                BindingFlags flags, int depth, Logs? logs, ILogger? logger, SerializationContext? context)
+                => new SerializedMember();
+
+            protected override bool SetValue(
+                Reflector reflector, ref object? instance, Type type, JsonElement? element,
+                int depth, Logs? logs, ILogger? logger)
+                => true;
+
+            public override bool SetField(
+                Reflector reflector, ref object? instance, Type type, FieldInfo field,
+                SerializedMember? member, int depth, Logs? logs, BindingFlags flags, ILogger? logger)
+                => true;
+
+            public override bool SetProperty(
+                Reflector reflector, ref object? instance, Type type, PropertyInfo prop,
+                SerializedMember? member, int depth, Logs? logs, BindingFlags flags, ILogger? logger)
+                => true;
+        }
+
+        [Fact]
+        public void AllowPointerFieldsAccess_WhenTrue_ShouldIncludePointerFields()
+        {
+            // Arrange
+            var converter = new PointerAllowedConverter();
+            var reflector = new Reflector();
+            var type = typeof(TestEntityWithPointers);
+            var flags = BindingFlags.Public | BindingFlags.Instance;
+
+            // Act
+            var fields = converter.GetSerializableFields(reflector, type, flags)?.ToList();
+
+            // Assert
+            Assert.NotNull(fields);
+            Assert.Equal(3, fields.Count); // PublicField, PointerField, VoidPointerField
+            Assert.Contains(fields, f => f.Name == nameof(TestEntityWithPointers.PublicField));
+            Assert.Contains(fields, f => f.Name == nameof(TestEntityWithPointers.PointerField));
+            Assert.Contains(fields, f => f.Name == nameof(TestEntityWithPointers.VoidPointerField));
+        }
+
+        [Fact]
+        public void AllowPointerFieldsAccess_WhenFalse_ShouldExcludePointerFields()
+        {
+            // Arrange
+            var converter = new PointerDisallowedConverter();
+            var reflector = new Reflector();
+            var type = typeof(TestEntityWithPointers);
+            var flags = BindingFlags.Public | BindingFlags.Instance;
+
+            // Act
+            var fields = converter.GetSerializableFields(reflector, type, flags)?.ToList();
+
+            // Assert
+            Assert.NotNull(fields);
+            Assert.Single(fields); // Only PublicField
+            Assert.Contains(fields, f => f.Name == nameof(TestEntityWithPointers.PublicField));
+            Assert.DoesNotContain(fields, f => f.Name == nameof(TestEntityWithPointers.PointerField));
+            Assert.DoesNotContain(fields, f => f.Name == nameof(TestEntityWithPointers.VoidPointerField));
+        }
+
+        [Fact]
+        public void AllowPointerPropertiesAccess_WhenTrue_ShouldIncludePointerProperties()
+        {
+            // Arrange
+            var converter = new PointerAllowedConverter();
+            var reflector = new Reflector();
+            var type = typeof(TestEntityWithPointers);
+            var flags = BindingFlags.Public | BindingFlags.Instance;
+
+            // Act
+            var props = converter.GetSerializableProperties(reflector, type, flags)?.ToList();
+
+            // Assert
+            Assert.NotNull(props);
+            Assert.Equal(3, props.Count); // PublicProp, PointerProp, VoidPointerProp
+            Assert.Contains(props, p => p.Name == nameof(TestEntityWithPointers.PublicProp));
+            Assert.Contains(props, p => p.Name == nameof(TestEntityWithPointers.PointerProp));
+            Assert.Contains(props, p => p.Name == nameof(TestEntityWithPointers.VoidPointerProp));
+        }
+
+        [Fact]
+        public void AllowPointerPropertiesAccess_WhenFalse_ShouldExcludePointerProperties()
+        {
+            // Arrange
+            var converter = new PointerDisallowedConverter();
+            var reflector = new Reflector();
+            var type = typeof(TestEntityWithPointers);
+            var flags = BindingFlags.Public | BindingFlags.Instance;
+
+            // Act
+            var props = converter.GetSerializableProperties(reflector, type, flags)?.ToList();
+
+            // Assert
+            Assert.NotNull(props);
+            Assert.Single(props); // Only PublicProp
+            Assert.Contains(props, p => p.Name == nameof(TestEntityWithPointers.PublicProp));
+            Assert.DoesNotContain(props, p => p.Name == nameof(TestEntityWithPointers.PointerProp));
+            Assert.DoesNotContain(props, p => p.Name == nameof(TestEntityWithPointers.VoidPointerProp));
+        }
+
+        [Fact]
+        public void AllowPointerFieldsAccess_DefaultValue_ShouldBeTrue()
+        {
+            // Arrange
+            var converter = new TestableReflectionConverter();
+
+            // Assert
+            Assert.True(converter.AllowPointerFieldsAccess);
+        }
+
+        [Fact]
+        public void AllowPointerPropertiesAccess_DefaultValue_ShouldBeTrue()
+        {
+            // Arrange
+            var converter = new TestableReflectionConverter();
+
+            // Assert
+            Assert.True(converter.AllowPointerPropertiesAccess);
+        }
+
+        #endregion
+
         // Helper methods to access private caches via reflection
         private LruCache<(Type, BindingFlags), FieldInfo[]> GetFieldCache(object converter)
         {
