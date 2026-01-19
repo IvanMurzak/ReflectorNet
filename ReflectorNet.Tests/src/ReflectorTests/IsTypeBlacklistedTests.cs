@@ -515,6 +515,178 @@ namespace com.IvanMurzak.ReflectorNet.Tests
 
         #endregion
 
+        #region Generic Type Definition Blacklisting Tests
+
+        [Fact]
+        public void IsTypeBlacklisted_ClosedGenericBlacklisted_OtherClosedTypesNotAffected()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(List<int>)); // Only blacklist List<int>
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(List<int>)));     // Exact match - blacklisted
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(List<string>))); // Different closed type - NOT blacklisted
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(List<object>))); // Different closed type - NOT blacklisted
+
+            _output.WriteLine("Blacklisting List<int> does not affect List<string> or List<object>");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_GenericTypeDefinitionBlacklisted_AllClosedTypesBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(List<>)); // Blacklist the generic type definition
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(List<int>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(List<string>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(List<object>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(List<BlacklistedBaseClass>)));
+
+            _output.WriteLine("Blacklisting List<> blacklists all List<T> types");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_GenericTypeDefinitionBlacklisted_OtherGenericFamiliesNotAffected()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(List<>)); // Only blacklist List<>
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(List<int>)));              // List<> family - blacklisted
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(Dictionary<string, int>))); // Different family - NOT blacklisted
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(HashSet<int>)));           // Different family - NOT blacklisted
+
+            _output.WriteLine("Blacklisting List<> does not affect Dictionary<,> or HashSet<>");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_DictionaryDefinitionBlacklisted_AllClosedTypesBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(Dictionary<,>)); // Blacklist Dictionary<,>
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(Dictionary<string, int>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(Dictionary<int, string>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(Dictionary<object, object>)));
+
+            _output.WriteLine("Blacklisting Dictionary<,> blacklists all Dictionary<TKey, TValue> types");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_NestedGenericWithBlacklistedDefinition_ReturnsTrue()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(List<>)); // Blacklist List<>
+
+            // Act - Dictionary contains List<int> as a type argument
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(Dictionary<string, List<int>>));
+
+            // Assert
+            Assert.True(result);
+            _output.WriteLine("Dictionary<string, List<int>> is blacklisted when List<> is blacklisted");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_GenericWrapperDefinitionBlacklisted_CustomClassBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(GenericWrapper<>)); // Blacklist our custom GenericWrapper<>
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(GenericWrapper<int>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(GenericWrapper<string>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(GenericWrapper<BlacklistedBaseClass>)));
+
+            _output.WriteLine("Blacklisting GenericWrapper<> blacklists all GenericWrapper<T> types");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_MultiGenericWrapperDefinitionBlacklisted_AllClosedTypesBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(MultiGenericWrapper<,>)); // Blacklist MultiGenericWrapper<,>
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(MultiGenericWrapper<int, string>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(MultiGenericWrapper<string, int>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(MultiGenericWrapper<object, object>)));
+
+            _output.WriteLine("Blacklisting MultiGenericWrapper<,> blacklists all MultiGenericWrapper<T1, T2> types");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_GenericTypeDefinitionItself_ReturnsTrue()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(List<>));
+
+            // Act - Check if the open generic type itself is blacklisted
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(List<>));
+
+            // Assert
+            Assert.True(result);
+            _output.WriteLine("The generic type definition List<> itself is blacklisted");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ArrayOfBlacklistedGenericDefinition_ReturnsTrue()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(List<>));
+
+            // Act - Array of List<int> where List<> is blacklisted
+            var result = reflector.Converters.IsTypeBlacklisted(typeof(List<int>[]));
+
+            // Assert
+            Assert.True(result);
+            _output.WriteLine("List<int>[] is blacklisted when List<> is blacklisted");
+        }
+
+#if NET5_0_OR_GREATER
+        [Fact]
+        public void IsTypeBlacklisted_SpanDefinitionBlacklisted_AllSpanTypesBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(Span<>)); // Blacklist Span<>
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(Span<int>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(Span<byte>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(Span<char>)));
+
+            _output.WriteLine("Blacklisting Span<> blacklists all Span<T> types");
+        }
+
+        [Fact]
+        public void IsTypeBlacklisted_ReadOnlySpanDefinitionBlacklisted_AllReadOnlySpanTypesBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            reflector.Converters.BlacklistType(typeof(ReadOnlySpan<>)); // Blacklist ReadOnlySpan<>
+
+            // Act & Assert
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(ReadOnlySpan<int>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(ReadOnlySpan<byte>)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(ReadOnlySpan<char>)));
+
+            _output.WriteLine("Blacklisting ReadOnlySpan<> blacklists all ReadOnlySpan<T> types");
+        }
+#endif
+
+        #endregion
+
         #region Nested Generic and Array Combinations
 
         [Fact]
