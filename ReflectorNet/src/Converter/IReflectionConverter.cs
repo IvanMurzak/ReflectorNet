@@ -43,6 +43,20 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// </summary>
         bool AllowCascadePropertiesConversion { get; }
 
+        /// <summary>
+        /// Gets a value indicating whether this converter should access pointer fields.
+        /// When true, the converter can access pointer fields.
+        /// When false, the converter can only access public fields.
+        /// </summary>
+        bool AllowPointerFieldsAccess { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether this converter should access pointer properties.
+        /// When true, the converter can access pointer properties.
+        /// When false, the converter can only access public properties.
+        /// </summary>
+        bool AllowPointerPropertiesAccess { get; }
+
         int SerializationPriority(Type type, ILogger? logger = null);
 
         object? Deserialize(

@@ -104,6 +104,20 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         public virtual bool AllowCascadePropertiesConversion => true;
 
         /// <summary>
+        /// Gets a value indicating whether this converter should access pointer fields.
+        /// When true, the converter can access pointer fields.
+        /// When false, the converter can only access public fields.
+        /// </summary>
+        public virtual bool AllowPointerFieldsAccess => true;
+
+        /// <summary>
+        /// Gets a value indicating whether this converter should access pointer properties.
+        /// When true, the converter can access pointer properties.
+        /// When false, the converter can only access public properties.
+        /// </summary>
+        public virtual bool AllowPointerPropertiesAccess => true;
+
+        /// <summary>
         /// Calculates the priority score for this converter when handling the specified type.
         /// Higher scores indicate stronger compatibility and preference for handling the type.
         /// This method implements a distance-based scoring system where closer type relationships
@@ -172,10 +186,15 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return objType.GetFields(flags)
+            var result = objType.GetFields(flags)
+                .Where(field => field.IsPublic)
                 .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null)
-                .Where(field => field.IsPublic);
+                .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null);
+
+            if (!AllowPointerFieldsAccess)
+                result = result.Where(field => !field.FieldType.IsPointer);
+
+            return result;
         }
 
         /// <summary>
@@ -217,10 +236,15 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return objType.GetProperties(flags)
+            var result = objType.GetProperties(flags)
                 .Where(prop => prop.CanRead)
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.GetIndexParameters().Length == 0); // Filter out indexer properties
+
+            if (!AllowPointerPropertiesAccess)
+                result = result.Where(prop => !prop.PropertyType.IsPointer);
+
+            return result;
         }
 
         public virtual IEnumerable<string> GetAdditionalSerializableFields(
