@@ -65,21 +65,22 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             foreach (var field in fields)
             {
-                if (reflector.Converters.IsTypeBlacklisted(field.FieldType))
+                var fieldType = field.FieldType;
+
+                if (reflector.Converters.IsTypeBlacklisted(fieldType))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Skipping serialization of field '{fieldName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth + 1), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Serializing field '{fieldName}' of type '{type}' in '{objType}'.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth + 1), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
 
                     var value = field.GetValue(obj);
-                    var fieldType = field.FieldType;
 
                     var serialized = reflector.Serialize(
                         obj: value,
@@ -100,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     // skip inaccessible field
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                         logger.LogWarning(ex.GetBaseException(), "{padding}Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Converter: {converter}. Path: {path}",
-                             StringUtils.GetPadding(depth + 1), field.Name, field.FieldType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
+                             StringUtils.GetPadding(depth + 1), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
                 }
             }
             return serializedFields;
@@ -124,21 +125,22 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             foreach (var prop in properties)
             {
-                if (reflector.Converters.IsTypeBlacklisted(prop.PropertyType))
+                var propType = prop.PropertyType;
+
+                if (reflector.Converters.IsTypeBlacklisted(propType))
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Skipping serialization of property '{propertyName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth + 1), prop.Name, propType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Serializing property '{propertyName}' of type '{type}' in '{objType}'.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth + 1), prop.Name, propType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
 
                     var value = prop.GetValue(obj);
-                    var propType = prop.PropertyType;
 
                     var serialized = reflector.Serialize(
                         obj: value,
@@ -159,7 +161,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     // skip inaccessible property
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                         logger.LogWarning(ex.GetBaseException(), "{padding}Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Converter: {converter}. Path: {path}",
-                             StringUtils.GetPadding(depth + 1), prop.Name, prop.PropertyType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
+                             StringUtils.GetPadding(depth + 1), prop.Name, propType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
                 }
             }
             return serializedProperties;
