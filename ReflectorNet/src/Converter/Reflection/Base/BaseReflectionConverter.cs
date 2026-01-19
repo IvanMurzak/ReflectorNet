@@ -104,6 +104,20 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         public virtual bool AllowCascadePropertiesConversion => true;
 
         /// <summary>
+        /// Gets a value indicating whether this converter should include pointer-type fields during serialization.
+        /// When true, pointer-type fields may be accessed and serialized.
+        /// When false, pointer-type fields are excluded from serialization while non-pointer public fields remain accessible.
+        /// </summary>
+        public virtual bool AllowPointerFieldsAccess => true;
+
+        /// <summary>
+        /// Gets a value indicating whether this converter should include pointer-type properties during serialization.
+        /// When true, pointer-type properties may be accessed and serialized.
+        /// When false, pointer-type properties are excluded from serialization while non-pointer public properties remain accessible.
+        /// </summary>
+        public virtual bool AllowPointerPropertiesAccess => true;
+
+        /// <summary>
         /// Calculates the priority score for this converter when handling the specified type.
         /// Higher scores indicate stronger compatibility and preference for handling the type.
         /// This method implements a distance-based scoring system where closer type relationships
@@ -172,10 +186,15 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return objType.GetFields(flags)
+            var result = objType.GetFields(flags)
+                .Where(field => field.IsPublic)
                 .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() == null)
-                .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null)
-                .Where(field => field.IsPublic);
+                .Where(field => field.GetCustomAttribute<NonSerializedAttribute>() == null);
+
+            if (!AllowPointerFieldsAccess)
+                result = result.Where(field => !field.FieldType.IsPointer);
+
+            return result;
         }
 
         /// <summary>
@@ -217,10 +236,15 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
-            return objType.GetProperties(flags)
+            var result = objType.GetProperties(flags)
                 .Where(prop => prop.CanRead)
                 .Where(prop => prop.GetCustomAttribute<ObsoleteAttribute>() == null)
                 .Where(prop => prop.GetIndexParameters().Length == 0); // Filter out indexer properties
+
+            if (!AllowPointerPropertiesAccess)
+                result = result.Where(prop => !prop.PropertyType.IsPointer);
+
+            return result;
         }
 
         public virtual IEnumerable<string> GetAdditionalSerializableFields(
