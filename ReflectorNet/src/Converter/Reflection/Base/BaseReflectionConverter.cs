@@ -104,16 +104,16 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         public virtual bool AllowCascadePropertiesConversion => true;
 
         /// <summary>
-        /// Gets a value indicating whether this converter should access pointer fields.
-        /// When true, the converter can access pointer fields.
-        /// When false, the converter can only access public fields.
+        /// Gets a value indicating whether this converter should include pointer-type fields during serialization.
+        /// When true, pointer-type fields may be accessed and serialized.
+        /// When false, pointer-type fields are excluded from serialization while non-pointer public fields remain accessible.
         /// </summary>
         public virtual bool AllowPointerFieldsAccess => true;
 
         /// <summary>
-        /// Gets a value indicating whether this converter should access pointer properties.
-        /// When true, the converter can access pointer properties.
-        /// When false, the converter can only access public properties.
+        /// Gets a value indicating whether this converter should include pointer-type properties during serialization.
+        /// When true, pointer-type properties may be accessed and serialized.
+        /// When false, pointer-type properties are excluded from serialization while non-pointer public properties remain accessible.
         /// </summary>
         public virtual bool AllowPointerPropertiesAccess => true;
 
