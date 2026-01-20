@@ -39,7 +39,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             SerializationContext? context = null)
         {
             if (obj == null)
-                return SerializedMember.FromJson(type, json: null, name: name);
+                return SerializedMember.Null(type, name);
 
             return SerializedMember.FromValue(reflector, type, obj, name: name);
         }

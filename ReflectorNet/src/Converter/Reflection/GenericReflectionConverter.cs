@@ -30,7 +30,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             SerializationContext? context = null)
         {
             if (obj == null)
-                return SerializedMember.FromJson(type, json: null, name: name);
+                return SerializedMember.Null(type, name);
 
             var isStruct = type.IsValueType && !type.IsPrimitive && !type.IsEnum;
             if (type.IsClass || isStruct)
@@ -45,7 +45,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             reflector: reflector,
                             obj: obj,
                             flags: flags,
-                            depth: depth,
+                            depth: depth + 1,
                             logs: logs,
                             logger: logger,
                             context: context),
@@ -53,7 +53,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             reflector: reflector,
                             obj: obj,
                             flags: flags,
-                            depth: depth,
+                            depth: depth + 1,
                             logs: logs,
                             logger: logger,
                             context: context),
