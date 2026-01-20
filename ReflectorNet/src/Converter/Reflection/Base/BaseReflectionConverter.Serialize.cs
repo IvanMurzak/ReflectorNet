@@ -71,24 +71,24 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Skipping serialization of field '{fieldName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Serializing field '{fieldName}' of type '{type}' in '{objType}'.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
 
                     var value = field.GetValue(obj);
 
-                    var serialized = reflector.Serialize(
-                        obj: value,
-                        fallbackType: fieldType,
-                        name: field.Name,
-                        recursive: AllowCascadeFieldsConversion,
+                    var serialized = SerializeField(
+                        reflector: reflector,
+                        obj: obj,
+                        field: field,
+                        value: value,
                         flags: flags,
-                        depth: depth + 1,
+                        depth: depth,
                         logs: logs,
                         logger: logger,
                         context: context);
@@ -101,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     // skip inaccessible field
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                         logger.LogWarning(ex.GetBaseException(), "{padding}Failed to serialize field '{fieldName}' of type '{type}' in '{objType}'. Converter: {converter}. Path: {path}",
-                             StringUtils.GetPadding(depth + 1), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
+                             StringUtils.GetPadding(depth), field.Name, fieldType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
                 }
             }
             return serializedFields;
@@ -131,24 +131,24 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Skipping serialization of property '{propertyName}' of type '{type}' in '{objType}' because its type is blacklisted.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), prop.Name, propType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth), prop.Name, propType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
                     continue;
                 }
                 try
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
                         logger.LogTrace("{padding}Serializing property '{propertyName}' of type '{type}' in '{objType}'.\nPath: {path}",
-                            StringUtils.GetPadding(depth + 1), prop.Name, propType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
+                            StringUtils.GetPadding(depth), prop.Name, propType.GetTypeId(), objType.GetTypeId(), context?.GetPath(obj));
 
                     var value = prop.GetValue(obj);
 
-                    var serialized = reflector.Serialize(
-                        obj: value,
-                        fallbackType: propType,
-                        name: prop.Name,
-                        recursive: AllowCascadePropertiesConversion,
+                    var serialized = SerializeProperty(
+                        reflector: reflector,
+                        obj: obj,
+                        property: prop,
+                        value: value,
                         flags: flags,
-                        depth: depth + 1,
+                        depth: depth,
                         logs: logs,
                         logger: logger,
                         context: context);
@@ -161,7 +161,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     // skip inaccessible property
                     if (logger?.IsEnabled(LogLevel.Warning) == true)
                         logger.LogWarning(ex.GetBaseException(), "{padding}Failed to serialize property '{propertyName}' of type '{type}' in '{objType}'. Converter: {converter}. Path: {path}",
-                             StringUtils.GetPadding(depth + 1), prop.Name, propType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
+                             StringUtils.GetPadding(depth), prop.Name, propType.GetTypeId(), objType.GetTypeId(), GetType().GetTypeShortName(), context?.GetPath(obj));
                 }
             }
             return serializedProperties;
@@ -178,5 +178,51 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Logs? logs = null,
             ILogger? logger = null,
             SerializationContext? context = null);
+
+        protected virtual SerializedMember SerializeField(
+            Reflector reflector,
+            object obj,
+            FieldInfo field,
+            object? value,
+            BindingFlags flags,
+            int depth,
+            Logs? logs,
+            ILogger? logger,
+            SerializationContext? context)
+        {
+            return reflector.Serialize(
+                obj: value,
+                fallbackType: field.FieldType,
+                name: field.Name,
+                recursive: AllowCascadeFieldsConversion,
+                flags: flags,
+                depth: depth,
+                logs: logs,
+                logger: logger,
+                context: context);
+        }
+
+        protected virtual SerializedMember SerializeProperty(
+            Reflector reflector,
+            object obj,
+            PropertyInfo property,
+            object? value,
+            BindingFlags flags,
+            int depth,
+            Logs? logs,
+            ILogger? logger,
+            SerializationContext? context)
+        {
+            return reflector.Serialize(
+                obj: value,
+                fallbackType: property.PropertyType,
+                name: property.Name,
+                recursive: AllowCascadePropertiesConversion,
+                flags: flags,
+                depth: depth,
+                logs: logs,
+                logger: logger,
+                context: context);
+        }
     }
 }
