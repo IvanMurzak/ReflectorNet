@@ -160,6 +160,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             catch
             {
+                // Ignore exceptions from Assembly.GetType
             }
 
             if (type != null)

@@ -163,7 +163,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// <param name="assemblyNamePrefix">The prefix that assembly names must start with (e.g., "MyCompany.MyProduct").</param>
             /// <param name="typeFullName">The full name of the type to blacklist (e.g., "MyCompany.MyProduct.SomeClass").</param>
             /// <returns>True if the type was resolved and added; false if the type could not be resolved or was already blacklisted.</returns>
-            public bool BlacklistType(string assemblyNamePrefix, string typeFullName)
+            public bool BlacklistTypeInAssembly(string assemblyNamePrefix, string typeFullName)
             {
                 if (string.IsNullOrEmpty(assemblyNamePrefix) || string.IsNullOrEmpty(typeFullName))
                     return false;
@@ -204,7 +204,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// <param name="assemblyNamePrefix">The prefix that assembly names must start with (e.g., "MyCompany.MyProduct").</param>
             /// <param name="typeFullNames">The full names of the types to blacklist.</param>
             /// <returns>True if at least one type was resolved and added; false if all types could not be resolved or were already blacklisted.</returns>
-            public bool BlacklistType(string assemblyNamePrefix, params string[] typeFullNames)
+            public bool BlacklistTypesInAssembly(string assemblyNamePrefix, params string[] typeFullNames)
             {
                 if (string.IsNullOrEmpty(assemblyNamePrefix))
                     return false;
@@ -217,8 +217,11 @@ namespace com.IvanMurzak.ReflectorNet
                     foreach (var typeFullName in typeFullNames)
                     {
                         var type = TypeUtils.GetType(assembly, typeFullName);
-                        if (type != null && _blacklistedTypes.TryAdd(type, 0))
-                            changed = true;
+                        if (type != null)
+                        {
+                            if (_blacklistedTypes.TryAdd(type, 0))
+                                changed = true;
+                        }
                     }
                 }
                 if (changed)
