@@ -498,5 +498,202 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
         #endregion
 
+        #region GetAssembliesStartingWith - Valid Prefix Tests
+
+        [Fact]
+        public void GetAssembliesStartingWith_SystemPrefix_ReturnsSystemAssemblies()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith("System").ToList();
+
+            // Assert
+            Assert.NotEmpty(assemblies);
+            Assert.All(assemblies, a => Assert.StartsWith("System", a.GetName().Name));
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_ReflectorNetPrefix_ReturnsReflectorNetAssemblies()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith("ReflectorNet").ToList();
+
+            // Assert
+            Assert.NotEmpty(assemblies);
+            Assert.All(assemblies, a => Assert.StartsWith("ReflectorNet", a.GetName().Name));
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_ExactAssemblyName_ReturnsSingleAssembly()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith("ReflectorNet.Tests").ToList();
+
+            // Assert
+            Assert.NotEmpty(assemblies);
+            Assert.Contains(assemblies, a => a.GetName().Name == "ReflectorNet.Tests");
+        }
+
+        #endregion
+
+        #region GetAssembliesStartingWith - Empty/Null Prefix Tests
+
+        [Fact]
+        public void GetAssembliesStartingWith_NullPrefix_ReturnsEmpty()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith(null!).ToList();
+
+            // Assert
+            Assert.Empty(assemblies);
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_EmptyPrefix_ReturnsEmpty()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith(string.Empty).ToList();
+
+            // Assert
+            Assert.Empty(assemblies);
+        }
+
+        #endregion
+
+        #region GetAssembliesStartingWith - No Match Tests
+
+        [Fact]
+        public void GetAssembliesStartingWith_NonExistentPrefix_ReturnsEmpty()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith("NonExistentAssemblyPrefix12345").ToList();
+
+            // Assert
+            Assert.Empty(assemblies);
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_PartialMatchInMiddle_ReturnsEmpty()
+        {
+            // "ystem" is part of "System" but not at the start
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith("ystem").ToList();
+
+            // Assert
+            Assert.Empty(assemblies);
+        }
+
+        #endregion
+
+        #region GetAssembliesStartingWith - Case Sensitivity Tests
+
+        [Fact]
+        public void GetAssembliesStartingWith_DefaultComparison_IsCaseSensitive()
+        {
+            // Act
+            var upperCaseAssemblies = AssemblyUtils.GetAssembliesStartingWith("SYSTEM").ToList();
+            var properCaseAssemblies = AssemblyUtils.GetAssembliesStartingWith("System").ToList();
+
+            // Assert - Default is Ordinal (case-sensitive), so "SYSTEM" should not match "System.*"
+            Assert.Empty(upperCaseAssemblies);
+            Assert.NotEmpty(properCaseAssemblies);
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_OrdinalIgnoreCase_MatchesRegardlessOfCase()
+        {
+            // Act
+            var upperCaseAssemblies = AssemblyUtils.GetAssembliesStartingWith("SYSTEM", StringComparison.OrdinalIgnoreCase).ToList();
+            var lowerCaseAssemblies = AssemblyUtils.GetAssembliesStartingWith("system", StringComparison.OrdinalIgnoreCase).ToList();
+            var mixedCaseAssemblies = AssemblyUtils.GetAssembliesStartingWith("SyStEm", StringComparison.OrdinalIgnoreCase).ToList();
+
+            // Assert
+            Assert.NotEmpty(upperCaseAssemblies);
+            Assert.NotEmpty(lowerCaseAssemblies);
+            Assert.NotEmpty(mixedCaseAssemblies);
+            Assert.Equal(upperCaseAssemblies.Count, lowerCaseAssemblies.Count);
+            Assert.Equal(upperCaseAssemblies.Count, mixedCaseAssemblies.Count);
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_Ordinal_IsCaseSensitive()
+        {
+            // Act
+            var upperCaseAssemblies = AssemblyUtils.GetAssembliesStartingWith("SYSTEM", StringComparison.Ordinal).ToList();
+            var properCaseAssemblies = AssemblyUtils.GetAssembliesStartingWith("System", StringComparison.Ordinal).ToList();
+
+            // Assert
+            Assert.Empty(upperCaseAssemblies);
+            Assert.NotEmpty(properCaseAssemblies);
+        }
+
+        #endregion
+
+        #region GetAssembliesStartingWith - Enumerable Behavior Tests
+
+        [Fact]
+        public void GetAssembliesStartingWith_ReturnsLazyEnumerable_CanBeIteratedMultipleTimes()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith("System");
+
+            var firstIteration = assemblies.ToList();
+            var secondIteration = assemblies.ToList();
+
+            // Assert
+            Assert.Equal(firstIteration.Count, secondIteration.Count);
+            Assert.All(firstIteration, a => Assert.Contains(a, secondIteration));
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_ReturnsDistinctAssemblies()
+        {
+            // Act
+            var assemblies = AssemblyUtils.GetAssembliesStartingWith("System").ToList();
+            var distinctAssemblies = assemblies.Distinct().ToList();
+
+            // Assert
+            Assert.Equal(assemblies.Count, distinctAssemblies.Count);
+        }
+
+        [Fact]
+        public void GetAssembliesStartingWith_ConcurrentEnumeration_Succeeds()
+        {
+            // Arrange
+            var counts = new int[5];
+
+            // Act - enumerate from multiple threads simultaneously
+            Parallel.For(0, 5, i =>
+            {
+                counts[i] = AssemblyUtils.GetAssembliesStartingWith("System").Count();
+            });
+
+            // Assert - all counts should be positive and equal
+            Assert.All(counts, c => Assert.True(c > 0));
+            Assert.All(counts, c => Assert.Equal(counts[0], c));
+        }
+
+        #endregion
+
+        #region GetAssembliesStartingWith - Different StringComparison Options
+
+        [Theory]
+        [InlineData(StringComparison.Ordinal)]
+        [InlineData(StringComparison.OrdinalIgnoreCase)]
+        [InlineData(StringComparison.CurrentCulture)]
+        [InlineData(StringComparison.CurrentCultureIgnoreCase)]
+        [InlineData(StringComparison.InvariantCulture)]
+        [InlineData(StringComparison.InvariantCultureIgnoreCase)]
+        public void GetAssembliesStartingWith_AllComparisonTypes_DoNotThrow(StringComparison comparison)
+        {
+            // Act
+            var exception = Record.Exception(() =>
+                AssemblyUtils.GetAssembliesStartingWith("System", comparison).ToList());
+
+            // Assert
+            Assert.Null(exception);
+        }
+
+        #endregion
+
     }
 }

@@ -39,6 +39,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         // LRU cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
         private static readonly LruCache<string, Type?> _typeCache = new(TypeCacheCapacity);
 
+        // LRU cache for assembly-prefixed type lookups (thread-safe)
+        // Key format: "assemblyPrefix|typeName"
+        private static readonly LruCache<string, Type?> _assemblyTypeCache = new(TypeCacheCapacity);
+
         // LRU cache for enumerable item types to avoid repeated interface/inheritance walks (thread-safe)
         private static readonly LruCache<Type, Type?> _enumerableItemTypeCache = new(EnumerableItemTypeCacheCapacity);
 
@@ -60,6 +64,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             logger?.LogDebug("Clearing enumerable item type cache with {count} entries (capacity: {capacity}).",
                 _enumerableItemTypeCache.Count, _enumerableItemTypeCache.Capacity);
             _enumerableItemTypeCache.Clear();
+        }
+
+        /// <summary>
+        /// Clears the assembly-prefixed type resolution cache.
+        /// </summary>
+        public static void ClearAssemblyTypeCache(ILogger? logger = null)
+        {
+            logger?.LogDebug("Clearing assembly-prefixed type resolution cache with {count} entries (capacity: {capacity}).",
+                _assemblyTypeCache.Count, _assemblyTypeCache.Capacity);
+            _assemblyTypeCache.Clear();
         }
 
         /// <summary>
@@ -142,6 +156,104 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
+        /// Resolves a <see cref="Type"/> from its string representation, searching only in assemblies
+        /// whose names start with the specified prefix.
+        /// </summary>
+        /// <remarks>
+        /// This method attempts to resolve types using multiple strategies in order:
+        /// <list type="number">
+        /// <item><description>Built-in <see cref="Type.GetType(string)"/> with assembly verification</description></item>
+        /// <item><description>Array type resolution (e.g., "Namespace.Type[]", "int[,]")</description></item>
+        /// <item><description>C#-style generic types (e.g., "List&lt;int&gt;", "Dictionary&lt;string, int&gt;")</description></item>
+        /// <item><description>CLR-style generic types (e.g., "System.Collections.Generic.List`1[[System.Int32]]")</description></item>
+        /// <item><description>Search across assemblies matching the prefix by FullName, AssemblyQualifiedName, or TypeId</description></item>
+        /// </list>
+        /// Results are cached for performance. Use <see cref="ClearAssemblyTypeCache"/> to clear the cache.
+        /// </remarks>
+        /// <param name="assemblyName">The assembly name prefix to filter assemblies. If null or empty, delegates to <see cref="GetType(string?)"/>.</param>
+        /// <param name="typeName">The type name to resolve. Can be a simple name, full name, assembly-qualified name,
+        /// or C#-style generic syntax.</param>
+        /// <returns>The resolved <see cref="Type"/>, or <c>null</c> if the type cannot be found.</returns>
+        public static Type? GetType(string? assemblyName, string? typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName))
+                return null;
+
+            // If no assembly filter, delegate to the standard method
+            if (string.IsNullOrEmpty(assemblyName))
+                return GetType(typeName);
+
+            // Check cache first (key format: "assemblyPrefix|typeName")
+            var cacheKey = $"{assemblyName}|{typeName}";
+            if (_assemblyTypeCache.TryGetValue(cacheKey, out var cachedType))
+                return cachedType;
+
+            // First try built-in Type.GetType() which handles many formats
+            Type? type = null;
+            try
+            {
+                type = Type.GetType(typeName, throwOnError: false);
+                // Verify the resolved type is in a matching assembly
+                if (type != null && !IsTypeInMatchingAssembly(type, assemblyName))
+                    type = null;
+            }
+            catch
+            {
+                // Ignore exceptions (e.g. invalid assembly name) and try other resolution methods
+            }
+
+            if (type != null)
+            {
+                _assemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            // Try resolving array types (e.g., "Namespace.Type[]")
+            type = TryResolveArrayType(assemblyName, typeName);
+            if (type != null)
+            {
+                _assemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            // Try resolving C#-style generic types (e.g., "Namespace.Generic<TypeArg>" or "Namespace.Generic<TypeArg1, TypeArg2>")
+            type = TryResolveCSharpGenericType(assemblyName, typeName);
+            if (type != null)
+            {
+                _assemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            // Try resolving generic types (e.g., "Namespace.Generic`1[[TypeArg]]")
+            type = TryResolveClassicGenericType(assemblyName, typeName);
+            if (type != null)
+            {
+                _assemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            // Search in types from matching assemblies only
+            type = AssemblyUtils.GetTypesStartingWith(assemblyName).FirstOrDefault(t =>
+                typeName == t.FullName ||
+                typeName == t.AssemblyQualifiedName ||
+                typeName == t.GetTypeId());
+
+            // Caching the result (even if null)
+            _assemblyTypeCache[cacheKey] = type;
+
+            return type;
+        }
+
+        /// <summary>
+        /// Checks if a type belongs to an assembly whose name starts with the specified prefix.
+        /// </summary>
+        private static bool IsTypeInMatchingAssembly(Type type, string assemblyPrefix)
+        {
+            var assemblyName = type.Assembly.GetName().Name;
+            return assemblyName != null && assemblyName.StartsWith(assemblyPrefix, StringComparison.Ordinal);
+        }
+
+        /// <summary>
         /// Attempts to resolve a simple (non-generic, non-array) type by name.
         /// </summary>
         private static Type? ResolveSimpleType(string name)
@@ -151,6 +263,22 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return type;
 
             return AssemblyUtils.AllTypes.FirstOrDefault(t =>
+                name == t.AssemblyQualifiedName ||
+                name == t.FullName ||
+                name == t.Name);
+        }
+
+        /// <summary>
+        /// Attempts to resolve a simple (non-generic, non-array) type by name,
+        /// searching only in assemblies whose names start with the specified prefix.
+        /// </summary>
+        private static Type? ResolveSimpleType(string assemblyPrefix, string name)
+        {
+            var type = Type.GetType(name, throwOnError: false);
+            if (type != null && IsTypeInMatchingAssembly(type, assemblyPrefix))
+                return type;
+
+            return AssemblyUtils.GetTypesStartingWith(assemblyPrefix).FirstOrDefault(t =>
                 name == t.AssemblyQualifiedName ||
                 name == t.FullName ||
                 name == t.Name);
@@ -177,6 +305,36 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var commas = content.Length;
             var elementTypeName = typeName.Substring(0, lastOpenBracket);
             var elementType = GetType(elementTypeName);
+
+            if (elementType == null) return null;
+
+            return commas == 0
+                ? elementType.MakeArrayType()
+                : elementType.MakeArrayType(commas + 1);
+        }
+
+        /// <summary>
+        /// Attempts to resolve array type names (e.g., "Namespace.Type[]"),
+        /// searching only in assemblies whose names start with the specified prefix.
+        /// </summary>
+        private static Type? TryResolveArrayType(string assemblyPrefix, string typeName)
+        {
+            if (!typeName.EndsWith("]"))
+                return null;
+
+            var lastOpenBracket = typeName.LastIndexOf('[');
+            if (lastOpenBracket < 0)
+                return null;
+
+            var suffix = typeName.Substring(lastOpenBracket);
+            // Check if content contains only commas
+            var content = suffix.Substring(1, suffix.Length - 2);
+            if (content.Length > 0 && content.Any(c => c != ','))
+                return null;
+
+            var commas = content.Length;
+            var elementTypeName = typeName.Substring(0, lastOpenBracket);
+            var elementType = GetType(assemblyPrefix, elementTypeName);
 
             if (elementType == null) return null;
 
@@ -273,6 +431,172 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     for (int i = 0; i < argNames.Length; i++)
                     {
                         var tempType = GetType(argNames[i]?.Trim());
+                        if (tempType == null) return null;
+                        nestedArgs[i] = tempType;
+                    }
+
+                    nextRemainingIndex = close + 1;
+                }
+                else
+                {
+                    // No generic args, but check if there are more separators
+                    var nextSep = remaining.IndexOfAny(new[] { '+', '.' });
+                    if (nextSep > 0)
+                    {
+                        nestedName = remaining.Substring(0, nextSep);
+                        nextRemainingIndex = nextSep;
+                    }
+                    else
+                    {
+                        nestedName = remaining;
+                        nextRemainingIndex = remaining.Length;
+                    }
+                }
+
+                // Find nested type
+                Type? nestedType;
+                Type[] allArgs;
+
+                if (nestedArgs != null)
+                {
+                    nestedType = currentType.GetNestedType($"{nestedName}`{nestedArgs.Length}");
+                    if (nestedType == null) return null;
+
+                    if (currentType.IsGenericType && !currentType.IsGenericTypeDefinition)
+                    {
+                        var parentArgs = currentType.GetGenericArguments();
+                        allArgs = new Type[parentArgs.Length + nestedArgs.Length];
+                        Array.Copy(parentArgs, allArgs, parentArgs.Length);
+                        Array.Copy(nestedArgs, 0, allArgs, parentArgs.Length, nestedArgs.Length);
+                    }
+                    else
+                    {
+                        allArgs = nestedArgs;
+                    }
+                }
+                else
+                {
+                    nestedType = currentType.GetNestedType(nestedName);
+                    if (nestedType == null) return null;
+
+                    allArgs = currentType.IsGenericType && !currentType.IsGenericTypeDefinition
+                        ? currentType.GetGenericArguments()
+                        : Type.EmptyTypes;
+                }
+
+                if (nestedType.IsGenericTypeDefinition)
+                {
+                    try
+                    {
+                        currentType = nestedType.GetGenericArguments().Length == allArgs.Length
+                            ? nestedType.MakeGenericType(allArgs)
+                            : nestedType;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    currentType = nestedType;
+                }
+
+                remaining = remaining.Substring(nextRemainingIndex);
+            }
+
+            return currentType;
+        }
+
+        /// <summary>
+        /// Attempts to resolve C#-style generic types,
+        /// searching only in assemblies whose names start with the specified prefix.
+        /// Handles formats like: "Namespace.Generic&lt;TypeArg&gt;" or "Namespace.Generic&lt;TypeArg1, TypeArg2&gt;"
+        /// Also handles nested types: "Namespace.Generic&lt;TypeArg&gt;+Nested" or "Namespace.Generic&lt;TypeArg&gt;+Nested&lt;TypeArg2&gt;"
+        /// Space after comma is optional.
+        /// </summary>
+        private static Type? TryResolveCSharpGenericType(string assemblyPrefix, string typeName)
+        {
+            // Find the opening angle bracket
+            var openBracketIndex = typeName.IndexOf('<');
+            if (openBracketIndex < 0)
+                return null;
+
+            // Find the matching closing angle bracket
+            var closeBracketIndex = FindMatchingCloseBracket(typeName, openBracketIndex);
+            if (closeBracketIndex < 0)
+                return null;
+
+            // Extract the base type name (everything before '<')
+            var baseTypeName = typeName.Substring(0, openBracketIndex);
+            if (string.IsNullOrWhiteSpace(baseTypeName))
+                return null;
+
+            // Extract the type arguments string (between '<' and '>')
+            var typeArgsString = typeName.Substring(openBracketIndex + 1, closeBracketIndex - openBracketIndex - 1);
+
+            // Parse the type arguments
+            var typeArgNames = ParseCSharpGenericArguments(typeArgsString);
+            if (typeArgNames == null || typeArgNames.Length == 0)
+                return null;
+
+            // Construct the generic type definition name (e.g., "Namespace.Generic`2")
+            var genericDefName = $"{baseTypeName}`{typeArgNames.Length}";
+
+            // Resolve the generic type definition
+            var genericDef = ResolveSimpleType(assemblyPrefix, genericDefName);
+            if (genericDef == null || !genericDef.IsGenericTypeDefinition)
+                return null;
+
+            // Resolve each type argument
+            var typeArgs = new Type[typeArgNames.Length];
+            for (int i = 0; i < typeArgNames.Length; i++)
+            {
+                var argType = GetType(assemblyPrefix, typeArgNames[i].Trim());
+                if (argType == null)
+                    return null;
+                typeArgs[i] = argType;
+            }
+
+            Type? currentType;
+            try
+            {
+                currentType = genericDef.MakeGenericType(typeArgs);
+            }
+            catch
+            {
+                return null;
+            }
+
+            // Handle nested types appended after the generic arguments
+            var remaining = typeName.Substring(closeBracketIndex + 1);
+            while (!string.IsNullOrEmpty(remaining))
+            {
+                if (!remaining.StartsWith("+") && !remaining.StartsWith("."))
+                    return null;
+
+                remaining = remaining.Substring(1); // Remove separator
+
+                // Check for generic args
+                var open = remaining.IndexOf('<');
+                string nestedName;
+                Type[]? nestedArgs = null;
+                int nextRemainingIndex;
+
+                if (open > 0)
+                {
+                    var close = FindMatchingCloseBracket(remaining, open);
+                    if (close < 0) return null;
+
+                    nestedName = remaining.Substring(0, open);
+                    var argsStr = remaining.Substring(open + 1, close - open - 1);
+                    var argNames = ParseCSharpGenericArguments(argsStr);
+                    if (argNames == null) return null;
+
+                    nestedArgs = new Type[argNames.Length];
+                    for (int i = 0; i < argNames.Length; i++)
+                    {
+                        var tempType = GetType(assemblyPrefix, argNames[i]?.Trim());
                         if (tempType == null) return null;
                         nestedArgs[i] = tempType;
                     }
@@ -460,6 +784,46 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
+        /// Attempts to resolve constructed generic types by parsing and reconstructing them,
+        /// searching only in assemblies whose names start with the specified prefix.
+        /// Handles formats like: "Namespace.Generic`1[[TypeArg, Assembly]]"
+        /// </summary>
+        private static Type? TryResolveClassicGenericType(string assemblyPrefix, string typeName)
+        {
+            // Find generic arity marker (backtick)
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex < 0)
+                return null;
+
+            // Find the start of generic arguments [[...]]
+            var argsStart = typeName.IndexOf("[[", backtickIndex);
+            if (argsStart < 0)
+                return null;
+
+            // Extract generic definition name (e.g., "Namespace.WrapperClass`1")
+            var genericDefName = typeName.Substring(0, argsStart);
+
+            // Resolve the generic type definition
+            var genericDef = ResolveSimpleType(assemblyPrefix, genericDefName);
+            if (genericDef == null || !genericDef.IsGenericTypeDefinition)
+                return null;
+
+            // Parse and resolve type arguments
+            var typeArgs = ParseGenericArguments(assemblyPrefix, typeName, argsStart);
+            if (typeArgs == null || typeArgs.Length != genericDef.GetGenericArguments().Length)
+                return null;
+
+            try
+            {
+                return genericDef.MakeGenericType(typeArgs);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Parses generic arguments from the [[Type1, Assembly], [Type2, Assembly]] format.
         /// The format uses double brackets where:
         /// - Outer [] wraps all type arguments
@@ -496,6 +860,73 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         if (!string.IsNullOrEmpty(argTypeName))
                         {
                             var argType = GetType(argTypeName);
+                            if (argType == null)
+                                return null;
+                            args.Add(argType);
+                        }
+                        currentArg.Clear();
+                    }
+                    else if (depth > 1)
+                    {
+                        // Append closing brackets for nested generics
+                        currentArg.Append(c);
+                    }
+                    else if (depth == 0)
+                    {
+                        break; // End of all arguments
+                    }
+                }
+                else if (c == ',' && depth == 1)
+                {
+                    // Separator between type arguments at the top level - skip it
+                }
+                else if (depth > 1)
+                {
+                    currentArg.Append(c);
+                }
+            }
+
+            return args.Count > 0 ? args.ToArray() : null;
+        }
+
+        /// <summary>
+        /// Parses generic arguments from the [[Type1, Assembly], [Type2, Assembly]] format,
+        /// searching only in assemblies whose names start with the specified prefix.
+        /// The format uses double brackets where:
+        /// - Outer [] wraps all type arguments
+        /// - Inner [] wraps each individual type argument
+        /// - Nested generic types have their own [[]] inside
+        /// </summary>
+        private static Type[]? ParseGenericArguments(string assemblyPrefix, string typeName, int startIndex)
+        {
+            var args = new List<Type>();
+            var depth = 0;
+            var currentArg = new System.Text.StringBuilder();
+
+            for (int i = startIndex; i < typeName.Length; i++)
+            {
+                var c = typeName[i];
+
+                if (c == '[')
+                {
+                    depth++;
+                    // Only append brackets for nested generics (depth > 2)
+                    // depth 1 = outer wrapper for all args
+                    // depth 2 = wrapper for individual type arg (don't include)
+                    // depth 3+ = nested generic brackets (include)
+                    if (depth > 2)
+                        currentArg.Append(c);
+                }
+                else if (c == ']')
+                {
+                    depth--;
+                    if (depth == 1)
+                    {
+                        // End of one type argument
+                        var argTypeName = currentArg.ToString().Trim();
+                        if (!string.IsNullOrEmpty(argTypeName))
+                        {
+                            var argType = GetType(assemblyPrefix, argTypeName);
                             if (argType == null)
                                 return null;
                             args.Add(argType);

@@ -39,6 +39,25 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
+        /// Gets all assemblies whose names start with the specified prefix.
+        /// </summary>
+        /// <param name="prefix">The prefix to match against assembly names.</param>
+        /// <param name="comparison">The string comparison type to use. Defaults to <see cref="StringComparison.Ordinal"/>.</param>
+        /// <returns>An enumerable of assemblies whose names start with the specified prefix.</returns>
+        public static IEnumerable<Assembly> GetAssembliesStartingWith(string prefix, StringComparison comparison = StringComparison.Ordinal)
+        {
+            if (string.IsNullOrEmpty(prefix))
+                yield break;
+
+            foreach (var assembly in AllAssemblies)
+            {
+                var name = assembly.GetName().Name;
+                if (name != null && name.StartsWith(prefix, comparison))
+                    yield return assembly;
+            }
+        }
+
+        /// <summary>
         /// Gets all types from all loaded assemblies with exception protection.
         /// </summary>
         public static IEnumerable<Type> AllTypes
@@ -52,6 +71,24 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     {
                         yield return types[i];
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets all types from assemblies whose names start with the specified prefix.
+        /// </summary>
+        /// <param name="prefix">The prefix to match against assembly names.</param>
+        /// <param name="comparison">The string comparison type to use. Defaults to <see cref="StringComparison.Ordinal"/>.</param>
+        /// <returns>An enumerable of types from assemblies whose names start with the specified prefix.</returns>
+        public static IEnumerable<Type> GetTypesStartingWith(string prefix, StringComparison comparison = StringComparison.Ordinal)
+        {
+            foreach (var assembly in GetAssembliesStartingWith(prefix, comparison))
+            {
+                var types = GetAssemblyTypes(assembly);
+                for (int i = 0; i < types.Length; i++)
+                {
+                    yield return types[i];
                 }
             }
         }
