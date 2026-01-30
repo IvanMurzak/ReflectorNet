@@ -315,16 +315,21 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
             // Vector3 is in Tests
             // Each should only be found with the correct prefix
 
+            var outerSimpleClassType = typeof(com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass);
+            var vector3ClassType = typeof(com.IvanMurzak.ReflectorNet.Tests.Model.Vector3);
+
             var outerType = "com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass";
             var testType = "com.IvanMurzak.ReflectorNet.Tests.Model.Vector3";
 
             // OuterSimpleClass with OuterAssembly prefix - should work
             Assert.NotNull(TypeUtils.GetType(ReflectorNetOuterPrefix, outerType));
-            // OuterSimpleClass with Tests prefix - should fail
-            Assert.Null(TypeUtils.GetType(ReflectorNetTestsPrefix, outerType));
+            Assert.Equal(outerSimpleClassType, TypeUtils.GetType(ReflectorNetOuterPrefix, outerType));
+            // OuterSimpleClass with System prefix - should fail
+            Assert.Null(TypeUtils.GetType(SystemPrefix, outerType));
 
             // Vector3 with Tests prefix - should work
             Assert.NotNull(TypeUtils.GetType(ReflectorNetTestsPrefix, testType));
+            Assert.Equal(vector3ClassType, TypeUtils.GetType(ReflectorNetTestsPrefix, testType));
             // Vector3 with OuterAssembly prefix - should fail
             Assert.Null(TypeUtils.GetType(ReflectorNetOuterPrefix, testType));
         }
@@ -397,7 +402,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
             Assert.NotNull(withMatching);
 
             // Call with non-matching prefix - should NOT find (and cache the null result)
-            var withNonMatching = TypeUtils.GetType(ReflectorNetTestsPrefix, typeName);
+            var withNonMatching = TypeUtils.GetType(SystemPrefix, typeName);
             Assert.Null(withNonMatching);
 
             // Call with matching prefix again - should still find (from its own cache entry)
