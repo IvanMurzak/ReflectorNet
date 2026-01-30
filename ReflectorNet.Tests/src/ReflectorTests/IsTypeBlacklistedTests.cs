@@ -1515,5 +1515,466 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         }
 
         #endregion
+
+        #region Assembly-Prefixed Blacklist Method Tests
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_TypeInMatchingAssembly_IsBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType(assemblyName, typeFullName);
+
+            // Assert
+            Assert.True(result, "BlacklistType should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine($"Type '{typeFullName}' from assembly '{assemblyName}' is correctly blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_TypeInNonMatchingAssembly_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+
+            // Act - Use a prefix that won't match the assembly containing BlacklistedBaseClass
+            var result = reflector.Converters.BlacklistType("NonExistentAssembly", typeFullName);
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false when assembly prefix doesn't match");
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine("Type not blacklisted when assembly prefix doesn't match");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_PartialAssemblyName_MatchesAssembly()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+            // Use just the first part of the assembly name (e.g., "ReflectorNet" from "ReflectorNet.Tests")
+            var assemblyPrefix = assemblyName.Split('.')[0];
+
+            // Act
+            var result = reflector.Converters.BlacklistType(assemblyPrefix, typeFullName);
+
+            // Assert
+            Assert.True(result, "BlacklistType should return true when assembly prefix matches");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine($"Type blacklisted using assembly prefix '{assemblyPrefix}'");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_InvalidTypeName_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType(assemblyName, "This.Type.Does.Not.Exist");
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false for non-existent type");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Invalid type name returns false even with valid assembly prefix");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_EmptyAssemblyPrefix_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType("", typeFullName);
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false for empty assembly prefix");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Empty assembly prefix returns false");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_NullAssemblyPrefix_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType(null!, typeFullName);
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false for null assembly prefix");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Null assembly prefix returns false");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_EmptyTypeName_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType(assemblyName, "");
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false for empty type name");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Empty type name returns false");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_NullTypeName_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType(assemblyName, null!);
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false for null type name");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Null type name returns false");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_AlreadyBlacklisted_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+            reflector.Converters.BlacklistType(assemblyName, typeFullName);
+
+            // Act - Try to add the same type again
+            var result = reflector.Converters.BlacklistType(assemblyName, typeFullName);
+
+            // Assert
+            Assert.False(result, "BlacklistType should return false when type already blacklisted");
+            _output.WriteLine("BlacklistType with assembly prefix returns false when type already blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_DerivedTypesAreBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistType(assemblyName, typeFullName);
+
+            // Assert - Derived types should also be blacklisted
+            Assert.True(result, "BlacklistType should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DerivedFromBlacklisted)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(DeeplyDerivedFromBlacklisted)));
+            _output.WriteLine("Derived types are correctly blacklisted after blacklisting base via assembly prefix");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_CacheInvalidation_WorksCorrectly()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var typeFullName = typeof(BlacklistedBaseClass).FullName!;
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Prime cache with false result
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+
+            // Act
+            var result = reflector.Converters.BlacklistType(assemblyName, typeFullName);
+
+            // Assert - Cache should be invalidated
+            Assert.True(result, "BlacklistType should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine("Cache is correctly invalidated after assembly-prefixed blacklist");
+        }
+
+        [Fact]
+        public void BlacklistType_WithAssemblyPrefix_SystemAssembly_CanBlacklistSystemTypes()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act - System.String is in an assembly starting with "System" or "mscorlib"
+            // Note: In .NET Core/5+, System.String is in System.Private.CoreLib
+            var stringType = typeof(string);
+            var assemblyName = stringType.Assembly.GetName().Name!;
+            var result = reflector.Converters.BlacklistType(assemblyName, "System.String");
+
+            // Assert
+            Assert.True(result, "BlacklistType should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(string)));
+            _output.WriteLine($"System.String blacklisted via assembly prefix '{assemblyName}'");
+        }
+
+        #endregion
+
+        #region Assembly-Prefixed Batch Blacklist Method Tests
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_MultipleTypes_AllAreBlacklisted()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                assemblyName,
+                typeof(BlacklistedBaseClass).FullName!,
+                typeof(NonBlacklistedClass).FullName!,
+                typeof(IBlacklistedInterface).FullName!);
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when types are added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(IBlacklistedInterface)));
+            _output.WriteLine($"Multiple types from assembly '{assemblyName}' are correctly blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_MixedValidAndInvalid_OnlyValidAdded()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act - Mix of valid and invalid type names
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                assemblyName,
+                typeof(BlacklistedBaseClass).FullName!,
+                "This.Does.Not.Exist",
+                typeof(NonBlacklistedClass).FullName!);
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.Equal(2, reflector.Converters.GetAllBlacklistedTypes().Count);
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(NonBlacklistedClass)));
+            _output.WriteLine("Only valid type names from batch are blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_NonMatchingAssembly_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                "NonExistentAssembly",
+                typeof(BlacklistedBaseClass).FullName!,
+                typeof(NonBlacklistedClass).FullName!);
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when assembly doesn't match");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("No types blacklisted when assembly prefix doesn't match any assembly");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_EmptyArray_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(assemblyName, Array.Empty<string>());
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when no types are provided");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Empty type array returns false");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_EmptyAssemblyPrefix_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                "",
+                typeof(BlacklistedBaseClass).FullName!);
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false for empty assembly prefix");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Empty assembly prefix returns false");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_NullAssemblyPrefix_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                null!,
+                typeof(BlacklistedBaseClass).FullName!);
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false for null assembly prefix");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Null assembly prefix returns false");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_DuplicateTypes_AddsOnlyOnce()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+            var typeName = typeof(BlacklistedBaseClass).FullName!;
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                assemblyName,
+                typeName,
+                typeName,
+                typeName);
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.Single(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("Duplicate types in batch are correctly deduplicated");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_AlreadyBlacklisted_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+            var typeName = typeof(BlacklistedBaseClass).FullName!;
+            reflector.Converters.BlacklistTypesInAssembly(assemblyName, typeName);
+
+            // Act - Try to add the same type again
+            var result = reflector.Converters.BlacklistTypesInAssembly(assemblyName, typeName);
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when all types already blacklisted");
+            _output.WriteLine("BlacklistTypes returns false when all types already blacklisted");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_WithNullTypeNames_IgnoresNulls()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                assemblyName,
+                typeof(BlacklistedBaseClass).FullName!,
+                null!,
+                typeof(NonBlacklistedClass).FullName!);
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.Equal(2, reflector.Converters.GetAllBlacklistedTypes().Count);
+            _output.WriteLine("Null type names in batch are correctly ignored");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_WithEmptyTypeNames_IgnoresEmpty()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                assemblyName,
+                typeof(BlacklistedBaseClass).FullName!,
+                "",
+                typeof(NonBlacklistedClass).FullName!);
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when at least one type is added");
+            Assert.Equal(2, reflector.Converters.GetAllBlacklistedTypes().Count);
+            _output.WriteLine("Empty type names in batch are correctly ignored");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_PartialAssemblyName_MatchesMultipleAssemblies()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            // Use "ReflectorNet" which should match both "ReflectorNet.Tests" and potentially other assemblies
+            var assemblyPrefix = "ReflectorNet";
+            var typeName = typeof(BlacklistedBaseClass).FullName!;
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(assemblyPrefix, typeName);
+
+            // Assert
+            Assert.True(result, "BlacklistTypes should return true when type is found in matching assembly");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine($"Type found using partial assembly prefix '{assemblyPrefix}'");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_CacheInvalidation_WorksCorrectly()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Prime cache with false result
+            Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+
+            // Act
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                assemblyName,
+                typeof(BlacklistedBaseClass).FullName!);
+
+            // Assert - Cache should be invalidated
+            Assert.True(result, "BlacklistTypes should return true when type is added");
+            Assert.True(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
+            _output.WriteLine("Cache is correctly invalidated after assembly-prefixed batch blacklist");
+        }
+
+        [Fact]
+        public void BlacklistTypes_WithAssemblyPrefix_AllInvalid_ReturnsFalse()
+        {
+            // Arrange
+            var reflector = new Reflector();
+            var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
+
+            // Act - All invalid type names
+            var result = reflector.Converters.BlacklistTypesInAssembly(
+                assemblyName,
+                "This.Does.Not.Exist",
+                "Neither.Does.This");
+
+            // Assert
+            Assert.False(result, "BlacklistTypes should return false when no types could be resolved");
+            Assert.Empty(reflector.Converters.GetAllBlacklistedTypes());
+            _output.WriteLine("BlacklistTypes returns false when all type names are invalid");
+        }
+
+        #endregion
     }
 }

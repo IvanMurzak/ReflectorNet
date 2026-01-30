@@ -157,6 +157,49 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             /// <summary>
+            /// Adds a type to the blacklist by its full name, searching only in assemblies whose name starts with the specified prefix.
+            /// This allows for more targeted type resolution when the same type name might exist in multiple assemblies.
+            /// </summary>
+            /// <param name="assemblyNamePrefix">The prefix that assembly names must start with (e.g., "MyCompany.MyProduct").</param>
+            /// <param name="typeFullName">The full name of the type to blacklist (e.g., "MyCompany.MyProduct.SomeClass").</param>
+            /// <returns>True if the type was resolved and added; false if the type could not be resolved or was already blacklisted.</returns>
+            public bool BlacklistType(string assemblyNamePrefix, string typeFullName)
+            {
+                if (string.IsNullOrEmpty(assemblyNamePrefix) || string.IsNullOrEmpty(typeFullName))
+                    return false;
+
+                var type = FindTypeInAssemblies(assemblyNamePrefix, typeFullName);
+                if (type != null)
+                    return BlacklistType(type);
+                return false;
+            }
+
+            /// <summary>
+            /// Finds a type by its full name in assemblies whose name starts with the specified prefix.
+            /// </summary>
+            /// <param name="assemblyNamePrefix">The prefix that assembly names must start with.</param>
+            /// <param name="typeFullName">The full name of the type to find.</param>
+            /// <returns>The found type, or null if not found.</returns>
+            private static Type? FindTypeInAssemblies(string assemblyNamePrefix, string typeFullName)
+            {
+                foreach (var assembly in AssemblyUtils.AllAssemblies)
+                {
+                    var assemblyName = assembly.GetName().Name;
+                    if (assemblyName == null || !assemblyName.StartsWith(assemblyNamePrefix, StringComparison.Ordinal))
+                        continue;
+
+                    var types = AssemblyUtils.GetAssemblyTypes(assembly);
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        var type = types[i];
+                        if (type.FullName == typeFullName)
+                            return type;
+                    }
+                }
+                return null;
+            }
+
+            /// <summary>
             /// Adds multiple types to the blacklist by their full names, preventing them from being processed by any converter.
             /// Types are resolved using <see cref="TypeUtils.GetType(string)"/>. The blacklist cache is only invalidated
             /// if at least one new type was successfully resolved and added.
@@ -169,6 +212,34 @@ namespace com.IvanMurzak.ReflectorNet
                 foreach (var typeFullName in typeFullNames)
                 {
                     var type = TypeUtils.GetType(typeFullName);
+                    if (type != null && _blacklistedTypes.TryAdd(type, 0))
+                        changed = true;
+                }
+                if (changed)
+                    _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes
+                return changed;
+            }
+
+            /// <summary>
+            /// Adds multiple types to the blacklist by their full names, searching only in assemblies whose name starts with the specified prefix.
+            /// This allows for more targeted type resolution when the same type name might exist in multiple assemblies.
+            /// The blacklist cache is only invalidated if at least one new type was successfully resolved and added.
+            /// </summary>
+            /// <param name="assemblyNamePrefix">The prefix that assembly names must start with (e.g., "MyCompany.MyProduct").</param>
+            /// <param name="typeFullNames">The full names of the types to blacklist.</param>
+            /// <returns>True if at least one type was resolved and added; false if all types could not be resolved or were already blacklisted.</returns>
+            public bool BlacklistTypesInAssembly(string assemblyNamePrefix, params string[] typeFullNames)
+            {
+                if (string.IsNullOrEmpty(assemblyNamePrefix))
+                    return false;
+
+                var changed = false;
+                foreach (var typeFullName in typeFullNames)
+                {
+                    if (string.IsNullOrEmpty(typeFullName))
+                        continue;
+
+                    var type = FindTypeInAssemblies(assemblyNamePrefix, typeFullName);
                     if (type != null && _blacklistedTypes.TryAdd(type, 0))
                         changed = true;
                 }
