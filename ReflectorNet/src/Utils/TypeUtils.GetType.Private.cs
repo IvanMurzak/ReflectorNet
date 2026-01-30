@@ -257,7 +257,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var typeArgs = new Type[typeArgNames.Length];
             for (int i = 0; i < typeArgNames.Length; i++)
             {
-                var argType = GetType(assemblyPrefix, typeArgNames[i].Trim());
+                var argType = GetType(typeArgNames[i].Trim());
                 if (argType == null)
                     return null;
                 typeArgs[i] = argType;
@@ -299,7 +299,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     nestedArgs = new Type[argNames.Length];
                     for (int i = 0; i < argNames.Length; i++)
                     {
-                        var tempType = GetType(assemblyPrefix, argNames[i]?.Trim());
+                        var tempType = GetType(argNames[i]?.Trim());
                         if (tempType == null) return null;
                         nestedArgs[i] = tempType;
                     }
@@ -569,7 +569,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         var argTypeName = currentArg.ToString().Trim();
                         if (!string.IsNullOrEmpty(argTypeName))
                         {
-                            var argType = GetType(assemblyPrefix, argTypeName);
+                            var argType = GetType(argTypeName);
                             if (argType == null)
                                 return null;
                             args.Add(argType);
