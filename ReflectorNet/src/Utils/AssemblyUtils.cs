@@ -48,9 +48,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 foreach (var assembly in AllAssemblies)
                 {
                     var types = GetAssemblyTypes(assembly);
-                    for (int i = 0; i < types.Length; i++)
+                    foreach (var type in types)
                     {
-                        yield return types[i];
+                        yield return type;
                     }
                 }
             }
@@ -70,11 +70,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </remarks>
         /// <param name="assembly">The assembly to get types from.</param>
         /// <returns>Array of types from the assembly. May be empty if the assembly cannot be inspected.</returns>
-        public static Type[] GetAssemblyTypes(Assembly assembly)
+        public static IEnumerable<Type> GetAssemblyTypes(Assembly assembly)
         {
             try
             {
-                return assembly.GetTypes();
+                return assembly.DefinedTypes;
             }
             catch (ReflectionTypeLoadException ex)
             {

@@ -62,7 +62,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             // Assert - should return different array instances (no caching)
             Assert.NotSame(types1, types2);
-            Assert.Equal(types1.Length, types2.Length);
+            Assert.Equal(types1.Count(), types2.Count());
         }
 
         [Fact]
@@ -359,7 +359,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
                 Parallel.For(0, 10, i =>
                 {
                     barrier.SignalAndWait(); // Ensure all threads start at the same time
-                    results[i] = AssemblyUtils.GetAssemblyTypes(assembly);
+                    results[i] = AssemblyUtils.GetAssemblyTypes(assembly).ToArray();
                 });
             }
 
@@ -386,7 +386,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             // Act - access different assemblies from multiple threads
             Parallel.ForEach(assemblies, assembly =>
             {
-                var types = AssemblyUtils.GetAssemblyTypes(assembly);
+                var types = AssemblyUtils.GetAssemblyTypes(assembly).ToArray();
                 lock (lockObj)
                 {
                     results[assembly] = types;
