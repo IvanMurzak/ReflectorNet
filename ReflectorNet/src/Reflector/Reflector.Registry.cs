@@ -224,7 +224,7 @@ namespace com.IvanMurzak.ReflectorNet
             /// <param name="assemblyNamePrefix">The prefix that assembly names must start with (e.g., "MyCompany.MyProduct").</param>
             /// <param name="typeFullNames">The full names of the types to blacklist.</param>
             /// <returns>True if at least one type was resolved and added; false if all types could not be resolved or were already blacklisted.</returns>
-            public bool BlacklistTypesInAssembly(string assemblyNamePrefix, params string[] typeFullNames)
+            public bool BlacklistType(string assemblyNamePrefix, params string[] typeFullNames)
             {
                 if (string.IsNullOrEmpty(assemblyNamePrefix))
                     return false;

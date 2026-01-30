@@ -1643,7 +1643,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
 
             // Act
-            var result = reflector.Converters.BlacklistType(assemblyName, null!);
+            var result = reflector.Converters.BlacklistType(assemblyName, (string)null!);
 
             // Assert
             Assert.False(result, "BlacklistType should return false for null type name");
@@ -1736,7 +1736,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 assemblyName,
                 typeof(BlacklistedBaseClass).FullName!,
                 typeof(NonBlacklistedClass).FullName!,
@@ -1758,7 +1758,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
 
             // Act - Mix of valid and invalid type names
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 assemblyName,
                 typeof(BlacklistedBaseClass).FullName!,
                 "This.Does.Not.Exist",
@@ -1779,7 +1779,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var reflector = new Reflector();
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 "NonExistentAssembly",
                 typeof(BlacklistedBaseClass).FullName!,
                 typeof(NonBlacklistedClass).FullName!);
@@ -1798,7 +1798,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(assemblyName, Array.Empty<string>());
+            var result = reflector.Converters.BlacklistType(assemblyName, Array.Empty<string>());
 
             // Assert
             Assert.False(result, "BlacklistTypes should return false when no types are provided");
@@ -1813,7 +1813,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var reflector = new Reflector();
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 "",
                 typeof(BlacklistedBaseClass).FullName!);
 
@@ -1830,7 +1830,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var reflector = new Reflector();
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 null!,
                 typeof(BlacklistedBaseClass).FullName!);
 
@@ -1849,7 +1849,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var typeName = typeof(BlacklistedBaseClass).FullName!;
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 assemblyName,
                 typeName,
                 typeName,
@@ -1868,10 +1868,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var reflector = new Reflector();
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
             var typeName = typeof(BlacklistedBaseClass).FullName!;
-            reflector.Converters.BlacklistTypesInAssembly(assemblyName, typeName);
+            reflector.Converters.BlacklistType(assemblyName, typeName);
 
             // Act - Try to add the same type again
-            var result = reflector.Converters.BlacklistTypesInAssembly(assemblyName, typeName);
+            var result = reflector.Converters.BlacklistType(assemblyName, typeName);
 
             // Assert
             Assert.False(result, "BlacklistTypes should return false when all types already blacklisted");
@@ -1886,7 +1886,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 assemblyName,
                 typeof(BlacklistedBaseClass).FullName!,
                 null!,
@@ -1906,7 +1906,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 assemblyName,
                 typeof(BlacklistedBaseClass).FullName!,
                 "",
@@ -1928,7 +1928,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var typeName = typeof(BlacklistedBaseClass).FullName!;
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(assemblyPrefix, typeName);
+            var result = reflector.Converters.BlacklistType(assemblyPrefix, typeName);
 
             // Assert
             Assert.True(result, "BlacklistTypes should return true when type is found in matching assembly");
@@ -1947,7 +1947,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             Assert.False(reflector.Converters.IsTypeBlacklisted(typeof(BlacklistedBaseClass)));
 
             // Act
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 assemblyName,
                 typeof(BlacklistedBaseClass).FullName!);
 
@@ -1965,7 +1965,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var assemblyName = typeof(BlacklistedBaseClass).Assembly.GetName().Name!;
 
             // Act - All invalid type names
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistType(
                 assemblyName,
                 "This.Does.Not.Exist",
                 "Neither.Does.This");
