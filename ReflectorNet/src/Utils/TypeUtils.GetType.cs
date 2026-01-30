@@ -77,6 +77,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </param>
         /// <param name="typeName">The name of the type to retrieve.</param>
         /// <returns>The <see cref="Type"/> corresponding to the specified name and assembly name prefix, or <see langword="null"/> if the type cannot be found.</returns>
+        /// <remarks>
+        /// Note: For generic types, only the generic type definition is required to be in an assembly whose name matches the
+        /// specified prefix. Generic type arguments are resolved from all currently loaded assemblies, not only from assemblies
+        /// whose names start with the provided prefix.
+        /// </remarks>
         public static Type? GetType(string? assemblyName, string? typeName)
         {
             if (string.IsNullOrWhiteSpace(typeName))

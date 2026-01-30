@@ -1319,7 +1319,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             var reflector = new Reflector();
 
             // Act - All invalid type names
-            var result = reflector.Converters.BlacklistTypesInAssembly(
+            var result = reflector.Converters.BlacklistTypes(
                 "This.Does.Not.Exist",
                 "Neither.Does.This");
 
@@ -1334,10 +1334,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests
         {
             // Arrange
             var reflector = new Reflector();
-            reflector.Converters.BlacklistTypesInAssembly("System.String", "System.Int32");
+            reflector.Converters.BlacklistTypes("System.String", "System.Int32");
 
             // Act - Try to add the same types again
-            var result = reflector.Converters.BlacklistTypesInAssembly("System.String", "System.Int32");
+            var result = reflector.Converters.BlacklistTypes("System.String", "System.Int32");
 
             // Assert
             Assert.False(result, "BlacklistTypes should return false when all types already blacklisted");

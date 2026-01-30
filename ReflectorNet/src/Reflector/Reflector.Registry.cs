@@ -217,11 +217,8 @@ namespace com.IvanMurzak.ReflectorNet
                     foreach (var typeFullName in typeFullNames)
                     {
                         var type = TypeUtils.GetType(assembly, typeFullName);
-                        if (type != null)
-                        {
-                            if (_blacklistedTypes.TryAdd(type, 0))
-                                changed = true;
-                        }
+                        if (type != null && _blacklistedTypes.TryAdd(type, 0))
+                            changed = true;
                     }
                 }
                 if (changed)
