@@ -36,6 +36,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// </remarks>
         public static IEnumerable<Type> AllTypes => AssemblyUtils.AllTypes;
 
+        // Characters used to separate nested type names (e.g. `Outer+Inner` or `Outer.Inner`).
+        private static readonly char[] NestedTypeSeparators = new[] { '+', '.' };
+
         // LRU cache for resolved type names to avoid repeated AllTypes enumeration (thread-safe)
         private static readonly LruCache<string, Type?> _typeCache = new(TypeCacheCapacity);
 
@@ -440,7 +443,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 else
                 {
                     // No generic args, but check if there are more separators
-                    var nextSep = remaining.IndexOfAny(new[] { '+', '.' });
+                    var nextSep = remaining.IndexOfAny(NestedTypeSeparators);
                     if (nextSep > 0)
                     {
                         nestedName = remaining.Substring(0, nextSep);
@@ -606,7 +609,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 else
                 {
                     // No generic args, but check if there are more separators
-                    var nextSep = remaining.IndexOfAny(new[] { '+', '.' });
+                    var nextSep = remaining.IndexOfAny(NestedTypeSeparators);
                     if (nextSep > 0)
                     {
                         nestedName = remaining.Substring(0, nextSep);
