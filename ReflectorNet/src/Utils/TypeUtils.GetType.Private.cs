@@ -40,30 +40,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         private static Type? TryResolveArrayType(string typeName)
         {
-            if (!typeName.EndsWith("]"))
-                return null;
-
-            var lastOpenBracket = typeName.LastIndexOf('[');
-            if (lastOpenBracket < 0)
-                return null;
-
-            var suffix = typeName.Substring(lastOpenBracket);
-            var content = suffix.Substring(1, suffix.Length - 2);
-            if (content.Length > 0 && content.Any(c => c != ','))
-                return null;
-
-            var commas = content.Length;
-            var elementTypeName = typeName.Substring(0, lastOpenBracket);
-            var elementType = GetType(elementTypeName);
-
-            if (elementType == null) return null;
-
-            return commas == 0
-                ? elementType.MakeArrayType()
-                : elementType.MakeArrayType(commas + 1);
+            return TryResolveArrayType((string?)null, typeName);
         }
 
-        private static Type? TryResolveArrayType(string assemblyPrefix, string typeName)
+        private static Type? TryResolveArrayType(string? assemblyPrefix, string typeName)
         {
             if (!typeName.EndsWith("]"))
                 return null;
@@ -260,7 +240,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var typeArgs = new Type[typeArgNames.Length];
             for (int i = 0; i < typeArgNames.Length; i++)
             {
-                var argType = GetType(typeArgNames[i].Trim());
+                var argType = GetType(typeArgNames[i].Trim()); // looking for generic type in all assemblies
                 if (argType == null)
                     return null;
                 typeArgs[i] = argType;
@@ -302,7 +282,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     nestedArgs = new Type[argNames.Length];
                     for (int i = 0; i < argNames.Length; i++)
                     {
-                        var tempType = GetType(argNames[i]?.Trim());
+                        var tempType = GetType(argNames[i]?.Trim()); // looking for generic type in all assemblies
                         if (tempType == null) return null;
                         nestedArgs[i] = tempType;
                     }

@@ -174,26 +174,6 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
             }
 
-            /// <summary>
-            /// Finds a type by its full name in a pre-collected list of type arrays from assemblies.
-            /// </summary>
-            /// <param name="typesFromAssemblies">The pre-collected list of type arrays from matching assemblies.</param>
-            /// <param name="typeFullName">The full name of the type to find.</param>
-            /// <returns>The found type, or null if not found.</returns>
-            private static Type? FindTypeInCachedAssemblies(List<Type[]> typesFromAssemblies, string typeFullName)
-            {
-                for (int i = 0; i < typesFromAssemblies.Count; i++)
-                {
-                    var types = typesFromAssemblies[i];
-                    for (int j = 0; j < types.Length; j++)
-                    {
-                        var type = types[j];
-                        if (type.FullName == typeFullName)
-                            return type;
-                    }
-                }
-                return null;
-            }
 
             /// <summary>
             /// Adds multiple types to the blacklist by their full names, preventing them from being processed by any converter.
@@ -229,23 +209,17 @@ namespace com.IvanMurzak.ReflectorNet
                 if (string.IsNullOrEmpty(assemblyNamePrefix))
                     return false;
 
-                // Collect matching assemblies and their types once
-                var matchingAssemblies = new List<Type[]>();
-                foreach (var assembly in AssemblyUtils.GetAssembliesStartingWith(assemblyNamePrefix))
-                    matchingAssemblies.Add(AssemblyUtils.GetAssemblyTypes(assembly));
-
-                if (matchingAssemblies.Count == 0)
-                    return false;
-
                 var changed = false;
-                foreach (var typeFullName in typeFullNames)
-                {
-                    if (string.IsNullOrEmpty(typeFullName))
-                        continue;
 
-                    var type = FindTypeInCachedAssemblies(matchingAssemblies, typeFullName);
-                    if (type != null && _blacklistedTypes.TryAdd(type, 0))
-                        changed = true;
+                // Collect matching assemblies and their types once
+                foreach (var assembly in AssemblyUtils.GetAssembliesStartingWith(assemblyNamePrefix))
+                {
+                    foreach (var typeFullName in typeFullNames)
+                    {
+                        var type = TypeUtils.GetType(assembly, typeFullName);
+                        if (type != null && _blacklistedTypes.TryAdd(type, 0))
+                            changed = true;
+                    }
                 }
                 if (changed)
                     _blacklistCache = new ConcurrentDictionary<Type, bool>(); // Invalidate cache when blacklist changes
