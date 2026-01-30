@@ -168,31 +168,10 @@ namespace com.IvanMurzak.ReflectorNet
                 if (string.IsNullOrEmpty(assemblyNamePrefix) || string.IsNullOrEmpty(typeFullName))
                     return false;
 
-                var type = FindTypeInAssemblies(assemblyNamePrefix, typeFullName);
+                var type = TypeUtils.GetType(assemblyNamePrefix, typeFullName);
                 if (type != null)
                     return BlacklistType(type);
                 return false;
-            }
-
-            /// <summary>
-            /// Finds a type by its full name in assemblies whose name starts with the specified prefix.
-            /// </summary>
-            /// <param name="assemblyNamePrefix">The prefix that assembly names must start with.</param>
-            /// <param name="typeFullName">The full name of the type to find.</param>
-            /// <returns>The found type, or null if not found.</returns>
-            private static Type? FindTypeInAssemblies(string assemblyNamePrefix, string typeFullName)
-            {
-                foreach (var assembly in AssemblyUtils.GetAssembliesStartingWith(assemblyNamePrefix))
-                {
-                    var types = AssemblyUtils.GetAssemblyTypes(assembly);
-                    for (int i = 0; i < types.Length; i++)
-                    {
-                        var type = types[i];
-                        if (type.FullName == typeFullName)
-                            return type;
-                    }
-                }
-                return null;
             }
 
             /// <summary>

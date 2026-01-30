@@ -31,6 +31,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         // Key format: "assemblyPrefix|typeName"
         private static readonly LruCache<string, Type?> _assemblyTypeCache = new(TypeCacheCapacity);
 
+        // LRU cache for exact assembly type lookups (thread-safe)
+        // Key format: "assemblyFullName|typeName"
+        private static readonly LruCache<string, Type?> _exactAssemblyTypeCache = new(TypeCacheCapacity);
+
         // LRU cache for enumerable item types to avoid repeated interface/inheritance walks (thread-safe)
         private static readonly LruCache<Type, Type?> _enumerableItemTypeCache = new(EnumerableItemTypeCacheCapacity);
 
@@ -62,6 +66,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             logger?.LogDebug("Clearing assembly-prefixed type resolution cache with {count} entries (capacity: {capacity}).",
                 _assemblyTypeCache.Count, _assemblyTypeCache.Capacity);
             _assemblyTypeCache.Clear();
+        }
+
+        /// <summary>
+        /// Clears the exact assembly type resolution cache.
+        /// </summary>
+        public static void ClearExactAssemblyTypeCache(ILogger? logger = null)
+        {
+            logger?.LogDebug("Clearing exact assembly type resolution cache with {count} entries (capacity: {capacity}).",
+                _exactAssemblyTypeCache.Count, _exactAssemblyTypeCache.Capacity);
+            _exactAssemblyTypeCache.Clear();
         }
     }
 }

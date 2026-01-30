@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -1456,7 +1457,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests
             reflector.Converters.BlacklistType(typeof(BlacklistedBaseClass));
 
             // Get all types from the current assembly to fill the cache
-            var types = typeof(IsTypeBlacklistedTests).Assembly.GetTypes()
+            var types = AssemblyUtils.GetAssemblyTypes(typeof(IsTypeBlacklistedTests).Assembly)
                 .Where(t => t != null)
                 .Take(1100) // More than MaxBlacklistCacheSize (1000)
                 .ToList();

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
@@ -65,11 +66,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
-        /// Retrieves a <see cref="Type"/> by its name and assembly name.
+        /// Retrieves a <see cref="Type"/> by its name and (optionally) an assembly name prefix.
         /// </summary>
-        /// <param name="assemblyName">The name of the assembly containing the type.</param>
+        /// <param name="assemblyName">
+        /// The name, or prefix of the name, of the assembly containing the type. The value is used as a prefix,
+        /// and the method will match any assembly whose name starts with this value.
+        /// </param>
         /// <param name="typeName">The name of the type to retrieve.</param>
-        /// <returns>The <see cref="Type"/> corresponding to the specified name and assembly, or <see langword="null"/> if the type cannot be found.</returns>
+        /// <returns>The <see cref="Type"/> corresponding to the specified name and assembly name prefix, or <see langword="null"/> if the type cannot be found.</returns>
         public static Type? GetType(string? assemblyName, string? typeName)
         {
             if (string.IsNullOrWhiteSpace(typeName))
@@ -126,6 +130,67 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 typeName == t.GetTypeId());
 
             _assemblyTypeCache[cacheKey] = type;
+
+            return type;
+        }
+
+        /// <summary>
+        /// Retrieves a <see cref="Type"/> by its name within a specific assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly to search in.</param>
+        /// <param name="typeName">The name of the type to retrieve.</param>
+        /// <returns>The <see cref="Type"/> corresponding to the specified name in the specified assembly, or <see langword="null"/> if the type cannot be found.</returns>
+        public static Type? GetType(Assembly assembly, string? typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName) || assembly == null)
+                return null;
+
+            var cacheKey = $"{assembly.GetName().Name}|{typeName}";
+            if (_exactAssemblyTypeCache.TryGetValue(cacheKey, out var cachedType))
+                return cachedType;
+
+            Type? type = null;
+            try
+            {
+                type = assembly.GetType(typeName, throwOnError: false);
+            }
+            catch
+            {
+            }
+
+            if (type != null)
+            {
+                _exactAssemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            type = TryResolveArrayType(assembly, typeName);
+            if (type != null)
+            {
+                _exactAssemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            type = TryResolveCSharpGenericType(assembly, typeName);
+            if (type != null)
+            {
+                _exactAssemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            type = TryResolveClassicGenericType(assembly, typeName);
+            if (type != null)
+            {
+                _exactAssemblyTypeCache[cacheKey] = type;
+                return type;
+            }
+
+            type = AssemblyUtils.GetAssemblyTypes(assembly).FirstOrDefault(t =>
+                typeName == t.FullName ||
+                typeName == t.AssemblyQualifiedName ||
+                typeName == t.GetTypeId());
+
+            _exactAssemblyTypeCache[cacheKey] = type;
 
             return type;
         }

@@ -40,10 +40,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
         public void GetType_NullAssemblyName_DelegatesToStandardGetType()
         {
             // When assemblyName is null, should delegate to GetType(typeName)
-            var type = TypeUtils.GetType(null, "System.Int32");
+            var type = TypeUtils.GetType((string?)null, "System.Int32");
             Assert.Equal(typeof(int), type);
 
-            var reflectorType = TypeUtils.GetType(null, "com.IvanMurzak.ReflectorNet.Model.SerializedMember");
+            var reflectorType = TypeUtils.GetType((string?)null, "com.IvanMurzak.ReflectorNet.Model.SerializedMember");
             Assert.Equal(typeof(SerializedMember), reflectorType);
         }
 
