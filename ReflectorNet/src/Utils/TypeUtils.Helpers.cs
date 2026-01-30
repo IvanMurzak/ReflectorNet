@@ -125,7 +125,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             {
                 if (fallbackType == null)
                 {
-                    error = $"Type '{member?.typeName}' not found.";
+                    error = $"Type '{member!.typeName}' not found.";
                     return null;
                 }
                 error = null;
@@ -145,10 +145,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     error = $"Type is unknown and {nameof(SerializedMember)}.{nameof(SerializedMember.typeName)} is null or empty.";
                     return null;
                 }
-                type = GetType(fallbackMember?.typeName);
+                type = GetType(fallbackMember.typeName);
                 if (type == null)
                 {
-                    error = $"Type '{fallbackMember?.typeName}' not found.";
+                    error = $"Type '{fallbackMember.typeName}' not found.";
                     return null;
                 }
                 error = null;

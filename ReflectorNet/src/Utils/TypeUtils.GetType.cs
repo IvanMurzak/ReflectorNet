@@ -26,6 +26,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             catch
             {
+                // Ignore exceptions from Type.GetType
             }
 
             if (type != null)
@@ -48,7 +49,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return type;
             }
 
-            type = TryResolveClassicGenericType(typeName);
+            type = TryResolveClassicGenericType(
+                assemblyPrefix: null,
+                typeName: typeName);
             if (type != null)
             {
                 _typeCache[typeName] = type;
@@ -95,6 +98,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
             catch
             {
+                // Ignore exceptions from Type.GetType
             }
 
             if (type != null)

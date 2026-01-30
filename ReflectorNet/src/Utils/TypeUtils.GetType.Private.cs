@@ -280,7 +280,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return args.Count > 0 ? args.ToArray() : null;
         }
 
-        private static Type? TryResolveClassicGenericType(string typeName)
+        private static Type? TryResolveClassicGenericType(string? assemblyPrefix, string typeName)
         {
             var backtickIndex = typeName.IndexOf('`');
             if (backtickIndex < 0)
@@ -291,40 +291,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return null;
 
             var genericDefName = typeName.Substring(0, argsStart);
-            var genericDef = ResolveSimpleType(genericDefName);
+            var genericDef = assemblyPrefix == null
+                ? ResolveSimpleType(genericDefName)
+                : ResolveSimpleType(assemblyPrefix, genericDefName);
             if (genericDef == null || !genericDef.IsGenericTypeDefinition)
                 return null;
 
             var typeArgs = ParseGenericArguments(typeName, argsStart);
-            if (typeArgs == null || typeArgs.Length != genericDef.GetGenericArguments().Length)
-                return null;
-
-            try
-            {
-                return genericDef.MakeGenericType(typeArgs);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static Type? TryResolveClassicGenericType(string assemblyPrefix, string typeName)
-        {
-            var backtickIndex = typeName.IndexOf('`');
-            if (backtickIndex < 0)
-                return null;
-
-            var argsStart = typeName.IndexOf("[[", backtickIndex);
-            if (argsStart < 0)
-                return null;
-
-            var genericDefName = typeName.Substring(0, argsStart);
-            var genericDef = ResolveSimpleType(assemblyPrefix, genericDefName);
-            if (genericDef == null || !genericDef.IsGenericTypeDefinition)
-                return null;
-
-            var typeArgs = ParseGenericArguments(assemblyPrefix, typeName, argsStart);
             if (typeArgs == null || typeArgs.Length != genericDef.GetGenericArguments().Length)
                 return null;
 
@@ -380,58 +353,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
                 else if (c == ',' && depth == 1)
                 {
-                }
-                else if (depth > 1)
-                {
-                    currentArg.Append(c);
-                }
-            }
-
-            return args.Count > 0 ? args.ToArray() : null;
-        }
-
-        private static Type[]? ParseGenericArguments(string assemblyPrefix, string typeName, int startIndex)
-        {
-            var args = new System.Collections.Generic.List<Type>();
-            var depth = 0;
-            var currentArg = new System.Text.StringBuilder();
-
-            for (int i = startIndex; i < typeName.Length; i++)
-            {
-                var c = typeName[i];
-
-                if (c == '[')
-                {
-                    depth++;
-                    if (depth > 2)
-                        currentArg.Append(c);
-                }
-                else if (c == ']')
-                {
-                    depth--;
-                    if (depth == 1)
-                    {
-                        var argTypeName = currentArg.ToString().Trim();
-                        if (!string.IsNullOrEmpty(argTypeName))
-                        {
-                            var argType = GetType(argTypeName);
-                            if (argType == null)
-                                return null;
-                            args.Add(argType);
-                        }
-                        currentArg.Clear();
-                    }
-                    else if (depth > 1)
-                    {
-                        currentArg.Append(c);
-                    }
-                    else if (depth == 0)
-                    {
-                        break;
-                    }
-                }
-                else if (c == ',' && depth == 1)
-                {
+                    // Top-level generic argument separator: intentionally ignored.
                 }
                 else if (depth > 1)
                 {
