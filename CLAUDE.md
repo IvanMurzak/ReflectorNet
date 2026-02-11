@@ -4,110 +4,90 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-### Build & Test
 ```bash
-# Restore dependencies
-dotnet restore
-
 # Build the solution
 dotnet build --configuration Release
 
-# Run tests
+# Run all tests (multi-TFM: net8.0 and net9.0)
 dotnet test --configuration Release --verbosity normal
 
-# Build and pack for NuGet
+# Run a single test by fully qualified name
+dotnet test --configuration Release --filter "FullyQualifiedName~com.IvanMurzak.ReflectorNet.Tests.ClassName.MethodName"
+
+# Run tests matching a pattern
+dotnet test --configuration Release --filter "FullyQualifiedName~SchemaTests"
+
+# Pack for NuGet
 dotnet pack ReflectorNet/ReflectorNet.csproj --configuration Release --output ./packages
 ```
 
-### Project Structure
-- **ReflectorNet/**: Main library project - advanced .NET reflection toolkit
-- **ReflectorNet.Tests/**: Primary test suite using xUnit
-- **ReflectorNet.Tests.OuterAssembly/**: Test assembly for cross-assembly reflection scenarios
-- **ConsoleApp/**: Console application for testing and examples
+## Project Layout
 
-## Architecture Overview
+- **ReflectorNet/** - Main library (NuGet: `com.IvanMurzak.ReflectorNet`)
+- **ReflectorNet.Tests/** - xUnit test suite
+- **ReflectorNet.Tests.OuterAssembly/** - Separate assembly used by tests for cross-assembly reflection scenarios
+- **ConsoleApp/** - Console app for manual testing
 
-ReflectorNet implements a sophisticated **Chain of Responsibility** pattern for object serialization/deserialization:
+## Target Frameworks & Language
 
-### Core Components
+- **Library**: `netstandard2.1`, `net8.0`, `net9.0` — LangVersion `10.0`
+- **Tests**: `net8.0`, `net9.0` — LangVersion `11.0`
+- Nullable enabled, ImplicitUsings disabled throughout
+- Root namespace: `com.IvanMurzak.ReflectorNet`
 
-#### Reflector Class (`src/Reflector/Reflector.cs`)
-- Main entry point providing serialization, deserialization, and object population capabilities
-- Partial class split across multiple files for different concerns
-- Uses converter registry system for extensible type handling
+## Architecture
 
-#### Converter System (`src/Converter/`)
-- **IReflectionConverter**: Interface defining converter contract
-- **Chain of Responsibility**: Multiple specialized converters handle different types:
-  - `PrimitiveReflectionConverter`: Built-in .NET types (int, string, DateTime, etc.)
-  - `GenericReflectionConverter`: Custom classes and structs
-  - `ArrayReflectionConverter`: Arrays and collections
-  - `BaseReflectionConverter`: Abstract base with common functionality
+ReflectorNet is a reflection toolkit for AI-driven .NET scenarios — fuzzy method discovery, type-preserving serialization, and dynamic invocation.
 
-#### Key Models (`src/Model/`)
-- **SerializedMember**: Type-preserving serialized object representation
-- **MethodRef**: Method reference for dynamic discovery and invocation
-- **MethodData**: Method metadata and parameter information
+### Reflector (partial class, split across 10 files)
 
-#### Utilities (`src/Utils/`)
-- **JsonSchema**: JSON Schema generation for types and methods
-- **JsonSerializer**: ReflectorNet-optimized JSON serialization
-- **TypeUtils**: Type resolution and naming utilities
-- **StringUtils**: String manipulation and formatting
+`Reflector` is the main entry point in `src/Reflector/`. Each concern is a separate partial file:
 
-### Target Frameworks
-- **.NET Standard 2.0** & **2.1**: Broad compatibility
-- **.NET 9.0**: Latest framework features
-- **LangVersion 11.0**: Modern C# language features
-- **Nullable enabled**: Strict null reference types
+| File | Responsibility |
+|------|---------------|
+| `Reflector.cs` | Constructor, reference resolution |
+| `Reflector.Serialize.cs` | Object → `SerializedMember` |
+| `Reflector.Deserialize.cs` | `SerializedMember` → object |
+| `Reflector.Populate.cs` | In-place object updates |
+| `Reflector.FindMethod.cs` | Fuzzy method discovery (match levels 1-6) |
+| `Reflector.CallMethod.cs` | Dynamic method invocation |
+| `Reflector.Json.cs` | JSON serialization integration |
+| `Reflector.Registry.cs` | Converter registry (nested `Registry` class) |
+| `Reflector.DefaultValue.cs` | Default value resolution |
+| `Reflector.Equals.cs` | Deep equality comparison |
+| `Reflector.Error.cs` | Hierarchical error formatting |
 
-## Key Features Implementation
+### Converter System (Chain of Responsibility)
 
-### Method Discovery & Invocation
-- Fuzzy matching algorithms with configurable similarity levels (0-6)
-- Dynamic method binding with parameter type resolution
-- Support for partial method names and namespace matching
-- Cross-assembly method discovery capabilities
+Located in `src/Converter/`. The `Registry` selects the best converter by querying each for `SerializationPriority(Type)` — highest score wins.
 
-### Object Population System
-- In-place object updates without replacement
-- Selective member population with BindingFlags control
-- Hierarchical population with depth tracking
-- Comprehensive error reporting with detailed logging
+**Reflection converters** (`src/Converter/Reflection/`):
+- `BaseReflectionConverter<T>` — abstract base (partial: `.Serialize`, `.Deserialize`, `.Populate`, `.DefaultValue`)
+- `PrimitiveReflectionConverter` — built-in types (int, string, DateTime, etc.)
+- `GenericReflectionConverter<T>` — custom classes/structs (fallback)
+- `ArrayReflectionConverter` — arrays and collections (partial: `.Deserialize`)
+- `TypeReflectionConverter`, `AssemblyReflectionConverter` — System.Type, Assembly
+- `LazyGenericReflectionConverter` — runtime type resolution for optional dependencies
+- `IgnoreFieldsAndPropertiesReflectionConverter` — selective member exclusion
 
-### JSON Schema Generation
-- OpenAPI-compatible schema generation
-- Method parameter schemas for dynamic invocation
-- Type introspection with reference optimization
-- Support for complex nested types and collections
+**JSON converters** (`src/Converter/Json/`): System.Text.Json converters for many .NET types. `IJsonSchemaConverter` interface enables custom JSON Schema generation.
 
-## Development Patterns
+### Key Models (`src/Model/`)
 
-### Converter Priority System
-Each converter implements `SerializationPriority(Type type)` returning a score (0-10000+):
-- Higher scores indicate better type compatibility
-- Automatic selection of optimal converter for each type
-- Considers inheritance distance for matching
+- `SerializedMember` — type-preserving intermediate representation (partial: `.Static`)
+- `MethodRef` — method reference for fuzzy discovery
+- `MethodData` — method metadata and parameters
+- `SerializationContext` / `DeserializationContext` — state during (de)serialization
 
-### Error Handling
-- Hierarchical error reporting with depth-based indentation
-- StringBuilder-based error accumulation
-- Microsoft.Extensions.Logging integration throughout
-- Comprehensive validation at each operation level
+### Thread Safety
 
-### Extensibility
-- Custom converter registration via `Reflector.Converters.Add()`
-- Override priority scoring for specialized type handling
-- Pluggable serialization behavior for any .NET type
+Registry uses `ConcurrentBag`/`ConcurrentDictionary` with a cache-replacement invalidation pattern (replace entire dictionary reference rather than clearing) for thread-safe converter and blacklist cache management.
 
-## Testing Strategy
-- **xUnit** testing framework
-- Cross-assembly testing with separate test assembly
-- Comprehensive coverage of serialization scenarios
-- Performance and compatibility testing across target frameworks
+## CI/CD
 
-## Package Information
-- **NuGet Package**: `com.IvanMurzak.ReflectorNet`
-- **Current Version**: 1.0.5
-- **Dependencies**: Microsoft.Extensions.Logging 9.0.7, System.Text.Json 9.0.7
-- **Runtime Identifiers**: Supports Windows, Linux, and macOS (x64, x86, ARM64)
+- **PR workflow** (`pull_request.yml`): build + test on ubuntu with .NET 8.0 + 9.0, publishes trx test results
+- **Release workflow** (`release.yml`): triggered on push to main — reads version from `ReflectorNet.csproj` `<Version>`, creates GitHub release tag, publishes NuGet package. Version bump = new release.
+
+## Versioning
+
+Version is defined in `ReflectorNet/ReflectorNet.csproj` `<Version>` element. Bumping it and merging to main triggers a NuGet publish.
