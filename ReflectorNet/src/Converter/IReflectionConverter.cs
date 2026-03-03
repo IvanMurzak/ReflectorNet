@@ -18,7 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <summary>
         /// Gets a value indicating whether this converter supports direct value setting operations.
         /// When true, the converter can handle primitive-style value assignments.
-        /// When false, the converter only supports field and property-based population.
+        /// When false, the converter only supports field and property-based modification.
         /// </summary>
         bool AllowSetValue { get; }
 
@@ -81,7 +81,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null);
 
-        bool TryPopulate(
+        bool TryModify(
             Reflector reflector,
             ref object? obj,
             SerializedMember data,

@@ -22,7 +22,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
     {
         /// <summary>
         /// Gets cached serializable member names for error messages. This avoids repeated reflection calls
-        /// when fields/properties are not found during population.
+        /// when fields/properties are not found during modification.
         /// </summary>
         private (List<string> fieldNames, List<string> propertyNames) GetCachedSerializableMemberNames(
             Reflector reflector,
@@ -47,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             });
         }
 
-        public virtual bool TryPopulate(
+        public virtual bool TryModify(
             Reflector reflector,
             ref object? obj,
             SerializedMember data,
@@ -72,19 +72,19 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 if (obj == null)
                 {
                     if (logger?.IsEnabled(LogLevel.Error) == true)
-                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{type.GetTypeId()}'.");
+                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' modification failed: Object is null. Instance creation failed for type '{type.GetTypeId()}'.");
 
                     if (logs != null)
-                        logs.Error($"Object '{data.name.ValueOrNull()}' population failed: Object is null. Instance creation failed for type '{type.GetTypeId()}'.", depth);
+                        logs.Error($"Object '{data.name.ValueOrNull()}' modification failed: Object is null. Instance creation failed for type '{type.GetTypeId()}'.", depth);
 
                     return false;
                 }
 
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' populated with type '{type.GetTypeId()}'.");
+                    logger.LogTrace($"{padding}Object '{data.name.ValueOrNull()}' modified with type '{type.GetTypeId()}'.");
 
                 if (logs != null)
-                    logs.Success($"Object '{data.name.ValueOrNull()}' populated with type '{type.GetTypeId()}'.", depth);
+                    logs.Success($"Object '{data.name.ValueOrNull()}' modified with type '{type.GetTypeId()}'.", depth);
 
                 return true;
             }
@@ -150,7 +150,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             {
                 foreach (var field in data.fields)
                 {
-                    var success = TryPopulateField(
+                    var success = TryModifyField(
                         reflector,
                         obj: ref obj!,
                         objType: type,
@@ -165,18 +165,18 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (success)
                     {
                         if (logger?.IsEnabled(LogLevel.Information) == true)
-                            logger.LogInformation($"{nextPadding}[Success] Field '{field.name}' populated.");
+                            logger.LogInformation($"{nextPadding}[Success] Field '{field.name}' modified.");
 
                         if (logs != null)
-                            logs.Success($"Field '{field.name}' populated.", nextDepth);
+                            logs.Success($"Field '{field.name}' modified.", nextDepth);
                     }
                     else
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{nextPadding}Field '{field.name}' was not populated.");
+                            logger.LogWarning($"{nextPadding}Field '{field.name}' was not modified.");
 
                         if (logs != null)
-                            logs.Warning($"Field '{field.name}' was not populated.", nextDepth);
+                            logs.Warning($"Field '{field.name}' was not modified.", nextDepth);
                     }
                 }
             }
@@ -184,17 +184,17 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if ((data.fields?.Count ?? 0) == 0)
             {
                 if (logger?.IsEnabled(LogLevel.Information) == true)
-                    logger.LogInformation($"{nextPadding}No fields populated.");
+                    logger.LogInformation($"{nextPadding}No fields modified.");
 
                 if (logs != null)
-                    logs.Info("No fields populated.", nextDepth);
+                    logs.Info("No fields modified.", nextDepth);
             }
 
             if (data.props != null)
             {
                 foreach (var property in data.props)
                 {
-                    var success = TryPopulateProperty(
+                    var success = TryModifyProperty(
                         reflector,
                         obj: ref obj!,
                         objType: type,
@@ -209,18 +209,18 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     if (success)
                     {
                         if (logger?.IsEnabled(LogLevel.Information) == true)
-                            logger.LogInformation($"{nextPadding}[Success] Property '{property.name}' populated.");
+                            logger.LogInformation($"{nextPadding}[Success] Property '{property.name}' modified.");
 
                         if (logs != null)
-                            logs.Success($"Property '{property.name}' populated.", nextDepth);
+                            logs.Success($"Property '{property.name}' modified.", nextDepth);
                     }
                     else
                     {
                         if (logger?.IsEnabled(LogLevel.Warning) == true)
-                            logger.LogWarning($"{nextPadding}Property '{property.name}' was not populated.");
+                            logger.LogWarning($"{nextPadding}Property '{property.name}' was not modified.");
 
                         if (logs != null)
-                            logs.Warning($"Property '{property.name}' was not populated.", nextDepth);
+                            logs.Warning($"Property '{property.name}' was not modified.", nextDepth);
                     }
                 }
             }
@@ -228,10 +228,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if ((data.props?.Count ?? 0) == 0)
             {
                 if (logger?.IsEnabled(LogLevel.Information) == true)
-                    logger.LogInformation($"{nextPadding}No properties populated.");
+                    logger.LogInformation($"{nextPadding}No properties modified.");
 
                 if (logs != null)
-                    logs.Info("No properties populated.", nextDepth);
+                    logs.Info("No properties modified.", nextDepth);
             }
 
             return overallSuccess;
@@ -246,7 +246,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Logs? logs = null,
             ILogger? logger = null);
 
-        protected virtual bool TryPopulateField(
+        protected virtual bool TryModifyField(
             Reflector reflector,
             ref object obj,
             Type objType,
@@ -312,14 +312,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             try
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Populate field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
+                    logger.LogTrace($"{padding}Modify field type='{fieldInfo.FieldType.GetTypeShortName()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 if (logs != null)
-                    logs.Info($"Populate field type='{fieldInfo.FieldType.GetTypeId().ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
+                    logs.Info($"Modify field type='{fieldInfo.FieldType.GetTypeId().ValueOrNull()}', name='{fieldInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
 
                 var currentValue = fieldInfo.GetValue(obj);
 
-                var success = reflector.TryPopulate(
+                var success = reflector.TryModify(
                     ref currentValue,
                     data: fieldValue,
                     fallbackObjType: targetType,
@@ -361,7 +361,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             }
         }
 
-        protected virtual bool TryPopulateProperty(
+        protected virtual bool TryModifyProperty(
             Reflector reflector,
             ref object obj,
             Type objType,
@@ -426,14 +426,14 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             try
             {
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
-                    logger.LogTrace($"{padding}Populate property type='{propInfo.PropertyType.GetTypeId().ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
+                    logger.LogTrace($"{padding}Modify property type='{propInfo.PropertyType.GetTypeId().ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.");
 
                 if (logs != null)
-                    logs.Info($"Populate property type='{propInfo.PropertyType.GetTypeId().ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
+                    logs.Info($"Modify property type='{propInfo.PropertyType.GetTypeId().ValueOrNull()}', name='{propInfo.Name.ValueOrNull()}'. Converter='{GetType().GetTypeShortName()}'.", depth);
 
                 var currentValue = propInfo.GetValue(obj);
 
-                var success = reflector.TryPopulate(
+                var success = reflector.TryModify(
                     ref currentValue,
                     data: propertyValue,
                     fallbackObjType: targetType,

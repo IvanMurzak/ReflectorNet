@@ -55,10 +55,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 valueJsonElement = JsonDocument.Parse("{}").RootElement
             };
 
-            // Act & Assert - Test error handling in population
+            // Act & Assert - Test error handling in modification
             object? testObject = default(GameObjectRef);
             var logs = new Logs();
-            var success = reflector.TryPopulate(ref testObject, invalidData, depth: 2, logs: logs);
+            var success = reflector.TryModify(ref testObject, invalidData, depth: 2, logs: logs);
 
             Assert.False(success);
             var errorString = logs.ToString();

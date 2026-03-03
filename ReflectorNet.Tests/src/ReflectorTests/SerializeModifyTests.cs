@@ -7,11 +7,11 @@ using com.IvanMurzak.ReflectorNet.Model;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 {
-    public class SerializePopulateTests : BaseTest
+    public class SerializeModifyTests : BaseTest
     {
-        public SerializePopulateTests(ITestOutputHelper output) : base(output) { }
+        public SerializeModifyTests(ITestOutputHelper output) : base(output) { }
 
-        void ActAssertPopulate(object? original, Type? fallbackType = null)
+        void ActAssertModify(object? original, Type? fallbackType = null)
         {
             // Arrange
             var reflector = new Reflector();
@@ -29,32 +29,32 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var type = original?.GetType() ?? fallbackType ?? throw new ArgumentNullException(nameof(original));
             var targetObject = reflector.CreateInstance(type);
 
-            var populateLogger = new StringBuilderLogger();
-            var success = reflector.TryPopulate(
+            var modifyLogger = new StringBuilderLogger();
+            var success = reflector.TryModify(
                 obj: ref targetObject,
                 data: serialized,
                 fallbackObjType: type,
                 logs: new Logs(),
-                logger: populateLogger);
+                logger: modifyLogger);
 
             Assert.True(success);
 
-            _output.WriteLine($"Population:\n{populateLogger}");
+            _output.WriteLine($"Modification:\n{modifyLogger}");
 
             // Assert
             var originalJson = original.ToJson(reflector);
-            var populatedJson = targetObject.ToJson(reflector);
+            var modifiedJson = targetObject.ToJson(reflector);
 
             _output.WriteLine($"----------------------------\n");
 
             _output.WriteLine($"Original JSON:\n{originalJson}\n");
-            _output.WriteLine($"Populated JSON:\n{populatedJson}\n");
+            _output.WriteLine($"Modified JSON:\n{modifiedJson}\n");
 
             _output.WriteLine($"----------------------------\n");
 
             _output.WriteLine($"Serialized JSON:\n{serialized.ToJson(reflector)}\n");
 
-            Assert.Equal(originalJson, populatedJson);
+            Assert.Equal(originalJson, modifiedJson);
 
             _output.WriteLine($"============================\n");
         }
@@ -65,7 +65,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var reflector = new Reflector();
 
             foreach (var type in TestUtils.Types.AllBaseNonStaticTypes)
-                ActAssertPopulate(reflector.CreateInstance(type), fallbackType: type);
+                ActAssertModify(reflector.CreateInstance(type), fallbackType: type);
         }
 
         [Fact]
@@ -74,13 +74,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var reflector = new Reflector();
 
             foreach (var type in TestUtils.Types.AllBaseNonStaticTypes)
-                ActAssertPopulate(reflector.GetDefaultValue(type), fallbackType: type);
+                ActAssertModify(reflector.GetDefaultValue(type), fallbackType: type);
         }
 
         [Fact]
         public void SolarSystem()
         {
-            ActAssertPopulate(new SolarSystem()
+            ActAssertModify(new SolarSystem()
             {
                 sun = new GameObjectRef() { instanceID = 1 },
                 celestialBodies = new SolarSystem.CelestialBody[]
@@ -107,7 +107,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [Fact]
         public void WrappedField_SolarSystem()
         {
-            ActAssertPopulate(new WrapperClass<SolarSystem>()
+            ActAssertModify(new WrapperClass<SolarSystem>()
             {
                 ValueField = new SolarSystem()
                 {
@@ -137,7 +137,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [Fact]
         public void WrappedProperty_SolarSystem()
         {
-            ActAssertPopulate(new WrapperClass<SolarSystem>()
+            ActAssertModify(new WrapperClass<SolarSystem>()
             {
                 ValueProperty = new SolarSystem()
                 {
@@ -168,7 +168,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [Fact]
         public void SolarSystemArray()
         {
-            ActAssertPopulate(new SolarSystem[]
+            ActAssertModify(new SolarSystem[]
             {
                 new SolarSystem()
                 {
@@ -198,7 +198,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         [Fact]
         public void SolarSystemArrayArray()
         {
-            ActAssertPopulate(new SolarSystem[][]
+            ActAssertModify(new SolarSystem[][]
             {
                 new SolarSystem[]
                 {

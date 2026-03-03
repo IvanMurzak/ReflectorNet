@@ -67,16 +67,16 @@ MyComplexClass restored = reflector.Deserialize<MyComplexClass>(serialized);
 object restoredObj = reflector.Deserialize(serialized);
 ```
 
-### 4. In-Place Population
+### 4. In-Place Modification
 
 Update an existing object instance with new data. This is crucial for maintaining object identity in stateful applications (like Unity games or long-running services).
 
 ```csharp
 var existingInstance = new MyComplexClass();
 
-// Populate 'existingInstance' with data from 'serialized'
+// Modify 'existingInstance' with data from 'serialized'
 // Returns true if successful
-bool success = reflector.TryPopulate(ref existingInstance, serialized);
+bool success = reflector.TryModify(ref existingInstance, serialized);
 ```
 
 ### 5. Dynamic Method Invocation
