@@ -102,7 +102,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
             var cache = GetCache();
             var type = typeof(TestEnumerable);
 
-            // Populate
+            // Modify
             TypeUtils.GetEnumerableItemType(type);
             Assert.True(cache.ContainsKey(type));
 

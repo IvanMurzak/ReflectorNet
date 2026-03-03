@@ -99,10 +99,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
             var type = typeof(TestEntity);
             var bindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
-            // First call - should populate cache
+            // First call - should modify cache
             var fields1 = converter.GetSerializableFields(reflector, type, bindingFlags);
 
-            // Verify cache is populated
+            // Verify cache is modified
             var cache = GetFieldCache(converter);
             Assert.Equal(1, cache.Count);
             Assert.True(cache.ContainsKey((type, bindingFlags)));
@@ -124,10 +124,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
             var type = typeof(TestEntity);
             var bindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
-            // First call - should populate cache
+            // First call - should modify cache
             var props1 = converter.GetSerializableProperties(reflector, type, bindingFlags);
 
-            // Verify cache is populated
+            // Verify cache is modified
             var cache = GetPropertyCache(converter);
             Assert.Equal(1, cache.Count);
             Assert.True(cache.ContainsKey((type, bindingFlags)));
@@ -189,11 +189,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Converter.Reflection.Base
             var type = typeof(TestEntity);
             var flags = BindingFlags.Public | BindingFlags.Instance;
 
-            // Populate caches
+            // Modify caches
             converter.GetSerializableFields(reflector, type, flags);
             converter.GetSerializableProperties(reflector, type, flags);
 
-            // Verify populated
+            // Verify modified
             var fieldCache = GetFieldCache(converter);
             var propCache = GetPropertyCache(converter);
             Assert.Equal(1, fieldCache.Count);

@@ -453,7 +453,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
         #region Tuple (reference type) Serialization Tests (1-8 elements)
         // Note: System.Tuple<> is immutable with read-only properties.
-        // Deserialization cannot populate properties without setters.
+        // Deserialization cannot modify properties without setters.
         // These tests verify serialization works correctly.
 
         [Fact]

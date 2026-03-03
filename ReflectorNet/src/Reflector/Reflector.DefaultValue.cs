@@ -21,7 +21,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// - Custom logic: Allows converters to implement specialized instantiation for specific types
         ///
         /// This method is essential for deserialization scenarios where new object instances
-        /// need to be created before population with serialized data.
+        /// need to be created before modification with serialized data.
         /// </summary>
         /// <typeparam name="T">The type of instance to create.</typeparam>
         /// <returns>A new instance of type T, or null if T is a reference type that cannot be instantiated.</returns>
@@ -43,7 +43,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// - Custom logic: Allows converters to implement specialized instantiation for specific types
         ///
         /// This method is essential for deserialization scenarios where new object instances
-        /// need to be created before population with serialized data.
+        /// need to be created before modification with serialized data.
         /// </summary>
         /// <param name="type">The Type of instance to create.</param>
         /// <returns>A new instance of the specified type, or null if it's a reference type that cannot be instantiated.</returns>

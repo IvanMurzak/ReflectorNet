@@ -48,7 +48,7 @@ ReflectorNet is a reflection toolkit for AI-driven .NET scenarios — fuzzy meth
 | `Reflector.cs` | Constructor, reference resolution |
 | `Reflector.Serialize.cs` | Object → `SerializedMember` |
 | `Reflector.Deserialize.cs` | `SerializedMember` → object |
-| `Reflector.Populate.cs` | In-place object updates |
+| `Reflector.Modify.cs` | In-place object updates |
 | `Reflector.FindMethod.cs` | Fuzzy method discovery (match levels 1-6) |
 | `Reflector.CallMethod.cs` | Dynamic method invocation |
 | `Reflector.Json.cs` | JSON serialization integration |
@@ -62,7 +62,7 @@ ReflectorNet is a reflection toolkit for AI-driven .NET scenarios — fuzzy meth
 Located in `src/Converter/`. The `Registry` selects the best converter by querying each for `SerializationPriority(Type)` — highest score wins.
 
 **Reflection converters** (`src/Converter/Reflection/`):
-- `BaseReflectionConverter<T>` — abstract base (partial: `.Serialize`, `.Deserialize`, `.Populate`, `.DefaultValue`)
+- `BaseReflectionConverter<T>` — abstract base (partial: `.Serialize`, `.Deserialize`, `.Modify`, `.DefaultValue`)
 - `PrimitiveReflectionConverter` — built-in types (int, string, DateTime, etc.)
 - `GenericReflectionConverter<T>` — custom classes/structs (fallback)
 - `ArrayReflectionConverter` — arrays and collections (partial: `.Deserialize`)
