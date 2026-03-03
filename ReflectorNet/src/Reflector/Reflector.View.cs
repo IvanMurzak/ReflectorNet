@@ -9,7 +9,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -102,7 +101,7 @@ namespace com.IvanMurzak.ReflectorNet
             ILogger? logger = null)
         {
             var matches = new List<ViewMatch>();
-            var visited = new HashSet<int>();
+            var visited = new HashSet<object>(ObjectReferenceEqualityComparer.Instance);
             GrepWalk(obj, obj?.GetType() ?? fallbackObjType, namePattern, maxDepth, 0,
                      string.Empty, matches, visited, depth, logs, flags, logger);
             return matches.AsReadOnly();
@@ -118,7 +117,7 @@ namespace com.IvanMurzak.ReflectorNet
             int currentDepth,
             string currentPath,
             List<ViewMatch> matches,
-            HashSet<int> visited,
+            HashSet<object> visited,
             int depth,
             Logs? logs,
             BindingFlags flags,
@@ -133,8 +132,7 @@ namespace com.IvanMurzak.ReflectorNet
             // Circular-reference guard for reference types
             if (!resolvedType.IsValueType)
             {
-                var id = RuntimeHelpers.GetHashCode(obj);
-                if (!visited.Add(id)) return;
+                if (!visited.Add(obj)) return;
             }
 
             // Arrays / IList — recurse into elements (name-match does not apply to index paths)
@@ -169,11 +167,8 @@ namespace com.IvanMurzak.ReflectorNet
                         matches.Add(new ViewMatch(fieldPath, serialized));
                     }
 
-                    // Recurse into non-primitive, non-list types
-                    if (!TypeUtils.IsPrimitive(field.FieldType) && !(fieldValue is IList))
-                        GrepWalk(fieldValue, field.FieldType, namePattern, maxDepth, currentDepth + 1,
-                                 fieldPath, matches, visited, depth, logs, flags, logger);
-                    else if (fieldValue is IList)
+                    // Recurse into non-primitive types (IList is handled by GrepWalk's own guard at entry)
+                    if (!TypeUtils.IsPrimitive(field.FieldType))
                         GrepWalk(fieldValue, field.FieldType, namePattern, maxDepth, currentDepth + 1,
                                  fieldPath, matches, visited, depth, logs, flags, logger);
                 }
@@ -334,6 +329,18 @@ namespace com.IvanMurzak.ReflectorNet
                 }
             }
             return result;
+        }
+
+        // Comparer that uses object identity (ReferenceEquals) rather than value equality.
+        // Avoids false-positive cycle-detection when two distinct objects share the same GetHashCode().
+        // netstandard2.1 does not provide System.Collections.Generic.ReferenceEqualityComparer,
+        // so we supply our own.
+        private sealed class ObjectReferenceEqualityComparer : IEqualityComparer<object>
+        {
+            public static readonly ObjectReferenceEqualityComparer Instance = new ObjectReferenceEqualityComparer();
+            private ObjectReferenceEqualityComparer() { }
+            public new bool Equals(object? x, object? y) => ReferenceEquals(x, y);
+            public int GetHashCode(object obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
         }
     }
 }
