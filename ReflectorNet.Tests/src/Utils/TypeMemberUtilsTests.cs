@@ -36,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var flags = BindingFlags.Public | BindingFlags.Instance;
             var fieldName = nameof(TestEntity.Field1);
 
-            // First call - should populate cache
+            // First call - should modify cache
             var field1 = TypeMemberUtils.GetField(type, flags, fieldName);
             Assert.NotNull(field1);
             Assert.Equal(fieldName, field1!.Name);
