@@ -1,0 +1,25 @@
+ReflectorNet/src/Reflector/Reflector.Patch.cs
+  8000549818d5a3b2 116,121-137,142,144-145
+ReflectorNet.Tests/src/ReflectorTests/AtomicModifyTests.cs
+  8000549818d5a3b2 365-535,547-565
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "25b26172bcd40551d4c6a3fdae13e545b227623f",
+  "prompts": {
+    "8000549818d5a3b2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5054ffe7-c300-461e-a89c-50bf54b690ce",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>",
+      "messages": [],
+      "total_additions": 1020,
+      "total_deletions": 814,
+      "accepted_lines": 346,
+      "overriden_lines": 0
+    }
+  }
+}
