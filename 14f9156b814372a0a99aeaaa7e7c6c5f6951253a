@@ -1,0 +1,23 @@
+ReflectorNet.Tests/src/ReflectorTests/ReflectorCoverageTests.cs
+  ad0659ad5c647308 1-1113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "14f9156b814372a0a99aeaaa7e7c6c5f6951253a",
+  "prompts": {
+    "ad0659ad5c647308": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c1d75ca4-550b-4e1a-950e-3ecefe8ec33c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>",
+      "messages": [],
+      "total_additions": 1133,
+      "total_deletions": 18,
+      "accepted_lines": 1113,
+      "overriden_lines": 0
+    }
+  }
+}
