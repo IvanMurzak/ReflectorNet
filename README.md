@@ -23,6 +23,7 @@ Traditional reflection is brittle and requires exact matches. ReflectorNet is bu
 *   **🔄 In-Place Modification**: Update existing object instances from serialized data without breaking references.
 *   **🎯 Atomic Path-Based Modification**: Navigate directly to any field, array element, or dictionary entry by path and modify only that — without touching anything else.
 *   **🩹 JSON Patch**: Apply a JSON document to modify multiple fields at different depths in a single call, following JSON Merge Patch (RFC 7396) semantics.
+*   **🔎 View & Grep**: Read exactly what you need — navigate to a subtree, filter by name pattern or type, or grep the entire live object graph for all fields matching a regex. The read-side counterpart to path-based modification.
 *   **📄 JSON Schema Generation**: Automatically generate schemas for your types and methods to feed into LLM context windows.
 
 ## 📦 Installation
@@ -187,7 +188,134 @@ using var doc = JsonDocument.Parse(@"{ ""globalOrbitSpeedMultiplier"": 9.0 }");
 reflector.TryPatch(ref system, doc.RootElement, logs: logs);
 ```
 
-### 7. Dynamic Method Invocation
+### 7. View & Grep — Read-Side Navigation
+
+Read exactly the data you need from a live object — navigate to a specific subtree, filter by name or type, or grep the entire graph for every field matching a pattern.
+This is the read-side counterpart to [Atomic Path-Based Modification](#5-atomic-path-based-modification).
+
+---
+
+#### `reflector.View` — filtered serialization
+
+Returns a `SerializedMember` tree with optional path navigation and post-filters applied.
+
+```csharp
+var reflector = new Reflector();
+object? system = new SolarSystem
+{
+    globalOrbitSpeedMultiplier = 1f,
+    globalSizeMultiplier       = 2f,
+    celestialBodies = new[]
+    {
+        new CelestialBody { orbitRadius = 10f, orbitSpeed = 1f },
+        new CelestialBody { orbitRadius = 20f, orbitSpeed = 2f },
+    }
+};
+
+// Full view — equivalent to Serialize()
+SerializedMember? full = reflector.View(system);
+
+// Navigate to a subtree (same path format as TryModifyAt)
+SerializedMember? firstBody = reflector.View(system,
+    new ViewQuery { Path = "celestialBodies/[0]" });
+// firstBody.typeName contains "CelestialBody"
+
+// Depth-limited — MaxDepth=0 returns root node only (no children)
+SerializedMember? shallow = reflector.View(system,
+    new ViewQuery { MaxDepth = 1 });
+
+// Pattern filter — keep only branches containing a matching field name
+// Accepts any .NET regex; matching is case-insensitive
+SerializedMember? orbitFields = reflector.View(system,
+    new ViewQuery { NamePattern = "^orbit" });
+
+// Type filter — keep only branches whose resolved type is assignable to float
+SerializedMember? floatFields = reflector.View(system,
+    new ViewQuery { TypeFilter = typeof(float) });
+
+// Combined — navigate first, then filter
+SerializedMember? result = reflector.View(system, new ViewQuery
+{
+    Path        = "celestialBodies/[0]",
+    NamePattern = "^orbit",
+    MaxDepth    = 2,
+});
+```
+
+When a filter produces no matches the **root envelope is still returned** with an empty fields collection so that `result.typeName` always identifies the navigated node's type.
+
+**`ViewQuery` options:**
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `Path` | `string?` | `null` | Navigate to this path before serializing (same format as `TryModifyAt`) |
+| `MaxDepth` | `int?` | `null` | Maximum depth of returned tree (`0` = root node only, no children) |
+| `NamePattern` | `string?` | `null` | .NET regex matched against field / property names (case-insensitive) |
+| `TypeFilter` | `Type?` | `null` | Keep only branches whose resolved runtime type is assignable to this type |
+
+---
+
+#### `reflector.TryReadAt` — single-value path read
+
+Navigate to exactly one value by path and serialize it. Mirrors `TryModifyAt` but reads instead of writes.
+
+```csharp
+// Scalar leaf
+bool ok = reflector.TryReadAt(system, "celestialBodies/[0]/orbitRadius", out SerializedMember? r);
+if (ok)
+    Console.WriteLine(r!.GetValue<float>(reflector)); // 10f
+
+// Composite node — result has full fields tree for the navigated object
+reflector.TryReadAt(system, "celestialBodies/[0]", out var body);
+float radius = body!.fields!.First(f => f.name == "orbitRadius").GetValue<float>(reflector);
+
+// Dictionary access — string or any key type
+reflector.TryReadAt(container, "config/[timeout]", out var timeout);
+int ms = timeout!.GetValue<int>(reflector); // 30
+
+// Invalid paths return false; errors are collected in Logs — nothing is thrown
+var logs = new Logs();
+bool ok2 = reflector.TryReadAt(system, "doesNotExist", out _, logs: logs);
+// ok2 == false
+// logs: "Segment 'doesNotExist' not found on type 'SolarSystem'.
+//        Available fields: globalOrbitSpeedMultiplier, celestialBodies, ..."
+```
+
+---
+
+#### `reflector.Grep` — grep the live object graph
+
+Walks the entire live object graph and returns a flat list of every field / property whose name matches the given regex pattern — like the `grep` command, but for in-RAM objects.
+
+```csharp
+// Find every field whose name starts with "orbit"
+IReadOnlyList<ViewMatch> hits = reflector.Grep(system, "^orbit");
+
+foreach (var hit in hits)
+    Console.WriteLine($"{hit.Path} = {hit.Value.GetValue<float>(reflector)}");
+// celestialBodies/[0]/orbitRadius = 10
+// celestialBodies/[0]/orbitSpeed  = 1
+// celestialBodies/[1]/orbitRadius = 20
+// celestialBodies/[1]/orbitSpeed  = 2
+
+// Limit search depth (0 = top-level fields only, no recursion)
+IReadOnlyList<ViewMatch> topLevel = reflector.Grep(system, ".*", maxDepth: 0);
+
+// Exact name — anchored regex
+IReadOnlyList<ViewMatch> exact = reflector.Grep(system, "^globalOrbitSpeedMultiplier$");
+Console.WriteLine(exact[0].Path);  // "globalOrbitSpeedMultiplier"
+```
+
+Each `ViewMatch` exposes:
+
+* `Path` — full slash-delimited path, e.g. `"celestialBodies/[0]/orbitRadius"`
+* `Value` — `SerializedMember` of the matched field, ready for `GetValue<T>(reflector)`
+
+> **Grep vs. View + NamePattern**: `Grep` walks the **live object graph** and can find fields inside array elements. `View` + `NamePattern` filters the `SerializedMember` tree after serialization; array element contents are stored as JSON and are not individually filterable by name. Use `Grep` when you need to search inside arrays.
+
+---
+
+### 8. Dynamic Method Invocation
 
 Allow AI to find and call methods without knowing the exact signature.
 
@@ -218,7 +346,7 @@ string result = reflector.MethodCall(
 Console.WriteLine(result); // Output: [Success] 30
 ```
 
-### 6. Method Inspection & Schema Generation
+### 9. Method Inspection & Schema Generation
 
 Generate JSON schemas for types and methods to help LLMs understand your code structure.
 
