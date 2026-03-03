@@ -1,0 +1,31 @@
+ReflectorNet/src/Reflector/Reflector.cs
+  6228410325e67c81 23,28,40-41
+ReflectorNet/src/Reflector/Reflector.DefaultValue.cs
+  6228410325e67c81 24,46
+ReflectorNet/src/Converter/Reflection/Base/BaseReflectionConverter.cs
+  6228410325e67c81 19,26,81
+README.md
+  6228410325e67c81 23
+ReflectorNet/src/Converter/Reflection/Base/BaseReflectionConverter.Deserialize.cs
+  6228410325e67c81 26-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "5891cded04317d53413d3ec6c59e58965d9ade58",
+  "prompts": {
+    "6228410325e67c81": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e2aacda7-ca54-4a96-9698-2890a1c7f250",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>",
+      "messages": [],
+      "total_additions": 1237,
+      "total_deletions": 1237,
+      "accepted_lines": 478,
+      "overriden_lines": 0
+    }
+  }
+}
