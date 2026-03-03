@@ -63,7 +63,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// <paramref name="objType"/> to the value at that segment.
         /// Handles bracket notation ([i] for arrays/lists, [key] for dicts) and plain member names.
         /// </summary>
-        internal bool TryNavigateOneSegment(
+        private bool TryNavigateOneSegment(
             ref object? obj,
             ref Type? objType,
             string segment,

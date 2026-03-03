@@ -68,8 +68,9 @@ namespace com.IvanMurzak.ReflectorNet
 
                 if (!string.IsNullOrEmpty(query.NamePattern))
                 {
-                    var filtered = FilterByNamePattern(serialized, query.NamePattern);
-                    // If nothing matched, return root envelope with empty fields/props
+                    var rx = TryCompilePattern(query.NamePattern, logs, depth);
+                    var filtered = rx != null ? FilterByNamePattern(serialized, rx) : null;
+                    // If nothing matched (or invalid pattern), return root envelope with empty fields/props
                     serialized = filtered ?? new SerializedMember { name = serialized.name, typeName = serialized.typeName };
                 }
 
@@ -91,6 +92,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// beginning with "orbit". maxDepth limits how many levels deep the search recurses
         /// (null = unlimited).
         ///
+        /// An invalid regex pattern logs an error and returns an empty list; nothing is thrown.
         /// Errors are accumulated in the optional Logs object; nothing is thrown.
         /// </summary>
         public IReadOnlyList<ViewMatch> Grep(
@@ -103,9 +105,12 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            var rx = TryCompilePattern(namePattern, logs, depth);
+            if (rx == null) return new List<ViewMatch>().AsReadOnly();
+
             var matches = new List<ViewMatch>();
             var visited = new HashSet<object>(ObjectReferenceEqualityComparer.Instance);
-            GrepWalk(obj, obj?.GetType() ?? fallbackObjType, namePattern, maxDepth, 0,
+            GrepWalk(obj, rx, maxDepth, 0,
                      string.Empty, matches, visited, depth, logs, flags, logger);
             return matches.AsReadOnly();
         }
@@ -114,8 +119,7 @@ namespace com.IvanMurzak.ReflectorNet
 
         private void GrepWalk(
             object? obj,
-            Type? objType,
-            string namePattern,
+            Regex rx,
             int? maxDepth,
             int currentDepth,
             string currentPath,
@@ -129,8 +133,7 @@ namespace com.IvanMurzak.ReflectorNet
             if (obj == null) return;
             if (maxDepth.HasValue && currentDepth > maxDepth.Value) return;
 
-            var resolvedType = obj.GetType() ?? objType;
-            if (resolvedType == null) return;
+            var resolvedType = obj.GetType();
 
             // Circular-reference guard for reference types
             if (!resolvedType.IsValueType)
@@ -141,11 +144,10 @@ namespace com.IvanMurzak.ReflectorNet
             // Arrays / IList — recurse into elements (name-match does not apply to index paths)
             if (obj is IList list)
             {
-                var elementType = TypeUtils.GetEnumerableItemType(resolvedType);
                 for (int i = 0; i < list.Count; i++)
                 {
                     var elemPath = currentPath.Length == 0 ? $"[{i}]" : $"{currentPath}/[{i}]";
-                    GrepWalk(list[i], elementType, namePattern, maxDepth, currentDepth + 1,
+                    GrepWalk(list[i], rx, maxDepth, currentDepth + 1,
                              elemPath, matches, visited, serializeDepth, logs, flags, logger);
                 }
                 return; // arrays also implement IEnumerable — skip field/dict scanning
@@ -163,7 +165,7 @@ namespace com.IvanMurzak.ReflectorNet
                     try { fieldValue = field.GetValue(obj); }
                     catch { continue; }
 
-                    if (Regex.IsMatch(field.Name, namePattern, RegexOptions.IgnoreCase))
+                    if (rx.IsMatch(field.Name))
                     {
                         var serialized = Serialize(fieldValue, field.FieldType, name: field.Name,
                                                    depth: serializeDepth, logs: logs, flags: flags, logger: logger);
@@ -172,7 +174,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                     // Recurse into non-primitive types (IList is handled by GrepWalk's own guard at entry)
                     if (!TypeUtils.IsPrimitive(field.FieldType))
-                        GrepWalk(fieldValue, field.FieldType, namePattern, maxDepth, currentDepth + 1,
+                        GrepWalk(fieldValue, rx, maxDepth, currentDepth + 1,
                                  fieldPath, matches, visited, serializeDepth, logs, flags, logger);
                 }
             }
@@ -191,7 +193,7 @@ namespace com.IvanMurzak.ReflectorNet
                     try { propValue = prop.GetValue(obj); }
                     catch { continue; }
 
-                    if (Regex.IsMatch(prop.Name, namePattern, RegexOptions.IgnoreCase))
+                    if (rx.IsMatch(prop.Name))
                     {
                         var serialized = Serialize(propValue, prop.PropertyType, name: prop.Name,
                                                    depth: serializeDepth, logs: logs, flags: flags, logger: logger);
@@ -200,7 +202,7 @@ namespace com.IvanMurzak.ReflectorNet
 
                     // Recurse into non-primitive types
                     if (!TypeUtils.IsPrimitive(prop.PropertyType))
-                        GrepWalk(propValue, prop.PropertyType, namePattern, maxDepth, currentDepth + 1,
+                        GrepWalk(propValue, rx, maxDepth, currentDepth + 1,
                                  propPath, matches, visited, serializeDepth, logs, flags, logger);
                 }
             }
@@ -208,13 +210,11 @@ namespace com.IvanMurzak.ReflectorNet
             // Dictionaries — recurse into values (name-match does not apply to key paths)
             if (TypeUtils.IsDictionary(resolvedType))
             {
-                var args    = TypeUtils.GetDictionaryGenericArguments(resolvedType);
-                var valType = args?[1] ?? typeof(object);
                 var dict    = (IDictionary)obj;
                 foreach (var key in dict.Keys)
                 {
                     var valuePath = currentPath.Length == 0 ? $"[{key}]" : $"{currentPath}/[{key}]";
-                    GrepWalk(dict[key], valType, namePattern, maxDepth, currentDepth + 1,
+                    GrepWalk(dict[key], rx, maxDepth, currentDepth + 1,
                              valuePath, matches, visited, serializeDepth, logs, flags, logger);
                 }
             }
@@ -253,14 +253,14 @@ namespace com.IvanMurzak.ReflectorNet
 
         /// <summary>
         /// Keeps only branches containing at least one field/property whose name matches
-        /// <paramref name="pattern"/> (regex, case-insensitive).
+        /// <paramref name="rx"/> (case-insensitive, pre-compiled).
         /// Returns null when nothing in this subtree matches.
         /// </summary>
-        private static SerializedMember? FilterByNamePattern(SerializedMember m, string pattern)
+        private static SerializedMember? FilterByNamePattern(SerializedMember m, Regex rx)
         {
-            var selfMatch      = m.name != null && Regex.IsMatch(m.name, pattern, RegexOptions.IgnoreCase);
-            var filteredFields = FilterListByNamePattern(m.fields, pattern);
-            var filteredProps  = FilterListByNamePattern(m.props,  pattern);
+            var selfMatch      = m.name != null && rx.IsMatch(m.name);
+            var filteredFields = FilterListByNamePattern(m.fields, rx);
+            var filteredProps  = FilterListByNamePattern(m.props,  rx);
 
             if (!selfMatch && filteredFields == null && filteredProps == null)
                 return null;
@@ -275,14 +275,14 @@ namespace com.IvanMurzak.ReflectorNet
             };
         }
 
-        private static SerializedMemberList? FilterListByNamePattern(SerializedMemberList? list, string pattern)
+        private static SerializedMemberList? FilterListByNamePattern(SerializedMemberList? list, Regex rx)
         {
             if (list == null || list.Count == 0) return null;
 
             SerializedMemberList? result = null;
             foreach (var m in list)
             {
-                var filtered = FilterByNamePattern(m, pattern);
+                var filtered = FilterByNamePattern(m, rx);
                 if (filtered != null)
                 {
                     result ??= new SerializedMemberList();
@@ -332,6 +332,25 @@ namespace com.IvanMurzak.ReflectorNet
                 }
             }
             return result;
+        }
+
+        // ─── Regex helper ─────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Compiles <paramref name="pattern"/> as a case-insensitive regex.
+        /// Returns null and logs an error if the pattern is invalid; nothing is thrown.
+        /// </summary>
+        private static Regex? TryCompilePattern(string pattern, Logs? logs, int depth = 0)
+        {
+            try
+            {
+                return new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            }
+            catch (ArgumentException ex)
+            {
+                logs?.Error($"Invalid regex pattern '{pattern}': {ex.Message}", depth);
+                return null;
+            }
         }
 
         // Comparer that uses object identity (ReferenceEquals) rather than value equality.
