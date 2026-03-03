@@ -22,11 +22,14 @@ namespace com.IvanMurzak.ReflectorNet
         /// Serializes the object (or a navigated subtree) with optional filtering.
         /// Without a query (or with an empty query) this is equivalent to Serialize().
         ///
-        /// ViewQuery options:
+        /// ViewQuery options (applied in this order):
         ///   Path        — navigate to a path first, then serialize only that subtree
         ///   MaxDepth    — prune the returned tree to N levels (0 = root typeName/value only)
         ///   NamePattern — keep only branches containing a field/property name matching a .NET regex
         ///   TypeFilter  — keep only branches whose typeName resolves to a type assignable to this
+        ///
+        /// Filter order matters: MaxDepth prunes the tree before NamePattern/TypeFilter are applied,
+        /// so members deeper than MaxDepth are excluded even if their name or type would match.
         ///
         /// Errors are accumulated in the optional Logs object; nothing is thrown.
         /// </summary>
@@ -118,7 +121,7 @@ namespace com.IvanMurzak.ReflectorNet
             string currentPath,
             List<ViewMatch> matches,
             HashSet<object> visited,
-            int depth,
+            int serializeDepth,
             Logs? logs,
             BindingFlags flags,
             ILogger? logger)
@@ -143,7 +146,7 @@ namespace com.IvanMurzak.ReflectorNet
                 {
                     var elemPath = currentPath.Length == 0 ? $"[{i}]" : $"{currentPath}/[{i}]";
                     GrepWalk(list[i], elementType, namePattern, maxDepth, currentDepth + 1,
-                             elemPath, matches, visited, depth, logs, flags, logger);
+                             elemPath, matches, visited, serializeDepth, logs, flags, logger);
                 }
                 return; // arrays also implement IEnumerable — skip field/dict scanning
             }
@@ -163,14 +166,14 @@ namespace com.IvanMurzak.ReflectorNet
                     if (Regex.IsMatch(field.Name, namePattern, RegexOptions.IgnoreCase))
                     {
                         var serialized = Serialize(fieldValue, field.FieldType, name: field.Name,
-                                                   depth: depth, logs: logs, flags: flags, logger: logger);
+                                                   depth: serializeDepth, logs: logs, flags: flags, logger: logger);
                         matches.Add(new ViewMatch(fieldPath, serialized));
                     }
 
                     // Recurse into non-primitive types (IList is handled by GrepWalk's own guard at entry)
                     if (!TypeUtils.IsPrimitive(field.FieldType))
                         GrepWalk(fieldValue, field.FieldType, namePattern, maxDepth, currentDepth + 1,
-                                 fieldPath, matches, visited, depth, logs, flags, logger);
+                                 fieldPath, matches, visited, serializeDepth, logs, flags, logger);
                 }
             }
 
@@ -191,14 +194,14 @@ namespace com.IvanMurzak.ReflectorNet
                     if (Regex.IsMatch(prop.Name, namePattern, RegexOptions.IgnoreCase))
                     {
                         var serialized = Serialize(propValue, prop.PropertyType, name: prop.Name,
-                                                   depth: depth, logs: logs, flags: flags, logger: logger);
+                                                   depth: serializeDepth, logs: logs, flags: flags, logger: logger);
                         matches.Add(new ViewMatch(propPath, serialized));
                     }
 
                     // Recurse into non-primitive types
                     if (!TypeUtils.IsPrimitive(prop.PropertyType))
                         GrepWalk(propValue, prop.PropertyType, namePattern, maxDepth, currentDepth + 1,
-                                 propPath, matches, visited, depth, logs, flags, logger);
+                                 propPath, matches, visited, serializeDepth, logs, flags, logger);
                 }
             }
 
@@ -212,7 +215,7 @@ namespace com.IvanMurzak.ReflectorNet
                 {
                     var valuePath = currentPath.Length == 0 ? $"[{key}]" : $"{currentPath}/[{key}]";
                     GrepWalk(dict[key], valType, namePattern, maxDepth, currentDepth + 1,
-                             valuePath, matches, visited, depth, logs, flags, logger);
+                             valuePath, matches, visited, serializeDepth, logs, flags, logger);
                 }
             }
         }

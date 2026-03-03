@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -448,6 +449,45 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             Assert.True(matches.Count >= 1);
             Assert.Contains(matches, m => m.Path == "config");
+        }
+
+        // ─── View — TypeFilter keeps only matching type branches ─────────────────
+
+        [Fact]
+        public void View_TypeFilter_KeepsMatchingBranches()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                globalOrbitSpeedMultiplier = 2f,
+                globalSizeMultiplier = 3f,
+            };
+            object? obj = system;
+
+            // TypeFilter = float should keep only float fields and discard non-float ones
+            var result = reflector.View(obj, new ViewQuery { TypeFilter = typeof(float) });
+
+            Assert.NotNull(result);
+            // All returned fields/props must resolve to float
+            if (result.fields != null)
+                Assert.True(result.fields.All(f => f.typeName != null && f.typeName.Contains("Single") || f.typeName == "float"),
+                    "Only float fields should survive TypeFilter=float");
+        }
+
+        [Fact]
+        public void View_TypeFilter_NoMatch_EmptyEnvelope()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 1f };
+            object? obj = system;
+
+            // Nothing in SolarSystem resolves to Guid
+            var result = reflector.View(obj, new ViewQuery { TypeFilter = typeof(Guid) });
+
+            Assert.NotNull(result);
+            Assert.Contains("SolarSystem", result.typeName);
+            Assert.True(result.fields == null || result.fields.Count == 0,
+                "No matching type → empty envelope");
         }
 
         // ─── Test-local helper types ───────────────────────────────────────────────

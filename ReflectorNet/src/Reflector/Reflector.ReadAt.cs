@@ -177,10 +177,12 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             // ── Not found — detailed error with available members ──────────────────────
-            var fieldNames = resolvedType.GetFields(flags).Select(f => f.Name).ToList();
-            var propNames  = resolvedType.GetProperties(flags).Select(p => p.Name).ToList();
-            var fieldsStr  = fieldNames.Count > 0 ? string.Join(", ", fieldNames) : "none";
-            var propsStr   = propNames.Count  > 0 ? string.Join(", ", propNames)  : "none";
+            var serializableFields = GetSerializableFields(resolvedType, flags, logger);
+            var serializableProps  = GetSerializableProperties(resolvedType, flags, logger);
+            var fieldsStr = serializableFields != null ? string.Join(", ", serializableFields.Select(f => f.Name)) : "none";
+            var propsStr  = serializableProps  != null ? string.Join(", ", serializableProps .Select(p => p.Name)) : "none";
+            if (fieldsStr.Length == 0) fieldsStr = "none";
+            if (propsStr .Length == 0) propsStr  = "none";
 
             var errorMsg = $"Segment '{segment}' not found on type '{resolvedType.GetTypeShortName()}'."
                          + $"\nAvailable fields: {fieldsStr}"
