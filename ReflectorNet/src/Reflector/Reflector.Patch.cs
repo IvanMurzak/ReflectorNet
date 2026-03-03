@@ -113,20 +113,36 @@ namespace com.IvanMurzak.ReflectorNet
                 typeHint = typeElement.GetString();
 
             // Apply type replacement if $type specifies a compatible subtype
+            var overallSuccess = true;
             if (typeHint != null)
             {
                 var desiredType = TypeUtils.GetType(typeHint);
                 var declaredType = objType ?? obj?.GetType();
-                if (desiredType != null
-                    && obj != null
-                    && desiredType != obj.GetType()
-                    && (declaredType == null || declaredType.IsAssignableFrom(desiredType)))
+                if (desiredType == null)
+                {
+                    var typeMsg = $"$type hint '{typeHint}' could not be resolved to a known type.";
+                    logs?.Error(typeMsg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{typeMsg}");
+                    overallSuccess = false;
+                }
+                else if (declaredType != null && !declaredType.IsAssignableFrom(desiredType))
+                {
+                    var typeMsg = $"$type hint '{typeHint}' ('{desiredType.GetTypeShortName()}') is not assignable to declared type '{declaredType.GetTypeShortName()}'.";
+                    logs?.Error(typeMsg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{typeMsg}");
+                    overallSuccess = false;
+                }
+                else if (obj != null && desiredType != obj.GetType())
                 {
                     obj = null;
                     objType = desiredType;
                 }
-                else if (desiredType != null && objType == null)
+                else if (objType == null || (obj == null && desiredType != objType))
                 {
+                    // obj was reset to null (by ApplyPatchTypeReplacement) and we have a declared type;
+                    // upgrade to the desired subtype so the fresh instance is created as the correct type.
                     objType = desiredType;
                 }
             }
@@ -155,7 +171,6 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             objType = obj.GetType();
-            var overallSuccess = true;
 
             foreach (var property in patch.EnumerateObject())
             {

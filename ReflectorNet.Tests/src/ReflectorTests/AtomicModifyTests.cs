@@ -362,6 +362,177 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.Equal(9f, ((SolarSystem)obj!).globalOrbitSpeedMultiplier);
         }
 
+        // ─── TryPatch — null value sets field to null (RFC 7396) ──────────────────
+
+        [Fact]
+        public void TryPatch_NullValue_SetsFieldToNull()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { sun = new GameObjectRef { instanceID = 1 } };
+            object? obj = system;
+
+            var logs = new Logs();
+            var success = reflector.TryPatch(ref obj, @"{""sun"": null}", logs: logs);
+
+            _output.WriteLine(logs.ToString());
+            Assert.True(success);
+            Assert.Null(((SolarSystem)obj!).sun);
+        }
+
+        // ─── TryPatch — $type polymorphic replacement ─────────────────────────────
+
+        [Fact]
+        public void TryPatch_TypeHint_PolymorphicReplacement()
+        {
+            var reflector = new Reflector();
+            var container = new AnimalContainer { animal = new Animal { name = "Cat" } };
+            object? obj = container;
+
+            var dogTypeId = typeof(Dog).GetTypeId();
+            var json = $@"{{""animal"": {{""$type"": ""{dogTypeId}"", ""name"": ""Rex"", ""breed"": ""Husky""}}}}";
+
+            var logs = new Logs();
+            var success = reflector.TryPatch(ref obj, json, logs: logs);
+
+            _output.WriteLine(logs.ToString());
+            Assert.True(success);
+            var result = (AnimalContainer)obj!;
+            Assert.IsType<Dog>(result.animal);
+            Assert.Equal("Rex", result.animal!.name);
+            Assert.Equal("Husky", ((Dog)result.animal).breed);
+        }
+
+        // ─── TryPatch — $type incompatible type logs error ────────────────────────
+
+        [Fact]
+        public void TryPatch_TypeHint_IncompatibleType_LogsError()
+        {
+            var reflector = new Reflector();
+            var container = new AnimalContainer { animal = new Animal { name = "Cat" } };
+            object? obj = container;
+
+            var incompatibleTypeId = typeof(SolarSystem).GetTypeId();
+            var json = $@"{{""animal"": {{""$type"": ""{incompatibleTypeId}""}}}}";
+
+            var logs = new Logs();
+            var success = reflector.TryPatch(ref obj, json, logs: logs);
+
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.False(success);
+            Assert.Contains("not assignable", logsText);
+            Assert.IsType<Animal>(((AnimalContainer)obj!).animal); // field untouched
+        }
+
+        // ─── TryPatch — $type unknown type string logs error ──────────────────────
+
+        [Fact]
+        public void TryPatch_TypeHint_UnknownType_LogsError()
+        {
+            var reflector = new Reflector();
+            var container = new AnimalContainer { animal = new Animal { name = "Cat" } };
+            object? obj = container;
+
+            var json = @"{""animal"": {""$type"": ""NoSuchType.Anywhere""}}";
+
+            var logs = new Logs();
+            var success = reflector.TryPatch(ref obj, json, logs: logs);
+
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.False(success);
+            Assert.Contains("could not be resolved", logsText);
+        }
+
+        // ─── TryPatch — unknown key returns false and logs error ──────────────────
+
+        [Fact]
+        public void TryPatch_UnknownKey_ReturnsFalseAndLogsError()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 1f };
+            object? obj = system;
+            var logs = new Logs();
+
+            var success = reflector.TryPatch(ref obj, @"{""doesNotExist"": 99.0}", logs: logs);
+
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.False(success);
+            Assert.Contains("doesNotExist", logsText);
+            Assert.Equal(1f, ((SolarSystem)obj!).globalOrbitSpeedMultiplier); // unchanged
+        }
+
+        // ─── TryModifyAt — List<T> element (IList branch) ────────────────────────
+
+        [Fact]
+        public void TryModifyAt_ListElement()
+        {
+            var reflector = new Reflector();
+            var container = new ListContainer
+            {
+                bodies = new List<SolarSystem.CelestialBody>
+                {
+                    new SolarSystem.CelestialBody { orbitRadius = 10f, orbitSpeed = 1f },
+                    new SolarSystem.CelestialBody { orbitRadius = 20f, orbitSpeed = 2f },
+                }
+            };
+            object? obj = container;
+
+            var success = reflector.TryModifyAt<float>(ref obj, "bodies/[0]/orbitRadius", 55f);
+
+            Assert.True(success);
+            var result = (ListContainer)obj!;
+            Assert.Equal(55f, result.bodies[0].orbitRadius);
+            Assert.Equal(1f,  result.bodies[0].orbitSpeed);  // untouched
+            Assert.Equal(20f, result.bodies[1].orbitRadius); // untouched
+        }
+
+        // ─── TryModifyAt — three-level path (field/index/property) ───────────────
+
+        [Fact]
+        public void TryModifyAt_ThreeLevelPath()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody { orbitTilt = new Vector3(1f, 2f, 3f) },
+                }
+            };
+            object? obj = system;
+
+            var success = reflector.TryModifyAt<float>(ref obj, "celestialBodies/[0]/orbitTilt/x", 99f);
+
+            Assert.True(success);
+            var result = (SolarSystem)obj!;
+            Assert.Equal(99f, result.celestialBodies![0].orbitTilt.x);
+            Assert.Equal(2f,  result.celestialBodies![0].orbitTilt.y); // untouched
+            Assert.Equal(3f,  result.celestialBodies![0].orbitTilt.z); // untouched
+        }
+
+        // ─── TryModifyAt — empty path delegates to TryModify on root ─────────────
+
+        [Fact]
+        public void TryModifyAt_EmptyPath_AppliesModifyToRoot()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 1f, globalSizeMultiplier = 1f };
+            object? obj = system;
+
+            var patch = new SerializedMember { typeName = typeof(SolarSystem).GetTypeId() ?? string.Empty };
+            patch.SetFieldValue(reflector, "globalOrbitSpeedMultiplier", 42f);
+
+            var logs = new Logs();
+            var success = reflector.TryModifyAt(ref obj, "", patch, logs: logs);
+
+            _output.WriteLine(logs.ToString());
+            Assert.True(success);
+            Assert.Equal(42f, ((SolarSystem)obj!).globalOrbitSpeedMultiplier);
+            Assert.Equal(1f,  ((SolarSystem)obj!).globalSizeMultiplier); // untouched
+        }
+
         // ─── Test-local helper types ───────────────────────────────────────────────
 
         private class DictionaryContainer
@@ -372,6 +543,26 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         private class IntDictionaryContainer
         {
             public Dictionary<int, string> lookup = new Dictionary<int, string>();
+        }
+
+        private class ListContainer
+        {
+            public List<SolarSystem.CelestialBody> bodies = new List<SolarSystem.CelestialBody>();
+        }
+
+        private class Animal
+        {
+            public string name = string.Empty;
+        }
+
+        private class Dog : Animal
+        {
+            public string breed = string.Empty;
+        }
+
+        private class AnimalContainer
+        {
+            public Animal? animal;
         }
     }
 }
