@@ -20,12 +20,12 @@ namespace com.IvanMurzak.ReflectorNet
     /// Core Functionality:
     /// - Serialization: Converts objects to SerializedMember representations with type preservation
     /// - Deserialization: Reconstructs objects from SerializedMember data with flexible type resolution
-    /// - Population: In-place updates of existing objects with serialized data
+    /// - Modification: In-place updates of existing objects with serialized data
     /// - Introspection: Discovery of serializable fields and properties for a given type
     /// - Error Handling: Comprehensive validation and detailed error reporting with hierarchical formatting
     ///
     /// Architecture:
-    /// - Chain of Responsibility: Uses registered converter chains for serialization, deserialization, and population
+    /// - Chain of Responsibility: Uses registered converter chains for serialization, deserialization, and modification
     /// - Extensibility: Supports custom converters for specialized types and serialization logic
     /// - Type Safety: Performs extensive type validation and compatibility checking
     /// - Logging Integration: Built-in support for Microsoft.Extensions.Logging throughout operations
@@ -37,8 +37,8 @@ namespace com.IvanMurzak.ReflectorNet
     /// - Flexible BindingFlags control for member visibility (public, private, static, instance)
     /// - Null-safe operations with appropriate default value handling
     /// - Hierarchical error reporting with depth-based indentation
-    /// - Property-specific population for fine-grained deserialization control
-    /// - Support for both complete deserialization and incremental population scenarios
+    /// - Property-specific modification for fine-grained deserialization control
+    /// - Support for both complete deserialization and incremental modification scenarios
     ///
     /// The class is designed as a partial class to allow for extension and modularization of functionality.
     /// It maintains a Registry of converters that handle the actual serialization/deserialization logic,

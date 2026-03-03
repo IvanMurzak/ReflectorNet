@@ -20,7 +20,7 @@ Traditional reflection is brittle and requires exact matches. ReflectorNet is bu
 *   **🤖 AI-Ready**: Designed for scenarios where inputs (from LLMs) might be partial or fuzzy.
 *   **🔍 Fuzzy Matching**: Discover methods and types even with incomplete names or parameters (configurable match levels 0-6).
 *   **📦 Type-Safe Serialization**: Preserves full type information, supporting complex nested objects, collections, and custom types.
-*   **🔄 In-Place Population**: Update existing object instances from serialized data without breaking references.
+*   **🔄 In-Place Modification**: Update existing object instances from serialized data without breaking references.
 *   **📄 JSON Schema Generation**: Automatically generate schemas for your types and methods to feed into LLM context windows.
 
 ## 📦 Installation

@@ -23,8 +23,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         ///
         /// Deserialization Process:
         /// 1. Value Deserialization: Attempts to deserialize the core value using TryDeserializeValue
-        /// 2. Field Population: Iterates through serialized fields and applies them to the target object
-        /// 3. Property Population: Iterates through serialized properties and applies them to the target object
+        /// 2. Field Modification: Iterates through serialized fields and applies them to the target object
+        /// 3. Property Modification: Iterates through serialized properties and applies them to the target object
         /// 4. Type Validation: Ensures field/property types are compatible with target object
         /// 5. Instance Creation: Creates object instances as needed during the deserialization process
         /// 6. Error Handling: Provides comprehensive error reporting with hierarchical formatting

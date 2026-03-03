@@ -16,14 +16,14 @@ using Microsoft.Extensions.Logging;
 namespace com.IvanMurzak.ReflectorNet.Converter
 {
     /// <summary>
-    /// Abstract base class for reflection-based converters that handle serialization, deserialization, and population
+    /// Abstract base class for reflection-based converters that handle serialization, deserialization, and modification
     /// operations for specific types. This class provides the foundation for the converter chain pattern used
     /// throughout ReflectorNet's type handling system.
     ///
     /// Core Responsibilities:
     /// - Defines common behavior and configuration options for all reflection converters
     /// - Provides priority-based type matching for converter selection
-    /// - Manages cascading serialization and population settings
+    /// - Manages cascading serialization and modification settings
     /// - Establishes the contract for type-specific conversion operations
     ///
     /// Architecture:
@@ -78,7 +78,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <summary>
         /// Gets a value indicating whether this converter supports direct value setting operations.
         /// When true, the converter can handle primitive-style value assignments.
-        /// When false, the converter only supports field and property-based population.
+        /// When false, the converter only supports field and property-based modification.
         /// </summary>
         public virtual bool AllowSetValue => true;
 
