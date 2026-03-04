@@ -1,0 +1,23 @@
+ReflectorNet.Tests/src/ReflectorTests/ViewTests.cs
+  a2caadcafc2f31ad 92,103,106-111,474,494-549
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "6e04c174378774e6fc01b8ef141bb2d308df2bbd",
+  "prompts": {
+    "a2caadcafc2f31ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb9e0259-bd4d-4327-9a75-319c03ace31e",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>",
+      "messages": [],
+      "total_additions": 567,
+      "total_deletions": 510,
+      "accepted_lines": 476,
+      "overriden_lines": 0
+    }
+  }
+}
