@@ -89,6 +89,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             var reflector = new Reflector();
             var system = new SolarSystem
             {
+                sun = new GameObjectRef { instanceID = 42 },
                 celestialBodies = new[]
                 {
                     new SolarSystem.CelestialBody { orbitRadius = 5f }
@@ -99,15 +100,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             var result = reflector.View(obj, new ViewQuery { MaxDepth = 1 });
 
             Assert.NotNull(result);
-            // celestialBodies field should be present ...
+            // celestialBodies field should be present at depth 1
             var bodiesField = result.fields?.FirstOrDefault(f => f.name == "celestialBodies");
             Assert.NotNull(bodiesField);
-            // ... but its own fields should be stripped (MaxDepth=1 means children of root are visible, grandchildren stripped)
-            // The array element [0] field should have no further fields
-            var elem0 = bodiesField.fields?.FirstOrDefault();
-            if (elem0 != null)
-                Assert.True(elem0.fields == null || elem0.fields.Count == 0,
-                    "MaxDepth=1 means grandchildren are stripped");
+            // sun field (a GameObjectRef object) should be present at depth 1 ...
+            var sunField = result.fields?.FirstOrDefault(f => f.name == "sun");
+            Assert.NotNull(sunField);
+            // ... but sun's own properties (instanceID, path, name) are at depth 2 and must be stripped
+            Assert.True(sunField.props == null || sunField.props.Count == 0,
+                "MaxDepth=1 means sun's nested properties are stripped");
         }
 
         // ─── View — NamePattern keeps only matching direct fields ────────────────
@@ -470,7 +471,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.NotNull(result);
             // All returned fields/props must resolve to float
             if (result.fields != null)
-                Assert.True(result.fields.All(f => f.typeName != null && f.typeName.Contains("Single") || f.typeName == "float"),
+                Assert.True(result.fields.All(f => f.typeName != null && (f.typeName.Contains("Single") || f.typeName == "float")),
                     "Only float fields should survive TypeFilter=float");
         }
 
@@ -488,6 +489,62 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.Contains("SolarSystem", result.typeName);
             Assert.True(result.fields == null || result.fields.Count == 0,
                 "No matching type → empty envelope");
+        }
+
+        // ─── Grep — null input returns empty list ─────────────────────────────────
+
+        [Fact]
+        public void Grep_NullInput_ReturnsEmpty()
+        {
+            var reflector = new Reflector();
+            var matches = reflector.Grep(null, ".*");
+            Assert.Empty(matches);
+        }
+
+        // ─── View — null object with known type does not throw ────────────────────
+
+        [Fact]
+        public void View_NullObject_WithFallbackType_DoesNotThrow()
+        {
+            var reflector = new Reflector();
+            // Serialize requires at least a type when obj is null
+            var result = reflector.View(null, fallbackObjType: typeof(SolarSystem));
+            Assert.NotNull(result);
+        }
+
+        // ─── Grep — invalid regex logs error and returns empty ────────────────────
+
+        [Fact]
+        public void Grep_InvalidRegex_ReturnsEmpty()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 1f };
+            object? obj = system;
+            var logs = new Logs();
+
+            var matches = reflector.Grep(obj, "(invalid[", logs: logs);
+
+            Assert.Empty(matches);
+            Assert.Contains("Invalid regex pattern", logs.ToString());
+        }
+
+        // ─── View — invalid NamePattern logs error and returns root envelope ──────
+
+        [Fact]
+        public void View_InvalidNamePattern_ReturnsEnvelope()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 1f };
+            object? obj = system;
+            var logs = new Logs();
+
+            var result = reflector.View(obj, new ViewQuery { NamePattern = "(invalid[" }, logs: logs);
+
+            Assert.NotNull(result);
+            Assert.Contains("SolarSystem", result.typeName);
+            Assert.True(result.fields == null || result.fields.Count == 0,
+                "Invalid pattern → root envelope with empty fields");
+            Assert.Contains("Invalid regex pattern", logs.ToString());
         }
 
         // ─── Test-local helper types ───────────────────────────────────────────────
