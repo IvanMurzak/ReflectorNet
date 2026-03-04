@@ -1,0 +1,25 @@
+ReflectorNet/src/Reflector/Reflector.Navigate.cs
+  c3a92c4aa9121e85 1-193
+ReflectorNet/src/Reflector/Reflector.ModifyAt.cs
+  c3a92c4aa9121e85 148-149,152-153,155,172-174,176-180
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "76a840d5d6c90213becdb7e99d4471aeb25101b7",
+  "prompts": {
+    "c3a92c4aa9121e85": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f3913a39-4200-4d7b-ab20-a559df0beb7b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>",
+      "messages": [],
+      "total_additions": 206,
+      "total_deletions": 180,
+      "accepted_lines": 206,
+      "overriden_lines": 0
+    }
+  }
+}
