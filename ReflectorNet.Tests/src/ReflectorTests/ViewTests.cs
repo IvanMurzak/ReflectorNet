@@ -547,6 +547,252 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.Contains("Invalid regex pattern", logs.ToString());
         }
 
+        // ─── TryReadAt — null object returns false ────────────────────────────────
+
+        [Fact]
+        public void TryReadAt_NullObject_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var logs = new Logs();
+
+            var ok = reflector.TryReadAt(null, "globalOrbitSpeedMultiplier", out var result, logs: logs);
+
+            Assert.False(ok);
+            Assert.Null(result);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("null", logsText);
+        }
+
+        // ─── TryReadAt — dictionary missing key returns false ────────────────────
+        // Unlike TryModifyAt (which adds the key via writeBack), TryReadAt uses
+        // TryNavigateOneSegment which explicitly checks dict.Contains and logs an error.
+
+        [Fact]
+        public void TryReadAt_DictionaryMissingKey_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var container = new DictionaryContainer
+            {
+                config = new Dictionary<string, int> { ["timeout"] = 30 }
+            };
+            object? obj = container;
+            var logs = new Logs();
+
+            var ok = reflector.TryReadAt(obj, "config/[doesNotExist]", out var result, logs: logs);
+
+            Assert.False(ok);
+            Assert.Null(result);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("doesNotExist", logsText);
+        }
+
+        // ─── TryReadAt — bracket notation on non-collection type ─────────────────
+
+        [Fact]
+        public void TryReadAt_BracketOnNonCollection_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody { orbitRadius = 10f }
+                }
+            };
+            object? obj = system;
+            var logs = new Logs();
+
+            // orbitRadius is a float — [0] makes no sense on it
+            var ok = reflector.TryReadAt(obj, "celestialBodies/[0]/orbitRadius/[0]", out var result, logs: logs);
+
+            Assert.False(ok);
+            Assert.Null(result);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("[0]", logsText);
+        }
+
+        // ─── TryReadAt — hash-prefixed path is stripped ───────────────────────────
+
+        [Fact]
+        public void TryReadAt_HashPrefixedPath_IsStripped()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 7f };
+            object? obj = system;
+
+            var ok = reflector.TryReadAt(obj, "#/globalOrbitSpeedMultiplier", out var result);
+
+            Assert.True(ok);
+            Assert.NotNull(result);
+            Assert.Equal(7f, result.GetValue<float>(reflector));
+        }
+
+        // ─── Grep — circular reference does not cause infinite loop ───────────────
+
+        [Fact]
+        public void Grep_CircularReference_DoesNotLoop()
+        {
+            var reflector = new Reflector();
+            var node = new CircularNode { name = "root" };
+            node.next = node; // self-reference
+            object? obj = node;
+
+            // Should complete without StackOverflowException
+            var matches = reflector.Grep(obj, ".*");
+
+            _output.WriteLine($"Found {matches.Count} matches (circular ref guard):");
+            foreach (var m in matches)
+                _output.WriteLine($"  {m.Path}");
+
+            // At minimum, the direct fields of the root node should match
+            Assert.True(matches.Count >= 1, "At least one field should be found before circular ref guard fires");
+            Assert.Contains(matches, m => m.Path == "name" || m.Path == "next");
+        }
+
+        // ─── Grep — finds properties, not only fields ─────────────────────────────
+        // Vector3's x, y, z are properties (not fields). Grep should include them.
+
+        [Fact]
+        public void Grep_FindsProperties_NotJustFields()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody { orbitTilt = new Vector3(5f, 6f, 7f) }
+                }
+            };
+            object? obj = system;
+
+            var matches = reflector.Grep(obj, "^x$");
+
+            _output.WriteLine($"Found {matches.Count} 'x' matches:");
+            foreach (var m in matches)
+                _output.WriteLine($"  {m.Path} = {m.Value.GetValue<float>(reflector)}");
+
+            Assert.True(matches.Count >= 1, "Property 'x' on Vector3 should be found by Grep");
+            Assert.Contains(matches, m => m.Path.Contains("/x") && m.Value.GetValue<float>(reflector) == 5f);
+        }
+
+        // ─── View — MaxDepth applied before NamePattern ───────────────────────────
+        // MaxDepth=1 prunes to top-level fields of SolarSystem. 'orbitRadius' lives
+        // inside celestialBodies elements (depth 3 in serialized tree), so it cannot
+        // survive the depth prune and will never match the pattern.
+
+        [Fact]
+        public void View_MaxDepthAndNamePatternCombined_DepthPruneFirst()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody { orbitRadius = 42f }
+                }
+            };
+            object? obj = system;
+
+            // Depth=1 strips everything below the top-level fields.
+            // orbitRadius is at depth 3 (SolarSystem→celestialBodies[0]→orbitRadius),
+            // so after pruning it is gone before NamePattern even runs.
+            var result = reflector.View(obj, new ViewQuery { MaxDepth = 1, NamePattern = "^orbitRadius$" });
+
+            Assert.NotNull(result);
+            Assert.Contains("SolarSystem", result.typeName);
+            Assert.True(result.fields == null || result.fields.Count == 0,
+                "orbitRadius is beyond MaxDepth=1 and must not appear after NamePattern filter");
+        }
+
+        // ─── View — empty path string is equivalent to no path ───────────────────
+
+        [Fact]
+        public void View_EmptyPath_SameAsNoPath()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                globalOrbitSpeedMultiplier = 3f,
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody { orbitRadius = 10f }
+                }
+            };
+            object? obj = system;
+
+            var withEmptyPath = reflector.View(obj, new ViewQuery { Path = "" });
+            var withNoQuery   = reflector.View(obj);
+
+            Assert.NotNull(withEmptyPath);
+            Assert.NotNull(withNoQuery);
+            Assert.Equal(withNoQuery.typeName, withEmptyPath.typeName);
+            Assert.Equal(withNoQuery.fields?.Count, withEmptyPath.fields?.Count);
+        }
+
+        // ─── Grep — finds matches inside List<T> elements ────────────────────────
+
+        [Fact]
+        public void Grep_FindsMatchesInsideListElements()
+        {
+            var reflector = new Reflector();
+            var container = new ListContainer
+            {
+                bodies = new List<SolarSystem.CelestialBody>
+                {
+                    new SolarSystem.CelestialBody { orbitRadius = 11f },
+                    new SolarSystem.CelestialBody { orbitRadius = 22f },
+                    new SolarSystem.CelestialBody { orbitRadius = 33f },
+                }
+            };
+            object? obj = container;
+
+            var matches = reflector.Grep(obj, "^orbitRadius$");
+
+            _output.WriteLine($"Found {matches.Count} orbitRadius matches in List<T>:");
+            foreach (var m in matches)
+                _output.WriteLine($"  {m.Path} = {m.Value.GetValue<float>(reflector)}");
+
+            Assert.Equal(3, matches.Count);
+            Assert.Contains(matches, m => m.Path.Contains("[0]") && m.Value.GetValue<float>(reflector) == 11f);
+            Assert.Contains(matches, m => m.Path.Contains("[1]") && m.Value.GetValue<float>(reflector) == 22f);
+            Assert.Contains(matches, m => m.Path.Contains("[2]") && m.Value.GetValue<float>(reflector) == 33f);
+        }
+
+        // ─── Grep — maxDepth=0 returns only root-level direct fields ─────────────
+        // At depth 0, Grep only matches fields of the root object itself.
+        // celestialBodies elements are at depth 2+ so they are skipped.
+
+        [Fact]
+        public void Grep_MaxDepthZero_SkipsNestedElements()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                globalOrbitSpeedMultiplier = 1f,
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody { orbitRadius = 99f }
+                }
+            };
+            object? obj = system;
+
+            // Match everything — but maxDepth=0 limits us to SolarSystem's own fields only
+            var matchesAll = reflector.Grep(obj, ".*", maxDepth: 0);
+
+            _output.WriteLine($"maxDepth=0: {matchesAll.Count} matches");
+            foreach (var m in matchesAll)
+                _output.WriteLine($"  {m.Path}");
+
+            // None of the paths should contain a '/' (that would indicate nesting)
+            Assert.True(matchesAll.All(m => !m.Path.Contains("/")),
+                "maxDepth=0 must not return nested paths");
+            // orbitRadius (inside celestialBodies[0]) must not appear
+            Assert.DoesNotContain(matchesAll, m => m.Path.Contains("orbitRadius"));
+        }
+
         // ─── Test-local helper types ───────────────────────────────────────────────
 
         private class DictionaryContainer
@@ -557,6 +803,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         private class IntDictionaryContainer
         {
             public Dictionary<int, string> lookup = new Dictionary<int, string>();
+        }
+
+        private class ListContainer
+        {
+            public List<SolarSystem.CelestialBody> bodies = new List<SolarSystem.CelestialBody>();
+        }
+
+        private class CircularNode
+        {
+            public string name = string.Empty;
+            public CircularNode? next;
         }
     }
 }

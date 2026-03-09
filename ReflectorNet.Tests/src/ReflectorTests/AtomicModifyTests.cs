@@ -533,6 +533,244 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.Equal(1f,  ((SolarSystem)obj!).globalSizeMultiplier); // untouched
         }
 
+        // ─── TryModifyAt — null at intermediate path ──────────────────────────────
+
+        [Fact]
+        public void TryModifyAt_NullAtIntermediatePath_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { sun = null }; // sun is null
+            object? obj = system;
+            var logs = new Logs();
+
+            // Trying to navigate sun/instanceID when sun is null
+            var success = reflector.TryModifyAt<int>(ref obj, "sun/instanceID", 99, logs: logs);
+
+            Assert.False(success);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("null", logsText);
+            // Original object must be untouched
+            Assert.Null(((SolarSystem)obj!).sun);
+        }
+
+        // ─── TryModifyAt — negative array index ───────────────────────────────────
+
+        [Fact]
+        public void TryModifyAt_NegativeIndex_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody { orbitRadius = 10f }
+                }
+            };
+            object? obj = system;
+            var logs = new Logs();
+
+            var success = reflector.TryModifyAt<float>(ref obj, "celestialBodies/[-1]/orbitRadius", 0f, logs: logs);
+
+            Assert.False(success);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("out of range", logsText);
+            Assert.Equal(10f, ((SolarSystem)obj!).celestialBodies![0].orbitRadius); // untouched
+        }
+
+        // ─── TryModifyAt — dictionary missing key is added ────────────────────────
+        // TryLookupBracketedElement returns true for non-existing dict keys and
+        // provides a writeBack that adds the entry — unlike TryReadAt/TryNavigateOneSegment.
+
+        [Fact]
+        public void TryModifyAt_Dictionary_AddsNewKey_WhenKeyMissing()
+        {
+            var reflector = new Reflector();
+            var container = new DictionaryContainer
+            {
+                config = new Dictionary<string, int> { ["timeout"] = 10 }
+            };
+            object? obj = container;
+            var logs = new Logs();
+
+            var success = reflector.TryModifyAt<int>(ref obj, "config/[newKey]", 42, logs: logs);
+
+            _output.WriteLine(logs.ToString());
+            Assert.True(success);
+            var result = (DictionaryContainer)obj!;
+            Assert.True(result.config.ContainsKey("newKey"));
+            Assert.Equal(42, result.config["newKey"]);
+            Assert.Equal(10, result.config["timeout"]); // untouched
+        }
+
+        // ─── TryModifyAt — dict key type-conversion failure ───────────────────────
+
+        [Fact]
+        public void TryModifyAt_DictKeyTypeConversionFailure_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var container = new IntDictionaryContainer
+            {
+                lookup = new Dictionary<int, string> { [1] = "one" }
+            };
+            object? obj = container;
+            var logs = new Logs();
+
+            // "notAnInt" cannot be converted to the key type int
+            var success = reflector.TryModifyAt<string>(ref obj, "lookup/[notAnInt]", "value", logs: logs);
+
+            Assert.False(success);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("notAnInt", logsText);
+        }
+
+        // ─── TryModifyAt — bracket notation on non-collection type ────────────────
+
+        [Fact]
+        public void TryModifyAt_BracketOnNonCollection_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 1f };
+            object? obj = system;
+            var logs = new Logs();
+
+            // globalOrbitSpeedMultiplier is a float — [0] makes no sense
+            var success = reflector.TryModifyAt<float>(ref obj, "globalOrbitSpeedMultiplier/[0]", 5f, logs: logs);
+
+            Assert.False(success);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("[0]", logsText);
+        }
+
+        // ─── TryModifyAt — read-only property returns false ───────────────────────
+
+        [Fact]
+        public void TryModifyAt_ReadOnlyProperty_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var container = new ReadOnlyPropertyContainer();
+            object? obj = container;
+            var logs = new Logs();
+
+            var success = reflector.TryModifyAt<float>(ref obj, "ReadOnlyValue", 99f, logs: logs);
+
+            Assert.False(success);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("read-only", logsText);
+            Assert.Equal(42f, ((ReadOnlyPropertyContainer)obj!).ReadOnlyValue); // unchanged
+        }
+
+        // ─── TryModifyAt — mixed dict + array nesting ────────────────────────────
+
+        [Fact]
+        public void TryModifyAt_MixedDictAndArrayNesting()
+        {
+            var reflector = new Reflector();
+            var container = new DictOfArraysContainer
+            {
+                groups = new Dictionary<string, SolarSystem.CelestialBody[]>
+                {
+                    ["alpha"] = new[]
+                    {
+                        new SolarSystem.CelestialBody { orbitRadius = 10f, orbitSpeed = 1f },
+                        new SolarSystem.CelestialBody { orbitRadius = 20f, orbitSpeed = 2f },
+                    }
+                }
+            };
+            object? obj = container;
+
+            // Navigate: groups → [alpha] → [0] → orbitRadius
+            var success = reflector.TryModifyAt<float>(ref obj, "groups/[alpha]/[0]/orbitRadius", 99f);
+
+            Assert.True(success);
+            var result = (DictOfArraysContainer)obj!;
+            Assert.Equal(99f, result.groups["alpha"][0].orbitRadius);
+            Assert.Equal(1f,  result.groups["alpha"][0].orbitSpeed);  // untouched
+            Assert.Equal(20f, result.groups["alpha"][1].orbitRadius); // untouched
+        }
+
+        // ─── TryPatch — invalid JSON returns false ────────────────────────────────
+
+        [Fact]
+        public void TryPatch_InvalidJson_ReturnsFalse()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 1f };
+            object? obj = system;
+            var logs = new Logs();
+
+            var success = reflector.TryPatch(ref obj, "{ this is not valid json }", logs: logs);
+
+            Assert.False(success);
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+            Assert.Contains("Failed to parse JSON patch", logsText);
+            Assert.Equal(1f, ((SolarSystem)obj!).globalOrbitSpeedMultiplier); // unchanged
+        }
+
+        // ─── TryPatch — four-level deep patch via array bracket notation ──────────
+
+        [Fact]
+        public void TryPatch_FourLevelDeepPatch_ViaArray()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem
+            {
+                celestialBodies = new[]
+                {
+                    new SolarSystem.CelestialBody
+                    {
+                        orbitRadius = 10f,
+                        orbitTilt   = new Vector3(1f, 2f, 3f)
+                    }
+                }
+            };
+            object? obj = system;
+
+            // celestialBodies → [0] → orbitTilt → x (4 levels)
+            var json = @"{
+                ""celestialBodies"": {
+                    ""[0]"": {
+                        ""orbitTilt"": {
+                            ""x"": 99.0
+                        }
+                    }
+                }
+            }";
+
+            var logs = new Logs();
+            var success = reflector.TryPatch(ref obj, json, logs: logs);
+
+            _output.WriteLine(logs.ToString());
+            Assert.True(success);
+            var result = (SolarSystem)obj!;
+            Assert.Equal(99f, result.celestialBodies![0].orbitTilt.x);
+            Assert.Equal(2f,  result.celestialBodies![0].orbitTilt.y); // untouched
+            Assert.Equal(3f,  result.celestialBodies![0].orbitTilt.z); // untouched
+            Assert.Equal(10f, result.celestialBodies![0].orbitRadius);  // untouched
+        }
+
+        // ─── TryPatch — null JSON at root sets object to null ─────────────────────
+
+        [Fact]
+        public void TryPatch_NullAtRoot_SetsObjectToNull()
+        {
+            var reflector = new Reflector();
+            var system = new SolarSystem { globalOrbitSpeedMultiplier = 2f };
+            object? obj = system;
+            var logs = new Logs();
+
+            var success = reflector.TryPatch(ref obj, "null", logs: logs);
+
+            _output.WriteLine(logs.ToString());
+            Assert.True(success);
+            Assert.Null(obj);
+        }
+
         // ─── Test-local helper types ───────────────────────────────────────────────
 
         private class DictionaryContainer
@@ -563,6 +801,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         private class AnimalContainer
         {
             public Animal? animal;
+        }
+
+        private class ReadOnlyPropertyContainer
+        {
+            public float ReadOnlyValue { get; } = 42f; // no setter — CanWrite == false
+            public float WritableValue { get; set; } = 1f;
+        }
+
+        private class DictOfArraysContainer
+        {
+            public Dictionary<string, SolarSystem.CelestialBody[]> groups
+                = new Dictionary<string, SolarSystem.CelestialBody[]>();
         }
     }
 }
