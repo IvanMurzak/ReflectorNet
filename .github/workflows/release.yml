@@ -151,6 +151,9 @@ jobs:
     needs: [build-and-test, check-version-tag]
     runs-on: ubuntu-latest
     if: needs.check-version-tag.outputs.is_new_version == 'true'
+    permissions:
+      id-token: write   # Required for NuGet trusted publishing (OIDC)
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -169,5 +172,8 @@ jobs:
       - name: Pack
         run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output ./packages
 
+      - name: NuGet login (Trusted Publishing)
+        uses: nuget/login@v1
+
       - name: Publish to NuGet
-        run: dotnet nuget push ./packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
