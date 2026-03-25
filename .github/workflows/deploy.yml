@@ -1,0 +1,67 @@
+name: deploy
+
+on:
+  release:
+    types: [released]
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Deploy to NuGet version (e.g., 1.0.0).'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      version: { required: true, type: string }
+
+jobs:
+  deploy-to-nuget:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          version=${{ inputs.version || github.event.release.tag_name }}
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Extracted version: $version"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal --configuration Release
+
+      - name: Pack
+        run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output ./packages
+
+      - name: Login to NuGet with Trusted Publishing
+        id: nuget_login
+        uses: NuGet/login@v1
+        with:
+          user: IvanMurzak
+
+      - name: Publish to NuGet
+        run: |
+          nupkg_file="./packages/com.IvanMurzak.ReflectorNet.${{ steps.version.outputs.version }}.nupkg"
+          if [ ! -f "$nupkg_file" ]; then
+            echo "Error: Expected .nupkg file not found: $nupkg_file"
+            exit 1
+          fi
+          echo "Deploying NuGet package: $nupkg_file (version: ${{ steps.version.outputs.version }})"
+          dotnet nuget push "$nupkg_file" --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

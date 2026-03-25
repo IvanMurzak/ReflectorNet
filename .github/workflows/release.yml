@@ -148,35 +148,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
-    needs: [build-and-test, check-version-tag]
-    runs-on: ubuntu-latest
-    if: needs.check-version-tag.outputs.is_new_version == 'true'
+    needs: publish-release
+    if: needs.publish-release.outputs.success == 'true'
     permissions:
-      id-token: write   # Required for NuGet trusted publishing (OIDC)
+      id-token: write
       contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
-            9.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Pack
-        run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output ./packages
-
-      - name: NuGet login (Trusted Publishing)
-        id: nuget_login
-        uses: NuGet/login@v1
-        with:
-          user: IvanMurzak
-
-      - name: Publish to NuGet
-        run: dotnet nuget push ./packages/*.nupkg --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    uses: ./.github/workflows/deploy.yml
+    with:
+      version: ${{ needs.publish-release.outputs.version }}
