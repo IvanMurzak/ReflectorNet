@@ -59,6 +59,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             DeserializationContext? context = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
             if (!TryDeserializeValue(
                 reflector,
                 data: data,
@@ -216,6 +219,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Logs? logs = null,
             ILogger? logger = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+
             if (data == null)
             {
                 result = null;
@@ -270,6 +275,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Logs? logs = null,
             ILogger? logger = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
             var padding = StringUtils.GetPadding(depth);
 
             if (AllowCascadeSerialization)
@@ -361,6 +370,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Logs? logs = null,
             ILogger? logger = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
             return reflector.JsonSerializer.Deserialize(
                 reflector,
                 data.valueJsonElement,

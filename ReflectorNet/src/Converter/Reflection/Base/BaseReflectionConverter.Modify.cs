@@ -57,6 +57,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
             var padding = StringUtils.GetPadding(depth);
 
             if (obj == null)
@@ -256,6 +260,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (objType == null) throw new ArgumentNullException(nameof(objType));
+            if (fieldValue == null) throw new ArgumentNullException(nameof(fieldValue));
+
             var padding = StringUtils.GetPadding(depth);
 
             if (string.IsNullOrEmpty(fieldValue.name))
@@ -371,6 +380,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (objType == null) throw new ArgumentNullException(nameof(objType));
+            if (propertyValue == null) throw new ArgumentNullException(nameof(propertyValue));
+
             var padding = StringUtils.GetPadding(depth);
 
             if (string.IsNullOrEmpty(propertyValue.name))

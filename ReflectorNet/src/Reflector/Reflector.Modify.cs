@@ -43,6 +43,9 @@ namespace com.IvanMurzak.ReflectorNet
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             ILogger? logger = null)
         {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+
             var padding = StringUtils.GetPadding(depth);
 
             if (obj == null && data.IsNull())
