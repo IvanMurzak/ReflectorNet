@@ -43,8 +43,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <exception cref="ArgumentException">Thrown when type cannot be instantiated due to constructor limitations.</exception>
         public virtual object? CreateInstance(Reflector reflector, Type type)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (type == null) throw new ArgumentNullException(nameof(type));
 
             // Handle enums
             if (type.IsEnum)
@@ -155,6 +155,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <returns>An appropriate default value for the specified type.</returns>
         public virtual object? GetDefaultValue(Reflector reflector, Type type)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
             // Handle nullable types first
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
                 return null;
