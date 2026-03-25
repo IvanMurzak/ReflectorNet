@@ -291,7 +291,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (underlyingType.IsEnum)
             {
                 var enumValues = new JsonArray();
-                foreach (var enumValue in Enum.GetValues(underlyingType))
+                foreach (var enumValue in System.Enum.GetValues(underlyingType))
                 {
                     enumValues.Add(JsonValue.Create(enumValue.ToString()));
                 }

@@ -27,6 +27,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         public const string Integer = "integer"; // int, long
         public const string Number = "number"; // float, double, supports int as well
         public const string Boolean = "boolean";
+        public const string Enum = "enum";
         public const string Minimum = "minimum";
         public const string Maximum = "maximum";
 
