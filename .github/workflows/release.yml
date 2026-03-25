@@ -173,7 +173,10 @@ jobs:
         run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output ./packages
 
       - name: NuGet login (Trusted Publishing)
-        uses: nuget/login@v1
+        id: nuget_login
+        uses: NuGet/login@v1
+        with:
+          user: IvanMurzak
 
       - name: Publish to NuGet
-        run: dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push ./packages/*.nupkg --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
