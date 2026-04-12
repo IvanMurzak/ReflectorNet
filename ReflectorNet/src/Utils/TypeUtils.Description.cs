@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+#if NET9_0_OR_GREATER
 using System.Text.Json.Schema;
 #endif
 
@@ -114,7 +114,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return propertyInfo != null ? GetPropertyDescription(propertyInfo) : null;
         }
 
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+#if NET9_0_OR_GREATER
         /// <summary>
         /// Retrieves the description of a property from a <see cref="JsonSchemaExporterContext"/>.
         /// </summary>

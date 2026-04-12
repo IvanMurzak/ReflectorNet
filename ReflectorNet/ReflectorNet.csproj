@@ -9,7 +9,7 @@
 
     <!-- NuGet Package Information -->
     <PackageId>com.IvanMurzak.ReflectorNet</PackageId>
-    <Version>4.1.0</Version>
+    <Version>4.2.0</Version>
     <Authors>Ivan Murzak</Authors>
     <Copyright>Copyright © Ivan Murzak 2025</Copyright>
     <Description>ReflectorNet is an advanced .NET reflection toolkit designed for AI-driven scenarios. Effortlessly search for C# methods using natural language queries, invoke any method by supplying arguments as JSON, and receive results as JSON. The library also provides a powerful API to inspect, modify, and manage in-memory object instances dynamically via JSON data. Ideal for automation, testing, and AI integration workflows.</Description>
@@ -26,7 +26,14 @@
     <None Include="..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- v8 for netstandard2.1 and net8.0 (Unity + general compatibility) -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'net9.0'">
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <!-- v10 for net9.0 (full features including System.Text.Json.Schema) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.3" />
     <PackageReference Include="System.Text.Json" Version="10.0.3" />
   </ItemGroup>

@@ -10,7 +10,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
+#if NET9_0_OR_GREATER
 using System.Text.Json.Schema;
+#endif
 using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Json;
 
@@ -45,10 +47,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     /// </summary>
     public partial class JsonSchema
     {
+#if NET9_0_OR_GREATER
         readonly JsonSchemaExporterOptions jsonSchemaExporterOptions = new JsonSchemaExporterOptions
         {
             TreatNullObliviousAsNonNullable = false
         };
+#endif
 
         /// <summary>
         /// Generates a comprehensive JSON Schema representation for the specified generic type.
