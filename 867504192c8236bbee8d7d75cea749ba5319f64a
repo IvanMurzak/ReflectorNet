@@ -1,0 +1,27 @@
+ReflectorNet/src/Utils/TypeUtils.Description.cs
+  8d4d689498114267 6,117
+ReflectorNet/src/Utils/Json/JsonSchema.cs
+  8d4d689498114267 13,15,50,55
+ReflectorNet/ReflectorNet.csproj
+  8d4d689498114267 12,29-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "867504192c8236bbee8d7d75cea749ba5319f64a",
+  "prompts": {
+    "8d4d689498114267": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36761876-bbce-477d-9fbd-04b51c7ad534",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Ivan Murzak",
+      "messages": [],
+      "total_additions": 1684,
+      "total_deletions": 1673,
+      "accepted_lines": 841,
+      "overriden_lines": 0
+    }
+  }
+}
