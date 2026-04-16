@@ -32,6 +32,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+
             var actualType = fallbackType ?? obj?.GetType() ?? typeof(T);
 
             return InternalSerialize(
@@ -56,6 +58,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+
             var serializedFields = default(SerializedMemberList);
             var objType = obj.GetType();
 
@@ -116,6 +121,9 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             ILogger? logger = null,
             SerializationContext? context = null)
         {
+            if (reflector == null) throw new ArgumentNullException(nameof(reflector));
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+
             var serializedProperties = default(SerializedMemberList);
             var objType = obj.GetType();
 
