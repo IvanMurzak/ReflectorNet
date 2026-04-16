@@ -45,7 +45,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     /// </summary>
     public partial class JsonSchema
     {
-
         /// <summary>
         /// Generates a comprehensive JSON Schema representation for the specified generic type.
         /// This method provides flexible schema generation supporting both full schema definitions
