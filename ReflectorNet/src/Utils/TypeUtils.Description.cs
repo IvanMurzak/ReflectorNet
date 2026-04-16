@@ -1,11 +1,6 @@
 using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
-
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-using System.Text.Json.Schema;
-#endif
 
 namespace com.IvanMurzak.ReflectorNet.Utils
 {
@@ -113,47 +108,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             var propertyInfo = type.GetProperty(propertyName);
             return propertyInfo != null ? GetPropertyDescription(propertyInfo) : null;
         }
-
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        /// <summary>
-        /// Retrieves the description of a property from a <see cref="JsonSchemaExporterContext"/>.
-        /// </summary>
-        /// <param name="context">The JSON schema exporter context.</param>
-        /// <returns>The description of the property associated with the context; otherwise, <see langword="null"/>.</returns>
-        public static string? GetPropertyDescription(JsonSchemaExporterContext context)
-        {
-            if (context.PropertyInfo == null || context.PropertyInfo.DeclaringType == null)
-                return null;
-
-            var memberInfo = context.PropertyInfo.DeclaringType
-                .GetMember(
-                    name: context.PropertyInfo.Name,
-                    bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .FirstOrDefault();
-
-            if (memberInfo == null)
-            {
-                var pascalCaseName = ToPascalCase(context.PropertyInfo.Name);
-                memberInfo = context.PropertyInfo.DeclaringType
-                    .GetMember(
-                        name: pascalCaseName,
-                        bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                    .FirstOrDefault();
-            }
-
-            if (memberInfo == null)
-            {
-                var allMembers = context.PropertyInfo.DeclaringType.GetMembers(BindingFlags.Public | BindingFlags.Instance);
-                memberInfo = allMembers.FirstOrDefault(m =>
-                    string.Equals(m.Name, context.PropertyInfo.Name, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (memberInfo == null)
-                return null;
-
-            return GetDescription(memberInfo);
-        }
-#endif
 
         private static string ToPascalCase(string camelCase)
         {
