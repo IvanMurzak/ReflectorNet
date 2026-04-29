@@ -94,6 +94,14 @@ namespace com.IvanMurzak.ReflectorNet
             // null patch → set the current node to null
             if (patch.ValueKind == JsonValueKind.Null)
             {
+                if (objType != null && objType.IsValueType && Nullable.GetUnderlyingType(objType) == null)
+                {
+                    var msg = $"Cannot set null on non-nullable value type '{objType.GetTypeShortName()}'.";
+                    logs?.Error(msg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{msg}");
+                    return false;
+                }
                 obj = null;
                 return true;
             }
@@ -150,7 +158,18 @@ namespace com.IvanMurzak.ReflectorNet
             // If obj is null but we have a type, create a default instance so we can navigate into it
             if (obj == null && objType != null)
             {
-                obj = CreateInstance(objType);
+                try
+                {
+                    obj = CreateInstance(objType);
+                }
+                catch (Exception ex)
+                {
+                    var msg = $"Cannot create instance of type '{objType.GetTypeShortName()}' for patch application: {ex.Message}";
+                    logs?.Error(msg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{msg}");
+                    return false;
+                }
                 if (obj == null)
                 {
                     var msg = $"Cannot create instance of type '{objType.GetTypeShortName()}' for patch application.";
@@ -216,13 +235,32 @@ namespace com.IvanMurzak.ReflectorNet
             var fieldInfo = TypeMemberUtils.GetField(objType, flags, memberName);
             if (fieldInfo != null)
             {
-                var currentValue = fieldInfo.GetValue(obj);
+                object? currentValue;
+                try { currentValue = fieldInfo.GetValue(obj); }
+                catch (Exception ex)
+                {
+                    var msg = $"Failed to get value of field '{memberName}' on type '{objType.GetTypeShortName()}': {ex.Message}";
+                    logs?.Error(msg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{msg}");
+                    return false;
+                }
                 ApplyPatchTypeReplacement(ref currentValue, patchValue, fieldInfo.FieldType);
 
                 var childType = currentValue?.GetType() ?? fieldInfo.FieldType;
                 var success = TryPatchInternal(ref currentValue, patchValue, childType, depth + 1, logs, flags, logger);
                 if (success)
-                    fieldInfo.SetValue(obj, currentValue);
+                {
+                    try { fieldInfo.SetValue(obj, currentValue); }
+                    catch (Exception ex)
+                    {
+                        var msg = $"Failed to set value of field '{memberName}' on type '{objType.GetTypeShortName()}': {ex.Message}";
+                        logs?.Error(msg, depth);
+                        if (logger?.IsEnabled(LogLevel.Error) == true)
+                            logger.LogError($"{padding}{msg}");
+                        return false;
+                    }
+                }
                 return success;
             }
 
@@ -239,13 +277,35 @@ namespace com.IvanMurzak.ReflectorNet
                     return false;
                 }
 
-                var currentValue = propInfo.GetValue(obj);
+                object? currentValue = null;
+                if (propInfo.CanRead)
+                {
+                    try { currentValue = propInfo.GetValue(obj); }
+                    catch (Exception ex)
+                    {
+                        var msg = $"Failed to get value of property '{memberName}' on type '{objType.GetTypeShortName()}': {ex.Message}";
+                        logs?.Error(msg, depth);
+                        if (logger?.IsEnabled(LogLevel.Error) == true)
+                            logger.LogError($"{padding}{msg}");
+                        return false;
+                    }
+                }
                 ApplyPatchTypeReplacement(ref currentValue, patchValue, propInfo.PropertyType);
 
                 var childType = currentValue?.GetType() ?? propInfo.PropertyType;
                 var success = TryPatchInternal(ref currentValue, patchValue, childType, depth + 1, logs, flags, logger);
                 if (success)
-                    propInfo.SetValue(obj, currentValue);
+                {
+                    try { propInfo.SetValue(obj, currentValue); }
+                    catch (Exception ex)
+                    {
+                        var msg = $"Failed to set value of property '{memberName}' on type '{objType.GetTypeShortName()}': {ex.Message}";
+                        logs?.Error(msg, depth);
+                        if (logger?.IsEnabled(LogLevel.Error) == true)
+                            logger.LogError($"{padding}{msg}");
+                        return false;
+                    }
+                }
                 return success;
             }
 
