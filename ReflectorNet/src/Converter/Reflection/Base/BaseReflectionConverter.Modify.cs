@@ -105,7 +105,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             }
 
             var overallSuccess = true;
-            if (AllowSetValue)
+            // Skip SetValue only when this is a partial-patch call: fields/props are present but no
+            // explicit value was supplied. When there are no fields/props and no valueJsonElement the
+            // intent is to SET the target to null (or its default), so SetValue must still run.
+            var hasFieldsOrProps = (data.fields?.Count > 0) || (data.props?.Count > 0);
+            if (AllowSetValue && (data.valueJsonElement.HasValue || !hasFieldsOrProps))
             {
                 try
                 {
