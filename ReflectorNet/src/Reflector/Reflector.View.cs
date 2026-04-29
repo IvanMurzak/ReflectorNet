@@ -58,7 +58,20 @@ namespace com.IvanMurzak.ReflectorNet
             }
 
             // Step 2: Serialize
-            var serialized = Serialize(target, targetType ?? fallbackObjType, depth: depth, logs: logs, flags: flags, logger: logger);
+            SerializedMember? serialized;
+            try
+            {
+                serialized = Serialize(target, targetType ?? fallbackObjType, depth: depth, logs: logs, flags: flags, logger: logger);
+            }
+            catch (ArgumentException ex)
+            {
+                logs?.Error(ex.Message, depth);
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{StringUtils.GetPadding(depth)}{ex.Message}");
+                return null;
+            }
+            if (serialized == null)
+                return null;
 
             // Step 3: Apply filters
             if (query != null)

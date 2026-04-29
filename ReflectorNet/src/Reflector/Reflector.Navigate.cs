@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// properties is enforced here. Returns false and logs a detailed error if the member is not
         /// found or is read-only.
         /// </summary>
-        private static bool TryLookupMember(
+        private bool TryLookupMember(
             object? obj,
             string memberName,
             Type objType,
@@ -41,9 +41,30 @@ namespace com.IvanMurzak.ReflectorNet
             var fieldInfo = TypeMemberUtils.GetField(objType, flags, memberName);
             if (fieldInfo != null)
             {
-                currentValue = fieldInfo.GetValue(obj);
-                memberType   = fieldInfo.FieldType;
-                writeBack    = v => fieldInfo.SetValue(obj, v);
+                try
+                {
+                    currentValue = fieldInfo.GetValue(obj);
+                }
+                catch (Exception ex)
+                {
+                    var getMsg = $"Field '{memberName}' on type '{objType.GetTypeShortName()}' getter threw: {ex.Message}";
+                    logs?.Error(getMsg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{getMsg}");
+                    currentValue = null;
+                    memberType   = fieldInfo.FieldType;
+                    writeBack    = null;
+                    return false;
+                }
+                memberType = fieldInfo.FieldType;
+                writeBack  = v =>
+                {
+                    try { fieldInfo.SetValue(obj, v); }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError($"{padding}Field '{memberName}' setter threw: {ex.Message}");
+                    }
+                };
                 return true;
             }
 
@@ -63,17 +84,55 @@ namespace com.IvanMurzak.ReflectorNet
                     return false;
                 }
 
-                currentValue = propInfo.GetValue(obj);
-                memberType   = propInfo.PropertyType;
-                writeBack    = v => propInfo.SetValue(obj, v);
+                if (!propInfo.CanRead)
+                {
+                    var writeOnlyMsg = $"Property '{memberName}' on type '{objType.GetTypeShortName()}' is write-only (no getter); cannot read current value.";
+                    logs?.Error(writeOnlyMsg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{writeOnlyMsg}");
+                    currentValue = null;
+                    memberType   = propInfo.PropertyType;
+                    writeBack    = null;
+                    return false;
+                }
+
+                try
+                {
+                    currentValue = propInfo.GetValue(obj);
+                }
+                catch (Exception ex)
+                {
+                    var getMsg = $"Property '{memberName}' on type '{objType.GetTypeShortName()}' getter threw: {ex.Message}";
+                    logs?.Error(getMsg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{getMsg}");
+                    currentValue = null;
+                    memberType   = propInfo.PropertyType;
+                    writeBack    = null;
+                    return false;
+                }
+                memberType = propInfo.PropertyType;
+                writeBack  = v =>
+                {
+                    try { propInfo.SetValue(obj, v); }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError($"{padding}Property '{memberName}' setter threw: {ex.Message}");
+                    }
+                };
                 return true;
             }
 
-            // Neither found — detailed error with available members
-            var fieldNames = objType.GetFields(flags).Select(f => f.Name).ToList();
-            var propNames  = objType.GetProperties(flags).Select(p => p.Name).ToList();
-            var fieldsStr  = fieldNames.Count > 0 ? string.Join(", ", fieldNames) : "none";
-            var propsStr   = propNames.Count  > 0 ? string.Join(", ", propNames)  : "none";
+            // Neither found — detailed error with available members (matches the read-side
+            // convention in TryNavigateOneSegment, which lists serializable members only).
+            var serializableFields = GetSerializableFields(objType, flags, logger);
+            var serializableProps  = GetSerializableProperties(objType, flags, logger);
+            var fieldsStr = serializableFields != null && serializableFields.Any()
+                ? string.Join(", ", serializableFields.Select(f => f.Name))
+                : "none";
+            var propsStr  = serializableProps  != null && serializableProps.Any()
+                ? string.Join(", ", serializableProps .Select(p => p.Name))
+                : "none";
 
             var msg = $"Segment '{memberName}' not found on type '{objType.GetTypeShortName()}'."
                     + $"\nAvailable fields: {fieldsStr}"

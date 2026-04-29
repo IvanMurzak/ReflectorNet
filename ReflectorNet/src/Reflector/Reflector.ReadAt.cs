@@ -163,17 +163,47 @@ namespace com.IvanMurzak.ReflectorNet
             var fieldInfo = TypeMemberUtils.GetField(resolvedType, flags, segment);
             if (fieldInfo != null)
             {
-                obj     = fieldInfo.GetValue(obj);
-                objType = fieldInfo.FieldType;
-                return true;
+                try
+                {
+                    obj     = fieldInfo.GetValue(obj);
+                    objType = fieldInfo.FieldType;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    var msg = $"Failed to read field '{segment}' on type '{resolvedType.GetTypeShortName()}': {ex.Message}";
+                    logs?.Error(msg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{msg}");
+                    return false;
+                }
             }
 
             var propInfo = TypeMemberUtils.GetProperty(resolvedType, flags, segment);
             if (propInfo != null)
             {
-                obj     = propInfo.GetValue(obj);
-                objType = propInfo.PropertyType;
-                return true;
+                if (!propInfo.CanRead)
+                {
+                    var msg = $"Property '{segment}' on type '{resolvedType.GetTypeShortName()}' is write-only and cannot be read.";
+                    logs?.Error(msg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{msg}");
+                    return false;
+                }
+                try
+                {
+                    obj     = propInfo.GetValue(obj);
+                    objType = propInfo.PropertyType;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    var msg = $"Failed to read property '{segment}' on type '{resolvedType.GetTypeShortName()}': {ex.Message}";
+                    logs?.Error(msg, depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{msg}");
+                    return false;
+                }
             }
 
             // ── Not found — detailed error with available members ──────────────────────
