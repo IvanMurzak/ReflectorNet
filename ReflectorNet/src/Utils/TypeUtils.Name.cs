@@ -115,8 +115,20 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return Sanitize(type);
         }
 
-        public static string GetSchemaTypeId<T>() => GetTypeId(typeof(T));
-        public static string GetSchemaTypeId(Type type) => GetTypeId(type);
+        public static string GetSchemaTypeId<T>() => GetSchemaTypeId(typeof(T));
+        public static string GetSchemaTypeId(Type type)
+        {
+            var typeId = GetTypeId(type);
+            return SanitizeForJsonSchemaRef(typeId);
+        }
+
+        private static string SanitizeForJsonSchemaRef(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId))
+                return typeId;
+            return typeId.Replace("[", "%5B").Replace("]", "%5D")
+                         .Replace("<", "%3C").Replace(">", "%3E");
+        }
 
         public static bool IsNameMatch(Type? type, string? typeName)
         {

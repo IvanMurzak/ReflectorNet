@@ -18,7 +18,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}", result);
+            Assert.Equal("System.Int32%5B%5D", result);
             _output.WriteLine($"int[] -> {result}");
         }
 
@@ -32,7 +32,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}", result);
+            Assert.Equal("System.Int32%5B%5D%5B%5D", result);
             _output.WriteLine($"int[][] -> {result}");
         }
 
@@ -46,7 +46,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}", result);
+            Assert.Equal("System.Int32%5B%5D%5B%5D%5B%5D", result);
             _output.WriteLine($"int[][][] -> {result}");
         }
 
@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal($"System.String{TypeUtils.ArraySuffix}", result);
+            Assert.Equal("System.String%5B%5D", result);
             _output.WriteLine($"string[] -> {result}");
         }
 
@@ -102,7 +102,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}", result);
+            Assert.Equal("System.Int32%5B%5D", result);
             _output.WriteLine($"int?[] -> {result}");
         }
 
@@ -116,7 +116,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.IEnumerable<System.Int32>", result);
+            Assert.Equal("System.Collections.Generic.IEnumerable%3CSystem.Int32%3E", result);
             _output.WriteLine($"IEnumerable<int> -> {result}");
         }
 
@@ -130,7 +130,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.ICollection<System.String>", result);
+            Assert.Equal("System.Collections.Generic.ICollection%3CSystem.String%3E", result);
             _output.WriteLine($"ICollection<string> -> {result}");
         }
 
@@ -144,7 +144,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.IList<System.Int32>", result);
+            Assert.Equal("System.Collections.Generic.IList%3CSystem.Int32%3E", result);
             _output.WriteLine($"IList<int> -> {result}");
         }
 
@@ -172,7 +172,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal($"com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType{TypeUtils.ArraySuffix}", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType%5B%5D", result);
             _output.WriteLine($"TestType[] -> {result}");
         }
     }
