@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using com.IvanMurzak.ReflectorNet.OuterAssembly.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
@@ -7,6 +8,20 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
     public class TestSchemaTypeId : BaseTest
     {
         public TestSchemaTypeId(ITestOutputHelper output) : base(output) { }
+
+        [Fact]
+        public void GetSchemaTypeId_NestedClass_ShouldEncodePlusSymbol()
+        {
+            // Arrange
+            var type = typeof(ParentClass.NestedClass);
+
+            // Act
+            var result = type.GetSchemaTypeId();
+
+            // Assert
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedClass", result);
+            _output.WriteLine($"ParentClass.NestedClass -> {result}");
+        }
 
         [Fact]
         public void GetSchemaTypeId_SimpleArray_ShouldAppendArray()
