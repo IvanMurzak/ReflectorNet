@@ -33,7 +33,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int[] -> {result}");
         }
 
@@ -47,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D%5B%5D", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int[][] -> {result}");
         }
 
@@ -61,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D%5B%5D%5B%5D", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int[][][] -> {result}");
         }
 
@@ -75,7 +75,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.String%5B%5D", result);
+            Assert.Equal($"System.String{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"string[] -> {result}");
         }
 
@@ -117,7 +117,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D", result);
+            Assert.Equal($"System.Int32{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"int?[] -> {result}");
         }
 
@@ -187,7 +187,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType%5B%5D", result);
+            Assert.Equal($"com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType{TypeUtils.ArraySuffix}", result);
             _output.WriteLine($"TestType[] -> {result}");
         }
     }

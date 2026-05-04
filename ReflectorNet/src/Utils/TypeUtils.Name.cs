@@ -5,7 +5,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 {
     public static partial class TypeUtils
     {
-        public const string ArraySuffix = "[]";
+        public const string ArraySuffix = "%5B%5D";
 
         /// <summary>
         /// Returns the sanitized type name.

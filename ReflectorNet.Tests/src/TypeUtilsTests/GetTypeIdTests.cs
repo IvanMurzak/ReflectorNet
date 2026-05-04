@@ -87,22 +87,22 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
         public static readonly Dictionary<string, Type> BuiltInArrayTypes = new Dictionary<string, Type>
         {
             // Simple arrays
-            ["System.Int32[]"] = typeof(int[]),
-            ["System.String[]"] = typeof(string[]),
-            ["System.Boolean[]"] = typeof(bool[]),
-            ["System.Double[]"] = typeof(double[]),
-            ["System.Object[]"] = typeof(object[]),
-            ["System.Byte[]"] = typeof(byte[]),
-            ["System.DateTime[]"] = typeof(DateTime[]),
-            ["System.Guid[]"] = typeof(Guid[]),
+            ["System.Int32%5B%5D"] = typeof(int[]),
+            ["System.String%5B%5D"] = typeof(string[]),
+            ["System.Boolean%5B%5D"] = typeof(bool[]),
+            ["System.Double%5B%5D"] = typeof(double[]),
+            ["System.Object%5B%5D"] = typeof(object[]),
+            ["System.Byte%5B%5D"] = typeof(byte[]),
+            ["System.DateTime%5B%5D"] = typeof(DateTime[]),
+            ["System.Guid%5B%5D"] = typeof(Guid[]),
 
             // Jagged arrays
-            ["System.Int32[][]"] = typeof(int[][]),
-            ["System.String[][]"] = typeof(string[][]),
-            ["System.Object[][]"] = typeof(object[][]),
+            ["System.Int32%5B%5D%5B%5D"] = typeof(int[][]),
+            ["System.String%5B%5D%5B%5D"] = typeof(string[][]),
+            ["System.Object%5B%5D%5B%5D"] = typeof(object[][]),
 
             // Triple jagged arrays
-            ["System.Int32[][][]"] = typeof(int[][][]),
+            ["System.Int32%5B%5D%5B%5D%5B%5D"] = typeof(int[][][]),
 
             // Multi-dimensional arrays
             ["System.Int32[,]"] = typeof(int[,]),
@@ -118,11 +118,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
 
             // Mixed arrays (Array of 2D arrays)
             // Note: C# syntax int[][,] is (int[,])[] -> System.Int32[,][]
-            ["System.Int32[,][]"] = typeof(int[][,]),
+            ["System.Int32[,]%5B%5D"] = typeof(int[][,]),
 
             // Mixed arrays (2D array of arrays)
             // Note: C# syntax int[,][] is (int[])[,] -> System.Int32[][,]
-            ["System.Int32[][,]"] = typeof(int[,][]),
+            ["System.Int32%5B%5D[,]"] = typeof(int[,][]),
         };
 
         #endregion
@@ -185,12 +185,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
         public static readonly Dictionary<string, Type> NestedGenericTypes = new Dictionary<string, Type>
         {
             // List of arrays
-            ["System.Collections.Generic.List<System.Int32[]>"] = typeof(List<int[]>),
-            ["System.Collections.Generic.List<System.String[]>"] = typeof(List<string[]>),
+            ["System.Collections.Generic.List<System.Int32%5B%5D>"] = typeof(List<int[]>),
+            ["System.Collections.Generic.List<System.String%5B%5D>"] = typeof(List<string[]>),
 
             // Array of lists
-            ["System.Collections.Generic.List<System.Int32>[]"] = typeof(List<int>[]),
-            ["System.Collections.Generic.List<System.String>[]"] = typeof(List<string>[]),
+            ["System.Collections.Generic.List<System.Int32>%5B%5D"] = typeof(List<int>[]),
+            ["System.Collections.Generic.List<System.String>%5B%5D"] = typeof(List<string>[]),
 
             // List of lists
             ["System.Collections.Generic.List<System.Collections.Generic.List<System.Int32>>"] = typeof(List<List<int>>),
@@ -232,8 +232,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
             ["com.IvanMurzak.ReflectorNet.Tests.Model.SolarSystem+CelestialBody"] = typeof(SolarSystem.CelestialBody),
 
             // Arrays of custom types
-            ["com.IvanMurzak.ReflectorNet.Tests.Model.Vector3[]"] = typeof(Vector3[]),
-            ["com.IvanMurzak.ReflectorNet.Tests.Model.GameObjectRef[]"] = typeof(GameObjectRef[]),
+            ["com.IvanMurzak.ReflectorNet.Tests.Model.Vector3%5B%5D"] = typeof(Vector3[]),
+            ["com.IvanMurzak.ReflectorNet.Tests.Model.GameObjectRef%5B%5D"] = typeof(GameObjectRef[]),
 
             // Generic with custom types
             ["System.Collections.Generic.List<com.IvanMurzak.ReflectorNet.Tests.Model.Vector3>"] = typeof(List<Vector3>),
@@ -258,7 +258,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
             ["com.IvanMurzak.ReflectorNet.Model.MethodData"] = typeof(MethodData),
 
             // Arrays
-            ["com.IvanMurzak.ReflectorNet.Model.SerializedMember[]"] = typeof(SerializedMember[]),
+            ["com.IvanMurzak.ReflectorNet.Model.SerializedMember%5B%5D"] = typeof(SerializedMember[]),
 
             // Generics with ReflectorNet types
             ["System.Collections.Generic.List<com.IvanMurzak.ReflectorNet.Model.SerializedMember>"] = typeof(List<SerializedMember>),
@@ -353,18 +353,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
         public static readonly Dictionary<string, Type> OuterAssemblyArrayTypes = new Dictionary<string, Type>
         {
             // Simple arrays
-            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass[]"] = typeof(OuterSimpleClass[]),
-            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleStruct[]"] = typeof(OuterSimpleStruct[]),
-            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterEnum[]"] = typeof(OuterEnum[]),
+            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass%5B%5D"] = typeof(OuterSimpleClass[]),
+            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleStruct%5B%5D"] = typeof(OuterSimpleStruct[]),
+            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterEnum%5B%5D"] = typeof(OuterEnum[]),
 
             // Jagged arrays
-            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass[][]"] = typeof(OuterSimpleClass[][]),
+            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass%5B%5D%5B%5D"] = typeof(OuterSimpleClass[][]),
 
             // Generic arrays
-            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterGenericClass<System.Int32>[]"] = typeof(OuterGenericClass<int>[]),
+            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterGenericClass<System.Int32>%5B%5D"] = typeof(OuterGenericClass<int>[]),
 
             // Nested type arrays
-            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterContainer+NestedClass[]"] = typeof(OuterContainer.NestedClass[]),
+            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterContainer+NestedClass%5B%5D"] = typeof(OuterContainer.NestedClass[]),
         };
 
         #endregion
@@ -393,13 +393,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
             ["System.Collections.Generic.List<com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterGenericClass<System.Int32>>"] = typeof(List<OuterGenericClass<int>>),
 
             // Array of generic outer assembly type
-            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterGenericClass<System.String>[]"] = typeof(OuterGenericClass<string>[]),
+            ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterGenericClass<System.String>%5B%5D"] = typeof(OuterGenericClass<string>[]),
 
             // Generic with array type argument
-            ["System.Collections.Generic.List<com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass[]>"] = typeof(List<OuterSimpleClass[]>),
+            ["System.Collections.Generic.List<com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleClass%5B%5D>"] = typeof(List<OuterSimpleClass[]>),
 
             // Dictionary with array value type
-            ["System.Collections.Generic.Dictionary<System.String,com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleStruct[]>"] = typeof(Dictionary<string, OuterSimpleStruct[]>),
+            ["System.Collections.Generic.Dictionary<System.String,com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterSimpleStruct%5B%5D>"] = typeof(Dictionary<string, OuterSimpleStruct[]>),
 
             // Cross-assembly generic combinations
             ["com.IvanMurzak.ReflectorNet.OuterAssembly.Model.OuterGenericClass<com.IvanMurzak.ReflectorNet.Tests.Model.Vector3>"] = typeof(OuterGenericClass<Vector3>),
