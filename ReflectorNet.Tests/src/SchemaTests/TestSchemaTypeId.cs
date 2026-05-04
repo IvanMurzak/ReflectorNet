@@ -12,15 +12,28 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void GetSchemaTypeId_NestedClass_ShouldEncodePlusSymbol()
         {
-            // Arrange
             var type = typeof(ParentClass.NestedClass);
-
-            // Act
             var result = type.GetSchemaTypeId();
-
-            // Assert
             Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedClass", result);
             _output.WriteLine($"ParentClass.NestedClass -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_DeeplyNestedClass_ShouldEncodeAllPlusSymbols()
+        {
+            var type = typeof(LevelOne.LevelTwo.LevelThree.LevelFour);
+            var result = type.GetSchemaTypeId();
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.LevelOne%2BLevelTwo%2BLevelThree%2BLevelFour", result);
+            _output.WriteLine($"LevelOne.LevelTwo.LevelThree.LevelFour -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_GenericNestedClass_ShouldEncodePlusAndAngleBrackets()
+        {
+            var type = typeof(GenericOuter<int>.GenericInner<string>);
+            var result = type.GetSchemaTypeId();
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.GenericOuter%3CSystem.Int32%3E%2BGenericInner%3CSystem.String%3E", result);
+            _output.WriteLine($"GenericOuter<int>.GenericInner<string> -> {result}");
         }
 
         [Fact]

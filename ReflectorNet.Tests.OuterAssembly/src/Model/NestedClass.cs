@@ -65,4 +65,35 @@ namespace com.IvanMurzak.ReflectorNet.OuterAssembly.Model
         /// </summary>
         public T? EchoNullable(T? value) => value;
     }
+
+    public class LevelOne
+    {
+        public class LevelTwo
+        {
+            public class LevelThree
+            {
+                public class LevelFour
+                {
+                    public string DeepProperty { get; set; } = "deep";
+                }
+
+                public LevelFour? NestedInstance { get; set; }
+            }
+
+            public LevelThree? NestedInstance { get; set; }
+        }
+
+        public LevelTwo? NestedInstance { get; set; }
+    }
+
+    public class GenericOuter<T>
+    {
+        public class GenericInner<U>
+        {
+            public T? OuterValue { get; set; }
+            public U? InnerValue { get; set; }
+        }
+
+        public GenericInner<T>? SelfReferencingInner { get; set; }
+    }
 }
