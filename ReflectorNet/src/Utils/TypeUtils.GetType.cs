@@ -7,14 +7,33 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     public static partial class TypeUtils
     {
         /// <summary>
+        /// Decodes percent-encoded type-id chars produced by JSON Schema $ref values
+        /// (<c>%2B %3C %3E %5B %5D</c>) back to their literal forms (<c>+ &lt; &gt; [ ]</c>).
+        /// Callers may submit type names in either raw or $ref-encoded form; normalizing here
+        /// lets every resolution path (cache lookup, Type.GetType, generic/array parsers) see a
+        /// single canonical form. Other percent sequences are left untouched (C# identifiers
+        /// never legitimately contain <c>%</c>, but we preserve the input rather than guess).
+        /// </summary>
+        static string DecodeSchemaRefChars(string typeName)
+        {
+            if (typeName.IndexOf('%') < 0)
+                return typeName;
+            return typeName.Replace("%5B", "[").Replace("%5D", "]")
+                           .Replace("%3C", "<").Replace("%3E", ">")
+                           .Replace("%2B", "+");
+        }
+
+        /// <summary>
         /// Retrieves a <see cref="Type"/> by its name.
         /// </summary>
-        /// <param name="typeName">The name of the type to retrieve. Can be a full name, assembly qualified name, or a custom identifier.</param>
+        /// <param name="typeName">The name of the type to retrieve. Can be a full name, assembly qualified name, or a custom identifier. Percent-encoded chars <c>%2B %3C %3E %5B %5D</c> are decoded before resolution so $ref-style input is accepted alongside raw type ids.</param>
         /// <returns>The <see cref="Type"/> corresponding to the specified name, or <see langword="null"/> if the type cannot be found.</returns>
         public static Type? GetType(string? typeName)
         {
             if (string.IsNullOrWhiteSpace(typeName))
                 return null;
+
+            typeName = DecodeSchemaRefChars(typeName!);
 
             if (_typeCache.TryGetValue(typeName, out var cachedType))
                 return cachedType;
@@ -87,6 +106,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (string.IsNullOrWhiteSpace(typeName))
                 return null;
 
+            typeName = DecodeSchemaRefChars(typeName!);
+
             if (string.IsNullOrEmpty(assemblyName))
                 return GetType(typeName);
 
@@ -153,6 +174,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         {
             if (string.IsNullOrWhiteSpace(typeName) || assembly == null)
                 return null;
+
+            typeName = DecodeSchemaRefChars(typeName!);
 
             var cacheKey = $"{assembly.GetName().Name}|{typeName}";
             if (_exactAssemblyTypeCache.TryGetValue(cacheKey, out var cachedType))

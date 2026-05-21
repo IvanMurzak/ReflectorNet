@@ -65,14 +65,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 Assert.NotNull(methodParameter);
 
                 var typeId = methodParameter.ParameterType.GetSchemaTypeId();
-                var refString = $"{JsonSchema.RefValue}{typeId}";
 
                 var targetDefine = defines[typeId];
                 Assert.NotNull(targetDefine);
 
+                // $ref values are URI-encoded; decode each before comparing against the raw typeId.
                 var refStringValue = properties.FirstOrDefault(kvp
                         => kvp.Value!.AsObject().TryGetPropertyValue(JsonSchema.Ref, out var refValue)
-                        && refString == refValue?.ToString())
+                        && refValue is not null
+                        && Uri.UnescapeDataString(refValue.ToString().Replace(JsonSchema.RefValue, string.Empty)) == typeId)
                     .Value
                     ?.ToString();
 
@@ -205,16 +206,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 var expectedTypeId = expectedType.GetSchemaTypeId();
 
                 // Check if the type is either:
-                // 1. Directly defined in $defs (exact match)
+                // 1. Directly defined in $defs (raw typeId match — $defs keys are raw)
                 var isDirectlyDefined = defines.ContainsKey(expectedTypeId);
 
-                // 2. Referenced somewhere in the schema (exact match in $ref)
-                var expectedRef = $"{JsonSchema.RefValue}{expectedTypeId}";
-                var isReferenced = allReferences.Contains(expectedRef);
+                // 2. Referenced somewhere in the schema ($ref values are URI-encoded — decode each)
+                var isReferenced = allReferences.Any(reference =>
+                    Uri.UnescapeDataString(reference.Replace(JsonSchema.RefValue, string.Empty)) == expectedTypeId);
 
                 Assert.True(isDirectlyDefined && isReferenced,
                     $"Expected type '{expectedType.GetTypeShortName()}' with ID '{expectedTypeId}' should be both defined in $defs and referenced in schema. " +
-                    $"Expected $ref: '{expectedRef}'. " +
                     $"Defined types: {string.Join(", ", defines.Select(d => d.Key))}. " +
                     $"Referenced types: {string.Join(", ", allReferences)}");
             }
@@ -278,13 +278,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
                 return;
             }
 
-            // References don't include restricted types
-            foreach (var reference in allReferences)
-            {
-                Assert.False(RestrictedDefineTypes.Any(x => JsonSchema.RefValue + x.GetSchemaTypeId() == reference),
-                    $"Reference '{reference}' is for a restricted type that should not appear as a $ref.");
-            }
-
             // Schema must have $defs if there are references
             Assert.True(schema.AsObject().ContainsKey(JsonSchema.Defs),
                 $"Schema contains {allReferences.Count} $ref reference(s) but no $defs section. References: {string.Join(", ", allReferences)}");
@@ -292,14 +285,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var defines = schema[JsonSchema.Defs]!.AsObject();
             Assert.NotNull(defines);
 
-            // Check each reference to ensure it's defined
+            // $defs keys are raw type-ids; $ref values are URI references with percent-encoded
+            // fragments. URI-decode the fragment to recover the raw type-id before lookup.
             foreach (var reference in allReferences)
             {
-                // Extract the type ID from the reference (e.g., "#/$defs/TypeId" -> "TypeId")
-                var typeId = reference.Replace(JsonSchema.RefValue, string.Empty);
+                var encodedTypeId = reference.Replace(JsonSchema.RefValue, string.Empty);
+                var typeId = Uri.UnescapeDataString(encodedTypeId);
+
+                Assert.False(RestrictedDefineTypes.Any(x => x.GetSchemaTypeId() == typeId),
+                    $"Reference '{reference}' is for a restricted type that should not appear as a $ref.");
 
                 Assert.True(defines.ContainsKey(typeId),
-                    $"Reference '{reference}' (type ID: '{typeId}') is not defined in $defs. " +
+                    $"Reference '{reference}' (decoded type ID: '{typeId}') is not defined in $defs. " +
                     $"Available definitions: {string.Join(", ", defines.Select(d => d.Key))}");
             }
 

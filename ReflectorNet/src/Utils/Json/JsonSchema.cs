@@ -282,10 +282,13 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 else
                 {
                     var typeId = type.GetSchemaTypeId();
-                    // If justRef is true and the type is not primitive, we return a reference schema
+                    // The $defs key is stored raw (it's an arbitrary JSON object key). The $ref
+                    // value is a URI reference per JSON Schema, so the type-id fragment must be
+                    // percent-encoded for chars not allowed in URI fragments. A consumer decoding
+                    // the $ref recovers the raw type-id and looks it up in $defs directly.
                     schema = new JsonObject
                     {
-                        [Ref] = RefValue + typeId
+                        [Ref] = RefValue + EncodeForJsonSchemaRef(typeId)
                     };
                 }
 
@@ -318,6 +321,20 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return schema;
         }
 
+        /// <summary>
+        /// Percent-encodes characters that are not allowed in a JSON Schema $ref URI fragment.
+        /// $defs keys are raw JSON object keys (e.g. <c>List&lt;int&gt;</c>, <c>Outer+Nested</c>);
+        /// the $ref value is a URI reference per JSON Schema and must escape <c>[ ] &lt; &gt; +</c>.
+        /// A consumer that URI-decodes the fragment recovers the raw type-id stored in $defs.
+        /// </summary>
+        static string EncodeForJsonSchemaRef(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId))
+                return typeId;
+            return typeId.Replace("[", "%5B").Replace("]", "%5D")
+                         .Replace("<", "%3C").Replace(">", "%3E")
+                         .Replace("+", "%2B");
+        }
 
         /// <summary>
         /// Recursively collects all nested non-primitive types from a given type and adds them to the definitions.

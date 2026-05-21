@@ -115,7 +115,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             return Sanitize(type);
         }
 
-        public static string GetSchemaTypeId<T>() => GetTypeId(typeof(T));
+        public static string GetSchemaTypeId<T>() => GetSchemaTypeId(typeof(T));
         public static string GetSchemaTypeId(Type type) => GetTypeId(type);
 
         public static bool IsNameMatch(Type? type, string? typeName)
