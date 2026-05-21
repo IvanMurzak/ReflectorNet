@@ -127,7 +127,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (string.IsNullOrEmpty(typeId))
                 return typeId;
             return typeId.Replace("[", "%5B").Replace("]", "%5D")
-                         .Replace("<", "%3C").Replace(">", "%3E");
+                         .Replace("<", "%3C").Replace(">", "%3E")
+                         .Replace("+", "%2B");
         }
 
         public static bool IsNameMatch(Type? type, string? typeName)

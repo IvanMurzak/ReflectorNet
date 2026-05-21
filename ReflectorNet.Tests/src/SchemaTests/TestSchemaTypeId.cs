@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using com.IvanMurzak.ReflectorNet.OuterAssembly.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit.Abstractions;
 
@@ -174,6 +175,66 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // Assert
             Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType%5B%5D", result);
             _output.WriteLine($"TestType[] -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_NestedClass_ShouldPercentEncodePlus()
+        {
+            // Arrange
+            var type = typeof(ParentClass.NestedClass);
+
+            // Act
+            var result = type.GetSchemaTypeId();
+
+            // Assert
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedClass", result);
+            Assert.DoesNotContain("+", result);
+            _output.WriteLine($"ParentClass.NestedClass -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_NestedStaticClass_ShouldPercentEncodePlus()
+        {
+            // Arrange
+            var type = typeof(ParentClass.NestedStaticClass);
+
+            // Act
+            var result = type.GetSchemaTypeId();
+
+            // Assert
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedStaticClass", result);
+            Assert.DoesNotContain("+", result);
+            _output.WriteLine($"ParentClass.NestedStaticClass -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_NestedClassInStaticParent_ShouldPercentEncodePlus()
+        {
+            // Arrange
+            var type = typeof(StaticParentClass.NestedClass);
+
+            // Act
+            var result = type.GetSchemaTypeId();
+
+            // Assert
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.StaticParentClass%2BNestedClass", result);
+            Assert.DoesNotContain("+", result);
+            _output.WriteLine($"StaticParentClass.NestedClass -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_ArrayOfNestedClass_ShouldPercentEncodePlusAndBrackets()
+        {
+            // Arrange
+            var type = typeof(ParentClass.NestedClass[]);
+
+            // Act
+            var result = type.GetSchemaTypeId();
+
+            // Assert
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedClass%5B%5D", result);
+            Assert.DoesNotContain("+", result);
+            _output.WriteLine($"ParentClass.NestedClass[] -> {result}");
         }
     }
 }
