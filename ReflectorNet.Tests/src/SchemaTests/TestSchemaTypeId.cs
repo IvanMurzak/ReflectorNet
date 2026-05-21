@@ -19,7 +19,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D", result);
+            Assert.Equal("System.Int32[]", result);
             _output.WriteLine($"int[] -> {result}");
         }
 
@@ -33,7 +33,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D%5B%5D", result);
+            Assert.Equal("System.Int32[][]", result);
             _output.WriteLine($"int[][] -> {result}");
         }
 
@@ -47,7 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D%5B%5D%5B%5D", result);
+            Assert.Equal("System.Int32[][][]", result);
             _output.WriteLine($"int[][][] -> {result}");
         }
 
@@ -61,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.String%5B%5D", result);
+            Assert.Equal("System.String[]", result);
             _output.WriteLine($"string[] -> {result}");
         }
 
@@ -103,7 +103,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32%5B%5D", result);
+            Assert.Equal("System.Int32[]", result);
             _output.WriteLine($"int?[] -> {result}");
         }
 
@@ -117,7 +117,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.IEnumerable%3CSystem.Int32%3E", result);
+            Assert.Equal("System.Collections.Generic.IEnumerable<System.Int32>", result);
             _output.WriteLine($"IEnumerable<int> -> {result}");
         }
 
@@ -131,7 +131,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.ICollection%3CSystem.String%3E", result);
+            Assert.Equal("System.Collections.Generic.ICollection<System.String>", result);
             _output.WriteLine($"ICollection<string> -> {result}");
         }
 
@@ -145,7 +145,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.IList%3CSystem.Int32%3E", result);
+            Assert.Equal("System.Collections.Generic.IList<System.Int32>", result);
             _output.WriteLine($"IList<int> -> {result}");
         }
 
@@ -173,12 +173,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType%5B%5D", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType[]", result);
             _output.WriteLine($"TestType[] -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_NestedClass_ShouldPercentEncodePlus()
+        public void GetSchemaTypeId_NestedClass_ShouldUsePlusSeparator()
         {
             // Arrange
             var type = typeof(ParentClass.NestedClass);
@@ -187,13 +187,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedClass", result);
-            Assert.DoesNotContain("+", result);
+            // $defs keys are raw JSON object keys — the '+' nested-class separator is stored
+            // verbatim. URI encoding happens at the $ref site only (see TestSchemaRefEncoding).
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass+NestedClass", result);
             _output.WriteLine($"ParentClass.NestedClass -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_NestedStaticClass_ShouldPercentEncodePlus()
+        public void GetSchemaTypeId_NestedStaticClass_ShouldUsePlusSeparator()
         {
             // Arrange
             var type = typeof(ParentClass.NestedStaticClass);
@@ -202,13 +203,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedStaticClass", result);
-            Assert.DoesNotContain("+", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass+NestedStaticClass", result);
             _output.WriteLine($"ParentClass.NestedStaticClass -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_NestedClassInStaticParent_ShouldPercentEncodePlus()
+        public void GetSchemaTypeId_NestedClassInStaticParent_ShouldUsePlusSeparator()
         {
             // Arrange
             var type = typeof(StaticParentClass.NestedClass);
@@ -217,13 +217,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.StaticParentClass%2BNestedClass", result);
-            Assert.DoesNotContain("+", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.StaticParentClass+NestedClass", result);
             _output.WriteLine($"StaticParentClass.NestedClass -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_ArrayOfNestedClass_ShouldPercentEncodePlusAndBrackets()
+        public void GetSchemaTypeId_ArrayOfNestedClass_ShouldUsePlusAndBrackets()
         {
             // Arrange
             var type = typeof(ParentClass.NestedClass[]);
@@ -232,8 +231,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass%2BNestedClass%5B%5D", result);
-            Assert.DoesNotContain("+", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass+NestedClass[]", result);
             _output.WriteLine($"ParentClass.NestedClass[] -> {result}");
         }
     }
