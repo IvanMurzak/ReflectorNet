@@ -5,12 +5,18 @@ using Xunit.Abstractions;
 
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
+    /// <summary>
+    /// GetSchemaTypeId emits firewall-safe structural delimiters (issue #80):
+    /// generic '&lt;&gt;' -> '()', nested-class '+' -> '-', array '[]' rank-1 -> '-1',
+    /// rank-N -> '-N', jagged repeats stack (int[][] -> '-1-1'). Namespace '.' and
+    /// generic-arg separator ',' stay literal. The $defs key equals the $ref value (symmetric).
+    /// </summary>
     public class TestSchemaTypeId : BaseTest
     {
         public TestSchemaTypeId(ITestOutputHelper output) : base(output) { }
 
         [Fact]
-        public void GetSchemaTypeId_SimpleArray_ShouldAppendArray()
+        public void GetSchemaTypeId_SimpleArray_ShouldAppendArrayRank()
         {
             // Arrange
             var type = typeof(int[]);
@@ -19,12 +25,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32[]", result);
+            Assert.Equal("System.Int32-1", result);
             _output.WriteLine($"int[] -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_NestedArray_ShouldAppendMultipleArrays()
+        public void GetSchemaTypeId_NestedArray_ShouldStackArrayRanks()
         {
             // Arrange
             var type = typeof(int[][]);
@@ -33,12 +39,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32[][]", result);
+            Assert.Equal("System.Int32-1-1", result);
             _output.WriteLine($"int[][] -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_TripleNestedArray_ShouldAppendThreeArrays()
+        public void GetSchemaTypeId_TripleNestedArray_ShouldStackThreeArrayRanks()
         {
             // Arrange
             var type = typeof(int[][][]);
@@ -47,8 +53,23 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32[][][]", result);
+            Assert.Equal("System.Int32-1-1-1", result);
             _output.WriteLine($"int[][][] -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_MultiDimensionalArray_ShouldUseRankDigit()
+        {
+            // Arrange
+            var type = typeof(int[,]);
+
+            // Act
+            var result = type.GetSchemaTypeId();
+
+            // Assert
+            // rank-2 multi-dimensional array -> '-2' (distinct from jagged int[][] -> '-1-1').
+            Assert.Equal("System.Int32-2", result);
+            _output.WriteLine($"int[,] -> {result}");
         }
 
         [Fact]
@@ -61,7 +82,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.String[]", result);
+            Assert.Equal("System.String-1", result);
             _output.WriteLine($"string[] -> {result}");
         }
 
@@ -103,7 +124,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Int32[]", result);
+            Assert.Equal("System.Int32-1", result);
             _output.WriteLine($"int?[] -> {result}");
         }
 
@@ -117,7 +138,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.IEnumerable<System.Int32>", result);
+            Assert.Equal("System.Collections.Generic.IEnumerable(System.Int32)", result);
             _output.WriteLine($"IEnumerable<int> -> {result}");
         }
 
@@ -131,7 +152,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.ICollection<System.String>", result);
+            Assert.Equal("System.Collections.Generic.ICollection(System.String)", result);
             _output.WriteLine($"ICollection<string> -> {result}");
         }
 
@@ -145,7 +166,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("System.Collections.Generic.IList<System.Int32>", result);
+            Assert.Equal("System.Collections.Generic.IList(System.Int32)", result);
             _output.WriteLine($"IList<int> -> {result}");
         }
 
@@ -164,7 +185,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void GetSchemaTypeId_ArrayOfCustomClass_ShouldAppendArray()
+        public void GetSchemaTypeId_ArrayOfCustomClass_ShouldAppendArrayRank()
         {
             // Arrange
             var type = typeof(TestType[]);
@@ -173,12 +194,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType[]", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.Tests.SchemaTests.TestType-1", result);
             _output.WriteLine($"TestType[] -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_NestedClass_ShouldUsePlusSeparator()
+        public void GetSchemaTypeId_NestedClass_ShouldUseHyphenSeparator()
         {
             // Arrange
             var type = typeof(ParentClass.NestedClass);
@@ -187,14 +208,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            // $defs keys are raw JSON object keys — the '+' nested-class separator is stored
-            // verbatim. URI encoding happens at the $ref site only (see TestSchemaRefEncoding).
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass+NestedClass", result);
+            // Firewall-safe nested-class delimiter (issue #80): '+' -> '-'. The $defs key and the
+            // $ref value are byte-identical (no encode/decode asymmetry).
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass-NestedClass", result);
             _output.WriteLine($"ParentClass.NestedClass -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_NestedStaticClass_ShouldUsePlusSeparator()
+        public void GetSchemaTypeId_NestedStaticClass_ShouldUseHyphenSeparator()
         {
             // Arrange
             var type = typeof(ParentClass.NestedStaticClass);
@@ -203,12 +224,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass+NestedStaticClass", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass-NestedStaticClass", result);
             _output.WriteLine($"ParentClass.NestedStaticClass -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_NestedClassInStaticParent_ShouldUsePlusSeparator()
+        public void GetSchemaTypeId_NestedClassInStaticParent_ShouldUseHyphenSeparator()
         {
             // Arrange
             var type = typeof(StaticParentClass.NestedClass);
@@ -217,12 +238,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.StaticParentClass+NestedClass", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.StaticParentClass-NestedClass", result);
             _output.WriteLine($"StaticParentClass.NestedClass -> {result}");
         }
 
         [Fact]
-        public void GetSchemaTypeId_ArrayOfNestedClass_ShouldUsePlusAndBrackets()
+        public void GetSchemaTypeId_ArrayOfNestedClass_ShouldUseHyphenAndArrayRank()
         {
             // Arrange
             var type = typeof(ParentClass.NestedClass[]);
@@ -231,8 +252,24 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             var result = type.GetSchemaTypeId();
 
             // Assert
-            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass+NestedClass[]", result);
+            Assert.Equal("com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass-NestedClass-1", result);
             _output.WriteLine($"ParentClass.NestedClass[] -> {result}");
+        }
+
+        [Fact]
+        public void GetSchemaTypeId_GenericOfArrayOfNestedClass_ShouldComposeAllDelimiters()
+        {
+            // Arrange — the combo from issue #80: IList<Outer+Nested[]>.
+            var type = typeof(IList<ParentClass.NestedClass[]>);
+
+            // Act
+            var result = type.GetSchemaTypeId();
+
+            // Assert
+            Assert.Equal(
+                "System.Collections.Generic.IList(com.IvanMurzak.ReflectorNet.OuterAssembly.Model.ParentClass-NestedClass-1)",
+                result);
+            _output.WriteLine($"IList<ParentClass.NestedClass[]> -> {result}");
         }
     }
 }

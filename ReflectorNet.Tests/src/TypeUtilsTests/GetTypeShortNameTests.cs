@@ -61,7 +61,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
                 var typeId = kvp.Key;
                 var type = kvp.Value;
 
-                var expectedShortName = StripNamespace(typeId);
+                // The shared GetTypeIdTests dictionary keys are firewall-safe schema type-ids
+                // (issue #80): generic '()', nested-class '-', array '-rank'. GetTypeShortName is a
+                // human-readable display name that is intentionally NOT firewall-safe — it still
+                // uses '<>', '+', '[]'/'[, ]'. Convert the safe-form key to that display form before
+                // stripping namespaces so the two representations line up.
+                var expectedShortName = StripNamespace(ToDisplayForm(typeId));
                 var actualShortName = TypeUtils.GetTypeShortName(type);
 
                 // Normalize spaces in expectedShortName just in case
@@ -85,6 +90,96 @@ namespace com.IvanMurzak.ReflectorNet.Tests.TypeUtilsTests
             {
                 Assert.Fail($"Failed {failed.Count} types. See output for details.");
             }
+        }
+
+        /// <summary>
+        /// Converts a firewall-safe schema type-id (issue #80) to the human-readable display form
+        /// that <see cref="TypeUtils.GetTypeShortName"/> emits: generic '(' ')' -> '&lt;' '&gt;',
+        /// nested-class '-&lt;ident&gt;' -> '+', array '-&lt;rank&gt;' -> '[' + (rank-1 commas) + ']'.
+        /// Comma spacing is left to <see cref="StripNamespace"/>, which already inserts a space
+        /// after every comma. Hyphens past a top-level comma (assembly name) are left literal.
+        /// </summary>
+        private string ToDisplayForm(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId))
+                return typeId;
+
+            var sb = new StringBuilder(typeId.Length + 4);
+            var depth = 0;
+            var inAssemblyName = false;
+
+            for (int i = 0; i < typeId.Length; i++)
+            {
+                var c = typeId[i];
+
+                if (inAssemblyName)
+                {
+                    sb.Append(c);
+                    continue;
+                }
+
+                switch (c)
+                {
+                    case '(':
+                        depth++;
+                        sb.Append('<');
+                        break;
+                    case ')':
+                        depth--;
+                        sb.Append('>');
+                        break;
+                    case '[':
+                        depth++;
+                        sb.Append('[');
+                        break;
+                    case ']':
+                        depth--;
+                        sb.Append(']');
+                        break;
+                    case ',':
+                        if (depth == 0)
+                            inAssemblyName = true;
+                        sb.Append(',');
+                        break;
+                    case '-':
+                        {
+                            var next = i + 1 < typeId.Length ? typeId[i + 1] : '\0';
+                            if (next >= '0' && next <= '9')
+                            {
+                                int j = i + 1;
+                                while (j < typeId.Length && typeId[j] >= '0' && typeId[j] <= '9')
+                                    j++;
+                                var rankText = typeId.Substring(i + 1, j - (i + 1));
+                                if (int.TryParse(rankText, out var rank) && rank >= 1)
+                                {
+                                    sb.Append('[');
+                                    if (rank > 1)
+                                        sb.Append(new string(',', rank - 1));
+                                    sb.Append(']');
+                                    i = j - 1;
+                                }
+                                else
+                                {
+                                    sb.Append('-');
+                                }
+                            }
+                            else if (next == '_' || char.IsLetter(next))
+                            {
+                                sb.Append('+');
+                            }
+                            else
+                            {
+                                sb.Append('-');
+                            }
+                            break;
+                        }
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+
+            return sb.ToString();
         }
 
         private string StripNamespace(string typeId)
