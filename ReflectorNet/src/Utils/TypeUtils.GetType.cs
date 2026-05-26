@@ -50,9 +50,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
                 if (inAssemblyName)
                 {
-                    // Past the type-name portion: emit verbatim, but still translate generic
-                    // close brackets that wrap the whole AQN-bearing argument list is not expected
-                    // for safe-form ids, so just copy through.
+                    // Past the type-name portion (a top-level comma introduced the assembly name):
+                    // safe-form ids never carry structural delimiters here, so emit every remaining
+                    // character verbatim without decoding.
                     sb.Append(c);
                     continue;
                 }
