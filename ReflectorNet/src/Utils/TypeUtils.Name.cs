@@ -75,11 +75,14 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         if (totalArgs.Length > outerArgsCount)
                         {
                             var localArgs = totalArgs.Skip(outerArgsCount).Select(GetTypeId);
-                            return $"{declaringTypeId}+{name}<{string.Join(",", localArgs)}>";
+                            // Firewall-safe structural delimiters (issue #80): nested-class '+' -> '-',
+                            // generic '<>' -> '()'. These are illegal in C# identifiers (collision-proof),
+                            // legal unescaped in URI fragments, and absent from every LLM firewall blocklist.
+                            return $"{declaringTypeId}-{name}({string.Join(",", localArgs)})";
                         }
                     }
 
-                    return $"{declaringTypeId}+{name}";
+                    return $"{declaringTypeId}-{name}";
                 }
             }
 
@@ -94,9 +97,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 if (tickIndex > 0)
                     genericTypeName = genericTypeName.Substring(0, tickIndex);
 
-                // Recursively get the type ID for each generic argument
+                // Recursively get the type ID for each generic argument.
+                // Firewall-safe generic delimiters (issue #80): '<>' -> '()'.
                 var genericArgs = type.GetGenericArguments().Select(GetTypeId);
-                return $"{genericTypeName}<{string.Join(",", genericArgs)}>";
+                return $"{genericTypeName}({string.Join(",", genericArgs)})";
             }
 
             if (type.IsArray)
@@ -105,11 +109,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 if (elementType == null)
                     throw new InvalidOperationException($"Array type '{type}' has no element type.");
 
+                // Firewall-safe array delimiters (issue #80): '[]'/'[,]' -> '-<rank>'.
+                // rank-1 -> '-1', rank-N -> '-N'; jagged repeats stack (int[][] -> '...-1-1').
+                // A digit after '-' denotes array rank; a letter/underscore denotes a nested class.
+                // Since C# identifiers cannot start with a digit, this is unambiguous.
                 var rank = type.GetArrayRank();
-                if (rank == 1)
-                    return $"{GetTypeId(elementType)}{ArraySuffix}";
-
-                return $"{GetTypeId(elementType)}[{new string(',', rank - 1)}]";
+                return $"{GetTypeId(elementType)}-{rank}";
             }
 
             return Sanitize(type);
