@@ -153,7 +153,13 @@ namespace com.IvanMurzak.ReflectorNet.Json
 
             writer.WriteStartObject();
 
-            writer.WriteString(nameof(SerializedMember.name), value.name);
+            // 'name' is nullable (string?) and is NOT in the schema's "required" set, which types it as
+            // a non-nullable "string". Writing it unconditionally emits JSON null for value-only/root/
+            // unnamed members, violating our own advertised output schema (strict MCP clients reject with
+            // -32602). Omit the key when null: an absent non-required key is schema-valid, and a present key
+            // is always a string. Do NOT widen the schema to ["string","null"] — PostprocessFields strips null.
+            if (value.name != null)
+                writer.WriteString(nameof(SerializedMember.name), value.name);
             writer.WriteString(nameof(SerializedMember.typeName), value.typeName);
 
             if (value.valueJsonElement.HasValue)
