@@ -431,7 +431,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     type: p.ParameterType,
                     name: p.Name ?? throw new InvalidOperationException($"Parameter in method '{method.Name}' has no name."),
                     description: TypeUtils.GetDescription(p),
-                    required: !p.HasDefaultValue));
+                    required: !p.HasDefaultValue,
+                    attributeProvider: (ICustomAttributeProvider?)p));
 
             return GenerateSchema(reflector, types, justRef, defines);
         }
@@ -534,6 +535,24 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             IEnumerable<(Type type, string name, string? description, bool required)> types,
             bool justRef = false,
             JsonObject? defines = null)
+            => GenerateSchema(
+                reflector,
+                types.Select(t => (t.type, t.name, t.description, t.required, attributeProvider: (ICustomAttributeProvider?)null)),
+                justRef,
+                defines);
+
+        /// <summary>
+        /// Overload of <see cref="GenerateSchema(Reflector, IEnumerable{ValueTuple{Type, string, string, bool}}, bool, JsonObject)"/>
+        /// that additionally carries the originating <see cref="ICustomAttributeProvider"/> (typically a
+        /// <see cref="ParameterInfo"/>) for each entry, so per-member schema attributes such as
+        /// <see cref="com.IvanMurzak.ReflectorNet.Json.JsonStringOrObjectAttribute"/> can be honored during
+        /// schema generation. Entries with a <c>null</c> attribute provider behave exactly as the 4-tuple overload.
+        /// </summary>
+        public JsonNode GenerateSchema(
+            Reflector reflector,
+            IEnumerable<(Type type, string name, string? description, bool required, ICustomAttributeProvider? attributeProvider)> types,
+            bool justRef = false,
+            JsonObject? defines = null)
         {
             var needToAddDefines = defines == null;
             defines ??= new();
@@ -554,7 +573,20 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 var isPrimitive = TypeUtils.IsPrimitive(parameter.type);
                 if (isPrimitive)
                 {
-                    parameterSchema = GetSchema(reflector, parameter.type, defines: defines);
+                    // Opt-in: a `string` parameter annotated with [JsonStringOrObject] emits an anyOf of
+                    // string + object so callers can pass either a JSON string or a raw JSON object.
+                    if ((Nullable.GetUnderlyingType(parameter.type) ?? parameter.type) == typeof(string) &&
+                        parameter.attributeProvider != null &&
+                        parameter.attributeProvider
+                            .GetCustomAttributes(typeof(com.IvanMurzak.ReflectorNet.Json.JsonStringOrObjectAttribute), inherit: true)
+                            .Length > 0)
+                    {
+                        parameterSchema = com.IvanMurzak.ReflectorNet.Json.JsonStringOrObjectAttribute.Schema;
+                    }
+                    else
+                    {
+                        parameterSchema = GetSchema(reflector, parameter.type, defines: defines);
+                    }
                 }
                 else
                 {

@@ -264,6 +264,16 @@ namespace com.IvanMurzak.ReflectorNet
             // Handle JsonElement conversion
             if (value is JsonElement jsonElement)
             {
+                // Coerce a raw JSON object/array into its raw JSON text when the target is `string`.
+                // This lets a `string` parameter that carries a "stringified JSON blob" (e.g. jsonPatch)
+                // accept BOTH a JSON string and a raw JSON object/array transparently. Without this,
+                // jsonElement.Deserialize<string>(...) throws on an object/array.
+                if (underlyingType == typeof(string) &&
+                    (jsonElement.ValueKind == JsonValueKind.Object || jsonElement.ValueKind == JsonValueKind.Array))
+                {
+                    return jsonElement.GetRawText();
+                }
+
                 var isPrimitive = TypeUtils.IsPrimitive(underlyingType);
                 if (!isPrimitive)
                 {
@@ -348,6 +358,16 @@ namespace com.IvanMurzak.ReflectorNet
             {
                 if (value is JsonElement jsonElement)
                 {
+                    // Coerce a raw JSON object/array into its raw JSON text when the target is `string`.
+                    // This lets a `string` parameter that carries a "stringified JSON blob" (e.g. jsonPatch)
+                    // accept BOTH a JSON string and a raw JSON object/array transparently. Without this,
+                    // jsonElement.Deserialize<string>(...) throws on an object/array.
+                    if (underlyingType == typeof(string) &&
+                        (jsonElement.ValueKind == JsonValueKind.Object || jsonElement.ValueKind == JsonValueKind.Array))
+                    {
+                        return jsonElement.GetRawText();
+                    }
+
                     var isPrimitive = TypeUtils.IsPrimitive(underlyingType);
                     if (!isPrimitive)
                     {
