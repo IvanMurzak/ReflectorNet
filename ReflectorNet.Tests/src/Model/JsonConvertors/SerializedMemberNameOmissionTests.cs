@@ -128,5 +128,41 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model.JsonConvertors
             Assert.NotNull(namedBack);
             Assert.Equal("foo", namedBack!.name);
         }
+
+        [Fact]
+        public void Write_NestedChildWithNullName_OmitsNameKeyRecursively()
+        {
+            // The recursive case from issue #86: a SerializedMember tree where a CHILD (under fields/props)
+            // has a null name. The converter serializes children through the same converter, so the omission
+            // must hold at every depth — not just at the root. This is the most material scenario because
+            // real tool outputs (assets-get-data, gameobject-component-get, etc.) return nested trees whose
+            // value-only leaf members legitimately have null names.
+            var reflector = new Reflector();
+
+            var fieldChild = new SerializedMember { name = null, typeName = "System.Int32" };
+            var propChild = new SerializedMember { name = null, typeName = "System.Boolean" };
+
+            var parent = new SerializedMember { name = "root", typeName = "Some.Composite.Type" };
+            parent.AddField(fieldChild);
+            parent.AddProperty(propChild);
+
+            var obj = SerializeToObject(parent, reflector);
+            _output.WriteLine($"Serialized (nested null-name children): {obj.ToJsonString()}");
+
+            // Parent retains its (non-null) name and typeName.
+            Assert.Equal("root", obj[nameof(SerializedMember.name)]!.GetValue<string>());
+            Assert.Equal("Some.Composite.Type", obj[nameof(SerializedMember.typeName)]!.GetValue<string>());
+
+            // Each nested child object must omit the "name" key entirely while keeping typeName.
+            var fieldChildObj = obj[nameof(SerializedMember.fields)]!.AsArray()[0]!.AsObject();
+            Assert.False(fieldChildObj.ContainsKey(nameof(SerializedMember.name)),
+                $"Expected no 'name' key on the nested field child, but JSON was: {fieldChildObj.ToJsonString()}");
+            Assert.Equal("System.Int32", fieldChildObj[nameof(SerializedMember.typeName)]!.GetValue<string>());
+
+            var propChildObj = obj[nameof(SerializedMember.props)]!.AsArray()[0]!.AsObject();
+            Assert.False(propChildObj.ContainsKey(nameof(SerializedMember.name)),
+                $"Expected no 'name' key on the nested prop child, but JSON was: {propChildObj.ToJsonString()}");
+            Assert.Equal("System.Boolean", propChildObj[nameof(SerializedMember.typeName)]!.GetValue<string>());
+        }
     }
 }
