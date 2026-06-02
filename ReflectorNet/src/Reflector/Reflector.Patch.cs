@@ -118,7 +118,14 @@ namespace com.IvanMurzak.ReflectorNet
             // encoding is an object but which a converter resolves indivisibly (e.g. a Unity object
             // reference {"instanceID":"…"} resolved via an asset lookup). A node carrying a "$type"
             // hint is exempt — polymorphic replacement still flows through the structural path below.
-            if (objType != null && !patch.TryGetProperty("$type", out _))
+            //
+            // POSITIONAL: this fires ONLY for non-root nodes (depth > 0), i.e. a value being assigned
+            // into a member/element slot. The ROOT node (depth 0) is always patched STRUCTURALLY —
+            // the target object is modified in place by descending into its members. This is what lets
+            // a multi-field patch of a component (or any object) at the root still apply field-by-field,
+            // while a reference encoded as {"instanceID":…} assigned INTO a member slot is resolved
+            // atomically by its converter.
+            if (depth > 0 && objType != null && !patch.TryGetProperty("$type", out _))
             {
                 var atomicConverter = Converters.GetConverter(objType);
                 if (atomicConverter != null && atomicConverter.TreatJsonObjectAsAtomicValue(objType))

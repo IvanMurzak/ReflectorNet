@@ -57,25 +57,69 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.DoesNotContain("not found", logs.ToString());
         }
 
-        // (a') Same routing at the ROOT (no enclosing member), proving the branch fires regardless of depth.
+        // (a') POSITIONAL CONTRACT: the ROOT node (depth 0) is ALWAYS patched STRUCTURALLY, even when
+        //      its type has an atomic converter. Atomic delegation is reserved for non-root member/element
+        //      values (depth > 0). So a root patch that structurally names the type's own members descends
+        //      into them; the converter's atomic SetValue (which consumes a {"ref":…} node) does NOT run at
+        //      root. Here we patch AssetRef's real member 'displayName' at the root and confirm it was set
+        //      field-by-field (structural), NOT swapped via a registry lookup.
         [Fact]
-        public void TryPatch_ConverterAtomicObjectNode_AtRoot_ResolvesViaConverter()
+        public void TryPatch_ConverterAtomicType_AtRoot_DescendsStructurally_NotAtomic()
         {
             var reflector = new Reflector();
             var registry = new AssetRegistry();
-            registry.Register(new AssetRef { id = "root-asset", displayName = "Root" });
+            // Register a DIFFERENT instance under a ref id; if the root were (incorrectly) treated
+            // atomically and resolved a ref, displayName would come from the registry instead of the patch.
+            registry.Register(new AssetRef { id = "should-not-be-used", displayName = "FromRegistry" });
             reflector.Converters.Add(new AssetRefAtomicConverter(registry));
 
-            object? obj = new AssetRef { id = "old", displayName = "Old" };
+            object? obj = new AssetRef { id = "keep-id", displayName = "old" };
 
+            // Structural root patch: set the real member 'displayName'. No "ref" key → if the root were
+            // routed atomically, the converter's SetValue would error ("requires a 'ref' property").
             var logs = new Logs();
-            var success = reflector.TryPatch(ref obj, @"{ ""ref"": ""root-asset"" }", logs: logs);
+            var success = reflector.TryPatch(ref obj, @"{ ""displayName"": ""patched"" }", logs: logs);
 
             _output.WriteLine(logs.ToString());
             Assert.True(success);
             var result = (AssetRef)obj!;
-            Assert.Equal("root-asset", result.id);
-            Assert.Equal("Root", result.displayName);
+            Assert.Equal("patched", result.displayName); // structural per-field set
+            Assert.Equal("keep-id", result.id);          // untouched → proves descent, not atomic replace
+            Assert.NotEqual("FromRegistry", result.displayName); // converter atomic path did NOT run at root
+            Assert.DoesNotContain("requires a 'ref'", logs.ToString());
+        }
+
+        // (a'') POSITIONAL CRUX: the SAME converter-atomic type behaves differently by position.
+        //       Structural when it is the ROOT object being patched (depth 0); atomic when it is a
+        //       MEMBER value (depth > 0). One converter, one type — position decides.
+        [Fact]
+        public void TryPatch_ConverterAtomicType_PositionalBehavior_RootStructural_MemberAtomic()
+        {
+            var reflector = new Reflector();
+            var registry = new AssetRegistry();
+            registry.Register(new AssetRef { id = "resolved", displayName = "Resolved" });
+            reflector.Converters.Add(new AssetRefAtomicConverter(registry));
+
+            // ── At the ROOT: structural. Patch the real member 'displayName'. ──
+            object? rootObj = new AssetRef { id = "root-keep", displayName = "before" };
+            var rootLogs = new Logs();
+            var rootSuccess = reflector.TryPatch(ref rootObj, @"{ ""displayName"": ""after"" }", logs: rootLogs);
+            _output.WriteLine("ROOT:\n" + rootLogs);
+            Assert.True(rootSuccess);
+            var rootResult = (AssetRef)rootObj!;
+            Assert.Equal("after", rootResult.displayName); // structural set
+            Assert.Equal("root-keep", rootResult.id);      // untouched
+
+            // ── As a MEMBER (depth > 0): atomic. The {"ref":…} node is resolved by the converter. ──
+            object? memberObj = new AssetContainer { asset = new AssetRef { id = "stale", displayName = "Stale" } };
+            var memberLogs = new Logs();
+            var memberSuccess = reflector.TryPatch(ref memberObj, @"{ ""asset"": { ""ref"": ""resolved"" } }", logs: memberLogs);
+            _output.WriteLine("MEMBER:\n" + memberLogs);
+            Assert.True(memberSuccess);
+            var memberResult = (AssetContainer)memberObj!;
+            Assert.Equal("resolved", memberResult.asset!.id);          // came from the registry
+            Assert.Equal("Resolved", memberResult.asset!.displayName); // atomic resolution, not the patch text
+            Assert.DoesNotContain("not found", memberLogs.ToString());
         }
 
         // (b) A plain POCO sub-object WITHOUT the flag still descends structurally (unchanged behavior).
