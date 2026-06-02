@@ -57,6 +57,27 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// </summary>
         bool AllowPointerPropertiesAccess { get; }
 
+        /// <summary>
+        /// Gets a value indicating whether a JSON-object patch node targeting <paramref name="type"/>
+        /// should be handed to this converter as an atomic value rather than being structurally
+        /// descended into (key-by-key) by the JSON Merge Patch engine.
+        /// <para>
+        /// When <c>false</c> (the default), <see cref="Reflector.TryPatch(ref object?, string, Type?, int, Logs?, BindingFlags, ILogger?)"/>
+        /// treats a JSON object as a bag of members and navigates into each key — correct for plain POCOs.
+        /// </para>
+        /// <para>
+        /// When <c>true</c>, a JSON object whose target type is handled by this converter is routed
+        /// through <see cref="Reflector.TryModify(ref object?, SerializedMember, Type?, int, Logs?, BindingFlags, ILogger?)"/>
+        /// (the same path componentDiff / pathPatches use), so the converter resolves the whole node
+        /// itself (e.g. a Unity object reference <c>{"instanceID":"…"}</c> resolved via an asset lookup).
+        /// A node carrying a <c>"$type"</c> hint is exempt — polymorphic replacement still flows through
+        /// the structural path.
+        /// </para>
+        /// </summary>
+        /// <param name="type">The target type the JSON-object patch node is being applied to.</param>
+        /// <returns><c>true</c> to treat a JSON object as an atomic converter value; otherwise <c>false</c>.</returns>
+        bool TreatJsonObjectAsAtomicValue(Type type);
+
         int SerializationPriority(Type type, ILogger? logger = null);
 
         object? Deserialize(
