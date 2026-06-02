@@ -113,6 +113,21 @@ namespace com.IvanMurzak.ReflectorNet
                 return TryModify(ref obj, member, objType, depth, logs, flags, logger);
             }
 
+            // Converter-atomic JSON object → delegate the whole node to the registered converter
+            // instead of structurally descending into its keys. This handles values whose JSON
+            // encoding is an object but which a converter resolves indivisibly (e.g. a Unity object
+            // reference {"instanceID":"…"} resolved via an asset lookup). A node carrying a "$type"
+            // hint is exempt — polymorphic replacement still flows through the structural path below.
+            if (objType != null && !patch.TryGetProperty("$type", out _))
+            {
+                var atomicConverter = Converters.GetConverter(objType);
+                if (atomicConverter != null && atomicConverter.TreatJsonObjectAsAtomicValue(objType))
+                {
+                    var member = SerializedMember.FromJson(objType, patch);
+                    return TryModify(ref obj, member, objType, depth, logs, flags, logger);
+                }
+            }
+
             // JSON object → process optional "$type" hint first, then navigate keys
 
             // Extract "$type" if present

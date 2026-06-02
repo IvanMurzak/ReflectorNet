@@ -118,6 +118,18 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         public virtual bool AllowPointerPropertiesAccess => true;
 
         /// <summary>
+        /// Gets a value indicating whether a JSON-object patch node targeting <paramref name="type"/>
+        /// should be handed to this converter as an atomic value instead of being structurally descended
+        /// into by the JSON Merge Patch engine. Defaults to <c>false</c> so plain POCOs continue to be
+        /// navigated key-by-key. Converters that represent a JSON object as an indivisible reference
+        /// (e.g. a Unity object reference resolved via an asset lookup) override this to return <c>true</c>.
+        /// See <see cref="IReflectionConverter.TreatJsonObjectAsAtomicValue"/> for the full contract.
+        /// </summary>
+        /// <param name="type">The target type the JSON-object patch node is being applied to.</param>
+        /// <returns><c>false</c> by default; override to return <c>true</c> for converter-atomic object nodes.</returns>
+        public virtual bool TreatJsonObjectAsAtomicValue(Type type) => false;
+
+        /// <summary>
         /// Calculates the priority score for this converter when handling the specified type.
         /// Higher scores indicate stronger compatibility and preference for handling the type.
         /// This method implements a distance-based scoring system where closer type relationships
