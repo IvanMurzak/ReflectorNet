@@ -141,6 +141,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.Equal("new", ((PocoContainer)obj!).label);
         }
 
+        // (e) Error-contract lock for #84: when the converter is reached but its SetValue resolution
+        //     FAILS (unresolvable ref), TryPatch must return false and surface the CONVERTER's error —
+        //     it must NOT fall through to structural key descent (which would re-produce the original
+        //     "Segment 'ref' not found on type 'AssetRef'" bug).
+        [Fact]
+        public void TryPatch_ConverterAtomicObjectNode_ResolutionFails_ReturnsFalseWithoutStructuralFallthrough()
+        {
+            var reflector = new Reflector();
+            var registry = new AssetRegistry(); // empty — nothing resolves
+            reflector.Converters.Add(new AssetRefAtomicConverter(registry));
+
+            var container = new AssetContainer { asset = new AssetRef { id = "keep", displayName = "Keep" } };
+            object? obj = container;
+
+            var logs = new Logs();
+            var success = reflector.TryPatch(ref obj, @"{ ""asset"": { ""ref"": ""missing-id"" } }", logs: logs);
+
+            var logsText = logs.ToString();
+            _output.WriteLine(logsText);
+
+            // (1) the patch failed
+            Assert.False(success);
+            // (2) the converter's own error is what surfaced
+            Assert.Contains("could not resolve ref 'missing-id'", logsText);
+            // (3) it did NOT fall through to structural key descent (the original #84 failure mode)
+            Assert.DoesNotContain("not found", logsText);
+        }
+
         // ─── Unity-agnostic test fixtures ──────────────────────────────────────────
 
         // A reference-like POCO whose JSON encoding is an object ({"ref":"<id>"}) that a converter
