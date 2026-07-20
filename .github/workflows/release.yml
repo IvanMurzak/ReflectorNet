@@ -18,7 +18,7 @@ jobs:
       is_new_version: ${{ steps.version_exists.outputs.exists == 'false' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -33,11 +33,11 @@ jobs:
 
       - name: Find previous version tag
         id: prev_version
-        uses: WyriHaximus/github-action-get-previous-tag@v1
+        uses: WyriHaximus/github-action-get-previous-tag@v2
 
       - name: Check if tag exists
         id: version_exists
-        uses: mukunku/tag-exists-action@v1.6.0
+        uses: mukunku/tag-exists-action@v1.7.0
         with:
           tag: ${{ steps.get_version.outputs.version }}
 
@@ -56,9 +56,9 @@ jobs:
     needs: check-version-tag
     if: needs.check-version-tag.outputs.is_new_version == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             8.0.x
@@ -90,7 +90,7 @@ jobs:
       success: ${{ steps.rel_desc.outputs.success }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -137,7 +137,7 @@ jobs:
           echo "success=true" >> $GITHUB_OUTPUT
 
       - name: Create Tag and Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.check-version-tag.outputs.version }}
           name: ${{ needs.check-version-tag.outputs.version }}
