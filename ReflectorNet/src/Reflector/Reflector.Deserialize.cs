@@ -36,6 +36,14 @@ namespace com.IvanMurzak.ReflectorNet
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
         /// <exception cref="TypeInstantiationException">Thrown when attempting to deserialize non-null data to an interface or abstract class type.</exception>
+        /// <exception cref="DeserializationException">
+        /// Thrown when the 'value' payload cannot be deserialized into the resolved type. This method's only
+        /// output is its return value, so a failure is never substituted with the type's default value:
+        /// such a default is indistinguishable from a real result (a boxed <c>default(T)</c> even satisfies
+        /// <see cref="Type.IsInstanceOfType"/>). Callers that need a non-throwing, reporting variant should
+        /// use <see cref="TryModify"/> or the converter <c>SetField</c>/<c>SetProperty</c> APIs, which return
+        /// <c>false</c> and record the reason in <see cref="Model.Logs"/>.
+        /// </exception>
         public T? Deserialize<T>(
             SerializedMember data,
             string? fallbackName = null,
@@ -76,6 +84,14 @@ namespace com.IvanMurzak.ReflectorNet
         /// <returns>The deserialized object, or the default value of the type if data is null and type is provided.</returns>
         /// <exception cref="ArgumentException">Thrown when both data and type are null, or when type resolution fails.</exception>
         /// <exception cref="TypeInstantiationException">Thrown when attempting to deserialize non-null data to an interface or abstract class type.</exception>
+        /// <exception cref="DeserializationException">
+        /// Thrown when the 'value' payload cannot be deserialized into the resolved type. This method's only
+        /// output is its return value, so a failure is never substituted with the type's default value:
+        /// such a default is indistinguishable from a real result (a boxed <c>default(T)</c> even satisfies
+        /// <see cref="Type.IsInstanceOfType"/>). Callers that need a non-throwing, reporting variant should
+        /// use <see cref="TryModify"/> or the converter <c>SetField</c>/<c>SetProperty</c> APIs, which return
+        /// <c>false</c> and record the reason in <see cref="Model.Logs"/>.
+        /// </exception>
         public object? Deserialize(
             SerializedMember data,
             Type? fallbackType = null,
