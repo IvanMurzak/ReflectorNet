@@ -27,6 +27,7 @@ namespace com.IvanMurzak.ReflectorNet
                 jsonElement: jsonElement,
                 type: type);
         }
+        /// <inheritdoc cref="DeserializeValueSerializedMember(JsonElement?, Reflector, Type, string?, int, Logs?, ILogger?)"/>
         public static T? DeserializeValueSerializedMember<T>(this JsonElement? jsonElement,
             Reflector reflector,
             string? name = null,
@@ -41,6 +42,25 @@ namespace com.IvanMurzak.ReflectorNet
                 logs: logs,
                 logger: logger);
         }
+
+        /// <summary>
+        /// Reads <paramref name="jsonElement"/> as a nested <see cref="SerializedMember"/> and
+        /// deserializes it into <paramref name="type"/>.
+        /// </summary>
+        /// <remarks>
+        /// A payload that is not a well-formed <see cref="SerializedMember"/> is a hard failure and
+        /// the resulting <see cref="JsonException"/> is propagated to the caller.
+        /// <para>
+        /// This method used to swallow that exception in a bare <c>catch { }</c> and return
+        /// <c>reflector.GetDefaultValue(type)</c> instead. The caller had no way to tell that
+        /// meaningless default apart from a genuinely deserialized value - for a value type the
+        /// boxed <c>default(T)</c> even passes <see cref="Type.IsInstanceOfType"/> - so an
+        /// undeserializable argument was silently reported as a successful one.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="JsonException">
+        /// The JSON payload is not a valid <see cref="SerializedMember"/>.
+        /// </exception>
         public static object? DeserializeValueSerializedMember(this JsonElement? jsonElement,
             Reflector reflector,
             Type type,
@@ -52,17 +72,12 @@ namespace com.IvanMurzak.ReflectorNet
             if (jsonElement == null)
                 return null;
 
-            SerializedMember? serializedMember = null;
+            // Deliberately NOT wrapped in try/catch: a JsonException here means the payload cannot be
+            // understood, and returning a default value in its place is indistinguishable from success.
+            var serializedMember = jsonElement.Deserialize<SerializedMember>(reflector);
 
-            try
-            {
-                serializedMember = jsonElement.Deserialize<SerializedMember>(reflector);
-            }
-            catch
-            {
-                // ignore
-            }
-
+            // A literal JSON `null` deserializes to a null SerializedMember - that is an explicit
+            // "no value", not a failure.
             if (serializedMember == null)
                 return reflector.GetDefaultValue(type);
 

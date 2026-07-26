@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -32,6 +33,8 @@ namespace com.IvanMurzak.ReflectorNet
         /// - Method not found: Returns detailed error with search criteria
         /// - Multiple methods found: Returns formatted list of candidates for disambiguation
         /// - Parameter mismatch: Returns validation errors with expected vs actual parameter information
+        /// - Parameter deserialization failure: Returns "[Error] Failed to deserialize input parameter ..."
+        ///   and does NOT invoke the method (see <see cref="DeserializationException"/>)
         /// - Execution failure: Returns exception details with stack trace information
         ///
         /// Thread Safety:
@@ -109,10 +112,27 @@ namespace com.IvanMurzak.ReflectorNet
 
             Func<string> action = () =>
             {
-                var dictInputParameters = inputParameters?.ToDictionary(
-                    keySelector: p => p.name!,
-                    elementSelector: p => reflector.Deserialize(p, logger: logger)
-                );
+                var dictInputParameters = default(Dictionary<string, object?>);
+                if (inputParameters != null)
+                {
+                    dictInputParameters = new Dictionary<string, object?>(inputParameters.Count);
+                    foreach (var inputParameter in inputParameters)
+                    {
+                        try
+                        {
+                            dictInputParameters.Add(inputParameter.name!, reflector.Deserialize(inputParameter, logger: logger));
+                        }
+                        catch (DeserializationException ex)
+                        {
+                            // Never invoke the method with a value we failed to build. A default value
+                            // would be indistinguishable from a real one (a boxed `default(T)` even
+                            // passes MethodWrapper.VerifyParameters) and the call would be reported as
+                            // a success while doing nothing.
+                            return $"[Error] Failed to deserialize input parameter '{inputParameter.name.ValueOrNull()}'"
+                                + $" of type '{inputParameter.typeName.ValueOrNull()}'.\n{ex.Message}";
+                        }
+                    }
+                }
 
                 var methodWrapper = default(MethodWrapper);
 
@@ -124,10 +144,19 @@ namespace com.IvanMurzak.ReflectorNet
                 else if (targetObject != null && !string.IsNullOrEmpty(targetObject.typeName))
                 {
                     // Instance method with target object provided
-                    var obj = reflector.Deserialize(
-                        targetObject,
-                        fallbackType: method.DeclaringType,
-                        logger: logger);
+                    object? obj;
+                    try
+                    {
+                        obj = reflector.Deserialize(
+                            targetObject,
+                            fallbackType: method.DeclaringType,
+                            logger: logger);
+                    }
+                    catch (DeserializationException ex)
+                    {
+                        return $"[Error] Failed to deserialize '{nameof(targetObject)}'"
+                            + $" of type '{targetObject.typeName.ValueOrNull()}'.\n{ex.Message}";
+                    }
                     if (obj == null)
                         return $"[Error] '{nameof(targetObject)}' deserialized instance is null. Please specify the '{nameof(targetObject)}' properly.";
 

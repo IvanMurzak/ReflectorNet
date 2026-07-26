@@ -48,7 +48,12 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <param name="depth">Current depth in the object hierarchy for proper error message indentation.</param>
         /// <param name="stringBuilder">Optional StringBuilder for accumulating detailed operation logs.</param>
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
-        /// <returns>The deserialized object instance, or null if deserialization fails.</returns>
+        /// <returns>The deserialized object instance.</returns>
+        /// <exception cref="DeserializationException">
+        /// The <c>value</c> payload could not be deserialized into the target type. This method has no
+        /// success channel other than its return value, so a failure is raised rather than silently
+        /// substituted with the target type's default value.
+        /// </exception>
         public virtual object? Deserialize(
             Reflector reflector,
             SerializedMember data,
@@ -62,6 +67,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (reflector == null) throw new ArgumentNullException(nameof(reflector));
             if (data == null) throw new ArgumentNullException(nameof(data));
 
+            // A failure to deserialize the value payload throws DeserializationException from
+            // TryDeserializeValueInternal and propagates out of here. A `false` return is reserved for
+            // the cases where there is nothing to deserialize at all (null data / unresolvable type),
+            // which are already reported through `logs` and never yield a fabricated default value.
             if (!TryDeserializeValue(
                 reflector,
                 data: data,
@@ -209,6 +218,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <param name="stringBuilder">Optional StringBuilder for accumulating detailed operation logs.</param>
         /// <param name="logger">Optional logger for tracing deserialization operations.</param>
         /// <returns>True if deserialization succeeded, false otherwise.</returns>
+        /// <exception cref="DeserializationException">
+        /// The value payload could not be deserialized. Callers that must not throw should use
+        /// <see cref="TryDeserializeValueReporting"/>, which converts this into <c>false</c> plus a
+        /// <see cref="LogType.Error"/> entry.
+        /// </exception>
         protected virtual bool TryDeserializeValue(
             Reflector reflector,
             SerializedMember? data,
@@ -266,6 +280,21 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             return success;
         }
+        /// <summary>
+        /// Deserializes the <c>value</c> payload of <paramref name="data"/> into
+        /// <paramref name="type"/>.
+        /// </summary>
+        /// <remarks>
+        /// A payload that cannot be understood throws <see cref="DeserializationException"/> rather
+        /// than yielding the target type's default value. Returning a default here would be
+        /// indistinguishable from a successful deserialization: the caller has no success channel
+        /// besides <paramref name="result"/>, and a boxed <c>default(T)</c> even satisfies
+        /// <see cref="Type.IsInstanceOfType"/>. Callers that DO have an error channel
+        /// (<c>SetField</c> / <c>SetProperty</c>) use <see cref="TryDeserializeValueReporting"/>,
+        /// which converts the exception back into <c>false</c> plus a
+        /// <see cref="LogType.Error"/> entry.
+        /// </remarks>
+        /// <exception cref="DeserializationException">The value payload could not be deserialized.</exception>
         protected virtual bool TryDeserializeValueInternal(
             Reflector reflector,
             SerializedMember data,
@@ -283,27 +312,33 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             if (AllowCascadeSerialization)
             {
+                // Both an absent 'value' and an explicit JSON `null` mean "no value" - that is a
+                // legitimate outcome, not a failure.
+                if (data.valueJsonElement == null ||
+                    data.valueJsonElement.Value.ValueKind == JsonValueKind.Null)
+                {
+                    if (logger?.IsEnabled(LogLevel.Trace) == true)
+                        logger.LogTrace($"{padding}'value' is null. Converter: {GetType().GetTypeShortName()}");
+
+                    result = GetDefaultValue(reflector, type);
+                    return true;
+                }
+                if (data.valueJsonElement.Value.ValueKind != JsonValueKind.Object)
+                {
+                    var message = $"Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeId()}': "
+                        + $"'value' is not a JSON object, it is '{data.valueJsonElement.Value.ValueKind}'. "
+                        + $"Converter: {GetType().GetTypeShortName()}";
+
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{Consts.Emoji.Fail} {message}");
+
+                    logs?.Error(message, depth);
+
+                    throw new DeserializationException(message, type, data.name);
+                }
+
                 try
                 {
-                    if (data.valueJsonElement == null)
-                    {
-                        if (logger?.IsEnabled(LogLevel.Trace) == true)
-                            logger.LogTrace($"{padding}'value' is null. Converter: {GetType().GetTypeShortName()}");
-
-                        result = GetDefaultValue(reflector, type);
-                        return true;
-                    }
-                    if (data.valueJsonElement.Value.ValueKind != JsonValueKind.Object)
-                    {
-                        if (logger?.IsEnabled(LogLevel.Error) == true)
-                            logger.LogError($"{padding}'value' is not an object. It is '{data.valueJsonElement?.ValueKind}'. Converter: {GetType().GetTypeShortName()}");
-
-                        logs?.Error("'value' is not an object. Attempting to deserialize as SerializedMember.", depth);
-
-                        result = reflector.GetDefaultValue(type);
-                        return false;
-                    }
-
                     result = data.valueJsonElement.DeserializeValueSerializedMember(
                         reflector,
                         type: type,
@@ -315,21 +350,26 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 }
                 catch (JsonException ex)
                 {
-                    if (logger?.IsEnabled(LogLevel.Warning) == true)
-                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    var message = $"Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}";
 
-                    logs?.Warning($"Failed to deserialize member '{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}", depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+
+                    logs?.Error(message, depth);
+
+                    throw new DeserializationException(message, type, data.name, ex);
                 }
                 catch (NotSupportedException ex)
                 {
-                    if (logger?.IsEnabled(LogLevel.Warning) == true)
-                        logger.LogWarning($"{padding}{Consts.Emoji.Warn} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+                    var message = $"Unsupported type '{type.GetTypeId()}' for member '{data.name.ValueOrNull()}':\n{ex.Message}";
 
-                    logs?.Warning($"Unsupported type '{type.GetTypeId()}' for member '{data.name.ValueOrNull()}':\n{ex.Message}", depth);
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
+
+                    logs?.Error(message, depth);
+
+                    throw new DeserializationException(message, type, data.name, ex);
                 }
-
-                result = reflector.GetDefaultValue(type);
-                return false;
             }
             else
             {
@@ -351,14 +391,62 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
                     return true;
                 }
+                catch (DeserializationException)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
-                    logs?.Error($"Failed to deserialize value'{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}", depth);
+                    var message = $"Failed to deserialize value '{data.name.ValueOrNull()}' of type '{type.GetTypeId()}':\n{ex.Message}";
+
+                    logs?.Error(message, depth);
                     if (logger?.IsEnabled(LogLevel.Critical) == true)
                         logger.LogCritical($"{padding}{Consts.Emoji.Fail} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}':\n{padding}{ex.Message}\n{ex.StackTrace}");
-                    result = reflector.GetDefaultValue(type);
-                    return false;
+
+                    throw new DeserializationException(message, type, data.name, ex);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Bool-returning wrapper around <see cref="TryDeserializeValue"/> for callers that have a
+        /// real error channel (a <c>bool</c> result plus a <see cref="Logs"/> sink) and therefore
+        /// report a deserialization failure instead of throwing - <c>SetField</c> / <c>SetProperty</c>
+        /// and, through them, <c>Modify</c> / <c>TryModify</c>.
+        /// </summary>
+        /// <remarks>
+        /// <paramref name="result"/> is never set to the target type's default value on failure:
+        /// a boxed <c>default(T)</c> is indistinguishable from a successfully deserialized value.
+        /// </remarks>
+        /// <returns><c>true</c> when the value was deserialized; otherwise <c>false</c>.</returns>
+        protected bool TryDeserializeValueReporting(
+            Reflector reflector,
+            SerializedMember? data,
+            out object? result,
+            out Type? type,
+            Type? fallbackType = null,
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null)
+        {
+            try
+            {
+                return TryDeserializeValue(
+                    reflector,
+                    data: data,
+                    result: out result,
+                    type: out type,
+                    fallbackType: fallbackType,
+                    depth: depth,
+                    logs: logs,
+                    logger: logger);
+            }
+            catch (DeserializationException ex)
+            {
+                // TryDeserializeValueInternal already wrote the detailed reason into `logs`/`logger`.
+                result = null;
+                type = ex.TargetType;
+                return false;
             }
         }
 

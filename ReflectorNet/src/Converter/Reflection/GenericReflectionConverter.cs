@@ -95,7 +95,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!TryDeserializeValue(
+            if (!TryDeserializeValueReporting(
                 reflector,
                 data: value,
                 result: out var parsedValue,
@@ -143,7 +143,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 return false;
             }
 
-            if (!TryDeserializeValue(
+            if (!TryDeserializeValueReporting(
                 reflector,
                 data: value,
                 result: out var parsedValue,

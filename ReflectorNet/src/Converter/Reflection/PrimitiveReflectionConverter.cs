@@ -88,7 +88,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             ILogger? logger = null)
         {
-            if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, logs: logs, logger: logger))
+            if (!TryDeserializeValueReporting(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, logs: logs, logger: logger))
             {
                 logs?.Error($"Failed to deserialize value for field '{value?.name.ValueOrNull()}'.", depth);
                 return false;
@@ -124,7 +124,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 return false;
             }
 
-            if (!TryDeserializeValue(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, logs: logs, logger: logger))
+            if (!TryDeserializeValueReporting(reflector, value, out var parsedValue, out var type, fallbackType: fallbackType, depth: depth, logs: logs, logger: logger))
             {
                 logs?.Error($"Failed to deserialize value for property '{value?.name.ValueOrNull()}'.", depth);
                 return false;

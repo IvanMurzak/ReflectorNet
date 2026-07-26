@@ -80,6 +80,17 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
         int SerializationPriority(Type type, ILogger? logger = null);
 
+        /// <summary>
+        /// Deserializes <paramref name="data"/> into an instance of the resolved type.
+        /// </summary>
+        /// <remarks>
+        /// The returned value is the method's only output, so an undeserializable payload must never be
+        /// answered with the target type's default value - such a default is indistinguishable from a
+        /// real result. Implementations raise <see cref="DeserializationException"/> instead. Callers
+        /// that need a non-throwing, reporting variant use <see cref="SetField"/> / <see cref="SetProperty"/>
+        /// or <see cref="TryModify"/>, which return <c>false</c> and record the reason in <see cref="Logs"/>.
+        /// </remarks>
+        /// <exception cref="DeserializationException">The value payload could not be deserialized.</exception>
         object? Deserialize(
             Reflector reflector,
             SerializedMember data,

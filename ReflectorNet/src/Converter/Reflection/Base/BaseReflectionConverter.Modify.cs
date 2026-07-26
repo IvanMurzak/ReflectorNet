@@ -66,12 +66,27 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (obj == null)
             {
                 // obj = CreateInstance(reflector, objType);
-                obj = reflector.Deserialize(
-                    data: data,
-                    fallbackType: type,
-                    depth: depth,
-                    logs: logs,
-                    logger: logger);
+                try
+                {
+                    obj = reflector.Deserialize(
+                        data: data,
+                        fallbackType: type,
+                        depth: depth,
+                        logs: logs,
+                        logger: logger);
+                }
+                catch (DeserializationException ex)
+                {
+                    // TryModify reports failures through its bool result plus `logs`, so an
+                    // undeserializable payload is reported here rather than thrown at the caller.
+                    // The detailed reason is already in `logs`/`logger`.
+                    if (logger?.IsEnabled(LogLevel.Error) == true)
+                        logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' modification failed: {ex.Message}");
+
+                    logs?.Error($"Object '{data.name.ValueOrNull()}' modification failed: {ex.Message}", depth);
+
+                    return false;
+                }
 
                 if (obj == null)
                 {
