@@ -116,6 +116,71 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         }
     }
 
+    /// <summary>Second stand-in engine type, for the <see cref="ForeignRefDeserializeOverrideConverter"/> pattern.</summary>
+    public class ForeignRefComponent
+    {
+        public string Id = string.Empty;
+        public string DisplayName = string.Empty;
+    }
+
+    /// <summary>
+    /// The OTHER consumer-simulation pattern, mirroring Unity-MCP's
+    /// <c>UnityEngine_Object_ReflectionConverter.Deserialize</c>: override <c>Deserialize</c>, call
+    /// <c>TryDeserializeValue(...)</c> purely as a GATE, DISCARD its result, and resolve the
+    /// reference from the raw payload afterwards.
+    /// </summary>
+    /// <remarks>
+    /// This converter exists mostly as a COMPILE-TIME and behavioural lock on the consumer seam.
+    /// <list type="bullet">
+    ///   <item><description>
+    ///     It calls the 8-argument <c>TryDeserializeValue</c> overload with the exact named-argument
+    ///     form Unity-MCP uses. Adding the tri-state <c>outcome</c> overload must not make that call
+    ///     ambiguous or resolve it to the wrong overload.
+    ///   </description></item>
+    ///   <item><description>
+    ///     That gate must return <c>true</c> for a declined (NotApplicable) payload. If it ever
+    ///     returns <c>false</c> - or throws - this converter returns early and the reference is
+    ///     never resolved, which is exactly the regression.
+    ///   </description></item>
+    /// </list>
+    /// </remarks>
+    public class ForeignRefDeserializeOverrideConverter : GenericReflectionConverter<ForeignRefComponent>
+    {
+        public override object? Deserialize(
+            Reflector reflector,
+            SerializedMember data,
+            Type? fallbackType = null,
+            string? fallbackName = null,
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null,
+            DeserializationContext? context = null)
+        {
+            if (!TryDeserializeValue(
+                reflector,
+                data: data,
+                result: out var result,
+                type: out var type,
+                fallbackType: fallbackType,
+                depth: depth,
+                logs: logs,
+                logger: logger))
+            {
+                return result;
+            }
+
+            // The base's answer is deliberately ignored - this converter owns the resolution.
+            if (ForeignRefReflectionConverter.TryReadForeignId(data.valueJsonElement, out var id))
+            {
+                var asset = ForeignRefRegistry.Find(id!);
+                if (asset != null)
+                    return new ForeignRefComponent { Id = asset.Id, DisplayName = asset.DisplayName };
+            }
+
+            return result;
+        }
+    }
+
     /// <summary>
     /// Regression tests for the converter fall-through contract.
     ///
@@ -197,6 +262,31 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
                 fallbackType: typeof(ForeignRefAsset)));
 
             Assert.Null(exception);
+        }
+
+        [Fact]
+        public void ForeignShape_DeserializeOverridePattern_GateReturnsTrue_AndResolutionRuns()
+        {
+            // The second consumer pattern: TryDeserializeValue is used only as a GATE and its result
+            // is discarded. The gate MUST stay open for a declined payload, or the converter returns
+            // early and the reference is never resolved.
+            var reflector = new Reflector();
+            reflector.Converters.Add(new ForeignRefDeserializeOverrideConverter());
+            ForeignRefRegistry.Register("777", "Rock");
+
+            var logs = new Logs();
+            var result = reflector.Deserialize(new SerializedMember
+            {
+                name = "component",
+                typeName = typeof(ForeignRefComponent).GetTypeId(),
+                valueJsonElement = JsonDocument.Parse("{\"instanceID\":\"777\"}").RootElement
+            }, logs: logs);
+
+            _output.WriteLine(logs.ToString());
+
+            var component = Assert.IsType<ForeignRefComponent>(result);
+            Assert.Equal("Rock", component.DisplayName);
+            Assert.DoesNotContain(logs, log => log.Type == LogType.Error);
         }
 
         // ------------------------------------------------------------------------------------
