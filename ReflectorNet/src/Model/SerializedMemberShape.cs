@@ -176,9 +176,6 @@ namespace com.IvanMurzak.ReflectorNet.Model
             => name == nameof(SerializedMember.name)
             || name == nameof(SerializedMember.typeName);
 
-        static bool IsKnownKey(string name)
-            => IsStructuralKey(name) || IsDescriptiveKey(name);
-
         /// <summary>
         /// Classifies a raw <c>value</c> payload against the <see cref="SerializedMember"/> schema.
         /// Pure: reads the payload's property names and nothing else.

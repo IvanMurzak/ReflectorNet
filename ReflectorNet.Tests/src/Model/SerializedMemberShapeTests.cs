@@ -147,7 +147,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Model
         public void EveryAdvertisedKnownKey_IsAccepted()
         {
             // Guards the one duplication in the classifier: the KnownKeys list used to phrase the
-            // diagnostic message and the IsKnownKey predicate used to decide must not drift apart.
+            // diagnostic message and the IsStructuralKey/IsDescriptiveKey predicates used to decide
+            // must not drift apart.
             foreach (var key in SerializedMemberShape.KnownKeys)
             {
                 var shape = Classify($"{{\"{key}\":null}}");
