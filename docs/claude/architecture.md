@@ -69,7 +69,20 @@ A converter answers a `value` payload with one of three outcomes (`Deserializati
 
 The **8-arg `TryDeserializeValue` is the only overridable seam**; the `out DeserializationOutcome` overload is a non-virtual wrapper that delegates to it. Keep it that way — if the wrapper carried the implementation, an external subclass overriding the virtual would still compile, still say `override`, and never be called.
 
-**Known gap (pre-existing, not closed by the tri-state work):** `ArrayReflectionConverter` overrides `Deserialize` wholesale, so arrays and collections never reach the chain-end check. A non-array `value` payload still returns `null` with only a `Warning`, and its `TryDeserializeValueInternal` can answer a hard failure with `GetDefaultValue(type)` / an empty `CreateInstance(type)`. That is the same silent-substitution shape `12f99093` fixed elsewhere; `outcome` is the mechanism to close it when someone takes it on.
+### Collections — same contract, second chain end
+
+`ArrayReflectionConverter` overrides `Deserialize` wholesale, so a collection never passes through `BaseReflectionConverter.Deserialize`. It therefore carries **its own chain end**, obeying the same rules:
+
+- The per-link work lives in `TryDeserializeCollectionValue` (`protected virtual`), which is QUIET: a `value` payload that is a JSON object carrying no `SerializedMember` key is `NotApplicable` at `Trace`. **Override that method to own a foreign payload shape on a collection type** — it is the collection equivalent of overriding `TryDeserializeValueInternal`.
+- `Deserialize` is the only place allowed to be loud, and it raises one `DeserializationException` when nobody resolved the decline.
+- A payload that is neither absent nor a JSON array nor a foreign shape (a string, a number, a malformed `SerializedMember`) is a hard failure and throws.
+- `result` is never a fabricated value on a failure path — not `GetDefaultValue(type)`, not an empty `CreateInstance(type)`, not `null`.
+
+**Element failures are all-or-nothing**, and that is a deliberate divergence from the member-set rule above. A member set settles for an honest `PartiallyApplied` because by the time a write fails it has already run side-effecting consumer setters that cannot be undone. A collection is BUILT and handed back — nothing reaches a live target until the caller assigns it — so atomicity is genuinely achievable, and returning a short or hole-punched collection that looks complete would be a fabrication rather than a compromise. A failing element records its index in the `MemberApplicationReport` and abandons the whole collection.
+
+⚠ **An element resolving to `null` is NOT a failure** and must not be made one. A blacklisted element type resolves to `null` by design, and a consumer converter resolves a cleared or deleted object reference to `null` as its *correct* answer (`UnityGenericReflectionConverter` does exactly this). The collection cannot tell that apart from an unresolved reference, so it keeps the `null` and **discloses** it with one `Info` line naming how many elements resolved to null — never an `Error`. The single exception is a non-nullable value type, for which no converter can legitimately answer `null`; that is raised. Regression coverage: `ReflectorNet.Tests/src/ReflectorTests/CollectionDeserializationFailureTests.cs`.
+
+Any exception escaping an element is re-raised as a `DeserializationException` (wrapping, e.g., a `JsonException` from a mistyped element). `Reflector.MethodCall`, `TryModify` and `TryDeserializeValueReporting` catch only that type, so anything else would escape the call instead of being reported.
 
 ### Member application (two-phase)
 
