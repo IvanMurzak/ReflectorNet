@@ -15,12 +15,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
     /// <see cref="SilentFailureProbeTarget"/>).
     /// </summary>
     /// <remarks>
-    /// Today each probe happens to be touched by exactly one test class, and xunit does not run tests
-    /// within a class concurrently, so there is no live race. That safety is accidental: the probes
-    /// are <c>public</c> in the test assembly, so the first cross-class use - or an
-    /// <c>xunit.runner.json</c> that enables in-class parallelism - would introduce one silently, and
-    /// a flaky assertion about "which setters ran" is exactly the kind of noise that erodes trust in
-    /// a regression suite. Naming one collection makes the constraint explicit and cheap to keep.
+    /// This is no longer a precaution: <see cref="ForeignRefRegistry"/> is now touched by BOTH
+    /// <c>ConverterFallThroughTests</c> (the scalar consumer seam) and
+    /// <c>CollectionDeserializationFailureTests</c> (the collection one), so without this collection
+    /// the two would race on a process-global dictionary and on <c>LookupCount</c>. Any further test
+    /// class that reads or writes one of these probes MUST join it.
     /// </remarks>
     [CollectionDefinition(Name, DisableParallelization = true)]
     public class ProbeStatics

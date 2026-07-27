@@ -36,6 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
     public static class ForeignRefRegistry
     {
         static readonly Dictionary<string, ForeignRefAsset> _byId = new();
+        static readonly Dictionary<string, List<ForeignRefAsset>> _byGroup = new();
 
         /// <summary>
         /// How many times the consumer's resolution was consulted. Lets a test assert that the
@@ -46,6 +47,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         public static void Reset()
         {
             _byId.Clear();
+            _byGroup.Clear();
             LookupCount = 0;
         }
 
@@ -60,6 +62,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         {
             LookupCount++;
             return _byId.TryGetValue(id, out var asset) ? asset : null;
+        }
+
+        /// <summary>
+        /// A named group that expands to a whole COLLECTION. Used by the collection-seam fixture
+        /// (<c>ForeignGroupArrayReflectionConverter</c>) to own a foreign <c>value</c> payload shape on
+        /// a collection type, the way <see cref="Find"/> backs the scalar one.
+        /// </summary>
+        public static void RegisterGroup(string group, List<ForeignRefAsset> assets) => _byGroup[group] = assets;
+
+        public static List<ForeignRefAsset>? FindGroup(string group)
+        {
+            LookupCount++;
+            return _byGroup.TryGetValue(group, out var assets) ? assets : null;
         }
     }
 
