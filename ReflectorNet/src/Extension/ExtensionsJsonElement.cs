@@ -57,6 +57,20 @@ namespace com.IvanMurzak.ReflectorNet
         /// boxed <c>default(T)</c> even passes <see cref="Type.IsInstanceOfType"/> - so an
         /// undeserializable argument was silently reported as a successful one.
         /// </para>
+        /// <para>
+        /// ⚠ That bare <c>catch</c> was ALSO doing a second, unrelated job: it was the "this payload
+        /// is not a <see cref="SerializedMember"/> at all - carry on" signal that consumer converters
+        /// depend on when they layer their own resolution of a foreign shape (e.g. a Unity object
+        /// reference <c>{"instanceID":"12345"}</c>) on top of the base one. Removing the catch fixed
+        /// the first job and severed the second. Do not restore a catch here to fix that: the two
+        /// questions are now separated by RESPONSIBILITY, not by a try/catch. This method's contract
+        /// is narrow and unchanged - "read this payload AS a <see cref="SerializedMember"/>", so
+        /// anything else is a failure FOR IT. The "is this even my shape?" question is answered one
+        /// level up, by the converter, via
+        /// <c>BaseReflectionConverter.DeclinesValueByShape</c> /
+        /// <see cref="SerializedMemberShape.Classify"/>, BEFORE it delegates here. See
+        /// <see cref="com.IvanMurzak.ReflectorNet.Converter.DeserializationOutcome"/>.
+        /// </para>
         /// </remarks>
         /// <exception cref="JsonException">
         /// The JSON payload is not a valid <see cref="SerializedMember"/>.

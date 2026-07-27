@@ -58,21 +58,44 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
     /// boxed <c>default(T)</c> even satisfies <see cref="Type.IsInstanceOfType"/>, so
     /// <c>MethodWrapper.VerifyParameters</c> accepted it and the method was invoked with a meaningless
     /// value while <c>Reflector.MethodCall</c> reported "[Success]".
+    ///
+    /// <para>
+    /// The defect must stay fixed under the tri-state converter redesign: an unresolvable payload is
+    /// still an explicit, loud failure - it is simply raised ONCE, at the end of the converter chain,
+    /// instead of by every link. See <see cref="ConverterFallThroughTests"/> for the other half of the
+    /// contract (a payload that is merely "not this converter's shape" must stay quiet so the next
+    /// link can resolve it).
+    /// </para>
     /// </summary>
+    [Collection(ProbeStatics.Name)]
     public class SilentDeserializationFailureTests : BaseTest
     {
         public SilentDeserializationFailureTests(ITestOutputHelper output) : base(output) { }
 
         /// <summary>
-        /// 'X'/'Y' are unknown keys for <see cref="SerializedMember"/>, so
-        /// <c>SerializedMemberConverter.Read</c> throws
-        /// <c>JsonException("Unexpected property name: 'X'. ...")</c>.
+        /// 'X'/'Y' are unknown keys for <see cref="SerializedMember"/> and there is no known key
+        /// alongside them, so the payload is a FOREIGN shape: no registered converter understands it.
+        /// Every link declines (<c>NotApplicable</c>) and the chain END reports the failure once.
         /// </summary>
         static SerializedMember UndeserializablePayload(string? name = "value") => new SerializedMember
         {
             name = name,
             typeName = typeof(SilentFailureProbeStruct).GetTypeId(),
             valueJsonElement = JsonDocument.Parse("{\"X\":1,\"Y\":2}").RootElement
+        };
+
+        /// <summary>
+        /// A payload that IS trying to be a <see cref="SerializedMember"/> - it carries the known
+        /// 'typeName' key - and gets it wrong by adding an unknown one. That is a hard failure inside
+        /// <c>SerializedMemberConverter.Read</c>, not a foreign shape.
+        /// </summary>
+        static SerializedMember MalformedSerializedMemberPayload(string? name = "value") => new SerializedMember
+        {
+            name = name,
+            typeName = typeof(SilentFailureProbeStruct).GetTypeId(),
+            valueJsonElement = JsonDocument
+                .Parse("{\"typeName\":\"" + typeof(SilentFailureProbeStruct).GetTypeId() + "\",\"X\":1}")
+                .RootElement
         };
 
         static MethodRef ProbeTargetFilter() => new MethodRef
@@ -96,7 +119,55 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.Equal("value", exception.MemberName);
             Assert.Contains(typeof(SilentFailureProbeStruct).GetTypeId(), exception.Message);
             Assert.Contains("Unexpected property name", exception.Message);
+            Assert.Contains("'X'", exception.Message);
+
+            // CONTRACT CHANGE (tri-state redesign): this payload carries no SerializedMember key at
+            // all, so it is a FOREIGN shape. The parse is never attempted - each converter declines
+            // quietly and the CHAIN END raises this single explicit failure - so there is no
+            // JsonException underneath it. A payload that IS a broken SerializedMember still carries
+            // its JsonException cause; see
+            // Deserialize_MalformedSerializedMemberValue_Throws_WithJsonExceptionCause below.
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public void Deserialize_MalformedSerializedMemberValue_Throws_WithJsonExceptionCause()
+        {
+            var reflector = new Reflector();
+            var logs = new Logs();
+
+            var exception = Assert.Throws<DeserializationException>(
+                () => reflector.Deserialize(MalformedSerializedMemberPayload(), logs: logs));
+
+            _output.WriteLine($"Expected exception caught: {exception.Message}\n{logs}");
+
+            Assert.Equal(typeof(SilentFailureProbeStruct), exception.TargetType);
+            Assert.Equal("value", exception.MemberName);
+            Assert.Contains(typeof(SilentFailureProbeStruct).GetTypeId(), exception.Message);
+            Assert.Contains("Unexpected property name", exception.Message);
             Assert.IsAssignableFrom<JsonException>(exception.InnerException);
+            Assert.Contains(logs, log => log.Type == LogType.Error);
+        }
+
+        [Fact]
+        public void Deserialize_MalformedSerializedMemberValue_NeverYieldsBoxedDefault()
+        {
+            var reflector = new Reflector();
+
+            object? result = null;
+            var completed = false;
+            try
+            {
+                result = reflector.Deserialize(MalformedSerializedMemberPayload());
+                completed = true;
+            }
+            catch (DeserializationException)
+            {
+                // expected
+            }
+
+            Assert.False(completed, "A malformed SerializedMember payload must not complete successfully.");
+            Assert.Null(result);
         }
 
         [Fact]
@@ -146,6 +217,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             // The extension method is public API. It must surface the parse failure rather than
             // silently answering `default(SilentFailureProbeStruct)`.
+            //
+            // Its contract is unchanged by the tri-state redesign: its documented job is "read this
+            // payload AS a SerializedMember", so anything that is not one is a failure FOR IT. The
+            // "is this even my shape?" question is answered by the CONVERTER, before it delegates
+            // here - see BaseReflectionConverter.DeclinesValueByShape.
             var exception = Assert.ThrowsAny<JsonException>(() => value.DeserializeValueSerializedMember(
                 reflector,
                 type: typeof(SilentFailureProbeStruct),
