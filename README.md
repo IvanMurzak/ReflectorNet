@@ -11,600 +11,470 @@
 [![License](https://img.shields.io/github/license/IvanMurzak/ReflectorNet?label=License&labelColor=333A41)](https://github.com/IvanMurzak/ReflectorNet/blob/main/LICENSE)
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
-**ReflectorNet** is a sophisticated .NET reflection toolkit designed to bridge the gap between static .NET applications and dynamic, AI-driven environments. It provides robust serialization, intelligent method discovery, and dynamic invocation capabilities that allow AI agents to interact with .NET codebases safely and effectively.
+ReflectorNet is a .NET reflection toolkit for dynamic automation, AI-assisted tooling, testing, and runtime inspection. It can serialize live objects with type metadata, deserialize them back, modify existing instances in place, inspect object graphs by path or pattern, generate JSON Schema, and discover or invoke methods from partial runtime descriptions.
 
-## 🚀 Why ReflectorNet?
+The main entry point is `Reflector`. The central data model is `SerializedMember`, a JSON-friendly representation of a .NET value that preserves the member name, resolved type, fields, properties, and raw JSON value payload.
 
-Traditional reflection is brittle and requires exact matches. ReflectorNet is built for flexibility:
+## Index
 
-*   **🤖 AI-Ready**: Designed for scenarios where inputs (from LLMs) might be partial or fuzzy.
-*   **🔍 Fuzzy Matching**: Discover methods and types even with incomplete names or parameters (configurable match levels 0-6).
-*   **📦 Type-Safe Serialization**: Preserves full type information, supporting complex nested objects, collections, and custom types.
-*   **🔄 In-Place Modification**: Update existing object instances from serialized data without breaking references.
-*   **🎯 Atomic Path-Based Modification**: Navigate directly to any field, array element, or dictionary entry by path and modify only that — without touching anything else.
-*   **🩹 JSON Patch**: Apply a JSON document to modify multiple fields at different depths in a single call, following JSON Merge Patch (RFC 7396) semantics.
-*   **🔎 View & Grep**: Read exactly what you need — navigate to a subtree, filter by name pattern or type, or grep the entire live object graph for all fields matching a regex. The read-side counterpart to path-based modification.
-*   **📄 JSON Schema Generation**: Automatically generate schemas for your types and methods to feed into LLM context windows.
+- [ReflectorNet](#reflectornet)
+  - [Index](#index)
+  - [Why ReflectorNet](#why-reflectornet)
+  - [Installation](#installation)
+  - [Target Frameworks](#target-frameworks)
+  - [Quick Start](#quick-start)
+  - [Core Features](#core-features)
+    - [Type-Preserving Serialization](#type-preserving-serialization)
+    - [In-Place Modification](#in-place-modification)
+    - [Path Syntax](#path-syntax)
+  - [Object Inspection](#object-inspection)
+    - [`TryReadAt`](#tryreadat)
+    - [`View`](#view)
+    - [`Grep`](#grep)
+  - [Object Modification](#object-modification)
+    - [`TryModifyAt`](#trymodifyat)
+    - [`TryPatch`](#trypatch)
+  - [Dynamic Method Workflows](#dynamic-method-workflows)
+    - [Find Methods](#find-methods)
+    - [Invoke Methods](#invoke-methods)
+  - [JSON Schema Generation](#json-schema-generation)
+  - [Converters and Extensibility](#converters-and-extensibility)
+  - [Project Layout](#project-layout)
+  - [Development](#development)
+  - [License](#license)
 
-## 📦 Installation
+## Why ReflectorNet
+
+Standard reflection is powerful, but it is low-level. ReflectorNet wraps reflection in higher-level operations that are useful when the caller does not have a compiled, strongly typed integration path.
+
+Key capabilities:
+
+- Type-preserving serialization through `SerializedMember`.
+- Full object reconstruction with flexible type resolution.
+- In-place object modification without replacing the root reference.
+- Path-based reads and writes for fields, properties, list items, array items, and dictionary entries.
+- JSON Merge Patch style updates for multi-field modifications.
+- Regex-based object graph search with `Grep`.
+- JSON Schema generation for types, method arguments, and method return values.
+- Fuzzy method discovery and dynamic invocation through `MethodRef` and `MethodCall`.
+- Extensible reflection and JSON converter registries.
+- Optional type blacklisting for excluding unsafe, irrelevant, or expensive types from reflection workflows.
+
+## Installation
 
 ```bash
 dotnet add package com.IvanMurzak.ReflectorNet
 ```
 
-## ⚡ Quick Start
+## Target Frameworks
 
-### 1. Setup
+The library targets:
 
-The `Reflector` class is your main entry point.
+- `netstandard2.1`
+- `net8.0`
+- `net9.0`
+
+The test suite targets `net8.0` and `net9.0`.
+
+## Quick Start
 
 ```csharp
+using System.Collections.Generic;
 using com.IvanMurzak.ReflectorNet;
+using com.IvanMurzak.ReflectorNet.Model;
+using com.IvanMurzak.ReflectorNet.Utils;
 
 var reflector = new Reflector();
-```
 
-### 2. Serialization
-
-Convert any .NET object into a `SerializedMember` intermediate representation. This preserves type metadata that standard JSON serializers might lose.
-
-```csharp
-var myObject = new MyComplexClass { Id = 1, Name = "Test" };
-
-// Serialize to intermediate representation
-SerializedMember serialized = reflector.Serialize(myObject);
-
-// Convert to JSON string if needed
-string json = reflector.JsonSerializer.Serialize(serialized);
-```
-
-### 3. Deserialization
-
-Reconstruct objects with full type fidelity.
-
-```csharp
-// Restore to a specific type
-MyComplexClass restored = reflector.Deserialize<MyComplexClass>(serialized);
-
-// Or let Reflector resolve the type automatically
-object restoredObj = reflector.Deserialize(serialized);
-```
-
-### 4. In-Place Modification
-
-Update an existing object instance with new data. This is crucial for maintaining object identity in stateful applications (like Unity games or long-running services).
-
-```csharp
-var existingInstance = new MyComplexClass();
-
-// Modify 'existingInstance' with data from 'serialized'
-// Returns true if successful
-bool success = reflector.TryModify(ref existingInstance, serialized);
-```
-
-### 5. Atomic Path-Based Modification
-
-Navigate directly to a specific field, array element, or dictionary entry by path and modify **only that target** — no surrounding data is affected.
-
-**Path format:**
-
-| Segment | Meaning |
-| --- | --- |
-| `fieldName` | Field or property by name |
-| `[i]` | Array / list element at index `i` |
-| `[key]` | Dictionary entry with key `key` (any key type) |
-
-A leading `#/` is stripped automatically for compatibility with `SerializationContext` paths.
-
-```csharp
-var reflector = new Reflector();
-object? system = new SolarSystem
+var player = new PlayerState
 {
-    globalOrbitSpeedMultiplier = 1f,
-    celestialBodies = new[]
+    Name = "Ada",
+    Level = 7,
+    Inventory = new Inventory
     {
-        new CelestialBody { orbitRadius = 10f, orbitSpeed = 1f },
-        new CelestialBody { orbitRadius = 20f, orbitSpeed = 2f },
+        Items = new List<ItemStack>
+        {
+            new ItemStack { ItemId = "health_potion", Quantity = 3 }
+        }
     }
 };
 
-// Modify a root field
-reflector.TryModifyAt<float>(ref system, "globalOrbitSpeedMultiplier", 5f);
+SerializedMember snapshot = reflector.Serialize(player);
+PlayerState? copy = reflector.Deserialize<PlayerState>(snapshot);
 
-// Modify a nested field — only that one field changes
-reflector.TryModifyAt<float>(ref system, "celestialBodies/[0]/orbitRadius", 999f);
-
-// Dictionary entry — string or integer keys both work
-object? container = new Config { settings = new Dictionary<string, int> { ["timeout"] = 10 } };
-reflector.TryModifyAt<int>(ref container, "settings/[timeout]", 60);
-```
-
-For partial updates of a complex object at a path, supply a `SerializedMember` that lists only the fields to change:
-
-```csharp
-var patch = new SerializedMember { typeName = typeof(CelestialBody).GetTypeId() };
-patch.SetFieldValue(reflector, "orbitRadius", 777f); // only orbitRadius changes
-
+object? liveObject = player;
 var logs = new Logs();
-reflector.TryModifyAt(ref system, "celestialBodies/[1]", patch, logs: logs);
-// celestialBodies[1].orbitSpeed is untouched
-```
 
-Errors are collected in the `Logs` object — nothing is thrown:
+reflector.TryModifyAt<int>(
+    ref liveObject,
+    "Inventory/Items/[0]/Quantity",
+    10,
+    logs: logs);
 
-```csharp
-var logs = new Logs();
-bool ok = reflector.TryModifyAt<float>(ref system, "doesNotExist", 5f, logs: logs);
-// ok == false; logs contains:
-// "Segment 'doesNotExist' not found on type 'SolarSystem'.
-//  Available fields: globalOrbitSpeedMultiplier, celestialBodies, ..."
-```
+reflector.TryReadAt(
+    liveObject,
+    "Inventory/Items/[0]/Quantity",
+    out SerializedMember? quantity);
 
-### 6. JSON Patch
+Console.WriteLine(quantity?.GetValue<int>(reflector));
 
-Apply a JSON document to modify multiple fields at different depths in a single call.
-Follows **JSON Merge Patch** (RFC 7396) semantics, extended with bracket-notation keys for arrays and dictionaries.
-
-```csharp
-var reflector = new Reflector();
-object? system = new SolarSystem { /* ... */ };
-
-// Modify several fields at once — untouched fields are preserved
-var logs = new Logs();
-bool ok = reflector.TryPatch(ref system, """
+public sealed class PlayerState
 {
-  "globalOrbitSpeedMultiplier": 5.0,
-  "globalSizeMultiplier": 2.0,
-  "celestialBodies": {
-    "[0]": { "orbitRadius": 42.0 }
+    public string Name { get; set; } = string.Empty;
+    public int Level { get; set; }
+    public Inventory Inventory { get; set; } = new Inventory();
+}
+
+public sealed class Inventory
+{
+    public List<ItemStack> Items { get; set; } = new List<ItemStack>();
+}
+
+public sealed class ItemStack
+{
+    public string ItemId { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+}
+```
+
+## Core Features
+
+### Type-Preserving Serialization
+
+`Reflector.Serialize` turns a live object into a `SerializedMember`. For complex objects, fields and properties are represented as nested `SerializedMember` entries. Primitive and converter-backed values are stored in the `value` JSON payload.
+
+```csharp
+var data = reflector.Serialize(player, name: "player");
+string json = reflector.JsonSerializer.Serialize(data);
+```
+
+`Reflector.Deserialize` reconstructs the object from that representation.
+
+```csharp
+var restored = reflector.Deserialize<PlayerState>(data);
+```
+
+ReflectorNet also tracks visited objects during serialization and can emit `$ref` entries for repeated references, helping avoid endless recursion in cyclic object graphs.
+
+### In-Place Modification
+
+`TryModify` applies a `SerializedMember` onto an existing object instance.
+
+```csharp
+object? target = player;
+var patch = new SerializedMember
+{
+    typeName = typeof(PlayerState).GetTypeId()
+};
+
+patch.SetPropertyValue(reflector, "Level", 8);
+
+bool ok = reflector.TryModify(ref target, patch, logs: logs);
+```
+
+This is useful for stateful systems such as games, editors, services, and test harnesses where keeping object identity matters.
+
+### Path Syntax
+
+Path-based APIs use slash-delimited paths:
+
+| Segment | Meaning | Example |
+| --- | --- | --- |
+| `Name` | Field or property | `Inventory` |
+| `[0]` | Array or `IList` index | `Items/[0]` |
+| `[key]` | Dictionary key | `Settings/[timeout]` |
+
+A leading `#/` is accepted and stripped, which makes paths compatible with `SerializationContext` reference paths.
+
+## Object Inspection
+
+### `TryReadAt`
+
+`TryReadAt` navigates to one value and serializes only that target.
+
+```csharp
+if (reflector.TryReadAt(player, "Inventory/Items/[0]/ItemId", out var itemId))
+{
+    Console.WriteLine(itemId!.GetValue<string>(reflector));
+}
+```
+
+Invalid paths return `false` and write details into `Logs` when supplied.
+
+### `View`
+
+`View` returns a serialized tree for the whole object or a navigated subtree, with optional filters.
+
+```csharp
+SerializedMember? view = reflector.View(player, new ViewQuery
+{
+    Path = "Inventory",
+    NamePattern = "Item|Quantity",
+    MaxDepth = 3
+});
+```
+
+`ViewQuery` supports:
+
+| Option | Description |
+| --- | --- |
+| `Path` | Navigate before serialization. |
+| `MaxDepth` | Limit the returned tree depth. `0` returns only the root envelope. |
+| `NamePattern` | Case-insensitive .NET regex matched against field and property names. |
+| `TypeFilter` | Keep branches whose resolved type is assignable to the supplied `Type`. |
+
+When filters match nothing, `View` keeps the root envelope so callers still know what object type was inspected.
+
+### `Grep`
+
+`Grep` searches the live object graph for matching field or property names and returns flat path/value matches.
+
+```csharp
+IReadOnlyList<ViewMatch> matches = reflector.Grep(player, "^Quantity$");
+
+foreach (var match in matches)
+{
+    Console.WriteLine($"{match.Path}: {match.Value.GetValue<int>(reflector)}");
+}
+```
+
+Use `Grep` when you need to search inside arrays or lists. `View` filters the serialized tree; `Grep` walks the live object graph.
+
+## Object Modification
+
+### `TryModifyAt`
+
+`TryModifyAt` changes one target path without touching sibling values.
+
+```csharp
+object? target = player;
+
+reflector.TryModifyAt<int>(
+    ref target,
+    "Inventory/Items/[0]/Quantity",
+    12,
+    logs: logs);
+```
+
+The same path syntax works for object members, lists, arrays, and dictionaries. For dictionaries, missing keys can be added when the key can be converted to the dictionary key type.
+
+You can also apply a partial `SerializedMember` to a complex node:
+
+```csharp
+var itemPatch = new SerializedMember
+{
+    typeName = typeof(ItemStack).GetTypeId()
+};
+
+itemPatch.SetPropertyValue(reflector, "Quantity", 20);
+
+reflector.TryModifyAt(
+    ref target,
+    "Inventory/Items/[0]",
+    itemPatch,
+    logs: logs);
+```
+
+### `TryPatch`
+
+`TryPatch` applies a JSON Merge Patch style document. It is useful when multiple values need to be updated in one call.
+
+```csharp
+reflector.TryPatch(ref target, """
+{
+  "Level": 9,
+  "Inventory": {
+    "Items": {
+      "[0]": {
+        "Quantity": 15
+      }
+    }
   }
 }
 """, logs: logs);
 ```
 
-**Patch document rules:**
+Patch behavior:
 
-* A JSON **object** key navigates into that field (`"fieldName"`) or element (`"[i]"` / `"[key]"`)
-* A JSON **non-object** value sets the field directly
-* `null` sets the field to `null`
-* `"$type"` key inside a JSON object specifies a desired subtype — the existing instance is replaced with a fresh instance of the new type before applying the remaining keys
+- JSON object keys navigate into fields, properties, array/list indexes, or dictionary keys.
+- JSON scalar values set the current value.
+- `null` sets the current value to `null` when the target type allows it.
+- `$type` can request a compatible subtype replacement before applying the remaining keys.
+- Invalid JSON, unknown members, incompatible type hints, read-only properties, and failed key conversions return `false` and are reported through `Logs`.
 
-```csharp
-// Replace a base-type field with a derived type and set its fields
-reflector.TryPatch(ref system, """
-{
-  "star": {
-    "$type": "MyNamespace.NeutronStar",
-    "mass": 2.5
-  }
-}
-""");
-```
+## Dynamic Method Workflows
 
-A `JsonElement` overload is also available when you already have a parsed document:
+### Find Methods
 
-```csharp
-using var doc = JsonDocument.Parse(@"{ ""globalOrbitSpeedMultiplier"": 9.0 }");
-reflector.TryPatch(ref system, doc.RootElement, logs: logs);
-```
-
-### 7. View & Grep — Read-Side Navigation
-
-Read exactly the data you need from a live object — navigate to a specific subtree, filter by name or type, or grep the entire graph for every field matching a pattern.
-This is the read-side counterpart to [Atomic Path-Based Modification](#5-atomic-path-based-modification).
-
----
-
-#### `reflector.View` — filtered serialization
-
-Returns a `SerializedMember` tree with optional path navigation and post-filters applied.
-
-```csharp
-var reflector = new Reflector();
-object? system = new SolarSystem
-{
-    globalOrbitSpeedMultiplier = 1f,
-    globalSizeMultiplier       = 2f,
-    celestialBodies = new[]
-    {
-        new CelestialBody { orbitRadius = 10f, orbitSpeed = 1f },
-        new CelestialBody { orbitRadius = 20f, orbitSpeed = 2f },
-    }
-};
-
-// Full view — equivalent to Serialize()
-SerializedMember? full = reflector.View(system);
-
-// Navigate to a subtree (same path format as TryModifyAt)
-SerializedMember? firstBody = reflector.View(system,
-    new ViewQuery { Path = "celestialBodies/[0]" });
-// firstBody.typeName contains "CelestialBody"
-
-// Depth-limited — MaxDepth=0 returns root node only (no children)
-SerializedMember? shallow = reflector.View(system,
-    new ViewQuery { MaxDepth = 1 });
-
-// Pattern filter — keep only branches containing a matching field name
-// Accepts any .NET regex; matching is case-insensitive
-SerializedMember? orbitFields = reflector.View(system,
-    new ViewQuery { NamePattern = "^orbit" });
-
-// Type filter — keep only branches whose resolved type is assignable to float
-SerializedMember? floatFields = reflector.View(system,
-    new ViewQuery { TypeFilter = typeof(float) });
-
-// Combined — navigate first, then filter
-SerializedMember? result = reflector.View(system, new ViewQuery
-{
-    Path        = "celestialBodies/[0]",
-    NamePattern = "^orbit",
-    MaxDepth    = 2,
-});
-```
-
-When a filter produces no matches the **root envelope is still returned** with an empty fields collection so that `result.typeName` always identifies the navigated node's type.
-
-**`ViewQuery` options:**
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `Path` | `string?` | `null` | Navigate to this path before serializing (same format as `TryModifyAt`) |
-| `MaxDepth` | `int?` | `null` | Maximum depth of returned tree (`0` = root node only, no children) |
-| `NamePattern` | `string?` | `null` | .NET regex matched against field / property names (case-insensitive) |
-| `TypeFilter` | `Type?` | `null` | Keep only branches whose resolved runtime type is assignable to this type |
-
----
-
-#### `reflector.TryReadAt` — single-value path read
-
-Navigate to exactly one value by path and serialize it. Mirrors `TryModifyAt` but reads instead of writes.
-
-```csharp
-// Scalar leaf
-bool ok = reflector.TryReadAt(system, "celestialBodies/[0]/orbitRadius", out SerializedMember? r);
-if (ok)
-    Console.WriteLine(r!.GetValue<float>(reflector)); // 10f
-
-// Composite node — result has full fields tree for the navigated object
-reflector.TryReadAt(system, "celestialBodies/[0]", out var body);
-float radius = body!.fields!.First(f => f.name == "orbitRadius").GetValue<float>(reflector);
-
-// Dictionary access — string or any key type
-reflector.TryReadAt(container, "config/[timeout]", out var timeout);
-int ms = timeout!.GetValue<int>(reflector); // 30
-
-// Invalid paths return false; errors are collected in Logs — nothing is thrown
-var logs = new Logs();
-bool ok2 = reflector.TryReadAt(system, "doesNotExist", out _, logs: logs);
-// ok2 == false
-// logs: "Segment 'doesNotExist' not found on type 'SolarSystem'.
-//        Available fields: globalOrbitSpeedMultiplier, celestialBodies, ..."
-```
-
----
-
-#### `reflector.Grep` — grep the live object graph
-
-Walks the entire live object graph and returns a flat list of every field / property whose name matches the given regex pattern — like the `grep` command, but for in-RAM objects.
-
-```csharp
-// Find every field whose name starts with "orbit"
-IReadOnlyList<ViewMatch> hits = reflector.Grep(system, "^orbit");
-
-foreach (var hit in hits)
-    Console.WriteLine($"{hit.Path} = {hit.Value.GetValue<float>(reflector)}");
-// celestialBodies/[0]/orbitRadius = 10
-// celestialBodies/[0]/orbitSpeed  = 1
-// celestialBodies/[1]/orbitRadius = 20
-// celestialBodies/[1]/orbitSpeed  = 2
-
-// Limit search depth (0 = top-level fields only, no recursion)
-IReadOnlyList<ViewMatch> topLevel = reflector.Grep(system, ".*", maxDepth: 0);
-
-// Exact name — anchored regex
-IReadOnlyList<ViewMatch> exact = reflector.Grep(system, "^globalOrbitSpeedMultiplier$");
-Console.WriteLine(exact[0].Path);  // "globalOrbitSpeedMultiplier"
-```
-
-Each `ViewMatch` exposes:
-
-* `Path` — full slash-delimited path, e.g. `"celestialBodies/[0]/orbitRadius"`
-* `Value` — `SerializedMember` of the matched field, ready for `GetValue<T>(reflector)`
-
-> **Grep vs. View + NamePattern**: `Grep` walks the **live object graph** and can find fields inside array elements. `View` + `NamePattern` filters the `SerializedMember` tree after serialization; array element contents are stored as JSON and are not individually filterable by name. Use `Grep` when you need to search inside arrays.
-
----
-
-### 8. Dynamic Method Invocation
-
-Allow AI to find and call methods without knowing the exact signature.
+`FindMethod` searches loaded assemblies for methods matching a `MethodRef`. Matching can be exact or fuzzy.
 
 ```csharp
 using com.IvanMurzak.ReflectorNet.Model;
 
-// 1. Define what we are looking for (can be partial)
-var methodRef = new MethodRef
+var filter = new MethodRef
 {
-    TypeName = "Calculator",
-    MethodName = "Add", // Could be "AddValues" or "CalculateAdd" depending on match level
-    InputParameters = new List<MethodRef.Parameter>
-    {
-        new MethodRef.Parameter { Name = "a", Value = "10" },
-        new MethodRef.Parameter { Name = "b", Value = "20" }
-    }
+    Namespace = typeof(PlayerCommands).Namespace,
+    TypeName = "PlayerCommands",
+    MethodName = "GrantItem"
 };
 
-// 2. Call the method
-// Note: We pass 'reflector' as the first argument to handle internal deserialization context
+var methods = reflector.FindMethod(
+    filter,
+    knownNamespace: true,
+    typeNameMatchLevel: 6,
+    methodNameMatchLevel: 6);
+```
+
+String match levels:
+
+| Level | Match |
+| --- | --- |
+| `6` | Exact, case-sensitive |
+| `5` | Exact, case-insensitive |
+| `4` | Prefix, case-sensitive |
+| `3` | Prefix, case-insensitive |
+| `2` | Contains, case-sensitive |
+| `1` | Contains, case-insensitive |
+| `0` | Disabled |
+
+Parameter matching can also be enabled with `parametersMatchLevel`.
+
+### Invoke Methods
+
+`MethodCall` combines method discovery, parameter deserialization, target instance handling, invocation, and JSON result formatting.
+
+```csharp
+var args = new SerializedMemberList
+{
+    reflector.Serialize("health_potion", name: "itemId"),
+    reflector.Serialize(2, name: "quantity")
+};
+
 string result = reflector.MethodCall(
     reflector,
-    methodRef,
-    methodNameMatchLevel: 3, // Allow fuzzy matching
-    executeInMainThread: false // Set to false for console apps/services (no UI thread)
-);
-
-Console.WriteLine(result); // Output: [Success] 30
+    new MethodRef
+    {
+        TypeName = "PlayerCommands",
+        MethodName = "GrantItem"
+    },
+    inputParameters: args,
+    executeInMainThread: false);
 ```
 
-### 9. Method Inspection & Schema Generation
+For instance methods, pass `targetObject` as a serialized object. If no target is supplied, ReflectorNet attempts to create an instance of the declaring type.
 
-Generate JSON schemas for types and methods to help LLMs understand your code structure.
+## JSON Schema Generation
+
+ReflectorNet can generate JSON Schema for types and methods. This is especially useful for AI function calling, tooling UIs, runtime validation, and API documentation.
 
 ```csharp
-// 1. Get schema for a specific type
-var typeSchema = reflector.GetSchema<MyComplexClass>();
+using System.Reflection;
 
-// 2. Get schema for method arguments (ideal for LLM function calling definitions)
-var methodInfo = typeof(Calculator).GetMethod("Add");
-var argsSchema = reflector.GetArgumentsSchema(methodInfo);
+var typeSchema = reflector.GetSchema<PlayerState>();
+var typeRef = reflector.GetSchemaRef<PlayerState>();
 
-// 3. Get schema for method return value
-var returnSchema = reflector.GetReturnSchema(methodInfo);
+MethodInfo method = typeof(PlayerCommands).GetMethod(nameof(PlayerCommands.GrantItem))!;
+
+var inputSchema = reflector.GetArgumentsSchema(method);
+var outputSchema = reflector.GetReturnSchema(method);
 ```
 
-## 🏗️ Architecture
+Schema generation supports:
 
-ReflectorNet is built on a **Chain of Responsibility** pattern to handle the complexity of .NET types.
+- Fields and properties discovered through the reflection converter chain.
+- Primitive, collection, dictionary, generic, and nested types.
+- `$defs` reuse for complex types.
+- Nullable and optional method parameter handling.
+- Return type unwrapping for `Task<T>` and `ValueTask<T>`.
+- Descriptions from `DescriptionAttribute`.
+- Custom schema output through `IJsonSchemaConverter`.
 
-### Core Components
+## Converters and Extensibility
 
-*   **`Reflector`**: The orchestrator. It manages the registry of converters and exposes the high-level API.
-*   **`Registry`**: Holds a prioritized list of `IReflectionConverter`s. When you serialize or deserialize, the registry finds the best converter for the specific type.
-*   **`SerializedMember`**: The universal data model. It represents any .NET object (primitive, class, array) in a serializable format that holds both value and type metadata.
+ReflectorNet uses a priority-based converter registry. Each `IReflectionConverter` reports how well it can handle a type, and the registry selects the highest-priority converter.
 
-### Built-in Converters
+Default reflection converters include:
 
-ReflectorNet comes with a set of standard converters:
-1.  **`PrimitiveReflectionConverter`**: Handles `int`, `string`, `bool`, `DateTime`, etc.
-2.  **`ArrayReflectionConverter`**: Handles arrays (`T[]`) and generic lists (`List<T>`).
-3.  **`GenericReflectionConverter<T>`**: The fallback for custom classes and structs.
-4.  **`TypeReflectionConverter`** & **`AssemblyReflectionConverter`**: Specialized handling for `System.Type` and `System.Reflection.Assembly`.
+- `PrimitiveReflectionConverter` for primitive and common value types.
+- `ArrayReflectionConverter` for arrays and list-like collections.
+- `GenericReflectionConverter<object>` for ordinary classes and structs.
+- `TypeReflectionConverter` for `System.Type`.
+- `AssemblyReflectionConverter` for `System.Reflection.Assembly`.
 
-### Extensibility
-
-You can create custom converters for your own types by implementing `IReflectionConverter` or inheriting from `GenericReflectionConverter<T>` and registering them:
-
-```csharp
-reflector.Converters.Add(new MyCustomConverter());
-```
-
-## 🛠️ Advanced Features
-
-### JSON Schema Generation
-
-Generate schemas to describe your C# types to an LLM.
-
-```csharp
-// Get schema for a type
-var typeSchema = reflector.GetSchema<MyClass>();
-
-// Get schema for method arguments (great for function calling)
-var methodSchema = reflector.GetArgumentsSchema(myMethodInfo);
-```
-### 🧩 The Converter System (Custom Serialization)
-
-ReflectorNet's power lies in its extensible **Converter System**. If you have "exotic" data models (e.g., third-party types you can't modify, complex graphs, or types needing special handling like `System.Type`), you can write a custom converter.
-
-#### How it Works
-
-1.  **Interface**: All converters implement `IReflectionConverter`.
-2.  **Base Class**: Most custom converters should inherit from `BaseReflectionConverter<T>` or `GenericReflectionConverter<T>`.
-3.  **Priority**: ReflectorNet asks every registered converter: *"Can you handle this type, and how well?"* (via `SerializationPriority`). The one with the highest score wins.
-    *   Exact match: Highest priority.
-    *   Inheritance match: Lower priority (based on distance).
-    *   No match: Zero.
-
-#### Creating a Custom Converter
-
-Here is an example of a converter for a hypothetical `ThirdPartyWidget` that should be serialized as a simple string instead of a complex object.
-
-<details>
-<summary>Click to see the code example</summary>
+Register a reflection converter when a type needs custom object traversal, creation, or mutation behavior:
 
 ```csharp
 using com.IvanMurzak.ReflectorNet.Converter;
-using com.IvanMurzak.ReflectorNet.Model;
 
-// 1. Inherit from GenericReflectionConverter<T> for the target type
-public class WidgetConverter : GenericReflectionConverter<ThirdPartyWidget>
-{
-    // 2. Override SerializationPriority if you need special matching logic
-    // (The default implementation already handles inheritance distance perfectly)
-
-    // 3. Override InternalSerialize to customize output
-    protected override SerializedMember InternalSerialize(
-        Reflector reflector,
-        object? obj,
-        Type type,
-        string? name = null,
-        bool recursive = true,
-        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-        int depth = 0,
-        Logs? logs = null,
-        ILogger? logger = null,
-        SerializationContext? context = null)
-    {
-        if (obj is ThirdPartyWidget widget)
-        {
-            // Serialize as a simple string value instead of an object with fields
-            return SerializedMember.FromValue(
-                reflector,
-                type,
-                value: $"Widget:{widget.Id}",
-                name: name
-            );
-        }
-
-        return base.InternalSerialize(reflector, obj, type, name, recursive, flags, depth, logs, logger, context);
-    }
-
-    // 4. Override CreateInstance if the type has no parameterless constructor
-    public override object? CreateInstance(Reflector reflector, Type type)
-    {
-        return new ThirdPartyWidget("default-id");
-    }
-}
-
-// 5. Register it
-reflector.Converters.Add(new WidgetConverter());
+reflector.Converters.Add(new MyReflectionConverter());
 ```
 
-</details>
-
-#### Lazy Loading & Optional Dependencies
-
-Sometimes you need to handle types that might not be present at runtime (e.g., optional plugins or platform-specific referencing like `UnityEngine.Collider` which is only available inside Unity). If you reference these types directly in your code, your application might crash if the assembly is missing.
-
-`LazyReflectionConverter` solves this by resolving the type by its **string name** at runtime. If the type is found, it works; if not, it gracefully steps aside.
-
-**Basic Usage:**
+Register a JSON converter when a type needs custom JSON transport or schema behavior:
 
 ```csharp
-// Only active if "Some.Optional.Library.SuperWidget" exists at runtime
-var lazyConverter = new LazyReflectionConverter("Some.Optional.Library.SuperWidget");
-
-reflector.Converters.Add(lazyConverter);
+reflector.JsonSerializer.AddConverter(new MyJsonConverter());
 ```
 
-**Advanced Usage: Delegation & Ignoring Members**
+Useful built-in extension points:
 
-You can also use `LazyReflectionConverter` to wrap your own custom converters. This allows you to apply your custom logic *only when the type exists*, without taking a hard dependency on it.
+- `GenericReflectionConverter<T>` for normal custom object handling.
+- `LazyGenericReflectionConverter` for optional runtime dependencies resolved by type name.
+- `IgnoreFieldsAndPropertiesReflectionConverter<T>` for treating selected types as shallow or read-only.
+- `IJsonSchemaConverter` and `JsonSchemaConverter<T>` for custom JSON Schema definitions.
+
+Types can be excluded from reflection processing through the registry blacklist:
 
 ```csharp
-// 1. Create your custom converter (assuming it can compile without the hard dependency, e.g. using generics or object)
-// Or, if you have a converter that specific to a type but you want to lazy load it:
-var myCustomLogic = new MySpecialConverter(); // Implements IReflectionConverter
-
-// 2. Wrap it in LazyReflectionConverter
-var lazyDelegate = new LazyReflectionConverter(
-    "UnityEngine.Collider",
-    backingConverter: myCustomLogic
-);
-
-reflector.Converters.Add(lazyDelegate);
+reflector.Converters.BlacklistType(typeof(ExpensiveRuntimeType));
+reflector.Converters.BlacklistTypes("Some.Namespace.InternalType");
+reflector.Converters.BlacklistTypeInAssembly("MyCompany.Game", "MyCompany.Game.SecretState");
 ```
 
-You can also simply ignore specific properties or fields without writing a full custom converter:
+Blacklist checks include inheritance, implemented interfaces, arrays, and generic type arguments.
 
-```csharp
-// Ignore "heavyData" property if the type exists
-var simpleLazy = new LazyReflectionConverter(
-    "My.Optional.Type",
-    ignoredProperties: new[] { "heavyData" }
-);
+## Project Layout
+
+```text
+ReflectorNet/
+  ReflectorNet/                    Main library project
+  ReflectorNet.Tests/              xUnit tests
+  ReflectorNet.Tests.OuterAssembly/ Cross-assembly test models
+  ConsoleApp/                      Manual schema and behavior checks
+  docs/                            Maintainer notes and architecture documentation
+  commands/                        Release and version helper scripts
 ```
 
-### 📜 Custom JSON Schema Generation
+Important library areas:
 
-While `ReflectionConverter` handles runtime object manipulation, you might also want to control how your types are described in the generated JSON Schema (used by LLMs to understand your data structure).
+- `src/Reflector/` contains the `Reflector` partial class split by responsibility.
+- `src/Model/` contains `SerializedMember`, `SerializedMemberList`, `MethodRef`, `MethodData`, `Logs`, and view models.
+- `src/Converter/Reflection/` contains the reflection converter chain.
+- `src/Converter/Json/` contains System.Text.Json converters and schema-aware converters.
+- `src/Utils/Json/` contains JSON serialization and schema generation utilities.
 
-ReflectorNet allows you to customize this by implementing the `IJsonSchemaConverter` interface. This is often done by inheriting from `JsonSchemaConverter<T>`, which combines standard JSON serialization with schema generation.
+## Development
 
-#### How it Works
+Restore and build:
 
-1.  **Interface**: Implement `IJsonSchemaConverter`.
-2.  **Registration**: Add the converter to `reflector.JsonSerializer`.
-3.  **Generation**: When `reflector.GetSchema()` is called, it checks if a registered converter exists for a type. If that converter implements `IJsonSchemaConverter`, it delegates schema creation to it.
-
-#### Example: Custom Schema for a Widget
-
-Suppose you have a `ThirdPartyWidget` that serializes to a string (e.g., "Widget:123"), and you want the LLM to know this format.
-
-<details>
-<summary>Click to see the code example</summary>
-
-```csharp
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using com.IvanMurzak.ReflectorNet.Converter.Json;
-using com.IvanMurzak.ReflectorNet.Utils;
-
-// 1. Inherit from JsonSchemaConverter<T>
-public class WidgetSchemaConverter : JsonSchemaConverter<ThirdPartyWidget>
-{
-    // 2. Define the Schema Definition (what the type looks like)
-    public override JsonNode GetSchema()
-    {
-        return new JsonObject
-        {
-            [JsonSchema.Type] = "string",
-            [JsonSchema.Pattern] = "^Widget:\\d+$",
-            [JsonSchema.Description] = "A widget identifier in the format 'Widget:{id}'"
-        };
-    }
-
-    // 3. Define the Schema Reference (how other types refer to it)
-    public override JsonNode GetSchemaRef()
-    {
-        // Standard way to refer to the definition
-        return new JsonObject
-        {
-            [JsonSchema.Ref] = JsonSchema.RefValue + TypeUtils.GetSchemaTypeId<ThirdPartyWidget>()
-        };
-    }
-
-    // 4. Implement standard System.Text.Json logic (optional if only used for schema, but recommended)
-    public override void Write(Utf8JsonWriter writer, ThirdPartyWidget value, JsonSerializerOptions options)
-    {
-        writer.WriteStringValue($"Widget:{value.Id}");
-    }
-
-    public override ThirdPartyWidget Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        var str = reader.GetString();
-        // Parse "Widget:123" back to object...
-        return new ThirdPartyWidget(str.Split(':')[1]);
-    }
-}
-
-// 5. Register it with the JSON Serializer
-reflector.JsonSerializer.AddConverter(new WidgetSchemaConverter());
+```bash
+dotnet restore
+dotnet build ReflectorNet.sln
 ```
 
-</details>
+Run tests:
 
-> **Note:** You can use `ReflectionConverter` (for runtime logic) and `JsonSchemaConverter` (for schema/transport) together for the same type if needed.
+```bash
+dotnet test ReflectorNet.sln
+```
 
-### Fuzzy Matching Levels
+Create a NuGet package locally:
 
-When searching for methods, you can tune the strictness:
-*   **6**: Exact match
-*   **5**: Case-insensitive match
-*   **4**: Starts with (Case-sensitive)
-*   **3**: Starts with (Case-insensitive)
-*   **2**: Contains (Case-sensitive)
-*   **1**: Contains (Case-insensitive)
+```bash
+dotnet pack ReflectorNet/ReflectorNet.csproj -c Release
+```
 
-## 🤝 Contributing
+## License
 
-Contributions are welcome! Please submit Pull Requests to the `main` branch.
+ReflectorNet is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
-1.  Fork the repository.
-2.  Create a feature branch.
-3.  Commit your changes.
-4.  Push to the branch.
-5.  Open a Pull Request.
-
-## 📄 License
-
-This project is licensed under the Apache-2.0 License. Copyright - Ivan Murzak.
+Copyright (c) Ivan Murzak.
