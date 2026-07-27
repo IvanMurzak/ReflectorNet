@@ -48,18 +48,24 @@ namespace com.IvanMurzak.ReflectorNet.Model
     /// </remarks>
     public enum MemberApplicationState
     {
-        /// <summary>Every member resolved and every write succeeded.</summary>
+        /// <summary>
+        /// Nothing was recorded at all. NOT a success - the operation either never reached a member
+        /// set (a value-only payload) or ran through a converter that does not report per-member
+        /// outcomes. Distinguished from <see cref="Applied"/> on purpose: "no evidence" must never
+        /// read as "everything worked".
+        /// </summary>
+        NothingRecorded,
+
+        /// <summary>Every recorded member resolved and every write succeeded.</summary>
         Applied,
 
         /// <summary>
-        /// The resolve phase failed: at least one member's value could not be built, so NOTHING was
-        /// written. The target is unchanged.
+        /// At least one member failed and NOTHING was applied. The target is unchanged.
         /// </summary>
         Rejected,
 
         /// <summary>
-        /// The resolve phase succeeded but a write failed. Some members landed and some did not; the
-        /// report names which.
+        /// At least one member failed while at least one other landed. The report names which.
         /// </summary>
         PartiallyApplied
     }
@@ -73,17 +79,31 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public MemberOutcome Outcome { get; }
         public string? Message { get; }
 
-        public MemberApplicationEntry(string name, MemberOutcome outcome, string? message = null)
+        /// <summary>
+        /// Nesting depth of the frame that recorded this entry. A report is threaded through the
+        /// WHOLE operation - including nested member sets - so entries from different levels share
+        /// one flat list, and two different objects can each contribute a member of the same name.
+        /// Depth is what tells them apart.
+        /// </summary>
+        public int Depth { get; }
+
+        public MemberApplicationEntry(string name, MemberOutcome outcome, string? message = null, int depth = 0)
         {
             Name = name;
             Outcome = outcome;
             Message = message;
+            Depth = depth;
         }
 
         public bool Applied => Outcome == MemberOutcome.Applied;
 
+        public bool Failed => Outcome == MemberOutcome.ResolutionFailed || Outcome == MemberOutcome.ApplyFailed;
+
         public override string ToString()
-            => Message == null ? $"{Name}: {Outcome}" : $"{Name}: {Outcome} - {Message}";
+        {
+            var prefix = Depth > 0 ? $"[d{Depth}] " : string.Empty;
+            return Message == null ? $"{prefix}{Name}: {Outcome}" : $"{prefix}{Name}: {Outcome} - {Message}";
+        }
     }
 
     /// <summary>
@@ -110,37 +130,52 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public IReadOnlyList<MemberApplicationEntry> Members => _members;
 
         /// <summary>Names of the members whose values were written to the target.</summary>
-        public IEnumerable<string> AppliedMembers => _members.Where(m => m.Applied).Select(m => m.Name);
+        public IEnumerable<string> AppliedMembers => _members.Where(m => m.Applied).Select(m => m.Name).Distinct();
 
         /// <summary>Names of the members that did not land.</summary>
-        public IEnumerable<string> FailedMembers => _members
-            .Where(m => m.Outcome == MemberOutcome.ResolutionFailed || m.Outcome == MemberOutcome.ApplyFailed)
-            .Select(m => m.Name);
+        public IEnumerable<string> FailedMembers => _members.Where(m => m.Failed).Select(m => m.Name).Distinct();
 
         /// <summary>
-        /// The terminal state, derived from the recorded members.
-        /// <see cref="MemberApplicationState.Rejected"/> whenever any member failed to RESOLVE
-        /// (the apply phase never started, so nothing was written);
-        /// <see cref="MemberApplicationState.PartiallyApplied"/> when every member resolved but a
-        /// write failed; otherwise <see cref="MemberApplicationState.Applied"/>.
+        /// The terminal state, derived from what was actually recorded.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Derived from evidence, never asserted. A report is threaded through the WHOLE operation,
+        /// nested member sets included, so a failure at one level can coexist with members that
+        /// genuinely landed at another. The state is therefore defined by what happened, not by which
+        /// phase failed:
+        /// </para>
+        /// <list type="bullet">
+        ///   <item><description>nothing recorded -> <see cref="MemberApplicationState.NothingRecorded"/> (NOT a success)</description></item>
+        ///   <item><description>a failure and nothing applied -> <see cref="MemberApplicationState.Rejected"/></description></item>
+        ///   <item><description>a failure alongside something applied -> <see cref="MemberApplicationState.PartiallyApplied"/></description></item>
+        ///   <item><description>no failure -> <see cref="MemberApplicationState.Applied"/></description></item>
+        /// </list>
+        /// <para>
+        /// In particular <see cref="MemberApplicationState.Rejected"/> can never be reported while
+        /// <see cref="AppliedMembers"/> is non-empty - the two would contradict each other, which is
+        /// the same class of defect this whole design exists to prevent.
+        /// </para>
+        /// </remarks>
         public MemberApplicationState State
         {
             get
             {
-                if (_members.Any(m => m.Outcome == MemberOutcome.ResolutionFailed))
-                    return MemberApplicationState.Rejected;
+                if (_members.Count == 0)
+                    return MemberApplicationState.NothingRecorded;
 
-                if (_members.Any(m => m.Outcome == MemberOutcome.ApplyFailed))
-                    return MemberApplicationState.PartiallyApplied;
+                if (!_members.Any(m => m.Failed))
+                    return MemberApplicationState.Applied;
 
-                return MemberApplicationState.Applied;
+                return _members.Any(m => m.Applied)
+                    ? MemberApplicationState.PartiallyApplied
+                    : MemberApplicationState.Rejected;
             }
         }
 
-        public MemberApplicationReport Record(string? name, MemberOutcome outcome, string? message = null)
+        public MemberApplicationReport Record(string? name, MemberOutcome outcome, string? message = null, int depth = 0)
         {
-            _members.Add(new MemberApplicationEntry(name ?? string.Empty, outcome, message));
+            _members.Add(new MemberApplicationEntry(name ?? string.Empty, outcome, message, depth));
             return this;
         }
 
@@ -162,7 +197,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         /// <see cref="MemberApplicationReport"/>; a no-op for a plain <see cref="Logs"/> sink or
         /// <c>null</c>. Lets the converter code record outcomes unconditionally.
         /// </summary>
-        public static void RecordMember(this Logs? logs, string? name, MemberOutcome outcome, string? message = null)
-            => (logs as MemberApplicationReport)?.Record(name, outcome, message);
+        public static void RecordMember(this Logs? logs, string? name, MemberOutcome outcome, string? message = null, int depth = 0)
+            => (logs as MemberApplicationReport)?.Record(name, outcome, message, depth);
     }
 }

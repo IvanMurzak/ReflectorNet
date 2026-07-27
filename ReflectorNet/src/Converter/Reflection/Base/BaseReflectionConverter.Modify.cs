@@ -81,7 +81,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     // undeserializable payload is reported here rather than thrown at the caller.
                     // The detailed reason is already in `logs`/`logger`. Nothing was written, so this
                     // is a RESOLVE failure -> the report reads `Rejected`.
-                    logs.RecordMember(data.name, MemberOutcome.ResolutionFailed, ex.Message);
+                    logs.RecordMember(data.name, MemberOutcome.ResolutionFailed, ex.Message, depth);
 
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' modification failed: {ex.Message}");
@@ -192,7 +192,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger: logger);
 
                     overallSuccess &= success;
-                    logs.RecordMember(field.name, success ? MemberOutcome.Applied : MemberOutcome.ApplyFailed);
+                    logs.RecordMember(field.name, success ? MemberOutcome.Applied : MemberOutcome.ApplyFailed, depth: nextDepth);
 
                     if (success)
                     {
@@ -237,7 +237,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger: logger);
 
                     overallSuccess &= success;
-                    logs.RecordMember(property.name, success ? MemberOutcome.Applied : MemberOutcome.ApplyFailed);
+                    logs.RecordMember(property.name, success ? MemberOutcome.Applied : MemberOutcome.ApplyFailed, depth: nextDepth);
 
                     if (success)
                     {

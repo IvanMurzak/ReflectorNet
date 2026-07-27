@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
@@ -77,8 +78,15 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         }
     }
 
+    /// <summary>Two-level target, for exercising a report threaded through NESTED member sets.</summary>
+    public class NestedProbeTarget
+    {
+        public TwoPhaseProbeTarget? Inner { get; set; }
+        public SilentFailureProbeStruct Broken { get; set; }
+    }
+
     /// <summary>
-    /// Regression tests for the two-phase (RESOLVE then APPLY) member application and its three
+    /// Regression tests for the two-phase (RESOLVE then APPLY) member application and its
     /// terminal states.
     ///
     /// <para>
@@ -89,6 +97,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
     /// <see cref="MemberApplicationState.PartiallyApplied"/>, and the report names exactly what landed.
     /// </para>
     /// </summary>
+    [Collection(ProbeStatics.Name)]
     public class TwoPhaseMemberApplicationTests : BaseTest, IDisposable
     {
         public TwoPhaseMemberApplicationTests(ITestOutputHelper output) : base(output)
@@ -153,10 +162,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             _output.WriteLine(report.ToString());
 
-            var offending = Assert.Single(report.Members, m => m.Outcome == MemberOutcome.ResolutionFailed);
-            Assert.Equal(nameof(TwoPhaseProbeTarget.Second), offending.Name);
-            Assert.False(offending.Applied);
-            Assert.Contains("instanceID", offending.Message);
+            // Exactly one member is named as failed, however many frames recorded it. The report is
+            // threaded through the whole operation, so the failing member is recorded twice - once by
+            // the nested frame that diagnosed it and once by the enclosing RESOLVE loop that aborted
+            // on it - and `Depth` is what tells those two records apart.
+            var offendingName = Assert.Single(report.FailedMembers);
+            Assert.Equal(nameof(TwoPhaseProbeTarget.Second), offendingName);
+
+            var offending = report.Members.Where(m => m.Failed).ToList();
+            Assert.All(offending, m => Assert.Equal(nameof(TwoPhaseProbeTarget.Second), m.Name));
+            Assert.All(offending, m => Assert.False(m.Applied));
+            Assert.All(offending, m => Assert.Contains("instanceID", m.Message));
+            Assert.Equal(offending.Count, offending.Select(m => m.Depth).Distinct().Count());
         }
 
         // ------------------------------------------------------------------------------------
@@ -205,7 +222,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             data.AddProperty(GoodMember(reflector, nameof(TwoPhaseProbeTarget.First), 7));
             data.AddProperty(GoodMember(reflector, nameof(TwoPhaseProbeTarget.Third), 9));
 
-            Assert.ThrowsAny<Exception>(() => reflector.Deserialize(data, logs: report));
+            // Reflection wraps a throwing setter, so assert the wrapper AND the real cause rather
+            // than ThrowsAny<Exception>, which would pass on any unrelated failure.
+            var thrown = Assert.Throws<System.Reflection.TargetInvocationException>(
+                () => reflector.Deserialize(data, logs: report));
+            var cause = Assert.IsType<InvalidOperationException>(thrown.InnerException);
+            Assert.Contains(nameof(TwoPhaseProbeTarget.Third), cause.Message);
 
             _output.WriteLine(report.ToString());
 
@@ -220,6 +242,67 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         // TryModify keeps its bool + Logs contract and never throws, but must never report a
         // blanket success either.
         // ------------------------------------------------------------------------------------
+
+        // ------------------------------------------------------------------------------------
+        // The report is threaded through NESTED member sets too, so its terminal state must be
+        // derived from what actually happened - never asserted from "which phase failed".
+        // ------------------------------------------------------------------------------------
+
+        [Fact]
+        public void NestedMemberApplied_ThenOuterMemberFails_ReportsPartiallyApplied_NotRejected()
+        {
+            var reflector = new Reflector();
+            var report = new MemberApplicationReport();
+
+            // The nested object is fully deserialized (and its own members genuinely written) during
+            // the OUTER resolve phase. Reporting `Rejected` - "nothing was applied, the target is
+            // unchanged" - while `AppliedMembers` is non-empty would be a self-contradicting report,
+            // which is the very defect class this design exists to prevent.
+            var nested = new SerializedMember { name = nameof(NestedProbeTarget.Inner), typeName = typeof(TwoPhaseProbeTarget).GetTypeId() };
+            nested.AddProperty(GoodMember(reflector, nameof(TwoPhaseProbeTarget.First), 7));
+
+            var data = new SerializedMember { typeName = typeof(NestedProbeTarget).GetTypeId() };
+            data.AddProperty(nested);
+            data.AddProperty(UnresolvableMember(nameof(NestedProbeTarget.Broken)));
+
+            Assert.Throws<DeserializationException>(() => reflector.Deserialize(data, logs: report));
+
+            _output.WriteLine(report.ToString());
+
+            Assert.NotEmpty(report.AppliedMembers);
+            Assert.Contains(nameof(TwoPhaseProbeTarget.First), report.AppliedMembers);
+            Assert.Contains(nameof(NestedProbeTarget.Broken), report.FailedMembers);
+
+            Assert.Equal(MemberApplicationState.PartiallyApplied, report.State);
+            Assert.NotEqual(MemberApplicationState.Rejected, report.State);
+        }
+
+        [Fact]
+        public void EmptyReport_IsNothingRecorded_NotApplied()
+        {
+            // "No evidence" must never read as "everything worked".
+            var report = new MemberApplicationReport();
+
+            Assert.Empty(report.Members);
+            Assert.Equal(MemberApplicationState.NothingRecorded, report.State);
+            Assert.NotEqual(MemberApplicationState.Applied, report.State);
+        }
+
+        [Fact]
+        public void ValueOnlyPayload_RecordsNothing_AndDoesNotClaimApplied()
+        {
+            var reflector = new Reflector();
+            var report = new MemberApplicationReport();
+
+            // No fields, no props - nothing to apply, so nothing is recorded, and the report says so
+            // rather than reporting a success it has no evidence for.
+            var result = reflector.Deserialize(
+                SerializedMember.FromValue(reflector, typeof(int), 42, name: "n"),
+                logs: report);
+
+            Assert.Equal(42, result);
+            Assert.Equal(MemberApplicationState.NothingRecorded, report.State);
+        }
 
         [Fact]
         public void TryModify_UnresolvablePayload_ReportsRejected_WithoutThrowing()

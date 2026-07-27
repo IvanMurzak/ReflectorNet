@@ -67,6 +67,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
     /// link can resolve it).
     /// </para>
     /// </summary>
+    [Collection(ProbeStatics.Name)]
     public class SilentDeserializationFailureTests : BaseTest
     {
         public SilentDeserializationFailureTests(ITestOutputHelper output) : base(output) { }

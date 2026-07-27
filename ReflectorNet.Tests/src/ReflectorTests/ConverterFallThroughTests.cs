@@ -37,7 +37,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
     {
         static readonly Dictionary<string, ForeignRefAsset> _byId = new();
 
-        public static void Reset() => _byId.Clear();
+        /// <summary>
+        /// How many times the consumer's resolution was consulted. Lets a test assert that the
+        /// subclass resolution was SKIPPED, rather than inferring it from the exception type.
+        /// </summary>
+        public static int LookupCount { get; private set; }
+
+        public static void Reset()
+        {
+            _byId.Clear();
+            LookupCount = 0;
+        }
 
         public static ForeignRefAsset Register(string id, string displayName)
         {
@@ -47,7 +57,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         }
 
         public static ForeignRefAsset? Find(string id)
-            => _byId.TryGetValue(id, out var asset) ? asset : null;
+        {
+            LookupCount++;
+            return _byId.TryGetValue(id, out var asset) ? asset : null;
+        }
     }
 
     /// <summary>
@@ -201,6 +214,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
     /// These tests reproduce the consumer pattern in-repo so <c>dotnet test</c> alone catches it.
     /// </para>
     /// </summary>
+    [Collection(ProbeStatics.Name)]
     public class ConverterFallThroughTests : BaseTest, IDisposable
     {
         public ConverterFallThroughTests(ITestOutputHelper output) : base(output)
@@ -360,6 +374,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             Assert.Contains("instanceID", exception.Message);
             Assert.IsAssignableFrom<JsonException>(exception.InnerException);
             Assert.Contains(logs, log => log.Type == LogType.Error);
+
+            // The chain aborted at the first Failed link, so the consumer's resolution was never
+            // consulted - observed directly, not inferred from the exception type.
+            Assert.Equal(0, ForeignRefRegistry.LookupCount);
         }
 
         // ------------------------------------------------------------------------------------
@@ -390,20 +408,131 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         {
             var reflector = new Reflector();
 
-            object? result = null;
-            var completed = false;
-            try
-            {
-                result = reflector.Deserialize(ForeignShapePayload("12345"));
-                completed = true;
-            }
-            catch (DeserializationException)
-            {
-                // expected
-            }
+            // Seeded with a marker rather than null so the assertion is a real discriminator: if the
+            // call ever handed a value back - a fabricated default included - `result` would change.
+            var unassigned = new object();
+            object? result = unassigned;
 
-            Assert.False(completed, "An unresolvable payload must not complete successfully.");
+            Assert.Throws<DeserializationException>(
+                () => result = reflector.Deserialize(ForeignShapePayload("12345")));
+
+            Assert.Same(unassigned, result);
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Seam guarantees the consumer depends on. These are compile-level and behavioural locks:
+        // the library MUST keep calling the overridable seam, and MUST leave a derived converter a
+        // way to own a foreign shape whose correct answer is null.
+        // ------------------------------------------------------------------------------------
+
+        [Fact]
+        public void OverridingTheVirtualTryDeserializeValue_IsStillCalledByTheLibrary()
+        {
+            // The tri-state `outcome` travels on a separate overload. If that overload carried the
+            // implementation instead of delegating, this override would still compile, still say
+            // `override`, and simply never run - a silent behaviour break with no diagnostic.
+            var reflector = new Reflector();
+            var converter = new SeamProbeConverter();
+            reflector.Converters.Add(converter);
+
+            // The well-formed cascade shape: 'value' is an empty object, members travel in 'props'.
+            var data = new SerializedMember
+            {
+                name = "p",
+                typeName = typeof(SeamProbe).GetTypeId(),
+                valueJsonElement = JsonDocument.Parse("{}").RootElement
+            };
+            data.AddProperty(SerializedMember.FromValue(reflector, typeof(int), 3, name: nameof(SeamProbe.N)));
+
+            var result = reflector.Deserialize(data, fallbackType: typeof(SeamProbe));
+
+            _output.WriteLine($"result={result}, seam calls={converter.Calls}");
+
+            Assert.Equal(3, Assert.IsType<SeamProbe>(result).N);
+            Assert.True(converter.Calls > 0, "The library must route through the overridable seam.");
+        }
+
+        [Fact]
+        public void ConverterOwningAForeignShape_MayResolveItToNull_WithoutATerminalFailure()
+        {
+            // A converter that OWNS a foreign shape must be able to answer "handled, and the correct
+            // answer is null" - a cleared reference, a deleted asset. It opts out of the shape-decline
+            // classification by overriding DeclinesValueByShape.
+            var reflector = new Reflector();
+            reflector.Converters.Add(new NullResolvingForeignRefConverter());
+
+            var logs = new Logs();
+            var result = reflector.Deserialize(new SerializedMember
+            {
+                name = "cleared",
+                typeName = typeof(NullResolvableRef).GetTypeId(),
+                valueJsonElement = JsonDocument.Parse("{\"instanceID\":\"0\"}").RootElement
+            }, logs: logs);
+
+            _output.WriteLine(logs.ToString());
+
             Assert.Null(result);
+            Assert.DoesNotContain(logs, log => log.Type == LogType.Error);
+        }
+
+        /// <summary>Probe type for the "the library still calls the overridable seam" test.</summary>
+        public class SeamProbe
+        {
+            public int N { get; set; }
+        }
+
+        /// <summary>Counts how often the library routed through the overridable 8-argument seam.</summary>
+        public class SeamProbeConverter : GenericReflectionConverter<SeamProbe>
+        {
+            public int Calls;
+
+            protected override bool TryDeserializeValue(
+                Reflector reflector,
+                SerializedMember? data,
+                out object? result,
+                out Type? type,
+                Type? fallbackType = null,
+                int depth = 0,
+                Logs? logs = null,
+                ILogger? logger = null)
+            {
+                Calls++;
+                return base.TryDeserializeValue(reflector, data, out result, out type, fallbackType, depth, logs, logger);
+            }
+        }
+
+        /// <summary>Reference type whose converter resolves a cleared reference to a legitimate null.</summary>
+        public class NullResolvableRef
+        {
+            public string Id = string.Empty;
+        }
+
+        /// <summary>
+        /// Owns the <c>{"instanceID":…}</c> shape and resolves <c>"0"</c> to <c>null</c> - the
+        /// cleared-reference case. It opts out of the shape-decline classification so its own
+        /// <c>null</c> is read as a real answer rather than as "nobody understood this".
+        /// </summary>
+        public class NullResolvingForeignRefConverter : GenericReflectionConverter<NullResolvableRef>
+        {
+            protected override bool DeclinesValueByShape(SerializedMember data) => false;
+
+            protected override bool TryDeserializeValueInternal(
+                Reflector reflector,
+                SerializedMember data,
+                out object? result,
+                Type type,
+                int depth = 0,
+                Logs? logs = null,
+                ILogger? logger = null)
+            {
+                if (ForeignRefReflectionConverter.TryReadForeignId(data.valueJsonElement, out var id))
+                {
+                    result = id == "0" ? null : new NullResolvableRef { Id = id! };
+                    return true;
+                }
+
+                return base.TryDeserializeValueInternal(reflector, data, out result, type, depth, logs, logger);
+            }
         }
 
         /// <summary>Minimal <see cref="ILogger"/> that records severity so Error logs can be asserted on.</summary>

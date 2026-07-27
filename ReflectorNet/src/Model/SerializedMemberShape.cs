@@ -70,18 +70,23 @@ namespace com.IvanMurzak.ReflectorNet.Model
 
         static readonly string[] EmptyKeys = Array.Empty<string>();
 
+        readonly IReadOnlyList<string>? _unknownKeys;
+
         public SerializedMemberShapeKind Kind { get; }
 
-        /// <summary>Property names present in the payload that are NOT <see cref="SerializedMember"/> keys.</summary>
-        public IReadOnlyList<string> UnknownKeys { get; }
+        /// <summary>
+        /// Property names present in the payload that are NOT <see cref="SerializedMember"/> keys.
+        /// Never <c>null</c>, including on a <c>default(SerializedMemberShape)</c>.
+        /// </summary>
+        public IReadOnlyList<string> UnknownKeys => _unknownKeys ?? EmptyKeys;
 
         /// <summary>How many <see cref="SerializedMember"/> keys the payload carries.</summary>
         public int RecognisedKeyCount { get; }
 
-        SerializedMemberShape(SerializedMemberShapeKind kind, IReadOnlyList<string> unknownKeys, int recognisedKeyCount)
+        SerializedMemberShape(SerializedMemberShapeKind kind, IReadOnlyList<string>? unknownKeys, int recognisedKeyCount)
         {
             Kind = kind;
-            UnknownKeys = unknownKeys;
+            _unknownKeys = unknownKeys;
             RecognisedKeyCount = recognisedKeyCount;
         }
 
@@ -107,6 +112,8 @@ namespace com.IvanMurzak.ReflectorNet.Model
                 + $"Did you want to use '{string.Join("', '", KnownKeys)}'?";
         }
 
+        // The single decision point. KnownKeys above is used ONLY to phrase the diagnostic message;
+        // keep the two in sync if the SerializedMember schema ever grows a key.
         static bool IsKnownKey(string name)
             => name == nameof(SerializedMember.name)
             || name == nameof(SerializedMember.typeName)

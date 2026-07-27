@@ -105,7 +105,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (outcome == DeserializationOutcome.NotApplicable)
             {
                 var shape = SerializedMemberShape.Classify(data.valueJsonElement);
-                var message = $"Failed to deserialize member '{data.name.ValueOrNull() ?? fallbackName.ValueOrNull()}'"
+                // `ValueOrNull()` renders null as the literal "null" and never returns null, so the
+                // fallback must be chosen BEFORE it is applied - otherwise the message reads
+                // "member 'null'" while the exception below carries the real fallback name.
+                var message = $"Failed to deserialize member '{(data.name ?? fallbackName).ValueOrNull()}'"
                     + $" of type '{type!.GetTypeId()}':\n"
                     + $"No converter understood the '{SerializedMember.ValueName}' payload shape."
                     + (shape.UnknownKeys.Count > 0 ? $" {shape.DescribeUnknownKeys()}" : string.Empty);
@@ -114,6 +117,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogError($"{padding}{Consts.Emoji.Fail} {message}");
 
                 logs?.Error(message, depth);
+
+                // Record it too: a caller threading a report must not see NothingRecorded (or, worse,
+                // an "Applied" derived from an empty list) for the headline failure of the operation.
+                logs.RecordMember(data.name ?? fallbackName, MemberOutcome.ResolutionFailed, message, depth);
 
                 throw new DeserializationException(message, type, data.name ?? fallbackName);
             }
@@ -145,7 +152,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
 
                         logs?.Warning($"Field name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.", depth);
-                        logs.RecordMember(field.name, MemberOutcome.Skipped, "Member name is null or empty.");
+                        logs.RecordMember(field.name, MemberOutcome.Skipped, "Member name is null or empty.", depth);
 
                         continue;
                     }
@@ -157,7 +164,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Field '{field.name}' not found on type '{type.GetTypeId()}'.");
 
                         logs?.Warning($"Field '{field.name}' not found on type '{type.GetTypeId()}'.", depth);
-                        logs.RecordMember(field.name, MemberOutcome.Skipped, $"Field not found on type '{type.GetTypeId()}'.");
+                        logs.RecordMember(field.name, MemberOutcome.Skipped, $"Field not found on type '{type.GetTypeId()}'.", depth);
 
                         continue;
                     }
@@ -177,7 +184,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     {
                         // RESOLVE failed -> reject the whole member set. Nothing has been written yet,
                         // so the target is left exactly as it was.
-                        logs.RecordMember(field.name, MemberOutcome.ResolutionFailed, ex.Message);
+                        logs.RecordMember(field.name, MemberOutcome.ResolutionFailed, ex.Message, depth);
                         throw;
                     }
 
@@ -200,7 +207,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.");
 
                         logs?.Warning($"Property name is null or empty in serialized data: '{(StringUtils.IsNullOrEmpty(data.name) ? fallbackName : data.name).ValueOrNull()}'. Skipping.", depth);
-                        logs.RecordMember(property.name, MemberOutcome.Skipped, "Member name is null or empty.");
+                        logs.RecordMember(property.name, MemberOutcome.Skipped, "Member name is null or empty.", depth);
 
                         continue;
                     }
@@ -212,7 +219,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' not found on type '{type.GetTypeId()}'.");
 
                         logs?.Warning($"Property '{property.name}' not found on type '{type.GetTypeId()}'.", depth);
-                        logs.RecordMember(property.name, MemberOutcome.Skipped, $"Property not found on type '{type.GetTypeId()}'.");
+                        logs.RecordMember(property.name, MemberOutcome.Skipped, $"Property not found on type '{type.GetTypeId()}'.", depth);
 
                         continue;
                     }
@@ -222,7 +229,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                             logger.LogWarning($"{padding}{Consts.Emoji.Warn} Property '{property.name}' on type '{type.GetTypeId()}' is read-only and cannot be set.");
 
                         logs?.Warning($"Property '{property.name}' on type '{type.GetTypeId()}' is read-only and cannot be set.", depth);
-                        logs.RecordMember(property.name, MemberOutcome.Skipped, "Property is read-only.");
+                        logs.RecordMember(property.name, MemberOutcome.Skipped, "Property is read-only.", depth);
 
                         continue;
                     }
@@ -240,7 +247,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     }
                     catch (Exception ex)
                     {
-                        logs.RecordMember(property.name, MemberOutcome.ResolutionFailed, ex.Message);
+                        logs.RecordMember(property.name, MemberOutcome.ResolutionFailed, ex.Message, depth);
                         throw;
                     }
 
@@ -260,11 +267,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     try
                     {
                         member.Apply(result);
-                        logs.RecordMember(member.Name, MemberOutcome.Applied);
+                        logs.RecordMember(member.Name, MemberOutcome.Applied, depth: depth);
                     }
                     catch (Exception ex)
                     {
-                        logs.RecordMember(member.Name, MemberOutcome.ApplyFailed, ex.Message);
+                        logs.RecordMember(member.Name, MemberOutcome.ApplyFailed, ex.Message, depth);
 
                         if (logger?.IsEnabled(LogLevel.Error) == true)
                             logger.LogError($"{padding}{Consts.Emoji.Fail} Failed to apply member '{member.Name}' on type '{type!.GetTypeId()}': {ex.Message}");
@@ -360,58 +367,12 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             Logs? logs = null,
             ILogger? logger = null)
         {
-            return TryDeserializeValue(
-                reflector,
-                data: data,
-                result: out result,
-                type: out type,
-                outcome: out _,
-                fallbackType: fallbackType,
-                depth: depth,
-                logs: logs,
-                logger: logger);
-        }
-
-        /// <summary>
-        /// <inheritdoc cref="TryDeserializeValue(Reflector, SerializedMember, out object, out Type, Type, int, Logs, ILogger)"/>
-        /// <para>
-        /// Overload that also reports the tri-state <paramref name="outcome"/>. It is what makes
-        /// "not my shape, carry on" distinguishable from "my shape, but broken" at the call site.
-        /// </para>
-        /// </summary>
-        /// <param name="outcome">
-        /// <see cref="DeserializationOutcome.Handled"/> when a value was produced;
-        /// <see cref="DeserializationOutcome.NotApplicable"/> when the payload's shape is foreign to
-        /// the <see cref="SerializedMember"/> schema AND no converter in the chain produced a value
-        /// for it - the caller at the END of the chain turns that into a single explicit failure;
-        /// <see cref="DeserializationOutcome.Failed"/> for the already-reported hard failures
-        /// (null data / unresolvable type).
-        /// </param>
-        /// <remarks>
-        /// The <c>NotApplicable</c> verdict is deliberately conservative: the base converter never
-        /// fabricates a default for a foreign-shaped payload, so <c>result == null</c> after a
-        /// shape-decline means "nothing in the chain produced anything". A derived converter that
-        /// resolves the foreign shape (the Unity-MCP object-reference pattern) sets a real value and
-        /// is therefore reported as <see cref="DeserializationOutcome.Handled"/>.
-        /// </remarks>
-        protected virtual bool TryDeserializeValue(
-            Reflector reflector,
-            SerializedMember? data,
-            out object? result,
-            out Type? type,
-            out DeserializationOutcome outcome,
-            Type? fallbackType = null,
-            int depth = 0,
-            Logs? logs = null,
-            ILogger? logger = null)
-        {
             if (reflector == null) throw new ArgumentNullException(nameof(reflector));
 
             if (data == null)
             {
                 result = null;
                 type = null;
-                outcome = DeserializationOutcome.Failed;
                 return false;
             }
 
@@ -422,7 +383,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
             if (type == null)
             {
                 result = null;
-                outcome = DeserializationOutcome.Failed;
                 logs?.Error(error ?? "Unknown error", depth);
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}{error}");
@@ -431,10 +391,6 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             if (logger?.IsEnabled(LogLevel.Trace) == true)
                 logger.LogTrace($"{padding}{Consts.Emoji.Start} Deserialize 'value', type='{type.GetTypeId()}' name='{data.name.ValueOrNull()}'.");
-
-            // Classified BEFORE the (possibly overridden) seam runs, so a derived converter's own
-            // resolution of a foreign payload can be recognised as a genuine `Handled`.
-            var declinedByShape = DeclinesValueByShape(data);
 
             var success = TryDeserializeValueInternal(
                 reflector,
@@ -447,22 +403,80 @@ namespace com.IvanMurzak.ReflectorNet.Converter
 
             if (success)
             {
-                outcome = declinedByShape && result == null
-                    ? DeserializationOutcome.NotApplicable
-                    : DeserializationOutcome.Handled;
-
                 if (logger?.IsEnabled(LogLevel.Trace) == true)
                     logger.LogTrace($"{padding}{Consts.Emoji.Done} Deserialized '{type.GetTypeId()}'.");
             }
             else
             {
-                // An explicit `false` from the seam is an already-reported hard failure, not a
-                // "carry on" - both call sites short-circuit on it before reading `outcome`.
-                outcome = DeserializationOutcome.Failed;
-
                 if (logger?.IsEnabled(LogLevel.Error) == true)
                     logger.LogError($"{padding}{Consts.Emoji.Fail} Deserialization '{type.GetTypeId()}' failed. Converter: {GetType().GetTypeShortName()}");
             }
+
+            return success;
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="TryDeserializeValue(Reflector, SerializedMember, out object, out Type, Type, int, Logs, ILogger)"/>
+        /// <para>
+        /// Wrapper that also reports the tri-state <paramref name="outcome"/>. It is what makes
+        /// "not my shape, carry on" distinguishable from "my shape, but broken" at the call site.
+        /// </para>
+        /// </summary>
+        /// <param name="outcome">
+        /// <see cref="DeserializationOutcome.Handled"/> when a value was produced;
+        /// <see cref="DeserializationOutcome.NotApplicable"/> when the payload's shape is foreign to
+        /// the <see cref="SerializedMember"/> schema AND no converter in the chain produced a value
+        /// for it - the caller at the END of the chain turns that into a single explicit failure;
+        /// <see cref="DeserializationOutcome.Failed"/> for the already-reported hard failures
+        /// (null data / unresolvable type, or an explicit <c>false</c> from the seam).
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// ⚠ Deliberately NOT <c>virtual</c>, and deliberately a thin wrapper that DELEGATES to the
+        /// virtual 8-argument overload rather than duplicating its body. The 8-argument overload is
+        /// the single overridable seam; if this wrapper carried the implementation, an external
+        /// subclass overriding the 8-argument overload would still compile, still carry
+        /// <c>override</c>, and simply never be called - a silent behaviour break with no diagnostic.
+        /// </para>
+        /// <para>
+        /// The <c>NotApplicable</c> verdict is conservative: the base converter never fabricates a
+        /// default for a foreign-shaped payload, so <c>result == null</c> after a shape-decline means
+        /// "nothing in the chain produced anything". A derived converter that resolves the foreign
+        /// shape (the Unity-MCP object-reference pattern) sets a real value and is therefore reported
+        /// as <see cref="DeserializationOutcome.Handled"/>. A derived converter that must resolve a
+        /// foreign shape to a legitimate <c>null</c> overrides
+        /// <see cref="DeclinesValueByShape"/> to return <c>false</c> - see its remarks.
+        /// </para>
+        /// </remarks>
+        protected bool TryDeserializeValue(
+            Reflector reflector,
+            SerializedMember? data,
+            out object? result,
+            out Type? type,
+            out DeserializationOutcome outcome,
+            Type? fallbackType = null,
+            int depth = 0,
+            Logs? logs = null,
+            ILogger? logger = null)
+        {
+            // Computed from `data` alone, so it is equivalent before or after the seam runs.
+            var declinedByShape = data != null && DeclinesValueByShape(data);
+
+            var success = TryDeserializeValue(
+                reflector,
+                data: data,
+                result: out result,
+                type: out type,
+                fallbackType: fallbackType,
+                depth: depth,
+                logs: logs,
+                logger: logger);
+
+            outcome = !success
+                ? DeserializationOutcome.Failed
+                : declinedByShape && result == null
+                    ? DeserializationOutcome.NotApplicable
+                    : DeserializationOutcome.Handled;
 
             return success;
         }
@@ -474,15 +488,27 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <c>{"instanceID":"12345"}</c>.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// This is the "not mine" half of the tri-state and is NOT an error: see
         /// <see cref="DeserializationOutcome.NotApplicable"/>. A payload that mixes recognised keys
         /// with unrecognised ones is NOT covered here - it is trying to be a
         /// <see cref="SerializedMember"/> and getting it wrong, which is a hard failure.
+        /// </para>
+        /// <para>
+        /// <b>Escape hatch.</b> A declined payload is judged "nobody understood it" when no converter
+        /// produced a value for it, and "produced no value" is observed as <c>result == null</c>. A
+        /// derived converter that OWNS a foreign shape and must be able to resolve it to a legitimate
+        /// <c>null</c> (a cleared object reference, a deleted asset, ...) should override this to
+        /// return <c>false</c> for the shapes it owns. The base then never classifies those payloads
+        /// as declined, so the converter's own <c>null</c> is reported as
+        /// <see cref="DeserializationOutcome.Handled"/> instead of raising a terminal failure.
+        /// </para>
         /// </remarks>
-        protected bool DeclinesValueByShape(SerializedMember data)
+        protected virtual bool DeclinesValueByShape(SerializedMember data)
             => AllowCascadeSerialization
             && data.valueJsonElement != null
             && SerializedMemberShape.Classify(data.valueJsonElement).IsForeign;
+
         /// <summary>
         /// Deserializes the <c>value</c> payload of <paramref name="data"/> into
         /// <paramref name="type"/>.
@@ -708,6 +734,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogError($"{padding}{Consts.Emoji.Fail} {message}");
 
                 logs?.Error(message, depth);
+                logs.RecordMember(data.name, MemberOutcome.ResolutionFailed, message, depth);
 
                 result = null;
                 return false;
