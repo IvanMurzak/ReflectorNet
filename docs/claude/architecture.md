@@ -73,7 +73,7 @@ The **8-arg `TryDeserializeValue` is the only overridable seam**; the `out Deser
 
 `ArrayReflectionConverter` overrides `Deserialize` wholesale, so a collection never passes through `BaseReflectionConverter.Deserialize`. It therefore carries **its own chain end**, obeying the same rules:
 
-- The per-link work lives in `TryDeserializeCollectionValue` (`protected virtual`), which is QUIET: a `value` payload that is a JSON object carrying no `SerializedMember` key is `NotApplicable` at `Trace`. **Override that method to own a foreign payload shape on a collection type** — it is the collection equivalent of overriding `TryDeserializeValueInternal`.
+- The per-link work lives in `TryDeserializeCollectionValue` (`protected virtual`), which is QUIET: a `value` payload that is a JSON object carrying no **structural** `SerializedMember` key is `NotApplicable` at `Trace` — the collection chain end goes through the same `SerializedMemberShape.Classify(...).IsForeign`, so `name`/`typeName` do not make a foreign collection payload loud either. **Override that method to own a foreign payload shape on a collection type** — it is the collection equivalent of overriding `TryDeserializeValueInternal`.
 - `Deserialize` is the only place allowed to be loud, and it raises one `DeserializationException` when nobody resolved the decline.
 - A payload that is neither absent nor a JSON array nor a foreign shape (a string, a number, a malformed `SerializedMember`) is a hard failure and throws.
 - `result` is never a fabricated value on a failure path — not `GetDefaultValue(type)`, not an empty `CreateInstance(type)`, not `null`.
