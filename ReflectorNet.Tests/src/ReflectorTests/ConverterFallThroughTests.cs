@@ -239,6 +239,19 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             valueJsonElement = JsonDocument.Parse($"{{\"instanceID\":\"{id}\"}}").RootElement
         };
 
+        /// <summary>
+        /// A Unity object reference carrying a key that is ALSO a SerializedMember key. These are the
+        /// literal wire shapes Unity-MCP's own converters emit - <c>ComponentRefConverter</c> writes
+        /// <c>typeName</c> when it disambiguates by type, <c>GameObjectRefConverter</c> writes
+        /// <c>name</c> - so the payload is a legitimate reference, not a broken SerializedMember.
+        /// </summary>
+        static SerializedMember ForeignShapePayloadRaw(string valueJson, string? name = "sharedAsset") => new SerializedMember
+        {
+            name = name,
+            typeName = typeof(ForeignRefAsset).GetTypeId(),
+            valueJsonElement = JsonDocument.Parse(valueJson).RootElement
+        };
+
         // ------------------------------------------------------------------------------------
         // 1. The fall-through works.
         // ------------------------------------------------------------------------------------
@@ -343,8 +356,73 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         }
 
         // ------------------------------------------------------------------------------------
-        // 3. A genuine failure is still loud: some known SerializedMember keys plus an unknown one
-        //    is a payload TRYING to be a SerializedMember and getting it wrong.
+        // 2b. The SAME quiet fall-through, for a reference that carries a key which is ALSO a
+        //     SerializedMember key. This is the 5.3.3 defect, reproduced on the real Unity wire
+        //     shapes: 'name'/'typeName' are ordinary English words, and treating either as proof
+        //     that the payload "was trying to be a SerializedMember" rejected legitimate refs.
+        //     Confirmed against a live Unity Editor via Tool_GameObject.ModifyComponent.
+        // ------------------------------------------------------------------------------------
+
+        [Theory]
+        // ComponentRefConverter disambiguating by type.
+        [InlineData("{\"instanceID\":\"12345\",\"typeName\":\"UnityEngine.Rigidbody\"}")]
+        // GameObjectRefConverter naming the object; instanceID as a JSON number, as it also appears.
+        [InlineData("{\"instanceID\":12345,\"name\":\"Player\"}")]
+        // ComponentRef with the full triple.
+        [InlineData("{\"instanceID\":\"12345\",\"index\":0,\"typeName\":\"UnityEngine.Transform\"}")]
+        public void ForeignShapeCarryingADescriptiveKey_BaseDeclines_SubclassResolves_LogsNoError(string valueJson)
+        {
+            var reflector = CreateReflectorWithConsumerConverter();
+            ForeignRefRegistry.Register("12345", "Grass");
+
+            var logs = new Logs();
+            var logger = new RecordingLogger();
+            var result = reflector.Deserialize(ForeignShapePayloadRaw(valueJson), logs: logs, logger: logger);
+
+            _output.WriteLine($"{valueJson}\n{logs}");
+
+            var asset = Assert.IsType<ForeignRefAsset>(result);
+            Assert.Equal("12345", asset.Id);
+            Assert.Equal("Grass", asset.DisplayName);
+
+            // The in-repo equivalent of Unity's LogAssert: a legitimate reference must not produce a
+            // single Error entry on either sink.
+            Assert.DoesNotContain(logs, log => log.Type == LogType.Error);
+            Assert.DoesNotContain(logs, log => log.Type == LogType.Critical);
+            Assert.DoesNotContain(logger.Entries, e => e.Level >= LogLevel.Error);
+        }
+
+        [Theory]
+        [InlineData("{\"instanceID\":\"12345\",\"typeName\":\"UnityEngine.Rigidbody\"}")]
+        [InlineData("{\"instanceID\":12345,\"name\":\"Player\"}")]
+        public void ForeignShapeCarryingADescriptiveKey_DeserializeOverridePattern_GateStaysOpen(string valueJson)
+        {
+            // The Unity-MCP UnityEngine_Object_ReflectionConverter.Deserialize pattern: the gate must
+            // return true (not throw) so the converter's own resolution still runs. In 5.3.3 the gate
+            // threw here - "Unexpected property name: 'instanceID'" - before Unity could resolve.
+            var reflector = new Reflector();
+            reflector.Converters.Add(new ForeignRefDeserializeOverrideConverter());
+            ForeignRefRegistry.Register("12345", "Rock");
+
+            var logs = new Logs();
+            var result = reflector.Deserialize(new SerializedMember
+            {
+                name = "component",
+                typeName = typeof(ForeignRefComponent).GetTypeId(),
+                valueJsonElement = JsonDocument.Parse(valueJson).RootElement
+            }, logs: logs);
+
+            _output.WriteLine($"{valueJson}\n{logs}");
+
+            var component = Assert.IsType<ForeignRefComponent>(result);
+            Assert.Equal("Rock", component.DisplayName);
+            Assert.DoesNotContain(logs, log => log.Type == LogType.Error);
+        }
+
+        // ------------------------------------------------------------------------------------
+        // 3. A genuine failure is still loud: a STRUCTURAL SerializedMember key ('value'/'fields'/
+        //    'props') plus an unknown one is a payload TRYING to be a SerializedMember and getting
+        //    it wrong.
         // ------------------------------------------------------------------------------------
 
         [Fact]
@@ -360,8 +438,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             {
                 name = "sharedAsset",
                 typeName = typeof(ForeignRefAsset).GetTypeId(),
+                // 'value' is STRUCTURAL - unique to the SerializedMember shape - so this payload
+                // really was trying to be one. (Before this fix the discriminator here was the
+                // 'typeName' key alone, which a legitimate Unity ComponentRef also carries.)
                 valueJsonElement = JsonDocument
-                    .Parse("{\"typeName\":\"" + typeof(ForeignRefAsset).GetTypeId() + "\",\"instanceID\":\"12345\"}")
+                    .Parse("{\"typeName\":\"" + typeof(ForeignRefAsset).GetTypeId() + "\",\"value\":{},\"instanceID\":\"12345\"}")
                     .RootElement
             };
 
@@ -378,6 +459,31 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             // The chain aborted at the first Failed link, so the consumer's resolution was never
             // consulted - observed directly, not inferred from the exception type.
             Assert.Equal(0, ForeignRefRegistry.LookupCount);
+        }
+
+        [Fact]
+        public void TypoedSerializedMember_WithoutAStructuralKey_IsStillATerminalFailure()
+        {
+            // The honest cost of the narrowed rule. A SerializedMember DOES serialize to just
+            // {"name":…,"typeName":…} when it has no value/fields/props (the JSON serializer ignores
+            // nulls), so a typo'd one is now indistinguishable BY KEYS from a consumer reference and
+            // is classified Foreign. It must therefore never become a SILENT success: with nobody in
+            // the chain able to resolve it, the chain end is loud and names the offending key.
+            var reflector = new Reflector();
+
+            var logs = new Logs();
+            var exception = Assert.Throws<DeserializationException>(() => reflector.Deserialize(new SerializedMember
+            {
+                name = "sharedAsset",
+                typeName = typeof(ForeignRefAsset).GetTypeId(),
+                valueJsonElement = JsonDocument.Parse("{\"typeName\":\"T\",\"vlaue\":42}").RootElement
+            }, logs: logs));
+
+            _output.WriteLine($"{exception.Message}\n{logs}");
+
+            Assert.Equal(typeof(ForeignRefAsset), exception.TargetType);
+            Assert.Contains("vlaue", exception.Message);
+            Assert.Contains(logs, log => log.Type == LogType.Error);
         }
 
         // ------------------------------------------------------------------------------------
