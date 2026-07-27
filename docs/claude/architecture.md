@@ -59,7 +59,9 @@ A converter answers a `value` payload with one of three outcomes (`Deserializati
 | `NotApplicable` | not this converter's shape; another may handle it. **Not an error** | `Trace` |
 | `Failed` | IS this converter's shape but invalid | `Error` |
 
-`SerializedMemberShape.Classify` decides which, from the payload's property names alone: no recognised `SerializedMember` key but ≥1 property (e.g. a consumer object reference `{"instanceID":"…"}`) → `NotApplicable`; recognised keys **plus** an unknown one → `Failed`; `{}` or all-recognised keys → a valid `SerializedMember`.
+`SerializedMemberShape.Classify` decides which, from the payload's property names alone: an unknown key and no **structural** `SerializedMember` key (e.g. a consumer object reference `{"instanceID":"…"}`) → `NotApplicable`; a **structural** key **plus** an unknown one → `Failed`; `{}` or all-recognised keys → a valid `SerializedMember`.
+
+⚠ The discriminator is a **structural** key — `value`, `fields`, `props` (`SerializedMemberShape.StructuralKeys`) — not any recognised key. `name` and `typeName` (`DescriptiveKeys`) are ordinary English words that foreign payloads carry too: Unity-MCP's `GameObjectRefConverter` writes `name` and its `ComponentRefConverter` writes `typeName`, so `{"instanceID":"7","typeName":"UnityEngine.Rigidbody"}` is a legitimate reference. Counting a descriptive key as evidence of intent (5.3.3) classified such references as `Failed` and threw `Unexpected property name: 'instanceID'` before the consumer's converter could resolve them. A genuinely mistyped `SerializedMember` carrying no structural key is not swallowed by the narrower rule — it still fails, at the chain end, with the same unknown-key diagnostic.
 
 **Chain semantics — loudness belongs at the END.** First `Handled` wins; first `Failed` aborts and propagates; and only when *every* link declined does the chain end raise one explicit `DeserializationException`. The chain ends are `BaseReflectionConverter.Deserialize` and `TryDeserializeValueReporting` (which backs `SetField`/`SetProperty`).
 
@@ -71,7 +73,7 @@ The **8-arg `TryDeserializeValue` is the only overridable seam**; the `out Deser
 
 `ArrayReflectionConverter` overrides `Deserialize` wholesale, so a collection never passes through `BaseReflectionConverter.Deserialize`. It therefore carries **its own chain end**, obeying the same rules:
 
-- The per-link work lives in `TryDeserializeCollectionValue` (`protected virtual`), which is QUIET: a `value` payload that is a JSON object carrying no `SerializedMember` key is `NotApplicable` at `Trace`. **Override that method to own a foreign payload shape on a collection type** — it is the collection equivalent of overriding `TryDeserializeValueInternal`.
+- The per-link work lives in `TryDeserializeCollectionValue` (`protected virtual`), which is QUIET: a `value` payload that is a JSON object carrying no **structural** `SerializedMember` key is `NotApplicable` at `Trace` — the collection chain end goes through the same `SerializedMemberShape.Classify(...).IsForeign`, so `name`/`typeName` do not make a foreign collection payload loud either. **Override that method to own a foreign payload shape on a collection type** — it is the collection equivalent of overriding `TryDeserializeValueInternal`.
 - `Deserialize` is the only place allowed to be loud, and it raises one `DeserializationException` when nobody resolved the decline.
 - A payload that is neither absent nor a JSON array nor a foreign shape (a string, a number, a malformed `SerializedMember`) is a hard failure and throws.
 - `result` is never a fabricated value on a failure path — not `GetDefaultValue(type)`, not an empty `CreateInstance(type)`, not `null`.

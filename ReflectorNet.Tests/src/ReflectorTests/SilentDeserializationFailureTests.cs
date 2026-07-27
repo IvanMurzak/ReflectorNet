@@ -85,11 +85,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         };
 
         /// <summary>
-        /// A payload that IS trying to be a <see cref="SerializedMember"/> - it carries the known
-        /// 'typeName' key - and gets it wrong by adding an unknown one. That is a hard failure inside
-        /// <c>SerializedMemberConverter.Read</c>, not a foreign shape.
+        /// A payload that IS trying to be a <see cref="SerializedMember"/> - it carries the STRUCTURAL
+        /// 'value' key, which nothing but a <see cref="SerializedMember"/> uses - and gets it wrong by
+        /// adding an unknown one. That is a hard failure inside <c>SerializedMemberConverter.Read</c>,
+        /// not a foreign shape.
         /// </summary>
+        /// <remarks>
+        /// The discriminator used to be the 'typeName' key alone. It cannot be: consumer object
+        /// references carry 'typeName' too (Unity-MCP's <c>ComponentRefConverter</c> writes it), so
+        /// that reading rejected legitimate references. Only a structural key
+        /// ('value'/'fields'/'props') proves intent - see <c>SerializedMemberShape.StructuralKeys</c>.
+        /// The descriptive-key-only variant is covered by
+        /// <see cref="Deserialize_TypoedSerializedMemberWithNoStructuralKey_IsStillLoud_AtTheChainEnd"/>.
+        /// </remarks>
         static SerializedMember MalformedSerializedMemberPayload(string? name = "value") => new SerializedMember
+        {
+            name = name,
+            typeName = typeof(SilentFailureProbeStruct).GetTypeId(),
+            valueJsonElement = JsonDocument
+                .Parse("{\"typeName\":\"" + typeof(SilentFailureProbeStruct).GetTypeId() + "\",\"value\":{},\"X\":1}")
+                .RootElement
+        };
+
+        /// <summary>
+        /// The same mistake, but on a payload whose only recognised key is DESCRIPTIVE. By keys alone
+        /// it is indistinguishable from a consumer object reference, so it is declined quietly - and
+        /// must therefore still fail LOUDLY at the chain end rather than turn into a silent success.
+        /// </summary>
+        static SerializedMember TypoedDescriptiveOnlyPayload(string? name = "value") => new SerializedMember
         {
             name = name,
             typeName = typeof(SilentFailureProbeStruct).GetTypeId(),
@@ -168,6 +191,29 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             Assert.False(completed, "A malformed SerializedMember payload must not complete successfully.");
             Assert.Null(result);
+        }
+
+        [Fact]
+        public void Deserialize_TypoedSerializedMemberWithNoStructuralKey_IsStillLoud_AtTheChainEnd()
+        {
+            // The honest cost of narrowing the Malformed rule to structural keys: a typo'd
+            // SerializedMember carrying only 'name'/'typeName' now looks exactly like a consumer
+            // object reference, so it is declined quietly on the way through the chain. It must NOT
+            // become a silent success - the chain end raises one explicit failure that names the
+            // offending key. Only the CAUSE moves (no JsonException underneath); the loudness does not.
+            var reflector = new Reflector();
+            var logs = new Logs();
+
+            var exception = Assert.Throws<DeserializationException>(
+                () => reflector.Deserialize(TypoedDescriptiveOnlyPayload(), logs: logs));
+
+            _output.WriteLine($"Expected exception caught: {exception.Message}\n{logs}");
+
+            Assert.Equal(typeof(SilentFailureProbeStruct), exception.TargetType);
+            Assert.Contains("Unexpected property name", exception.Message);
+            Assert.Contains("'X'", exception.Message);
+            Assert.Contains(logs, log => log.Type == LogType.Error);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]

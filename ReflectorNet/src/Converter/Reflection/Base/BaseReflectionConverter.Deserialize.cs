@@ -484,15 +484,20 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <summary>
         /// <c>true</c> when this converter reads the <c>value</c> payload as a nested
         /// <see cref="SerializedMember"/> and the payload is not that shape at all - a JSON object
-        /// carrying only unrecognised keys, e.g. a consumer object reference
-        /// <c>{"instanceID":"12345"}</c>.
+        /// carrying unrecognised keys and no STRUCTURAL <see cref="SerializedMember"/> key, e.g. a
+        /// consumer object reference <c>{"instanceID":"12345"}</c> or
+        /// <c>{"instanceID":"7","typeName":"UnityEngine.Rigidbody"}</c>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// This is the "not mine" half of the tri-state and is NOT an error: see
-        /// <see cref="DeserializationOutcome.NotApplicable"/>. A payload that mixes recognised keys
-        /// with unrecognised ones is NOT covered here - it is trying to be a
-        /// <see cref="SerializedMember"/> and getting it wrong, which is a hard failure.
+        /// <see cref="DeserializationOutcome.NotApplicable"/>. A payload that mixes a STRUCTURAL key
+        /// (<c>value</c> / <c>fields</c> / <c>props</c> - see
+        /// <see cref="SerializedMemberShape.StructuralKeys"/>) with unrecognised ones is NOT covered
+        /// here - it is trying to be a <see cref="SerializedMember"/> and getting it wrong, which is a
+        /// hard failure. The descriptive keys <c>name</c> / <c>typeName</c> deliberately do NOT count:
+        /// they are ordinary English words that consumer reference shapes carry too, and treating them
+        /// as proof of intent rejected legitimate references.
         /// </para>
         /// <para>
         /// <b>Escape hatch.</b> A declined payload is judged "nobody understood it" when no converter
@@ -525,9 +530,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
         /// <c>false</c> plus a <see cref="LogType.Error"/> entry.
         /// </para>
         /// <para>
-        /// ⚠ A payload that is NOT this converter's shape at all (a JSON object with no recognised
+        /// ⚠ A payload that is NOT this converter's shape at all (a JSON object with no STRUCTURAL
         /// <see cref="SerializedMember"/> key, e.g. a consumer object reference
-        /// <c>{"instanceID":"12345"}</c>) is a completely different thing:
+        /// <c>{"instanceID":"12345"}</c> or <c>{"instanceID":"7","typeName":"UnityEngine.Rigidbody"}</c>)
+        /// is a completely different thing:
         /// <see cref="DeserializationOutcome.NotApplicable"/>. It does NOT throw, it does NOT log at
         /// Error, and it returns <c>true</c> with a <c>null</c> <paramref name="result"/> - the
         /// "carry on, someone else may understand this" signal that a derived converter relies on
@@ -586,11 +592,13 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 }
 
                 // ---- Tri-state: NotApplicable -------------------------------------------------
-                // The payload is a JSON object that carries not one SerializedMember key. It is not
-                // a broken SerializedMember - it is not a SerializedMember at all, and this converter
-                // simply has nothing to say about it. Decline QUIETLY (Trace, never Error, never an
-                // exception) so a derived converter that DOES understand this shape still gets to
-                // resolve it. See DeserializationOutcome for the full rationale.
+                // The payload is a JSON object that carries not one STRUCTURAL SerializedMember key
+                // ('value'/'fields'/'props'). It is not a broken SerializedMember - it is not a
+                // SerializedMember at all, and this converter simply has nothing to say about it.
+                // Decline QUIETLY (Trace, never Error, never an exception) so a derived converter that
+                // DOES understand this shape still gets to resolve it. A 'name'/'typeName' on the
+                // payload changes nothing: Unity's own object-reference converters emit them.
+                // See DeserializationOutcome / SerializedMemberShape for the full rationale.
                 if (SerializedMemberShape.Classify(data.valueJsonElement).IsForeign)
                 {
                     if (logger?.IsEnabled(LogLevel.Trace) == true)
