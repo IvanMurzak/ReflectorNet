@@ -79,7 +79,10 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 {
                     // TryModify reports failures through its bool result plus `logs`, so an
                     // undeserializable payload is reported here rather than thrown at the caller.
-                    // The detailed reason is already in `logs`/`logger`.
+                    // The detailed reason is already in `logs`/`logger`. Nothing was written, so this
+                    // is a RESOLVE failure -> the report reads `Rejected`.
+                    logs.RecordMember(data.name, MemberOutcome.ResolutionFailed, ex.Message);
+
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError($"{padding}Object '{data.name.ValueOrNull()}' modification failed: {ex.Message}");
 
@@ -158,6 +161,11 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                 }
                 catch (Exception ex)
                 {
+                    // A throwing SetValue is a FAILURE and must never leave `overallSuccess` true:
+                    // reporting blanket success while an error sits in `logs` is the same class of
+                    // defect as answering a failed deserialization with a fabricated default.
+                    overallSuccess = false;
+
                     if (logger?.IsEnabled(LogLevel.Error) == true)
                         logger.LogError(ex, $"{padding}Value '{obj}' modification failed: {ex.Message}");
 
@@ -184,6 +192,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger: logger);
 
                     overallSuccess &= success;
+                    logs.RecordMember(field.name, success ? MemberOutcome.Applied : MemberOutcome.ApplyFailed);
 
                     if (success)
                     {
@@ -228,6 +237,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger: logger);
 
                     overallSuccess &= success;
+                    logs.RecordMember(property.name, success ? MemberOutcome.Applied : MemberOutcome.ApplyFailed);
 
                     if (success)
                     {
