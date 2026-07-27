@@ -48,3 +48,23 @@ Located in `src/Converter/`. The `Registry` selects the best converter by queryi
 - `IgnoreFieldsAndPropertiesReflectionConverter` — selective member exclusion
 
 **JSON converters** (`src/Converter/Json/`): System.Text.Json converters for many .NET types. `IJsonSchemaConverter` interface enables custom JSON Schema generation.
+
+### Deserialization outcome (tri-state) — read before touching a converter's error handling
+
+A converter answers a `value` payload with one of three outcomes (`DeserializationOutcome`), never a bare boolean:
+
+| outcome | meaning | severity |
+|---|---|---|
+| `Handled` | value produced | — |
+| `NotApplicable` | not this converter's shape; another may handle it. **Not an error** | `Trace` |
+| `Failed` | IS this converter's shape but invalid | `Error` |
+
+`SerializedMemberShape.Classify` decides which, from the payload's property names alone: no recognised `SerializedMember` key but ≥1 property (e.g. a consumer object reference `{"instanceID":"…"}`) → `NotApplicable`; recognised keys **plus** an unknown one → `Failed`; `{}` or all-recognised keys → a valid `SerializedMember`.
+
+**Chain semantics — loudness belongs at the END.** First `Handled` wins; first `Failed` aborts and propagates; and only when *every* link declined does the chain end raise one explicit `DeserializationException`. The chain ends are `BaseReflectionConverter.Deserialize` and `TryDeserializeValueReporting` (which backs `SetField`/`SetProperty`).
+
+⚠ **Never log `Error` for a non-error condition.** Two regressions have come out of collapsing these states into one signal: reporting both as success handed back a fabricated `default(T)` indistinguishable from a real value (`12f99093`), and then reporting both as failure severed every consumer converter that calls `base.TryDeserializeValueInternal(...)` and resolves a foreign shape itself — plus it logged `Error` for an ordinary condition, which reddened 11 downstream tests. `TryDeserializeValueInternal` and the 8-arg `TryDeserializeValue` are that consumer seam: their signatures **and** their decline behaviour (return `true`, leave `result` null) are load-bearing. Regression coverage: `ReflectorNet.Tests/src/ReflectorTests/ConverterFallThroughTests.cs`.
+
+### Member application (two-phase)
+
+`BaseReflectionConverter.Deserialize` RESOLVEs every `fields`/`props` member before writing any of them, so a payload that fails mid-way never leaves the target half-written. Three terminal states, recorded per member in `MemberApplicationReport` (a `Logs` subclass — pass it as the existing `logs` argument to opt in): `Applied`, `Rejected` (resolve failed → nothing written), `PartiallyApplied` (a setter threw during apply → the report names what landed). There is deliberately **no rollback**: consumer setters have side effects, so writing an old value back is a new mutation, not an undo.
