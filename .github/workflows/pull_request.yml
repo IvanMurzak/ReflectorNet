@@ -1,17 +1,44 @@
 name: Pull Request
 
+# Chain leg (node `reflectornet`, the .NET ROOT): the SAME `build-and-test` job also runs under
+# `workflow_dispatch` with a chain lock as its input. `.github/scripts/chain_feed.py` (vendored,
+# byte-identical to ai-game-dev-software `.scripts/chain/leg/chain_feed.py`) asserts this run is
+# at the lock's sha, exports `CHAIN_BUILD_PROPS=-p:Version=<ws>` so build and pack share one
+# version, and `record` proves the packed nupkg (its name + the DLL's ProductVersion). A root
+# consumes nothing, so there are no lower layers to self-build. On an ordinary pull_request every
+# chain step is a no-op ("chain: no lock (ordinary run)") and CHAIN_BUILD_PROPS is empty.
 on:
   pull_request:
-    branches: ["main"]
+    branches: ["main", "chain-testing"]
+  workflow_dispatch:
+    inputs:
+      lock:
+        description: the chain lock JSON (<= 60000 characters)
+        required: true
+        type: string
+      lock_hash8:
+        description: first 8 hex characters of the lock hash
+        required: true
+        type: string
+
+# Empty on ordinary runs => GitHub's default title. The chain dispatcher captures a dispatched run
+# by this exact title + headSha. No `concurrency` block: nothing cancels today, and two different
+# locks must be able to run side by side.
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('chain {0} reflectornet', inputs.lock_hash8) || '' }}
 
 permissions:
   contents: read
   checks: write
   pull-requests: write
 
+env:
+  CHAIN_LOCK: ${{ inputs.lock }}
+  CHAIN_LOCK_HASH8: ${{ inputs.lock_hash8 }}
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - name: Setup .NET
@@ -20,10 +47,23 @@ jobs:
           dotnet-version: |
             8.0.x
             9.0.x
+      - name: chain python (posix)
+        if: runner.os != 'Windows' && env.CHAIN_PY == ''
+        shell: bash
+        run: |
+          for c in python3 python; do
+            if "$c" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; then
+              echo "CHAIN_PY=$c" >> "$GITHUB_ENV"; exit 0
+            fi
+          done
+          echo 'chain: no Python 3.9+ on PATH (tried python3, python)' >&2; exit 2
+      - name: chain feed
+        id: chain
+        run: ${{ env.CHAIN_PY }} .github/scripts/chain_feed.py apply --node reflectornet --job build-and-test
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build --no-restore --configuration Release ${{ env.CHAIN_BUILD_PROPS }}
       - name: Test
         run: dotnet test --no-build --verbosity normal --configuration Release --logger trx
       - name: Publish Test Results
@@ -33,3 +73,28 @@ jobs:
           files: "**/TestResults/*.trx"
           check_name: "Test Results"
           large_files: true
+      # The root's own pack, by the release recipe (deploy.yml) at the lock's ws version. The SAME
+      # CHAIN_BUILD_PROPS as the Build step: `pack --no-build -p:Version=X` after a build at Y names
+      # the file X but stamps Y into the DLL, and `record` reads both.
+      - name: chain pack
+        if: env.CHAIN_ACTIVE == '1'
+        run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output .artifacts/nuget ${{ env.CHAIN_BUILD_PROPS }}
+      - name: chain feed artifact
+        if: env.CHAIN_ACTIVE == '1'
+        uses: actions/upload-artifact@v7
+        with:
+          name: chain-feed-reflectornet-${{ inputs.lock_hash8 }}
+          path: .artifacts/nuget/*.nupkg
+          if-no-files-found: error
+      # No --edges: a root's record proves its OWN pack. Exits 3 on any identity failure, so this job
+      # is RED even when the tests passed.
+      - name: chain leg record
+        id: chain_record
+        if: always()
+        run: ${{ env.CHAIN_PY }} .github/scripts/chain_feed.py record --node reflectornet --job build-and-test --job-status ${{ job.status }} --out chain-leg.json
+      - name: chain leg artifact
+        if: always() && steps.chain_record.outputs.artifact_name != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.chain_record.outputs.artifact_name }}
+          path: chain-leg.json
