@@ -1,0 +1,23 @@
+.github/workflows/pull_request.yml
+  s_de71e20c9d8602::t_4c418ec026759a 82-84
+  s_de71e20c9d8602::t_d23822b2364af3 114
+  s_de71e20c9d8602::t_a9ec7a6b9bd01a 88-89,91-93,96
+  s_de71e20c9d8602::t_7e4d4fc03ec1f1 101-103
+  s_de71e20c9d8602::t_723254fac1ab8f 107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ce50e5db65577761a8cb72f84f03ee08548e4b95",
+  "prompts": {},
+  "sessions": {
+    "s_de71e20c9d8602": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b1fa7ae0-224c-4b0e-8499-22456e0d6a3f",
+        "model": "unknown"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
