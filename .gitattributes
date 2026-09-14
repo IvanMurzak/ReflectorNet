@@ -1,0 +1,3 @@
+# The vendored chain script must stay byte-identical to ai-game-dev-software
+# `.scripts/chain/leg/chain_feed.py` (compared by sha256), so never let autocrlf rewrite it.
+.github/scripts/chain_feed.py text eol=lf
