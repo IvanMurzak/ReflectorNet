@@ -79,22 +79,37 @@ jobs:
       - name: chain pack
         if: env.CHAIN_ACTIVE == '1'
         run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output .artifacts/nuget ${{ env.CHAIN_BUILD_PROPS }}
-      - name: chain feed artifact
+      # The nupkg is deliberately NOT uploaded: chain artifacts are kept to small, essential files,
+      # and no leg downloads it — consumer legs self-build ReflectorNet from the lock's sha. Its
+      # name, version, size and sha256 go into the leg record's warnings[] instead (`record --warn`).
+      - name: chain pack evidence
         if: env.CHAIN_ACTIVE == '1'
-        uses: actions/upload-artifact@v7
-        with:
-          name: chain-feed-reflectornet-${{ inputs.lock_hash8 }}
-          path: .artifacts/nuget/*.nupkg
-          if-no-files-found: error
+        shell: bash
+        # The exact path `record` proves (package id + CHAIN_WS_VERSION), never a glob, so the hash
+        # always belongs to the same file as the identity row.
+        run: |
+          pkg=".artifacts/nuget/com.IvanMurzak.ReflectorNet.${CHAIN_WS_VERSION}.nupkg"
+          if [ -z "${CHAIN_WS_VERSION}" ] || [ ! -f "$pkg" ]; then
+            echo "chain: packed nupkg not found at $pkg (CHAIN_WS_VERSION='${CHAIN_WS_VERSION}')" >&2; exit 2
+          fi
+          sha=$(sha256sum "$pkg" | cut -d' ' -f1)
+          size=$(wc -c < "$pkg")
+          evidence="pack nupkg=$(basename "$pkg") version=${CHAIN_WS_VERSION} bytes=${size} sha256=${sha}"
+          echo "chain: $evidence"
+          echo "CHAIN_PACK_EVIDENCE=$evidence" >> "$GITHUB_ENV"
       # No --edges: a root's record proves its OWN pack. Exits 3 on any identity failure, so this job
-      # is RED even when the tests passed.
+      # is RED even when the tests passed. On a chain run whose evidence step did not run (a failed
+      # build, say) CHAIN_PACK_EVIDENCE is unset and `record` drops the blank --warn; on an ordinary
+      # run `record` exits before reading it.
       - name: chain leg record
         id: chain_record
         if: always()
-        run: ${{ env.CHAIN_PY }} .github/scripts/chain_feed.py record --node reflectornet --job build-and-test --job-status ${{ job.status }} --out chain-leg.json
+        run: ${{ env.CHAIN_PY }} .github/scripts/chain_feed.py record --node reflectornet --job build-and-test --job-status ${{ job.status }} --warn "$CHAIN_PACK_EVIDENCE" --out chain-leg.json
       - name: chain leg artifact
         if: always() && steps.chain_record.outputs.artifact_name != ''
         uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.chain_record.outputs.artifact_name }}
           path: chain-leg.json
+          # Deliberately short: the record is small JSON, and chain artifact storage is kept minimal.
+          retention-days: 1
