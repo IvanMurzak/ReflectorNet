@@ -1,17 +1,44 @@
 name: Pull Request
 
+# Chain leg (node `reflectornet`, the .NET ROOT): the SAME `build-and-test` job also runs under
+# `workflow_dispatch` with a chain lock as its input. `.github/scripts/chain_feed.py` (vendored,
+# byte-identical to ai-game-dev-software `.scripts/chain/leg/chain_feed.py`) asserts this run is
+# at the lock's sha, exports `CHAIN_BUILD_PROPS=-p:Version=<ws>` so build and pack share one
+# version, and `record` proves the packed nupkg (its name + the DLL's ProductVersion). A root
+# consumes nothing, so there are no lower layers to self-build. On an ordinary pull_request every
+# chain step is a no-op ("chain: no lock (ordinary run)") and CHAIN_BUILD_PROPS is empty.
 on:
   pull_request:
-    branches: ["main"]
+    branches: ["main", "chain-testing"]
+  workflow_dispatch:
+    inputs:
+      lock:
+        description: the chain lock JSON (<= 60000 characters)
+        required: true
+        type: string
+      lock_hash8:
+        description: first 8 hex characters of the lock hash
+        required: true
+        type: string
+
+# Empty on ordinary runs => GitHub's default title. The chain dispatcher captures a dispatched run
+# by this exact title + headSha. No `concurrency` block: nothing cancels today, and two different
+# locks must be able to run side by side.
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('chain {0} reflectornet', inputs.lock_hash8) || '' }}
 
 permissions:
   contents: read
   checks: write
   pull-requests: write
 
+env:
+  CHAIN_LOCK: ${{ inputs.lock }}
+  CHAIN_LOCK_HASH8: ${{ inputs.lock_hash8 }}
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - name: Setup .NET
@@ -20,10 +47,40 @@ jobs:
           dotnet-version: |
             8.0.x
             9.0.x
+      - name: chain python (posix)
+        if: runner.os != 'Windows' && env.CHAIN_PY == ''
+        shell: bash
+        run: |
+          for c in python3 python; do
+            exe="$("$c" -c 'import sys, select, zlib, hashlib; sys.version_info >= (3, 9) or sys.exit(1); print(sys.executable.replace(chr(92), chr(47)))' 2>/dev/null)" || continue
+            case "$exe" in /*) ;; *) continue ;; esac
+            case "$exe" in *[[:space:]]*) continue ;; esac
+            [ -f "$exe" ] && [ -x "$exe" ] || continue
+            echo "CHAIN_PY=$exe" >> "$GITHUB_ENV"; exit 0
+          done
+          echo 'chain: no Python 3.9+ on PATH that runs and reports an absolute, space-free sys.executable (tried python3, python)' >&2; exit 2
+      - name: chain python (windows)
+        if: runner.os == 'Windows' && env.CHAIN_PY == ''
+        shell: pwsh
+        run: |
+          foreach ($c in 'python', 'python3') {
+            $cmd = Get-Command $c -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $cmd) { continue }
+            $global:LASTEXITCODE = $null
+            try { $out = & $cmd.Source -c 'import sys, select, zlib, hashlib; sys.version_info >= (3, 9) or sys.exit(1); print(sys.executable.replace(chr(92), chr(47)))' 2>$null } catch { continue }
+            if ($LASTEXITCODE -ne 0) { continue }
+            $exe = (@($out) -join ' ').Trim()
+            if ($exe -notmatch '^[A-Za-z]:/\S+\z' -or -not (Test-Path -LiteralPath $exe -PathType Leaf)) { continue }
+            "CHAIN_PY=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8; exit 0
+          }
+          [Console]::Error.WriteLine('chain: no Python 3.9+ on PATH that runs and reports an absolute, space-free sys.executable (tried python, python3; never py)'); exit 2
+      - name: chain feed
+        id: chain
+        run: ${{ env.CHAIN_PY }} .github/scripts/chain_feed.py apply --node reflectornet --job build-and-test
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build --no-restore --configuration Release ${{ env.CHAIN_BUILD_PROPS }}
       - name: Test
         run: dotnet test --no-build --verbosity normal --configuration Release --logger trx
       - name: Publish Test Results
@@ -33,3 +90,43 @@ jobs:
           files: "**/TestResults/*.trx"
           check_name: "Test Results"
           large_files: true
+      # The root's own pack, by the release recipe (deploy.yml) at the lock's ws version. The SAME
+      # CHAIN_BUILD_PROPS as the Build step: `pack --no-build -p:Version=X` after a build at Y names
+      # the file X but stamps Y into the DLL, and `record` reads both.
+      - name: chain pack
+        if: env.CHAIN_ACTIVE == '1'
+        run: dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output .artifacts/nuget ${{ env.CHAIN_BUILD_PROPS }}
+      # The nupkg is deliberately NOT uploaded: chain artifacts are kept to small, essential files,
+      # and no leg downloads it — consumer legs self-build ReflectorNet from the lock's sha. Its
+      # name, version, size and sha256 go into the leg record's warnings[] instead (`record --warn`).
+      - name: chain pack evidence
+        if: env.CHAIN_ACTIVE == '1'
+        shell: bash
+        # The exact path `record` proves (package id + CHAIN_WS_VERSION), never a glob, so the hash
+        # always belongs to the same file as the identity row.
+        run: |
+          pkg=".artifacts/nuget/com.IvanMurzak.ReflectorNet.${CHAIN_WS_VERSION}.nupkg"
+          if [ -z "${CHAIN_WS_VERSION}" ] || [ ! -f "$pkg" ]; then
+            echo "chain: packed nupkg not found at $pkg (CHAIN_WS_VERSION='${CHAIN_WS_VERSION}')" >&2; exit 2
+          fi
+          sha=$(sha256sum "$pkg" | cut -d' ' -f1)
+          size=$(wc -c < "$pkg")
+          evidence="pack nupkg=$(basename "$pkg") version=${CHAIN_WS_VERSION} bytes=${size} sha256=${sha}"
+          echo "chain: $evidence"
+          echo "CHAIN_PACK_EVIDENCE=$evidence" >> "$GITHUB_ENV"
+      # No --edges: a root's record proves its OWN pack. Exits 3 on any identity failure, so this job
+      # is RED even when the tests passed. On a chain run whose evidence step did not run (a failed
+      # build, say) CHAIN_PACK_EVIDENCE is unset and `record` drops the blank --warn; on an ordinary
+      # run `record` exits before reading it.
+      - name: chain leg record
+        id: chain_record
+        if: always()
+        run: ${{ env.CHAIN_PY }} .github/scripts/chain_feed.py record --node reflectornet --job build-and-test --job-status ${{ job.status }} --warn "$CHAIN_PACK_EVIDENCE" --out chain-leg.json
+      - name: chain leg artifact
+        if: always() && steps.chain_record.outputs.artifact_name != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.chain_record.outputs.artifact_name }}
+          path: chain-leg.json
+          # Deliberately short: the record is small JSON, and chain artifact storage is kept minimal.
+          retention-days: 1
