@@ -1,16 +1,8 @@
 name: deploy
 
+# Reusable child ONLY: reachable exclusively via `workflow_call` from release.yml (manual
+# dispatch, gated on dry_run + the full test set). No release/push/dispatch trigger of its own.
 on:
-  release:
-    types: [released]
-
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Deploy to NuGet version (e.g., 1.0.0).'
-        required: true
-        type: string
-
   workflow_call:
     inputs:
       version: { required: true, type: string }
@@ -24,10 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Extract version from tag
+      - name: Resolve version
         id: version
         run: |
-          version=${{ inputs.version || github.event.release.tag_name }}
+          version=${{ inputs.version }}
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Extracted version: $version"
 
