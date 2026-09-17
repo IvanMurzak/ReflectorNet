@@ -1,8 +1,31 @@
 name: Release
 
+# Releases ONLY by a manual dispatch (owner directive 2026-09-16). Merging a version bump to
+# `main` publishes nothing. Order: guard -> full tests + pack -> NuGet publish (deploy.yml via
+# workflow_call; its NuGet Trusted Publishing binding is exercised through THIS caller, as before)
+# -> verify the version is live on NuGet -> tag + GitHub Release. The tag is created only after
+# the package is verified live, so a re-dispatch after a failed publish/verify is always possible
+# (the NuGet push is --skip-duplicate).
+#
+#   gh workflow run release.yml -R IvanMurzak/ReflectorNet --ref main -f dry_run=true
+#   gh workflow run release.yml -R IvanMurzak/ReflectorNet --ref main -f dry_run=false
 on:
-  push:
-    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run every test and build job, publish NOTHING (no NuGet push, no tag, no GitHub Release)."
+        required: false
+        default: false
+        type: boolean
+      release_notes:
+        description: "Optional markdown appended to the generated GitHub Release body."
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -15,8 +38,13 @@ jobs:
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       prev_version: ${{ steps.prev_version.outputs.tag }}
-      is_new_version: ${{ steps.version_exists.outputs.exists == 'false' }}
     steps:
+      - name: Ref guard
+        if: inputs.dry_run != true && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::A real release must be dispatched on refs/heads/main (got '${{ github.ref }}'). Use dry_run=true on other refs."
+          exit 1
+
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
@@ -28,6 +56,10 @@ jobs:
         shell: bash
         run: |
           version=$(grep -oP '<Version>\K[^<]+' ReflectorNet/ReflectorNet.csproj)
+          if [ -z "$version" ]; then
+            echo "::error::Could not read <Version> from ReflectorNet/ReflectorNet.csproj"
+            exit 1
+          fi
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Found version: $version"
 
@@ -41,20 +73,28 @@ jobs:
         with:
           tag: ${{ steps.get_version.outputs.version }}
 
-      - name: Output version info
-        if: steps.version_exists.outputs.exists == 'true'
+      # ReflectorNet tags are the bare version (e.g. `5.4.0`, no `v` prefix) — kept as-is.
+      - name: Version guard
+        shell: bash
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+          TAG_EXISTS: ${{ steps.version_exists.outputs.exists }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          echo "Version tag '${{ steps.get_version.outputs.version }}' already exists. Skipping release process."
-
-      - name: Output version info
-        if: steps.version_exists.outputs.exists == 'false'
-        run: |
-          echo "Version tag '${{ steps.get_version.outputs.version }}' does not exist. Proceeding with release process."
+          if [ "$TAG_EXISTS" = "true" ]; then
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "::warning::Tag '$VERSION' already exists. Dry run continues (a real run would fail here). Bump <Version> before a real release."
+            else
+              echo "::error::Tag '$VERSION' already exists: version $VERSION is already released. Bump <Version> in ReflectorNet/ReflectorNet.csproj on main, then dispatch again."
+              exit 1
+            fi
+          else
+            echo "Version tag '$VERSION' does not exist. Proceeding (dry_run=$DRY_RUN)."
+          fi
 
   build-and-test:
     runs-on: ubuntu-latest
     needs: check-version-tag
-    if: needs.check-version-tag.outputs.is_new_version == 'true'
     steps:
       - uses: actions/checkout@v6
       - name: Setup .NET
@@ -81,13 +121,75 @@ jobs:
           check_name: "Test Results"
           large_files: true
 
+      # Same pack command as deploy.yml, so a dry run proves the package builds under the exact
+      # file name the publish step expects. The package is NOT uploaded or pushed from here.
+      - name: Pack (verify)
+        shell: bash
+        env:
+          VERSION: ${{ needs.check-version-tag.outputs.version }}
+        run: |
+          dotnet pack ReflectorNet/ReflectorNet.csproj --no-build --configuration Release --output ./packages
+          nupkg_file="./packages/com.IvanMurzak.ReflectorNet.${VERSION}.nupkg"
+          if [ ! -f "$nupkg_file" ]; then
+            echo "::error::Expected .nupkg file not found: $nupkg_file"
+            ls -la ./packages || true
+            exit 1
+          fi
+          echo "Packed: $nupkg_file"
+
+  deploy:
+    needs: [check-version-tag, build-and-test]
+    if: inputs.dry_run != true
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/deploy.yml
+    with:
+      version: ${{ needs.check-version-tag.outputs.version }}
+
+  # Moved in from the local release pipeline (wait-release-and-nuget.py): the run is green only
+  # when the version is actually listed in the NuGet v3 flat-container index.
+  verify-nuget:
+    runs-on: ubuntu-latest
+    needs: [check-version-tag, deploy]
+    if: inputs.dry_run != true
+    timeout-minutes: 20
+    steps:
+      - name: Wait for version on NuGet
+        shell: bash
+        env:
+          VERSION: ${{ needs.check-version-tag.outputs.version }}
+          PACKAGE_ID: com.IvanMurzak.ReflectorNet
+          CAP_SECONDS: "900"
+          INTERVAL_SECONDS: "30"
+        run: |
+          pid=$(printf '%s' "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
+          want=$(printf '%s' "$VERSION" | tr '[:upper:]' '[:lower:]')
+          url="https://api.nuget.org/v3-flatcontainer/${pid}/index.json"
+          deadline=$(( $(date +%s) + CAP_SECONDS ))
+          while :; do
+            body=$(curl -sS --retry 3 --retry-delay 5 -w '\n%{http_code}' "$url") || body=$'\ncurl-error'
+            status=${body##*$'\n'}
+            json=${body%$'\n'*}
+            if [ "$status" = "200" ] && printf '%s' "$json" | jq -e --arg v "$want" '.versions | map(ascii_downcase) | index($v) != null' > /dev/null; then
+              echo "NuGet: $PACKAGE_ID $VERSION is listed in $url"
+              break
+            fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::$PACKAGE_ID $VERSION not listed in $url after ${CAP_SECONDS}s (last status: $status). deploy succeeded, so this is indexing lag or a publish problem; verify on nuget.org, then re-dispatch (the push is --skip-duplicate)."
+              exit 1
+            fi
+            echo "NuGet: $VERSION not listed yet (status $status); retrying in ${INTERVAL_SECONDS}s"
+            sleep "$INTERVAL_SECONDS"
+          done
+          nuspec="https://api.nuget.org/v3-flatcontainer/${pid}/${want}/${pid}.nuspec"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' "$nuspec" || true)
+          echo "nuspec snapshot (informational): HTTP $code for $nuspec"
+
   publish-release:
     runs-on: ubuntu-latest
-    needs: [check-version-tag, build-and-test]
-    if: needs.check-version-tag.outputs.is_new_version == 'true'
-    outputs:
-      version: ${{ needs.check-version-tag.outputs.version }}
-      success: ${{ steps.rel_desc.outputs.success }}
+    needs: [check-version-tag, build-and-test, deploy, verify-nuget]
+    if: inputs.dry_run != true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -99,6 +201,7 @@ jobs:
         id: rel_desc
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
         run: |
           set -e
           version=${{ needs.check-version-tag.outputs.version }}
@@ -133,8 +236,14 @@ jobs:
             done
           fi
 
+          if [ -n "$RELEASE_NOTES" ]; then
+            echo "" >> release.md
+            echo "---" >> release.md
+            echo "" >> release.md
+            printf '%s\n' "$RELEASE_NOTES" >> release.md
+          fi
+
           printf "release_body<<ENDOFRELEASEBODY\n%s\nENDOFRELEASEBODY\n" "$(cat release.md)" >> $GITHUB_OUTPUT
-          echo "success=true" >> $GITHUB_OUTPUT
 
       - name: Create Tag and Release
         uses: softprops/action-gh-release@v3
@@ -142,17 +251,8 @@ jobs:
           tag_name: ${{ needs.check-version-tag.outputs.version }}
           name: ${{ needs.check-version-tag.outputs.version }}
           body: ${{ steps.rel_desc.outputs.release_body }}
+          target_commitish: ${{ github.sha }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  deploy:
-    needs: publish-release
-    if: needs.publish-release.outputs.success == 'true'
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/deploy.yml
-    with:
-      version: ${{ needs.publish-release.outputs.version }}
