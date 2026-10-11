@@ -21,13 +21,13 @@ dotnet pack ReflectorNet/ReflectorNet.csproj --configuration Release --output ./
 - `ReflectorNet.Tests.OuterAssembly/` — separate assembly for cross-assembly reflection tests.
 - `ConsoleApp/` — console app for manual testing.
 - `commands/` — maintainer PowerShell scripts (version bump, release notes).
-- `docs/claude/` — agent reference docs (below); `docs/plan/` — design notes.
+- `docs/agents/` — agent reference docs (below); `docs/plan/` — design notes.
 - `.github/workflows/` — PR build/test (`pull_request.yml`) and the dispatch-only release.
 
 ## Find detail in
 
-- `docs/claude/architecture.md` — Reflector partial-class structure, converter chain, target frameworks
-- `docs/claude/models.md` — `SerializedMember`, `MethodRef`, context objects
-- `docs/claude/threading.md` — Registry thread safety pattern
-- `docs/claude/release.md` — CI/CD workflows and versioning
+- `docs/agents/architecture.md` — Reflector partial-class structure, converter chain, target frameworks
+- `docs/agents/models.md` — `SerializedMember`, `MethodRef`, context objects
+- `docs/agents/threading.md` — Registry thread safety pattern
+- `docs/agents/release.md` — CI/CD workflows and versioning
 - `.github/copilot-instructions.md` — code style and test naming conventions
