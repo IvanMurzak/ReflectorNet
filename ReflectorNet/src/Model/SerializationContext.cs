@@ -18,6 +18,11 @@ namespace com.IvanMurzak.ReflectorNet.Model
         private readonly Dictionary<object, string> _visited;
         private readonly Stack<string> _pathStack;
 
+        // View uses call nesting, independently of the depth used for log indentation.
+        internal int TraversalDepth { get; set; } = -1;
+        internal int? MaxTraversalDepth { get; set; }
+        internal bool PreserveReferences { get; set; }
+
         public SerializationContext()
         {
             _visited = new Dictionary<object, string>(new ReferenceEqualityComparer());
@@ -33,15 +38,13 @@ namespace com.IvanMurzak.ReflectorNet.Model
         /// <returns>True if the object can be visited (no cycle); False if a cycle is detected.</returns>
         public bool Enter(object obj, string? segment)
         {
+            // A rejected entry must not change the stack or remove an ancestor on exit.
+            if (_visited.ContainsKey(obj))
+                return false;
+
             if (!string.IsNullOrEmpty(segment))
             {
                 _pathStack.Push(segment!);
-            }
-
-            if (_visited.ContainsKey(obj))
-            {
-                // Cycle detected. Caller must still call Exit() to pop the segment from the stack.
-                return false;
             }
 
             // Compute and store the path string directly (more memory efficient than storing List<string>)
@@ -68,7 +71,10 @@ namespace com.IvanMurzak.ReflectorNet.Model
         /// <param name="segment">The path segment that was used to enter.</param>
         public void Exit(object obj, string? segment)
         {
-            _visited.Remove(obj);
+            // Boxed values and strings still need active paths for converter logging,
+            // but must never become shared-object references in later branches.
+            if (!PreserveReferences || obj.GetType().IsValueType || obj is string)
+                _visited.Remove(obj);
             if (!string.IsNullOrEmpty(segment))
             {
                 _pathStack.Pop();
