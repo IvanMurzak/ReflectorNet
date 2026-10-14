@@ -1,0 +1,21 @@
+.github/workflows/release.yml
+  s_c7987960245c7b::t_b03f19b4334be7 3-11,13-28,42-47,59-62,76-82,84-93,124-140,142-147,149-192,204,239-245,254
+.github/workflows/deploy.yml
+  s_c7987960245c7b::t_df17a848e04100 3-4,19,22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f240544a7f1b25a9c1bdcc20e8bcfa5f012b6646",
+  "prompts": {},
+  "sessions": {
+    "s_c7987960245c7b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "370aad94-9c8a-4b3c-a63d-4982a83a2756",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}

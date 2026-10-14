@@ -1,0 +1,42 @@
+ReflectorNet/src/Model/ViewQuery.cs
+  8e94f9e912dc8f91 9,27-33,44-49,58-63,70-74,87-90,96
+ReflectorNet.Tests/src/ReflectorTests/ViewTests.cs
+  62141936a4816553 1,454-492
+ReflectorNet/src/Reflector/Reflector.ReadAt.cs
+  62141936a4816553 180-185
+ReflectorNet/src/Reflector/Reflector.View.cs
+  62141936a4816553 25,31-32,124,149,169,176,197,204,218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "a40a50f990506a7a1a0d5af99de225bd2ef5ca10",
+  "prompts": {
+    "62141936a4816553": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f4b596e4-db69-460c-b799-1a6ec104507d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>",
+      "messages": [],
+      "total_additions": 1059,
+      "total_deletions": 1014,
+      "accepted_lines": 356,
+      "overriden_lines": 0
+    },
+    "8e94f9e912dc8f91": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ba439b8-37c9-4cb0-861b-b51e7f041648",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>",
+      "messages": [],
+      "total_additions": 105,
+      "total_deletions": 75,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    }
+  }
+}

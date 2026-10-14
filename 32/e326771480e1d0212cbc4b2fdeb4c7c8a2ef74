@@ -1,0 +1,19 @@
+ReflectorNet/ReflectorNet.csproj
+  s_06c8dfd51768c0::t_1c2e5fcf78af25 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "32e326771480e1d0212cbc4b2fdeb4c7c8a2ef74",
+  "prompts": {},
+  "sessions": {
+    "s_06c8dfd51768c0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_06c8dfd51768c0",
+        "model": "unknown"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}

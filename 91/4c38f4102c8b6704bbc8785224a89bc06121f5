@@ -1,0 +1,36 @@
+ReflectorNet/ReflectorNet.csproj
+  0f16acfd52ce85c1 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "914c38f4102c8b6704bbc8785224a89bc06121f5",
+  "prompts": {
+    "0f16acfd52ce85c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2b68a1a3-1429-49c0-b1cc-85a03a7e02b8",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Ivan Murzak",
+      "messages": [],
+      "total_additions": 410,
+      "total_deletions": 4,
+      "accepted_lines": 410,
+      "overriden_lines": 0
+    },
+    "4a72700fa0d01f72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "293d90db-23d4-4578-87ac-05e06ade0c8f",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Ivan Murzak",
+      "messages": [],
+      "total_additions": 4982,
+      "total_deletions": 300,
+      "accepted_lines": 4679,
+      "overriden_lines": 0
+    }
+  }
+}
