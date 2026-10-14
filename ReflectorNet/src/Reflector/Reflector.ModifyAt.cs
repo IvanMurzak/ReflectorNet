@@ -6,7 +6,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Microsoft.Extensions.Logging;
@@ -96,14 +98,47 @@ namespace com.IvanMurzak.ReflectorNet
             else if (path.StartsWith("#"))
                 path = path.Substring(1);
 
-            return path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var segments = new List<string>();
+            var start = 0;
+            var bracketed = false;
+            for (int i = 0; i < path.Length; i++)
+            {
+                var c = path[i];
+                if (bracketed && c == '\\' && i + 1 < path.Length
+                    && (path[i + 1] == ']' || path[i + 1] == '\\'))
+                {
+                    i++; // Keep escapes intact until the key is decoded.
+                    continue;
+                }
+                if (i == start && c == '[') bracketed = true;
+                else if (bracketed && c == ']') bracketed = false;
+                else if (!bracketed && c == '/')
+                {
+                    if (i > start) segments.Add(path.Substring(start, i - start));
+                    start = i + 1;
+                }
+            }
+            if (start < path.Length) segments.Add(path.Substring(start));
+            return segments.ToArray();
         }
 
-        internal static bool TryParseBracketSegment(string segment, out string innerKey)
+        internal static bool TryParseBracketSegment(string segment, out string innerKey, bool unescape = true)
         {
-            if (segment.Length > 2 && segment[0] == '[' && segment[segment.Length - 1] == ']')
+            if (segment.Length >= 2 && segment[0] == '[' && segment[segment.Length - 1] == ']')
             {
-                innerKey = segment.Substring(1, segment.Length - 2);
+                if (!unescape)
+                {
+                    innerKey = segment.Substring(1, segment.Length - 2);
+                    return true;
+                }
+                var key = new StringBuilder();
+                for (int i = 1; i < segment.Length - 1; i++)
+                {
+                    if (segment[i] == '\\' && i + 1 < segment.Length - 1
+                        && (segment[i + 1] == ']' || segment[i + 1] == '\\')) i++;
+                    key.Append(segment[i]);
+                }
+                innerKey = key.ToString();
                 return true;
             }
             innerKey = string.Empty;

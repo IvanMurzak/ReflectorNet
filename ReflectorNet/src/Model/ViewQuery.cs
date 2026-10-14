@@ -12,7 +12,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
 {
     /// <summary>
     /// Options for <see cref="Reflector.View"/> — controls which parts of the serialized data to return.
-    /// When no options are set, <c>View</c> is equivalent to <c>Serialize</c> (full tree returned).
+    /// Shared objects are expanded once per call, with later occurrences emitted as references.
     /// </summary>
     public class ViewQuery
     {
@@ -22,6 +22,7 @@ namespace com.IvanMurzak.ReflectorNet.Model
         ///   - Plain segment navigates a field or property (e.g. "admin/name")
         ///   - [i] navigates an Array or IList element (e.g. "users/[2]/name")
         ///   - [key] navigates a dictionary entry (e.g. "config/[timeout]")
+        ///     Slashes inside brackets are literal; escape closing brackets and backslashes with a backslash.
         ///   - Leading "#/" is stripped automatically (compatible with SerializationContext paths)
         /// </summary>
         [Description(
@@ -50,15 +51,16 @@ namespace com.IvanMurzak.ReflectorNet.Model
         public string? NamePattern { get; set; }
 
         /// <summary>
-        /// Maximum depth of the returned tree.
-        /// 0 = root typeName/value only — no nested fields or properties.
-        /// 1 = one level of fields/props visible, their children stripped.
+        /// Maximum traversal depth relative to the selected subtree, including collection elements.
+        /// 0 = root envelope only (primitive values are retained).
+        /// 1 = one level of fields/props visible; complex children are type envelopes.
+        /// Boundary objects are not traversed, and boundary collections are not enumerated.
         /// null = unlimited depth (default).
         /// </summary>
         [Description(
-            "Maximum nesting depth of the returned serialized tree. " +
-            "0 = root type name and value only — no nested fields or properties. " +
-            "1 = one level of fields/props visible, their children stripped. " +
+            "Maximum traversal depth relative to the selected subtree, including collection elements. " +
+            "0 = root type envelope or primitive value only. " +
+            "1 = one level of fields/props visible, with complex children represented by type envelopes. " +
             "2 = two levels visible, and so on. " +
             "Leave null (default) for unlimited depth.")]
         public int? MaxDepth { get; set; }

@@ -20,15 +20,15 @@ namespace com.IvanMurzak.ReflectorNet
     {
         /// <summary>
         /// Serializes the object (or a navigated subtree) with optional filtering.
-        /// Without a query (or with an empty query) this is equivalent to Serialize().
+        /// Shared objects are expanded once per call; later occurrences are references.
         ///
         /// ViewQuery options (applied in this order):
         ///   Path        — navigate to a path first, then serialize only that subtree
-        ///   MaxDepth    — prune the returned tree to N levels (0 = root typeName/value only)
+        ///   MaxDepth    — limit traversal to N levels (0 = root envelope/leaf value only)
         ///   NamePattern — keep only branches containing a field/property name matching a .NET regex
         ///   TypeFilter  — keep only branches whose typeName resolves to a type assignable to this
         ///
-        /// Filter order matters: MaxDepth prunes the tree before NamePattern/TypeFilter are applied,
+        /// Filter order matters: MaxDepth bounds traversal before NamePattern/TypeFilter are applied,
         /// so members deeper than MaxDepth are excluded even if their name or type would match.
         ///
         /// Errors are accumulated in the optional Logs object; nothing is thrown.
@@ -61,7 +61,12 @@ namespace com.IvanMurzak.ReflectorNet
             SerializedMember? serialized;
             try
             {
-                serialized = Serialize(target, targetType ?? fallbackObjType, depth: depth, logs: logs, flags: flags, logger: logger);
+                var context = new SerializationContext
+                {
+                    MaxTraversalDepth = query?.MaxDepth,
+                    PreserveReferences = true,
+                };
+                serialized = Serialize(target, targetType ?? fallbackObjType, depth: depth, logs: logs, flags: flags, logger: logger, context: context);
             }
             catch (ArgumentException ex)
             {
@@ -76,9 +81,6 @@ namespace com.IvanMurzak.ReflectorNet
             // Step 3: Apply filters
             if (query != null)
             {
-                if (query.MaxDepth.HasValue)
-                    serialized = PruneToDepth(serialized, query.MaxDepth.Value);
-
                 if (!string.IsNullOrEmpty(query.NamePattern))
                 {
                     var rx = TryCompilePattern(query.NamePattern, logs, depth);
@@ -226,7 +228,9 @@ namespace com.IvanMurzak.ReflectorNet
                 var dict    = (IDictionary)obj;
                 foreach (var key in dict.Keys)
                 {
-                    var valuePath = currentPath.Length == 0 ? $"[{key}]" : $"{currentPath}/[{key}]";
+                    var keyText = key.ToString() ?? string.Empty;
+                    var keySegment = "[" + keyText.Replace("\\", "\\\\").Replace("]", "\\]") + "]";
+                    var valuePath = currentPath.Length == 0 ? keySegment : $"{currentPath}/{keySegment}";
                     GrepWalk(dict[key], rx, maxDepth, currentDepth + 1,
                              valuePath, matches, visited, serializeDepth, logs, flags, logger);
                 }
@@ -234,35 +238,6 @@ namespace com.IvanMurzak.ReflectorNet
         }
 
         // ─── Filter helpers ───────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Returns a shallow copy of <paramref name="m"/> with all fields/props beyond
-        /// <paramref name="maxRelativeDepth"/> levels stripped.
-        /// maxRelativeDepth = 0 keeps the node itself (typeName + value) but removes all children.
-        /// </summary>
-        private static SerializedMember PruneToDepth(SerializedMember m, int maxRelativeDepth)
-        {
-            if (maxRelativeDepth <= 0)
-                return new SerializedMember { name = m.name, typeName = m.typeName, valueJsonElement = m.valueJsonElement };
-
-            var result = new SerializedMember { name = m.name, typeName = m.typeName, valueJsonElement = m.valueJsonElement };
-
-            if (m.fields != null)
-            {
-                result.fields = new SerializedMemberList(m.fields.Count);
-                foreach (var f in m.fields)
-                    result.fields.Add(PruneToDepth(f, maxRelativeDepth - 1));
-            }
-
-            if (m.props != null)
-            {
-                result.props = new SerializedMemberList(m.props.Count);
-                foreach (var p in m.props)
-                    result.props.Add(PruneToDepth(p, maxRelativeDepth - 1));
-            }
-
-            return result;
-        }
 
         /// <summary>
         /// Keeps only branches containing at least one field/property whose name matches

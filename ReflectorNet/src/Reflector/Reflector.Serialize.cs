@@ -55,17 +55,27 @@ namespace com.IvanMurzak.ReflectorNet
         {
             context ??= new SerializationContext();
 
-            if (obj != null && !context.Enter(obj, name))
-            {
-                var path = context.GetPath(obj);
-                return SerializedMember.FromReference(path, name);
-            }
-
+            context.TraversalDepth++;
+            var entered = false;
             try
             {
                 var type = TypeUtils.GetTypeWithObjectPriority(obj, fallbackType, out var error);
                 if (type == null)
                     throw new ArgumentException(error);
+
+                // Stop before calling a converter, reading getters, or enumerating collections.
+                // Leaf values can still be serialized at the boundary.
+                if (context.MaxTraversalDepth.HasValue
+                    && context.TraversalDepth >= context.MaxTraversalDepth.Value
+                    && !TypeUtils.IsPrimitive(type))
+                    return new SerializedMember { typeName = type.GetTypeId(), name = name };
+
+                if (obj != null)
+                {
+                    if (!context.Enter(obj, name))
+                        return SerializedMember.FromReference(context.GetPath(obj), name);
+                    entered = true;
+                }
 
                 if (Converters.IsTypeBlacklisted(type))
                 {
@@ -132,10 +142,11 @@ namespace com.IvanMurzak.ReflectorNet
             }
             finally
             {
-                if (obj != null)
+                if (entered)
                 {
-                    context.Exit(obj, name);
+                    context.Exit(obj!, name);
                 }
+                context.TraversalDepth--;
             }
         }
 

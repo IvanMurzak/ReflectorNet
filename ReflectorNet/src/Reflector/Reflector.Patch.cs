@@ -219,7 +219,7 @@ namespace com.IvanMurzak.ReflectorNet
                     continue; // already consumed above
 
                 bool success;
-                if (TryParseBracketSegment(property.Name, out var innerKey))
+                if (TryParseBracketSegment(property.Name, out var innerKey, unescape: false))
                     success = TryPatchBracketed(ref obj, property.Name, innerKey, property.Value, objType, depth, logs, flags, logger);
                 else
                     success = TryPatchMember(ref obj, property.Name, property.Value, objType, depth, logs, flags, logger);
