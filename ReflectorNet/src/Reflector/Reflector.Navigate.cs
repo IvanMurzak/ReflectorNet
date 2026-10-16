@@ -57,14 +57,7 @@ namespace com.IvanMurzak.ReflectorNet
                     return false;
                 }
                 memberType = fieldInfo.FieldType;
-                writeBack  = v =>
-                {
-                    try { fieldInfo.SetValue(obj, v); }
-                    catch (Exception ex)
-                    {
-                        logger?.LogError($"{padding}Field '{memberName}' setter threw: {ex.Message}");
-                    }
-                };
+                writeBack  = v => fieldInfo.SetValue(obj, v);
                 return true;
             }
 
@@ -112,14 +105,7 @@ namespace com.IvanMurzak.ReflectorNet
                     return false;
                 }
                 memberType = propInfo.PropertyType;
-                writeBack  = v =>
-                {
-                    try { propInfo.SetValue(obj, v); }
-                    catch (Exception ex)
-                    {
-                        logger?.LogError($"{padding}Property '{memberName}' setter threw: {ex.Message}");
-                    }
-                };
+                writeBack  = v => propInfo.SetValue(obj, v);
                 return true;
             }
 
