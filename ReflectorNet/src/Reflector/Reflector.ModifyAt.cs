@@ -197,6 +197,14 @@ namespace com.IvanMurzak.ReflectorNet
             }
         }
 
+        /// <summary>
+        /// True when a nested modification mutated a reference-type value in place: it is already stored in its
+        /// container, so writing it back is redundant (and a throwing container setter must not turn an applied
+        /// change into a reported failure). Boxed value types are copies and always need the write-back.
+        /// </summary>
+        private static bool IsSameInstance(object? original, object? modified)
+            => modified != null && !modified.GetType().IsValueType && ReferenceEquals(original, modified);
+
         // ─── Bracket navigation (array index / dict key) ─────────────────────────────
 
         private bool TryModifyAtBracketed(
@@ -216,8 +224,9 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
 
             ApplyTypeReplacementCheck(ref currentElement, value, elementType, remainingPath);
+            var original = currentElement;
             return TryModifyAt(ref currentElement, remainingPath, value, elementType, depth + 1, logs, flags, logger)
-                && TryWriteBack(writeBack!, currentElement, () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
+                && (IsSameInstance(original, currentElement) || TryWriteBack(writeBack!, currentElement, () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger));
         }
 
         // ─── Member navigation (field / property) ────────────────────────────────────
@@ -238,8 +247,10 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
 
             ApplyTypeReplacementCheck(ref currentValue, value, memberType, remainingPath);
+            var original = currentValue;
             return TryModifyAt(ref currentValue, remainingPath, value, memberType, depth + 1, logs, flags, logger)
-                && TryWriteBack(writeBack!, currentValue, () => $"member '{memberName}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
+                && (IsSameInstance(original, currentValue) || TryWriteBack(writeBack!, currentValue,
+                    () => $"member '{memberName}' of type '{objType.GetTypeShortName()}'", depth, logs, logger));
         }
     }
 }

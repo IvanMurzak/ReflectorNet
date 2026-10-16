@@ -19,6 +19,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
         enum Mode { Off, On }
 
+        class Inner
+        {
+            public string Name { get; set; } = "a";
+        }
+
+        [Flags]
+        enum Layers { None = 0, A = 1, B = 2 }
+
         class Target
         {
             public float Ratio { get; set; } = 1f;
@@ -26,10 +34,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
             public int Count { get; set; } = 1;
             public byte Small = 0;
             public Mode Mode { get; set; }
+            public Layers Layers { get; set; }
             public string Title { get; set; } = "t";
             public List<float> Weights { get; set; } = new List<float> { 1f };
             public int[] Slots { get; set; } = { 1 };
             public Dictionary<string, int> Map { get; set; } = new Dictionary<string, int> { ["k"] = 1 };
+
+            readonly Inner child = new Inner();
+            public Inner Child
+            {
+                get => child;
+                set => throw new InvalidOperationException("child is fixed");
+            }
 
             public int Guarded
             {
@@ -173,6 +189,57 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             Assert.True(ok);
             Assert.Equal(2, target.Map["k"]);
+        }
+
+        [Fact]
+        public void IntIntoFlagsEnumProperty_CombinationLands()
+        {
+            var (ok, target, _) = Modify("Layers", Value<int>("3"));
+
+            Assert.True(ok);
+            Assert.Equal(Layers.A | Layers.B, target.Layers);
+        }
+
+        [Fact]
+        public void Deserialize_EnumTypeNameWithIntFallback_KeepsTheEnum()
+        {
+            var result = new Reflector().Deserialize(Value<Mode>("\"On\""), typeof(int));
+
+            Assert.Equal(Mode.On, result);
+        }
+
+        [Fact]
+        public void Patch_ThrowingSetter_ReportsTheSetterMessage()
+        {
+            object? obj = new Target();
+            var logs = new Logs();
+
+            Assert.False(new Reflector().TryPatch(ref obj, "{\"Guarded\":2}", logs: logs));
+            Assert.True(HasError(logs, "guarded is read-only at runtime"));
+        }
+
+        [Fact]
+        public void NestedChangeOfClassBehindThrowingSetter_LandsAndSucceeds()
+        {
+            // The child is a reference type modified in place; writing the same instance back is skipped, so the
+            // container's throwing setter cannot turn an applied change into a reported failure.
+            var (ok, target, logs) = Modify("Child/Name", Value<string>("\"b\""));
+
+            Assert.True(ok);
+            Assert.Equal("b", target.Child.Name);
+            Assert.DoesNotContain(logs, e => e.Type == LogType.Error);
+        }
+
+        [Fact]
+        public void TryModify_WithoutPath_ThrowingSetter_ReportsTheSetterMessage()
+        {
+            object? obj = new Target();
+            var data = new SerializedMember { typeName = typeof(Target).FullName! };
+            data.props = new SerializedMemberList { Value<int>("2").SetName("Guarded") };
+            var logs = new Logs();
+
+            Assert.False(new Reflector().TryModify(ref obj, data, logs: logs));
+            Assert.True(HasError(logs, "guarded is read-only at runtime"));
         }
     }
 }
