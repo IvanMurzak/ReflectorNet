@@ -152,7 +152,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// Resolves a type prioritizing the type name defined in <paramref name="member"/>, falling back to <paramref name="fallbackType"/>.
         /// </summary>
         /// <param name="member">The serialized member info usually containing the type name.</param>
-        /// <param name="fallbackType">The type to return if the member type name is missing or invalid.</param>
+        /// <param name="fallbackType">The type to return if the member type name is missing or invalid. Also returned when
+        /// the type name is a numeric type and <paramref name="fallbackType"/> is a different numeric or enum type: the
+        /// JSON number is then read as the declared type.</param>
         /// <param name="error">On failure, contains an error message describing why the type could not be resolved.</param>
         /// <returns>The resolved <see cref="Type"/>, or <c>null</c> if resolution fails.</returns>
         public static Type? GetTypeWithNamePriority(SerializedMember? member, Type? fallbackType, out string? error)
@@ -176,8 +178,22 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
 
             error = null;
+            // A numeric typeName aimed at a different numeric or enum type (e.g. 'System.Double' for a float
+            // member) only describes the JSON number: read it as the declared type, which is the only type
+            // the target can store. Otherwise the value is parsed as the sent type and cannot be assigned.
+            // An enum typeName is not redirected: its JSON is usually a member name, not a number.
+            if (fallbackType != null && type != fallbackType && IsNumeric(type))
+            {
+                var target = Nullable.GetUnderlyingType(fallbackType) ?? fallbackType;
+                if (target.IsEnum || IsNumeric(target))
+                    return fallbackType;
+            }
             return type;
         }
+
+        static bool IsNumeric(Type type)
+            => type == typeof(decimal) || (type.IsPrimitive && type != typeof(bool) && type != typeof(char)
+                && type != typeof(IntPtr) && type != typeof(UIntPtr));
 
         /// <summary>
         /// Resolves a type prioritizing the provided <paramref name="type"/>, falling back to the type definition in <paramref name="fallbackMember"/>.

@@ -80,8 +80,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         flags: flags,
                         logger: logger);
 
-                    if (success)
-                        array.SetValue(currentElement, idx);
+                    success = success && Reflector.TryWriteBack(v => array.SetValue(v, idx), currentElement,
+                        () => $"element '[{idx}]' of type '{type.GetTypeShortName()}'", depth, logs, logger);
 
                     overallSuccess &= success;
                 }
@@ -111,8 +111,8 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         flags: flags,
                         logger: logger);
 
-                    if (success)
-                        list[idx] = currentElement;
+                    success = success && Reflector.TryWriteBack(v => list[idx] = v, currentElement,
+                        () => $"element '[{idx}]' of type '{type.GetTypeShortName()}'", depth, logs, logger);
 
                     overallSuccess &= success;
                 }

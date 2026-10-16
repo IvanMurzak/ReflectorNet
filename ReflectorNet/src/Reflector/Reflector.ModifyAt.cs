@@ -166,6 +166,45 @@ namespace com.IvanMurzak.ReflectorNet
             }
         }
 
+        // ─── Write-back ──────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Stores a modified value back into its container (member, array/list element or dictionary entry).
+        /// A setter that throws is reported to <paramref name="logs"/> and fails the call, so a dropped write
+        /// is never reported as a success. <paramref name="describeTarget"/> is only evaluated on failure.
+        /// </summary>
+        internal static bool TryWriteBack(
+            Action<object?> writeBack,
+            object? value,
+            Func<string> describeTarget,
+            int depth,
+            Logs? logs,
+            ILogger? logger)
+        {
+            try
+            {
+                writeBack(value);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var reason = (ex as TargetInvocationException)?.InnerException?.Message ?? ex.Message;
+                var msg = $"Cannot write {describeTarget()}: {reason}";
+                logs?.Error(msg, depth);
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{StringUtils.GetPadding(depth)}{msg}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// True when a nested modification mutated a reference-type value in place: it is already stored in its
+        /// container, so writing it back is redundant (and a throwing container setter must not turn an applied
+        /// change into a reported failure). Boxed value types are copies and always need the write-back.
+        /// </summary>
+        private static bool IsSameInstance(object? original, object? modified)
+            => modified != null && !modified.GetType().IsValueType && ReferenceEquals(original, modified);
+
         // ─── Bracket navigation (array index / dict key) ─────────────────────────────
 
         private bool TryModifyAtBracketed(
@@ -185,10 +224,9 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
 
             ApplyTypeReplacementCheck(ref currentElement, value, elementType, remainingPath);
-            var success = TryModifyAt(ref currentElement, remainingPath, value, elementType, depth + 1, logs, flags, logger);
-            if (success)
-                writeBack!(currentElement);
-            return success;
+            var original = currentElement;
+            return TryModifyAt(ref currentElement, remainingPath, value, elementType, depth + 1, logs, flags, logger)
+                && (IsSameInstance(original, currentElement) || TryWriteBack(writeBack!, currentElement, () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger));
         }
 
         // ─── Member navigation (field / property) ────────────────────────────────────
@@ -209,10 +247,10 @@ namespace com.IvanMurzak.ReflectorNet
                 return false;
 
             ApplyTypeReplacementCheck(ref currentValue, value, memberType, remainingPath);
-            var success = TryModifyAt(ref currentValue, remainingPath, value, memberType, depth + 1, logs, flags, logger);
-            if (success)
-                writeBack!(currentValue);
-            return success;
+            var original = currentValue;
+            return TryModifyAt(ref currentValue, remainingPath, value, memberType, depth + 1, logs, flags, logger)
+                && (IsSameInstance(original, currentValue) || TryWriteBack(writeBack!, currentValue,
+                    () => $"member '{memberName}' of type '{objType.GetTypeShortName()}'", depth, logs, logger));
         }
     }
 }

@@ -170,7 +170,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                         logger.LogError(ex, $"{padding}Value '{obj}' modification failed: {ex.Message}");
 
                     if (logs != null)
-                        logs.Error($"Value '{obj}' modification failed: {ex.Message}", depth);
+                        logs.Error($"Value '{obj}' modification failed: {(ex as TargetInvocationException)?.InnerException?.Message ?? ex.Message}", depth);
                 }
             }
 
@@ -393,7 +393,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogError(ex, $"{padding}Field '{fieldValue.name.ValueOrNull()}' modification failed: {ex.Message}");
 
                 if (logs != null)
-                    logs.Error($"Field '{fieldValue.name.ValueOrNull()}' modification failed: {ex.Message}", depth);
+                    logs.Error($"Field '{fieldValue.name.ValueOrNull()}' modification failed: {(ex as TargetInvocationException)?.InnerException?.Message ?? ex.Message}", depth);
 
                 return false;
             }
@@ -512,7 +512,7 @@ namespace com.IvanMurzak.ReflectorNet.Converter
                     logger.LogError(ex, $"{padding}Property '{propertyValue.name.ValueOrNull()}' modification failed: {ex.Message}");
 
                 if (logs != null)
-                    logs.Error($"Property '{propertyValue.name.ValueOrNull()}' modification failed: {ex.Message}", depth);
+                    logs.Error($"Property '{propertyValue.name.ValueOrNull()}' modification failed: {(ex as TargetInvocationException)?.InnerException?.Message ?? ex.Message}", depth);
 
                 return false;
             }

@@ -271,19 +271,9 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var childType = currentValue?.GetType() ?? fieldInfo.FieldType;
                 var success = TryPatchInternal(ref currentValue, patchValue, childType, depth + 1, logs, flags, logger);
-                if (success)
-                {
-                    try { fieldInfo.SetValue(obj, currentValue); }
-                    catch (Exception ex)
-                    {
-                        var msg = $"Failed to set value of field '{memberName}' on type '{objType.GetTypeShortName()}': {ex.Message}";
-                        logs?.Error(msg, depth);
-                        if (logger?.IsEnabled(LogLevel.Error) == true)
-                            logger.LogError($"{padding}{msg}");
-                        return false;
-                    }
-                }
-                return success;
+                var target = obj;
+                return success && TryWriteBack(v => fieldInfo.SetValue(target, v), currentValue,
+                    () => $"field '{memberName}' on type '{objType.GetTypeShortName()}'", depth, logs, logger);
             }
 
             // Try property
@@ -316,19 +306,9 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var childType = currentValue?.GetType() ?? propInfo.PropertyType;
                 var success = TryPatchInternal(ref currentValue, patchValue, childType, depth + 1, logs, flags, logger);
-                if (success)
-                {
-                    try { propInfo.SetValue(obj, currentValue); }
-                    catch (Exception ex)
-                    {
-                        var msg = $"Failed to set value of property '{memberName}' on type '{objType.GetTypeShortName()}': {ex.Message}";
-                        logs?.Error(msg, depth);
-                        if (logger?.IsEnabled(LogLevel.Error) == true)
-                            logger.LogError($"{padding}{msg}");
-                        return false;
-                    }
-                }
-                return success;
+                var target = obj;
+                return success && TryWriteBack(v => propInfo.SetValue(target, v), currentValue,
+                    () => $"property '{memberName}' on type '{objType.GetTypeShortName()}'", depth, logs, logger);
             }
 
             // Neither found — detailed error
@@ -444,9 +424,8 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var childType = currentElement?.GetType() ?? elementType;
                 var success = TryPatchInternal(ref currentElement, patchValue, childType, depth + 1, logs, flags, logger);
-                if (success)
-                    array.SetValue(currentElement, idx);
-                return success;
+                return success && TryWriteBack(v => array.SetValue(v, idx), currentElement,
+                    () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
             }
 
             if (obj is IList list)
@@ -465,9 +444,8 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var childType = currentElement?.GetType() ?? elementType;
                 var success = TryPatchInternal(ref currentElement, patchValue, childType, depth + 1, logs, flags, logger);
-                if (success)
-                    list[idx] = currentElement;
-                return success;
+                return success && TryWriteBack(v => list[idx] = v, currentElement,
+                    () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
             }
 
             {
@@ -497,9 +475,8 @@ namespace com.IvanMurzak.ReflectorNet
 
             var childType = currentElement?.GetType() ?? valueType;
             var success = TryPatchInternal(ref currentElement, patchValue, childType, depth + 1, logs, flags, logger);
-            if (success)
-                dict[dictKey] = currentElement;
-            return success;
+            return success && TryWriteBack(v => dict[dictKey] = v, currentElement,
+                () => $"element '{segment}' of type '{dict.GetType().GetTypeShortName()}'", depth, logs, logger);
         }
 
         // ─── Type replacement for patch (uses "$type" from JsonElement) ──────────────
