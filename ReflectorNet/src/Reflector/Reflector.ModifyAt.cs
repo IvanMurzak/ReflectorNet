@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Reflection;
 using System.Text;
 using com.IvanMurzak.ReflectorNet.Model;
@@ -170,99 +169,33 @@ namespace com.IvanMurzak.ReflectorNet
         // ─── Write-back ──────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Stores the modified value back into its container (field, property, array/list element or
-        /// dictionary entry). The value was produced by the converter named by the patch's <c>typeName</c>,
-        /// so it may be a different primitive than the declared type (e.g. a <c>double</c> for a <c>float</c>
-        /// member): such a value is converted when the conversion is lossless. Any value that still cannot be
-        /// stored — or a setter that throws — is reported to <paramref name="logs"/> and fails the call
-        /// instead of being reported as a success.
+        /// Stores a modified value back into its container (member, array/list element or dictionary entry).
+        /// A setter that throws is reported to <paramref name="logs"/> and fails the call, so a dropped write
+        /// is never reported as a success. <paramref name="describeTarget"/> is only evaluated on failure.
         /// </summary>
-        private static bool TryWriteBack(
+        internal static bool TryWriteBack(
             Action<object?> writeBack,
             object? value,
-            Type declaredType,
-            string target,
+            Func<string> describeTarget,
             int depth,
             Logs? logs,
             ILogger? logger)
         {
-            string? error;
-            if (TryConvertForAssignment(value, declaredType, out var converted, out error))
+            try
             {
-                try
-                {
-                    writeBack(converted);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    error = $"setter threw: {(ex as TargetInvocationException)?.InnerException?.Message ?? ex.Message}";
-                }
-            }
-
-            var msg = $"Cannot write {target}: {error}";
-            logs?.Error(msg, depth);
-            if (logger?.IsEnabled(LogLevel.Error) == true)
-                logger.LogError($"{StringUtils.GetPadding(depth)}{msg}");
-            return false;
-        }
-
-        /// <summary>
-        /// Returns <paramref name="value"/> as-is when <paramref name="declaredType"/> accepts it, or converts a
-        /// numeric value to a numeric/enum declared type when no information is lost (no overflow, no dropped
-        /// fraction). Anything else is rejected with a reason.
-        /// </summary>
-        private static bool TryConvertForAssignment(object? value, Type declaredType, out object? converted, out string? error)
-        {
-            converted = value;
-            error = null;
-            var target = Nullable.GetUnderlyingType(declaredType) ?? declaredType;
-
-            if (value == null)
-            {
-                if (!declaredType.IsValueType || target != declaredType)
-                    return true;
-                error = $"null is not a valid '{declaredType.GetTypeShortName()}'";
-                return false;
-            }
-            if (declaredType.IsInstanceOfType(value))
+                writeBack(value);
                 return true;
-
-            if (IsNumeric(value.GetType()) && (IsNumeric(target) || target.IsEnum))
+            }
+            catch (Exception ex)
             {
-                var numericTarget = target.IsEnum ? Enum.GetUnderlyingType(target) : target;
-                try
-                {
-                    var number = Convert.ChangeType(value, numericTarget, CultureInfo.InvariantCulture)!;
-                    // An integer must keep its exact value (3.7 never silently becomes 4); a float only must not
-                    // overflow to infinity (0.33 as float is the intended rounding).
-                    var lossless = IsIntegral(numericTarget)
-                        ? Convert.ToDecimal(value, CultureInfo.InvariantCulture) == Convert.ToDecimal(number, CultureInfo.InvariantCulture)
-                        : !double.IsInfinity(Convert.ToDouble(number, CultureInfo.InvariantCulture))
-                            || double.IsInfinity(Convert.ToDouble(value, CultureInfo.InvariantCulture));
-                    if (lossless)
-                    {
-                        converted = target.IsEnum ? Enum.ToObject(target, number) : number;
-                        return true;
-                    }
-                }
-                catch (Exception ex) when (ex is OverflowException || ex is InvalidCastException)
-                {
-                }
-                error = $"the {value.GetType().GetTypeShortName()} value '{value}' does not fit '{declaredType.GetTypeShortName()}'";
+                var reason = (ex as TargetInvocationException)?.InnerException?.Message ?? ex.Message;
+                var msg = $"Cannot write {describeTarget()}: {reason}";
+                logs?.Error(msg, depth);
+                if (logger?.IsEnabled(LogLevel.Error) == true)
+                    logger.LogError($"{StringUtils.GetPadding(depth)}{msg}");
                 return false;
             }
-
-            error = $"a '{value.GetType().GetTypeShortName()}' value is not assignable to '{declaredType.GetTypeShortName()}'";
-            return false;
         }
-
-        private static bool IsNumeric(Type type)
-            => IsIntegral(type) || type == typeof(float) || type == typeof(double) || type == typeof(decimal);
-
-        private static bool IsIntegral(Type type)
-            => type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort)
-            || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong);
 
         // ─── Bracket navigation (array index / dict key) ─────────────────────────────
 
@@ -284,7 +217,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             ApplyTypeReplacementCheck(ref currentElement, value, elementType, remainingPath);
             return TryModifyAt(ref currentElement, remainingPath, value, elementType, depth + 1, logs, flags, logger)
-                && TryWriteBack(writeBack!, currentElement, elementType, $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
+                && TryWriteBack(writeBack!, currentElement, () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
         }
 
         // ─── Member navigation (field / property) ────────────────────────────────────
@@ -306,7 +239,7 @@ namespace com.IvanMurzak.ReflectorNet
 
             ApplyTypeReplacementCheck(ref currentValue, value, memberType, remainingPath);
             return TryModifyAt(ref currentValue, remainingPath, value, memberType, depth + 1, logs, flags, logger)
-                && TryWriteBack(writeBack!, currentValue, memberType, $"member '{memberName}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
+                && TryWriteBack(writeBack!, currentValue, () => $"member '{memberName}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
         }
     }
 }

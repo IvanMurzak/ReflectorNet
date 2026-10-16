@@ -8,9 +8,10 @@ using Xunit.Abstractions;
 namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 {
     /// <summary>
-    /// TryModifyAt writes the modified value back into its container. A value whose typeName names a different
-    /// primitive than the member (e.g. 'System.Double' for a float) used to make the setter throw, and the
-    /// failure went only to the ILogger while TryModifyAt still returned true — a silently dropped write.
+    /// A value whose typeName names a different numeric type than the member (e.g. 'System.Double' for a float)
+    /// used to be parsed as the sent type; writing it back threw, and TryModifyAt sent that only to the ILogger
+    /// while returning true — a silently dropped write. The declared type now wins, and a write-back that still
+    /// fails is reported and returns false.
     /// </summary>
     public class ModifyAtWriteBackTests : BaseTest
     {
@@ -21,8 +22,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         class Target
         {
             public float Ratio { get; set; } = 1f;
+            public float? Optional { get; set; }
             public int Count { get; set; } = 1;
-            public byte Small;
+            public byte Small = 0;
             public Mode Mode { get; set; }
             public string Title { get; set; } = "t";
             public List<float> Weights { get; set; } = new List<float> { 1f };
@@ -75,7 +77,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             Assert.False(ok);
             Assert.Equal(1, target.Count);
-            Assert.True(HasError(logs, "Count"));
+            Assert.True(HasError(logs, "out of range"));
         }
 
         [Fact]
@@ -85,7 +87,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
 
             Assert.False(ok);
             Assert.Equal(0, target.Small);
-            Assert.True(HasError(logs, "Small"));
+            Assert.True(HasError(logs, "out of range"));
         }
 
         [Fact]
@@ -98,14 +100,32 @@ namespace com.IvanMurzak.ReflectorNet.Tests.ReflectorTests
         }
 
         [Fact]
-        public void IntIntoEnumProperty_IsRejectedUpFront()
+        public void IntIntoEnumProperty_Lands()
         {
-            // Not numeric-castable, so the converter reports a type mismatch before anything is written.
-            var (ok, target, logs) = Modify("Mode", Value<int>("1"));
+            var (ok, target, _) = Modify("Mode", Value<int>("1"));
 
-            Assert.False(ok);
-            Assert.Equal(Mode.Off, target.Mode);
-            Assert.True(HasError(logs, "Type mismatch"));
+            Assert.True(ok);
+            Assert.Equal(Mode.On, target.Mode);
+        }
+
+        [Fact]
+        public void DoubleIntoNullableFloat_Lands()
+        {
+            var (ok, target, _) = Modify("Optional", Value<double>("0.5"));
+
+            Assert.True(ok);
+            Assert.Equal(0.5f, target.Optional);
+        }
+
+        [Fact]
+        public void TryModify_WithoutPath_DoubleIntoFloatMember_Lands()
+        {
+            object? obj = new Target();
+            var data = new SerializedMember { typeName = typeof(Target).FullName! };
+            data.props = new SerializedMemberList { Value<double>("0.75").SetName("Ratio") };
+
+            Assert.True(new Reflector().TryModify(ref obj, data, logs: new Logs()));
+            Assert.Equal(0.75f, ((Target)obj!).Ratio);
         }
 
         [Fact]

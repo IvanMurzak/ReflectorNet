@@ -444,9 +444,8 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var childType = currentElement?.GetType() ?? elementType;
                 var success = TryPatchInternal(ref currentElement, patchValue, childType, depth + 1, logs, flags, logger);
-                if (success)
-                    array.SetValue(currentElement, idx);
-                return success;
+                return success && TryWriteBack(v => array.SetValue(v, idx), currentElement,
+                    () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
             }
 
             if (obj is IList list)
@@ -465,9 +464,8 @@ namespace com.IvanMurzak.ReflectorNet
 
                 var childType = currentElement?.GetType() ?? elementType;
                 var success = TryPatchInternal(ref currentElement, patchValue, childType, depth + 1, logs, flags, logger);
-                if (success)
-                    list[idx] = currentElement;
-                return success;
+                return success && TryWriteBack(v => list[idx] = v, currentElement,
+                    () => $"element '{segment}' of type '{objType.GetTypeShortName()}'", depth, logs, logger);
             }
 
             {

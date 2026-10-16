@@ -176,8 +176,18 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
 
             error = null;
+            // A numeric typeName aimed at a different numeric or enum type (e.g. 'System.Double' for a float
+            // member) only describes the JSON number: read it as the declared type, which is the only type
+            // the target can store. Otherwise the value is parsed as the sent type and cannot be assigned.
+            if (fallbackType != null && type != fallbackType && IsNumericOrEnum(type)
+                && IsNumericOrEnum(Nullable.GetUnderlyingType(fallbackType) ?? fallbackType))
+                return fallbackType;
             return type;
         }
+
+        static bool IsNumericOrEnum(Type type)
+            => type.IsEnum || type == typeof(decimal) || (type.IsPrimitive && type != typeof(bool) && type != typeof(char)
+                && type != typeof(IntPtr) && type != typeof(UIntPtr));
 
         /// <summary>
         /// Resolves a type prioritizing the provided <paramref name="type"/>, falling back to the type definition in <paramref name="fallbackMember"/>.
