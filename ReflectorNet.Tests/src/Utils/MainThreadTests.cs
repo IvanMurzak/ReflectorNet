@@ -57,21 +57,25 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         }
 
         [Fact]
-        public void Run_FromOtherThread_ExecutesOnMainContextThread()
+        public async Task Run_FromOtherThread_ExecutesOnMainContextThread()
         {
             using var loop = new SingleThreadContext();
             var mainThread = new MainThread(loop);
+            var callerThreadId = Thread.CurrentThread.ManagedThreadId;
 
             var task = mainThread.RunAsync(() => Thread.CurrentThread.ManagedThreadId);
 
-            Assert.True(task.Wait(Timeout), "Work posted to the main context never ran.");
-            Assert.Equal(loop.ThreadId, task.Result);
-            Assert.NotEqual(Thread.CurrentThread.ManagedThreadId, task.Result);
+            Assert.Same(task, await Task.WhenAny(task, Task.Delay(Timeout)));
+            var executedOnThreadId = await task;
+            Assert.Equal(loop.ThreadId, executedOnThreadId);
+            Assert.NotEqual(callerThreadId, executedOnThreadId);
         }
 
         [Fact]
         public void DefaultConstructor_OnOtherContextThread_KeepsTypeInitContext()
         {
+            // Make sure the type is initialized here, not on the loop thread below.
+            _ = MainThread.Instance;
             using var loop = new SingleThreadContext();
 
             // Constructed on the loop thread, but the main context is the one captured at type initialization
@@ -82,12 +86,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         }
 
         [Fact]
-        public void RunAsync_WithoutMainContext_FromNonMainThread_ThrowsInvalidOperation()
+        public async Task RunAsync_WithoutMainContext_FromNonMainThread_ThrowsInvalidOperation()
         {
             var mainThread = new MainThread(null);
 
             // A thread-pool thread is never managed thread 1, so the fallback treats it as a non-main thread.
-            var error = Task.Run(() => Record.Exception(() => { mainThread.RunAsync(() => 0); })).Result;
+            var error = await Task.Run(() => Record.Exception(() => { mainThread.RunAsync(() => 0); }));
 
             Assert.IsType<InvalidOperationException>(error);
         }
