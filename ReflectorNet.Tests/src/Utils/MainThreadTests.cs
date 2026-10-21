@@ -23,7 +23,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             var result = loop.Invoke(() =>
             {
-                var mainThread = new MainThread(SynchronizationContext.Current!);
+                var mainThread = new MainThread(SynchronizationContext.Current);
                 return (mainThread.IsMainThread, Thread.CurrentThread.ManagedThreadId);
             });
 
@@ -48,7 +48,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
 
             var result = loop.Invoke(() =>
             {
-                var mainThread = new MainThread(SynchronizationContext.Current!);
+                var mainThread = new MainThread(SynchronizationContext.Current);
                 var callerThreadId = Thread.CurrentThread.ManagedThreadId;
                 return mainThread.Run(() => Thread.CurrentThread.ManagedThreadId == callerThreadId);
             });
@@ -62,10 +62,34 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             using var loop = new SingleThreadContext();
             var mainThread = new MainThread(loop);
 
-            var executedOnThreadId = mainThread.Run(() => Thread.CurrentThread.ManagedThreadId);
+            var task = mainThread.RunAsync(() => Thread.CurrentThread.ManagedThreadId);
 
-            Assert.Equal(loop.ThreadId, executedOnThreadId);
-            Assert.NotEqual(Thread.CurrentThread.ManagedThreadId, executedOnThreadId);
+            Assert.True(task.Wait(Timeout), "Work posted to the main context never ran.");
+            Assert.Equal(loop.ThreadId, task.Result);
+            Assert.NotEqual(Thread.CurrentThread.ManagedThreadId, task.Result);
+        }
+
+        [Fact]
+        public void DefaultConstructor_OnOtherContextThread_KeepsTypeInitContext()
+        {
+            using var loop = new SingleThreadContext();
+
+            // Constructed on the loop thread, but the main context is the one captured at type initialization
+            // (the test runner's), not the loop's: subclasses built on worker threads keep posting to it.
+            var isMainOnLoop = loop.Invoke(() => new MainThread().IsMainThread);
+
+            Assert.False(isMainOnLoop);
+        }
+
+        [Fact]
+        public void RunAsync_WithoutMainContext_FromNonMainThread_ThrowsInvalidOperation()
+        {
+            var mainThread = new MainThread(null);
+
+            // A thread-pool thread is never managed thread 1, so the fallback treats it as a non-main thread.
+            var error = Task.Run(() => Record.Exception(() => { mainThread.RunAsync(() => 0); })).Result;
+
+            Assert.IsType<InvalidOperationException>(error);
         }
 
         /// <summary>
