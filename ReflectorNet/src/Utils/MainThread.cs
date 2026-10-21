@@ -15,13 +15,34 @@ namespace com.IvanMurzak.ReflectorNet.Utils
     {
         public static MainThread Instance { get; set; } = new MainThread();
 
-        static SynchronizationContext mainContext = SynchronizationContext.Current!;
+        readonly SynchronizationContext mainContext;
+
+        /// <summary>
+        /// Captures <see cref="SynchronizationContext.Current"/> of the constructing thread as the main context.
+        /// </summary>
+        public MainThread() : this(SynchronizationContext.Current!)
+        {
+        }
+
+        /// <summary>
+        /// Uses <paramref name="mainContext"/> as the main context: work from other threads is posted to it.
+        /// </summary>
+        public MainThread(SynchronizationContext mainContext)
+        {
+            this.mainContext = mainContext;
+        }
 
         /// <summary>
         /// Determines if the current thread is the main thread.
         /// This delegate can be replaced for different environments (e.g. Unity).
+        /// <para>With a main context, the main thread is the one running on that context: posting to it from
+        /// there and blocking on the result would wait forever. Managed thread ids are not a reliable signal,
+        /// e.g. the Unity 7 CoreCLR editor on Windows runs its main thread with id 2. Without a main context
+        /// it falls back to managed thread id 1.</para>
         /// </summary>
-        public virtual bool IsMainThread => Thread.CurrentThread.ManagedThreadId == 1;
+        public virtual bool IsMainThread => mainContext != null
+            ? SynchronizationContext.Current == mainContext
+            : Thread.CurrentThread.ManagedThreadId == 1;
 
         // Synchronous methods
         public virtual void Run(Task task) => RunAsync(task).Wait();
