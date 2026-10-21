@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -35,7 +36,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         public void IsMainThread_OnOtherThread_IsFalse()
         {
             using var loop = new SingleThreadContext();
-            var mainThread = new MainThread(loop.Context);
+            var mainThread = new MainThread(loop);
 
             Assert.False(mainThread.IsMainThread);
         }
@@ -49,7 +50,6 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             {
                 var mainThread = new MainThread(SynchronizationContext.Current!);
                 var callerThreadId = Thread.CurrentThread.ManagedThreadId;
-                // Before the fix, a main thread with id != 1 posted this to its own context and blocked on it.
                 return mainThread.Run(() => Thread.CurrentThread.ManagedThreadId == callerThreadId);
             });
 
@@ -60,7 +60,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         public void Run_FromOtherThread_ExecutesOnMainContextThread()
         {
             using var loop = new SingleThreadContext();
-            var mainThread = new MainThread(loop.Context);
+            var mainThread = new MainThread(loop);
 
             var executedOnThreadId = mainThread.Run(() => Thread.CurrentThread.ManagedThreadId);
 
@@ -69,65 +69,49 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         }
 
         /// <summary>
-        /// A dedicated thread that pumps its own <see cref="SynchronizationContext"/>, like an engine main loop.
+        /// A dedicated thread that pumps this <see cref="SynchronizationContext"/>, like an engine main loop.
         /// </summary>
-        sealed class SingleThreadContext : IDisposable
+        sealed class SingleThreadContext : SynchronizationContext, IDisposable
         {
             readonly BlockingCollection<(SendOrPostCallback callback, object? state)> queue = new();
             readonly Thread thread;
-            readonly ManualResetEventSlim started = new();
 
-            public SynchronizationContext Context { get; }
-            public int ThreadId { get; private set; }
+            public int ThreadId => thread.ManagedThreadId;
 
             public SingleThreadContext()
             {
-                Context = new QueueContext(queue);
                 thread = new Thread(Pump) { IsBackground = true, Name = nameof(SingleThreadContext) };
                 thread.Start();
-                if (!started.Wait(Timeout))
-                    throw new TimeoutException("Main context thread did not start.");
             }
+
+            public override void Post(SendOrPostCallback d, object? state) => queue.Add((d, state));
 
             public T Invoke<T>(Func<T> func)
             {
-                var done = new ManualResetEventSlim();
-                T result = default!;
-                Exception? error = null;
-                Context.Post(_ =>
+                var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+                Post(_ =>
                 {
-                    try { result = func(); }
-                    catch (Exception e) { error = e; }
-                    finally { done.Set(); }
+                    try { tcs.SetResult(func()); }
+                    catch (Exception e) { tcs.SetException(e); }
                 }, null);
-                if (!done.Wait(Timeout))
+                if (!tcs.Task.Wait(Timeout))
                     throw new TimeoutException("Main context thread is blocked (deadlock).");
-                if (error != null)
-                    throw new InvalidOperationException("Callback on the main context thread failed.", error);
-                return result;
+                return tcs.Task.Result;
             }
 
             void Pump()
             {
-                SynchronizationContext.SetSynchronizationContext(Context);
-                ThreadId = Thread.CurrentThread.ManagedThreadId;
-                started.Set();
+                SetSynchronizationContext(this);
                 foreach (var (callback, state) in queue.GetConsumingEnumerable())
                     callback(state);
             }
 
-            public void Dispose() => queue.CompleteAdding();
-
-            sealed class QueueContext : SynchronizationContext
+            public void Dispose()
             {
-                readonly BlockingCollection<(SendOrPostCallback callback, object? state)> queue;
-
-                public QueueContext(BlockingCollection<(SendOrPostCallback callback, object? state)> queue)
-                {
-                    this.queue = queue;
-                }
-
-                public override void Post(SendOrPostCallback d, object? state) => queue.Add((d, state));
+                queue.CompleteAdding();
+                // A deadlocked pump never exits: leave its queue alive rather than fault the test host.
+                if (thread.Join(Timeout))
+                    queue.Dispose();
             }
         }
     }

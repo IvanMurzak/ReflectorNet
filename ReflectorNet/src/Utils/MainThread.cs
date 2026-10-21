@@ -34,7 +34,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         /// <summary>
         /// Determines if the current thread is the main thread.
-        /// This delegate can be replaced for different environments (e.g. Unity).
+        /// Override for different environments (e.g. Unity).
         /// <para>With a main context, the main thread is the one running on that context: posting to it from
         /// there and blocking on the result would wait forever. Managed thread ids are not a reliable signal,
         /// e.g. the Unity 7 CoreCLR editor on Windows runs its main thread with id 2. Without a main context
