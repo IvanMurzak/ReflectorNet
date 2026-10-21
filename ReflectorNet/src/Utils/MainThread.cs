@@ -13,15 +13,46 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
     public class MainThread
     {
+        // Declared before Instance: static initializers run in order, and Instance's constructor reads it.
+        static readonly SynchronizationContext? typeInitContext = SynchronizationContext.Current;
+
         public static MainThread Instance { get; set; } = new MainThread();
 
-        static SynchronizationContext mainContext = SynchronizationContext.Current!;
+        readonly SynchronizationContext? mainContext;
+
+        /// <summary>
+        /// Uses <see cref="SynchronizationContext.Current"/> of the thread that first touched
+        /// <see cref="MainThread"/> (type initialization) as the main context, so subclasses constructed later
+        /// on a worker thread still post to the main context.
+        /// </summary>
+        public MainThread() : this(typeInitContext)
+        {
+        }
+
+        /// <summary>
+        /// Uses <paramref name="mainContext"/> as the main context: work from other threads is posted to it.
+        /// <c>null</c> means there is no main context (see <see cref="IsMainThread"/>).
+        /// </summary>
+        public MainThread(SynchronizationContext? mainContext)
+        {
+            this.mainContext = mainContext;
+        }
+
+        SynchronizationContext MainContext => mainContext ?? throw new InvalidOperationException(
+            $"{nameof(MainThread)} has no main {nameof(SynchronizationContext)} to post work to from a non-main thread. " +
+            $"Construct it on the main thread, pass the main context explicitly, or install a host-specific {nameof(MainThread)}.");
 
         /// <summary>
         /// Determines if the current thread is the main thread.
-        /// This delegate can be replaced for different environments (e.g. Unity).
+        /// Override for different environments (e.g. Unity).
+        /// <para>With a main context, the main thread is the one running on that context: posting to it from
+        /// there and blocking on the result would wait forever. Managed thread ids are not a reliable signal,
+        /// e.g. the Unity 7 CoreCLR editor on Windows runs its main thread with id 2. Without a main context
+        /// it falls back to managed thread id 1.</para>
         /// </summary>
-        public virtual bool IsMainThread => Thread.CurrentThread.ManagedThreadId == 1;
+        public virtual bool IsMainThread => mainContext != null
+            ? SynchronizationContext.Current == mainContext
+            : Thread.CurrentThread.ManagedThreadId == 1;
 
         // Synchronous methods
         public virtual void Run(Task task) => RunAsync(task).Wait();
@@ -36,7 +67,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return task;
 
             var tcs = new TaskCompletionSource<bool>();
-            mainContext.Post(_ =>
+            MainContext.Post(_ =>
             {
                 try
                 {
@@ -58,7 +89,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return task;
 
             var tcs = new TaskCompletionSource<T>();
-            mainContext.Post(_ =>
+            MainContext.Post(_ =>
             {
                 try
                 {
@@ -79,7 +110,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 return Task.FromResult(func());
 
             var tcs = new TaskCompletionSource<T>();
-            mainContext.Post(_ =>
+            MainContext.Post(_ =>
             {
                 try
                 {
@@ -103,7 +134,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
 
             var tcs = new TaskCompletionSource<bool>();
-            mainContext.Post(_ =>
+            MainContext.Post(_ =>
             {
                 try
                 {
