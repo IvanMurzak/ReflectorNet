@@ -1,0 +1,39 @@
+ReflectorNet/src/Reflector/Reflector.View.cs
+  s_a01036bd1f823a::t_25145f5c7e6a2f 23,27,31,64-69
+  s_a01036bd1f823a::t_3f3d8624b693b9 233
+  s_a01036bd1f823a::t_7fcee32afd18e2 231-232
+ReflectorNet.Tests/src/ReflectorTests/Issue109Tests.cs
+  s_a01036bd1f823a::t_7fcee32afd18e2 99-125
+  s_a01036bd1f823a::t_d3c239486dfae6 1-88,170-179
+  s_a01036bd1f823a::t_89995eecef9e44 89-98,126-169
+ReflectorNet/src/Reflector/Reflector.ModifyAt.cs
+  s_a01036bd1f823a::t_25145f5c7e6a2f 9,11,101-122,127,134-141
+  s_a01036bd1f823a::t_89995eecef9e44 125,129-133
+ReflectorNet/src/Reflector/Reflector.Serialize.cs
+  s_a01036bd1f823a::t_3f3d8624b693b9 73
+  s_a01036bd1f823a::t_2fb9357401ff36 71
+  s_a01036bd1f823a::t_25145f5c7e6a2f 58-59,66-70,72,74-79,145,147,149
+ReflectorNet/src/Model/SerializationContext.cs
+  s_a01036bd1f823a::t_25145f5c7e6a2f 21-25,41-44
+  s_a01036bd1f823a::t_3f3d8624b693b9 74-77
+ReflectorNet/src/Model/ViewQuery.cs
+  s_a01036bd1f823a::t_89995eecef9e44 15,25,54-57,61-63
+ReflectorNet/src/Reflector/Reflector.Patch.cs
+  s_a01036bd1f823a::t_89995eecef9e44 222
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ddedc8b9820f7bf32b42010bd0b77ab7194254d3",
+  "prompts": {},
+  "sessions": {
+    "s_a01036bd1f823a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a139c1-c389-7a23-96d3-22a10c43030c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}

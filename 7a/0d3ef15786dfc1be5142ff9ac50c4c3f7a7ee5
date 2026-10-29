@@ -1,0 +1,26 @@
+ReflectorNet/src/Converter/Reflection/Base/BaseReflectionConverter.cs
+  s_5fd6444b4d41de::t_8b679010ee800e 121-132
+ReflectorNet/src/Reflector/Reflector.Patch.cs
+  s_5fd6444b4d41de::t_b77a0a7952dbe3 116-130
+ReflectorNet.Tests/src/ReflectorTests/TryPatchAtomicConverterTests.cs
+  s_5fd6444b4d41de::t_5c40f4d0cf6a94 12
+  s_5fd6444b4d41de::t_6695f163055a13 1-11,13-231
+ReflectorNet/src/Converter/IReflectionConverter.cs
+  s_5fd6444b4d41de::t_a7cbbd760fedc7 60-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7a0d3ef15786dfc1be5142ff9ac50c4c3f7a7ee5",
+  "prompts": {},
+  "sessions": {
+    "s_5fd6444b4d41de": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7c3c29c8-20ae-4e58-b199-acfc3956bb78",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}

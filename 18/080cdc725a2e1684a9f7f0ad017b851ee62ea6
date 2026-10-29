@@ -1,0 +1,42 @@
+ReflectorNet/src/Reflector/Reflector.Patch.cs
+  4f6c1befdf1355be 97-104,161-172,238-247,253-263,280-292,298-308
+ReflectorNet/src/Reflector/Reflector.ReadAt.cs
+  4f6c1befdf1355be 166-179,185-206
+ReflectorNet/src/Reflector/Reflector.Navigate.cs
+  4f6c1befdf1355be 26,44-67,87-122,126-135
+ReflectorNet/src/Reflector/Reflector.View.cs
+  4f6c1befdf1355be 61-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "18080cdc725a2e1684a9f7f0ad017b851ee62ea6",
+  "prompts": {
+    "0f16acfd52ce85c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2b68a1a3-1429-49c0-b1cc-85a03a7e02b8",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Ivan Murzak",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 406,
+      "overriden_lines": 0
+    },
+    "4f6c1befdf1355be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "818b14ac-53a6-4387-97a9-f04e12876670",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Ivan Murzak",
+      "messages": [],
+      "total_additions": 186,
+      "total_deletions": 24,
+      "accepted_lines": 1372,
+      "overriden_lines": 0
+    }
+  }
+}
