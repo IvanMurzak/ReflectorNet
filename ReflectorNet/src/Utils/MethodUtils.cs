@@ -6,6 +6,8 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -242,7 +244,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// element of its <c>byte[]</c>), or null when the attribute is absent. Matched by name: each assembly may
         /// embed its own copy of these attributes.
         /// </summary>
-        private static byte? ReadNullableFlag(System.Collections.Generic.IList<CustomAttributeData> attributes, string attributeName)
+        private static byte? ReadNullableFlag(IList<CustomAttributeData> attributes, string attributeName)
         {
             foreach (var attribute in attributes)
             {
@@ -251,7 +253,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 var argument = attribute.ConstructorArguments[0].Value;
                 if (argument is byte flag)
                     return flag;
-                if (argument is System.Collections.ObjectModel.ReadOnlyCollection<CustomAttributeTypedArgument> flags && flags.Count > 0 && flags[0].Value is byte first)
+                if (argument is ReadOnlyCollection<CustomAttributeTypedArgument> flags && flags.Count > 0 && flags[0].Value is byte first)
                     return first;
                 return null;
             }
