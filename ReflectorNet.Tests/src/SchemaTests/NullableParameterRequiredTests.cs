@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -29,8 +30,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public static string Mixed(string? nullableText, string text, int? nullableNumber, int number, string? withDefault = null, int numberWithDefault = 1)
             => text;
 
-        // Most parameters nullable: the compiler puts [NullableContext(2)] on the method and [Nullable(1)] on `text`.
-        public static string MostlyNullable(string? a, string? b, List<string>? c, string text) => text;
+        // Most parameters nullable (void return): the compiler puts [NullableContext(2)] on the method and [Nullable(1)] on `text`.
+        internal static void MostlyNullable(string? a, string? b, List<string>? c, string text) { }
+
+        public static (string? text, int? number) EchoNullable(string? nullableText, int? nullableNumber)
+            => (nullableText, nullableNumber);
+
+        // No nullable attribute on the method or its parameters: they inherit the enclosing types' context.
+        public static class Nested
+        {
+            public static void Inherits(string? a, string? b, string? c) { }
+        }
 
         public static string NullableList(List<string>? items, List<string?> nonNullList) => string.Empty;
 
@@ -40,9 +50,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public static string Oblivious(string text) => text;
 #nullable enable
 
-        static string[] Required(string methodName)
+        static string[] Required(string methodName) => Required(typeof(NullableParameterRequiredTests).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!);
+
+        static string[] Required(MethodInfo method)
         {
-            var method = typeof(NullableParameterRequiredTests).GetMethod(methodName)!;
             var schema = new Reflector().GetArgumentsSchema(method)!;
             return schema[JsonSchema.Required] is JsonArray required
                 ? required.Select(node => node!.GetValue<string>()).OrderBy(name => name).ToArray()
@@ -59,6 +70,12 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void NullableContextOnMethod_KeepsTheNonNullableParameterRequired()
         {
             Assert.Equal(new[] { "text" }, Required(nameof(MostlyNullable)));
+        }
+
+        [Fact]
+        public void NullableContextFromEnclosingType_IsHonoured()
+        {
+            Assert.Empty(Required(typeof(Nested).GetMethod(nameof(Nested.Inherits))!));
         }
 
         [Fact]
@@ -97,19 +114,26 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [InlineData(nameof(Oblivious), "text", false)]
         public void IsParameterNullable(string methodName, string parameterName, bool expected)
         {
-            var parameter = typeof(NullableParameterRequiredTests).GetMethod(methodName)!
+            var parameter = typeof(NullableParameterRequiredTests).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!
                 .GetParameters().Single(p => p.Name == parameterName);
             Assert.Equal(expected, MethodUtils.IsParameterNullable(parameter));
         }
 
         [Fact]
-        public void MissingNullableParameter_IsBoundAsNull()
+        public async Task MissingNullableParameter_IsBoundAsNull_ByName()
         {
             // The binder side of the contract the schema now states: a missing nullable parameter is null.
-            var method = typeof(NullableParameterRequiredTests).GetMethod(nameof(Mixed))!;
-            var wrapper = new MethodWrapper(_reflector, logger: null, method);
-            var result = wrapper.InvokeDict(new Dictionary<string, object?> { ["text"] = "ok", ["number"] = 2 }).Result;
-            Assert.Equal("ok", result);
+            var wrapper = new MethodWrapper(_reflector, logger: null, typeof(NullableParameterRequiredTests).GetMethod(nameof(EchoNullable))!);
+            var result = await wrapper.InvokeDict(new Dictionary<string, object?>());
+            Assert.Equal(((string?)null, (int?)null), Assert.IsType<(string?, int?)>(result));
+        }
+
+        [Fact]
+        public async Task MissingNullableParameter_IsBoundAsNull_Positionally()
+        {
+            var wrapper = new MethodWrapper(_reflector, logger: null, typeof(NullableParameterRequiredTests).GetMethod(nameof(EchoNullable))!);
+            var result = await wrapper.Invoke("a");
+            Assert.Equal(("a", (int?)null), Assert.IsType<(string?, int?)>(result));
         }
     }
 }

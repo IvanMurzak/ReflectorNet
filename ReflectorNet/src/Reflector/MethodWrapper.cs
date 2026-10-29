@@ -251,6 +251,11 @@ namespace com.IvanMurzak.ReflectorNet
                 // Use the default value if no value is provided
                 return methodParameter.DefaultValue;
             }
+            else if (MethodUtils.IsParameterNullable(methodParameter))
+            {
+                // Optional in the arguments schema (see JsonSchema.GetArgumentsSchema): a missing nullable parameter is null.
+                return null;
+            }
             else
             {
                 throw new ArgumentException($"No value provided for parameter '{methodParameter.Name}' and no default value is defined.");
