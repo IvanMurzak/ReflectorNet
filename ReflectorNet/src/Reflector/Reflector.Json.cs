@@ -107,7 +107,7 @@ namespace com.IvanMurzak.ReflectorNet
         /// Behavior:
         /// - Parameter analysis: Examines all method parameters including names, types, and default values
         /// - Schema structure: Creates object schema with properties for each parameter
-        /// - Required fields: Automatically determines required vs optional parameters based on default values
+        /// - Required fields: a parameter is optional when it has a default value or is nullable (int?, string?)
         /// - Type definitions: Includes $defs section for complex types to avoid duplication
         /// - Documentation: Extracts parameter descriptions from DescriptionAttribute annotations
         /// - Generic support: Handles generic method parameters and their type constraints

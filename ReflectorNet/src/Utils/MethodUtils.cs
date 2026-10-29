@@ -6,6 +6,8 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -205,6 +207,57 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
 
             return isNullable;
+        }
+
+        /// <summary>
+        /// Whether a parameter accepts null: a <see cref="Nullable{T}"/> value type (<c>int?</c>), or a reference
+        /// type annotated nullable (<c>string?</c>) in a nullable-enabled context. A reference type in a
+        /// nullable-oblivious context, and any non-nullable value type, is not. Reads the compiler's nullable
+        /// attributes by name, so it works on every target framework.
+        /// </summary>
+        public static bool IsParameterNullable(ParameterInfo parameter)
+        {
+            if (parameter == null)
+                throw new ArgumentNullException(nameof(parameter));
+
+            var type = parameter.ParameterType;
+            if (type.IsByRef)
+                type = type.GetElementType()!;
+            if (Nullable.GetUnderlyingType(type) != null)
+                return true;
+            if (type.IsValueType)
+                return false;
+
+            // The parameter's own [Nullable] wins; without one it inherits [NullableContext] from the method, then
+            // from the declaring type and the types that enclose it.
+            var flag = ReadNullableFlag(parameter.GetCustomAttributesData(), NullableAttributeName);
+            for (var member = parameter.Member; flag == null && member != null; member = member.DeclaringType)
+                flag = ReadNullableFlag(member.GetCustomAttributesData(), NullableContextAttributeName);
+            return flag == NullableContextNullable;
+        }
+
+        private const string NullableAttributeName = "System.Runtime.CompilerServices.NullableAttribute";
+        private const string NullableContextAttributeName = "System.Runtime.CompilerServices.NullableContextAttribute";
+
+        /// <summary>
+        /// The top-level nullable flag of the named compiler attribute (its <c>byte</c> argument, or the first
+        /// element of its <c>byte[]</c>), or null when the attribute is absent. Matched by name: each assembly may
+        /// embed its own copy of these attributes.
+        /// </summary>
+        private static byte? ReadNullableFlag(IList<CustomAttributeData> attributes, string attributeName)
+        {
+            foreach (var attribute in attributes)
+            {
+                if (attribute.AttributeType.FullName != attributeName || attribute.ConstructorArguments.Count == 0)
+                    continue;
+                var argument = attribute.ConstructorArguments[0].Value;
+                if (argument is byte flag)
+                    return flag;
+                if (argument is ReadOnlyCollection<CustomAttributeTypedArgument> flags && flags.Count > 0 && flags[0].Value is byte first)
+                    return first;
+                return null;
+            }
+            return null;
         }
     }
 }
