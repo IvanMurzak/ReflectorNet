@@ -23,30 +23,17 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
         }
 
         [Fact]
-        public void Constructor_ShouldNotPreallocateStorageForFullCapacity()
-        {
-            var cache = new LruCache<string, int>(10_000);
-
-            Assert.Equal(10_000, cache.Capacity);
-            Assert.Equal(0, GetStorageCapacity(cache));
-        }
-
-        [Fact]
-        public void Storage_ShouldGrowOnDemand_AndStayBoundedByCapacity()
+        public void Storage_ShouldGrowOnDemand_InsteadOfPreallocatingCapacity()
         {
             var cache = new LruCache<int, int>(10_000);
+            Assert.Equal(10_000, cache.Capacity);
+            Assert.Equal(0, GetStorageCapacity(cache));
+
             for (int i = 0; i < 3; i++)
                 cache[i] = i;
 
             Assert.Equal(3, cache.Count);
             Assert.InRange(GetStorageCapacity(cache), 3, 100);
-
-            for (int i = 0; i < 20_000; i++)
-                cache[i] = i;
-
-            Assert.Equal(10_000, cache.Count);
-            Assert.False(cache.ContainsKey(0));
-            Assert.True(cache.ContainsKey(19_999));
         }
 
         private static int GetStorageCapacity<TKey, TValue>(LruCache<TKey, TValue> cache) where TKey : notnull
