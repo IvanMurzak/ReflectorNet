@@ -47,7 +47,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be at least 1.");
 
             _capacity = capacity;
-            _cache = new Dictionary<TKey, LinkedListNode<CacheItem>>(capacity);
+            // Capacity is the logical maximum, not an expected size: let the dictionary grow on demand
+            // instead of reserving storage for the maximum up front (most caches stay far below it).
+            _cache = new Dictionary<TKey, LinkedListNode<CacheItem>>();
             _lruList = new LinkedList<CacheItem>();
         }
 

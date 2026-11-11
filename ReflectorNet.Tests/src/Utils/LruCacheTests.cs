@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using com.IvanMurzak.ReflectorNet.Utils;
 using Xunit;
@@ -19,6 +20,41 @@ namespace com.IvanMurzak.ReflectorNet.Tests.Utils
             var cache = new LruCache<string, int>(10);
             Assert.Equal(10, cache.Capacity);
             Assert.Equal(0, cache.Count);
+        }
+
+        [Fact]
+        public void Constructor_ShouldNotPreallocateStorageForFullCapacity()
+        {
+            var cache = new LruCache<string, int>(10_000);
+
+            Assert.Equal(10_000, cache.Capacity);
+            Assert.Equal(0, GetStorageCapacity(cache));
+        }
+
+        [Fact]
+        public void Storage_ShouldGrowOnDemand_AndStayBoundedByCapacity()
+        {
+            var cache = new LruCache<int, int>(10_000);
+            for (int i = 0; i < 3; i++)
+                cache[i] = i;
+
+            Assert.Equal(3, cache.Count);
+            Assert.InRange(GetStorageCapacity(cache), 3, 100);
+
+            for (int i = 0; i < 20_000; i++)
+                cache[i] = i;
+
+            Assert.Equal(10_000, cache.Count);
+            Assert.False(cache.ContainsKey(0));
+            Assert.True(cache.ContainsKey(19_999));
+        }
+
+        private static int GetStorageCapacity<TKey, TValue>(LruCache<TKey, TValue> cache) where TKey : notnull
+        {
+            var field = typeof(LruCache<TKey, TValue>).GetField("_cache", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var dictionary = field.GetValue(cache)!;
+            // EnsureCapacity(0) never grows the dictionary; it returns the current storage capacity.
+            return (int)dictionary.GetType().GetMethod("EnsureCapacity")!.Invoke(dictionary, new object[] { 0 })!;
         }
 
         [Theory]
