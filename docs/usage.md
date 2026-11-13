@@ -85,9 +85,10 @@ if (reflector.TryReadAt(player, "Items/[0]/Count", out SerializedMember? count, 
 // A filtered tree of the whole object or a subtree
 SerializedMember? view = reflector.View(player, new ViewQuery { NamePattern = "Name|Level", MaxDepth = 1 });
 
-// Flat path/value matches anywhere in the live graph, including list items
+// Flat path/value matches anywhere in the live graph, including list items.
+// Prints "Items/[0]/Count = 3", ...
 foreach (ViewMatch match in reflector.Grep(player, "^Count$"))
-    Console.WriteLine($"{match.Path} = {match.Value.GetValue<int>(reflector)}"); // Items/[0]/Count = 3, ...
+    Console.WriteLine($"{match.Path} = {match.Value.GetValue<int>(reflector)}");
 ```
 
 `ViewQuery` options:
@@ -197,11 +198,11 @@ To host your own tools, `MethodWrapper` wraps one `MethodInfo` with its `InputSc
 
 ```csharp
 JsonNode typeSchema = reflector.GetSchema<Player>();    // full schema with $defs
-JsonNode typeRef    = reflector.GetSchemaRef<Player>(); // {"$ref":"#/$defs/Player"}
+JsonNode typeRef = reflector.GetSchemaRef<Player>();    // {"$ref":"#/$defs/Player"}
 
 MethodInfo buy = typeof(Shop).GetMethod(nameof(Shop.Buy))!;
-JsonNode  input  = reflector.GetArgumentsSchema(buy);
-JsonNode? output = reflector.GetReturnSchema(buy);      // {"type":"object","properties":{"result":{"type":"string"}},...}
+JsonNode input = reflector.GetArgumentsSchema(buy);     // arguments as one object schema
+JsonNode? output = reflector.GetReturnSchema(buy);      // {"type":"object","properties":{"result":...}}
 ```
 
 Covered: fields and properties, primitives, collections, dictionaries, generics and nested types;

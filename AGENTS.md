@@ -21,7 +21,7 @@ dotnet pack ReflectorNet/ReflectorNet.csproj --configuration Release --output ./
 - `ReflectorNet.Tests.OuterAssembly/` — separate assembly for cross-assembly reflection tests.
 - `ConsoleApp/` — console app for manual testing.
 - `commands/` — maintainer PowerShell scripts (version bump, release notes).
-- `docs/usage.md` — public usage guide linked from the README; `docs/assets/` — README SVGs.
+- `docs/usage.md` — public usage guide linked from the README; `docs/assets/` — README SVGs (regenerate with `py -3 docs/assets/build-svgs.py`).
 - `docs/agents/` — agent reference docs (below); `docs/plan/` — design notes.
 - `.github/workflows/` — PR build/test (`pull_request.yml`) and the dispatch-only release.
 

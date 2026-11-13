@@ -1,18 +1,15 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
-    <img alt="ReflectorNet: .NET reflection for AI agents. A live object serialized to JSON and a method called from JSON" src="docs/assets/hero-light.svg" width="100%">
-  </picture>
+  <img alt="ReflectorNet: .NET reflection toolkit. Live objects to JSON and back, JSON Schema and method calls for AI agents" src="docs/assets/hero.svg" width="100%">
 </p>
 
 <p align="center">
   <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet" src="https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=1D4ED8&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
   <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet downloads" src="https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=1D4ED8&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
-  <img alt=".NET: netstandard2.1, net8.0, net9.0" src="https://img.shields.io/badge/.NET-netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white">
+  <img alt=".NET: netstandard2.1, net8.0, net9.0" src="https://img.shields.io/badge/netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white">
+  <br>
   <a href="https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml"><img alt="Release workflow" src="https://img.shields.io/github/actions/workflow/status/IvanMurzak/ReflectorNet/release.yml?label=Release&style=for-the-badge&logo=githubactions&logoColor=white&labelColor=0F172A"></a>
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache--2.0-047857?style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
   <a href="https://discord.gg/Cgs6nM8BPU"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
-  <a href="https://stand-with-ukraine.pp.ua"><img alt="Stand With Ukraine" src="https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg"></a>
 </p>
 
 **ReflectorNet** is a .NET reflection toolkit that lets an AI agent, or any tool without compiled
@@ -24,20 +21,17 @@ The entry point is the `Reflector` class. Its data model is `SerializedMember`: 
 value that keeps the member name, the type name, nested fields and properties, and the raw value.
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/flow-dark.svg">
-    <img alt="A live .NET object is serialized to SerializedMember JSON and deserialized or patched back; types and methods produce JSON Schema; an AI agent reads the JSON and the schema and sends a JSON method call that ReflectorNet finds and invokes" src="docs/assets/flow-light.svg" width="100%">
-  </picture>
+  <img alt="A live .NET object is serialized to SerializedMember JSON and changed back in place; types and methods produce JSON Schema; an AI agent reads the JSON and the schema and sends patches and JSON method calls that ReflectorNet finds and invokes" src="docs/assets/flow.svg" width="100%">
 </p>
 
 ## Features
 
-- ✅ **Serialize / Deserialize** — live objects to `SerializedMember` JSON and back
-- ✅ **In-place changes** — `TryModify`, `TryModifyAt` and `TryPatch` keep object identity
-- ✅ **Inspection** — `TryReadAt` one path, `View` a filtered tree, `Grep` by member name
-- ✅ **JSON Schema** — for types, method arguments and return values
-- ✅ **Method calls** — find methods by fuzzy name and call them with JSON arguments
-- ✅ **Extensible** — custom reflection and JSON converters, type blacklist
+✅ **Serialize / Deserialize** — live objects to `SerializedMember` JSON and back<br>
+✅ **In-place changes** — `TryModify`, `TryModifyAt` and `TryPatch` keep object identity<br>
+✅ **Inspection** — `TryReadAt` one path, `View` a filtered tree, `Grep` by member name<br>
+✅ **JSON Schema** — for types, method arguments and return values<br>
+✅ **Method calls** — find methods by fuzzy name and call them with JSON arguments<br>
+✅ **Extensible** — custom reflection and JSON converters, type blacklist
 
 ## Install
 
@@ -102,7 +96,8 @@ using System.Reflection;
 
 MethodInfo buy = typeof(Shop).GetMethod(nameof(Shop.Buy))!;
 var argsSchema = reflector.GetArgumentsSchema(buy);
-// {"type":"object","properties":{"itemId":{"type":"string"},"count":{"type":"integer"}},"required":["itemId","count"]}
+// {"type":"object","properties":{"itemId":{"type":"string"},"count":{"type":"integer"}},
+//  "required":["itemId","count"]}
 
 var callArgs = reflector.JsonSerializer.Deserialize<SerializedMemberList>("""
 [
@@ -162,3 +157,7 @@ dotnet pack ReflectorNet/ReflectorNet.csproj --configuration Release --output ./
 ## License
 
 [Apache License 2.0](LICENSE). Copyright (c) Ivan Murzak.
+
+<div align="center">
+  <a href="https://stand-with-ukraine.pp.ua"><img src="https://raw.githubusercontent.com/IvanMurzak/IvanMurzak/main/images/ukraine/flag-rounded.svg" width="28" height="28" alt="Stand with Ukraine" title="Stand with Ukraine"></a>
+</div>
