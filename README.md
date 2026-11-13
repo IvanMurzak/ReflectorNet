@@ -2,16 +2,12 @@
   <img alt="ReflectorNet: .NET reflection toolkit. Live objects to JSON and back, JSON Schema and method calls for AI agents" src="docs/assets/hero.svg" width="100%">
 </p>
 
-<p align="center">
-  <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet" src="https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
-  <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet downloads" src="https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
-  <img alt=".NET: netstandard2.1, net8.0, net9.0" src="https://img.shields.io/badge/netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white">
-  <br>
-  <a href="https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml"><img alt="Release workflow" src="https://img.shields.io/github/actions/workflow/status/IvanMurzak/ReflectorNet/release.yml?label=Release&color=15803D&style=for-the-badge&logo=githubactions&logoColor=white&labelColor=0F172A"></a>
-  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache--2.0-047857?style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
-  <a href="https://discord.gg/Cgs6nM8BPU"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
-  <a href="https://stand-with-ukraine.pp.ua"><img src="https://raw.githubusercontent.com/IvanMurzak/IvanMurzak/main/images/ukraine/flag-square.svg" height="28" alt="Stand with Ukraine" title="Stand with Ukraine"></a>
-</p>
+<div align="center">
+
+[![NuGet](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) [![NuGet downloads](https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![.NET: netstandard2.1, net8.0, net9.0](https://img.shields.io/badge/netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white)<br>
+[![Release workflow](https://img.shields.io/github/actions/workflow/status/IvanMurzak/ReflectorNet/release.yml?label=Release&color=15803D&style=for-the-badge&logo=githubactions&logoColor=white&labelColor=0F172A)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache--2.0-047857?style=for-the-badge&labelColor=0F172A&logoColor=white)](LICENSE) [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://discord.gg/Cgs6nM8BPU) [![Stand with Ukraine](https://raw.githubusercontent.com/IvanMurzak/IvanMurzak/main/images/ukraine/flag-badge.svg)](https://stand-with-ukraine.pp.ua)
+
+</div>
 
 **ReflectorNet** is a .NET reflection toolkit that lets an AI agent, or any tool without compiled
 bindings, work with a running program through JSON. It serializes live objects with their type
