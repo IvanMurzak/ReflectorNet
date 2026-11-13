@@ -12,8 +12,8 @@ import svgkit as K  # noqa: E402
 
 
 def code_card():
-    """Right side of the hero: a static editor card with real ReflectorNet output (x 760..1180)."""
-    x, y, w, h = 760, 56, 420, 272
+    """Right side of the hero: a static editor card with real ReflectorNet output (x 820..1180)."""
+    x, y, w, h = 820, 56, 360, 272
     s = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="14" fill="#070D14" stroke="{K.HAIR_STRONG}" stroke-opacity=".6"/>',
          f'<rect x="{x}" y="{y}" width="{w}" height="40" rx="14" fill="{K.SURF}"/>',
          f'<rect x="{x}" y="{y + 26}" width="{w}" height="14" fill="{K.SURF}"/>',
@@ -36,7 +36,7 @@ def code_card():
         assert n * 9.7 <= w - 36, (n, parts)
         spans = "".join(f'<tspan fill="{c}">{K.esc(t)}</tspan>' for c, t in parts)
         s.append(f'<text x="{x + 18}" y="{y + 74 + i * 29}" class="m" font-size="16">{spans}</text>')
-    s.append(f'<rect class="blink" x="{x + 18 + 28 * 9.7:.0f}" y="{y + 74 + 6 * 29 - 15}" width="9" height="19" fill="{K.TEXT}"/>')
+    s.append(f'<rect class="blink" x="{x + 26 + 28 * 9.7:.0f}" y="{y + 74 + 6 * 29 - 15}" width="9" height="19" fill="{K.TEXT}"/>')
     return "".join(s)
 
 
@@ -45,7 +45,7 @@ def hero():
         title="Reflector", accent="Net", eyebrow_text=".NET reflection toolkit",
         subtitle=["Live objects to JSON and back,", "JSON Schema and method calls for AI agents."],
         chip_items=["netstandard2.1", "net8.0", "net9.0"],
-        right=code_card(),
+        right=K.mark(688, 190, 76) + code_card(),
         label="ReflectorNet: .NET reflection toolkit. Live objects to JSON and back, JSON Schema and method calls "
               "for AI agents")
 
