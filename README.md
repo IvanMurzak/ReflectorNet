@@ -6,12 +6,12 @@
 </p>
 
 <p align="center">
-  <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet" src="https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=004880"></a>
-  <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet downloads" src="https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=downloads&color=8250df"></a>
-  <img alt=".NET: netstandard2.1, net8.0, net9.0" src="https://img.shields.io/badge/.NET-netstandard2.1%20%7C%208.0%20%7C%209.0-512bd4">
-  <a href="https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml"><img alt="Release" src="https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml/badge.svg?branch=main"></a>
-  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/github/license/IvanMurzak/ReflectorNet?label=License"></a>
-  <a href="https://discord.gg/Cgs6nM8BPU"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join-7289da?logo=discord&logoColor=white"></a>
+  <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet" src="https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=1D4ED8&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
+  <a href="https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/"><img alt="NuGet downloads" src="https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=1D4ED8&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
+  <img alt=".NET: netstandard2.1, net8.0, net9.0" src="https://img.shields.io/badge/.NET-netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white">
+  <a href="https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml"><img alt="Release workflow" src="https://img.shields.io/github/actions/workflow/status/IvanMurzak/ReflectorNet/release.yml?label=Release&style=for-the-badge&logo=githubactions&logoColor=white&labelColor=0F172A"></a>
+  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache--2.0-047857?style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
+  <a href="https://discord.gg/Cgs6nM8BPU"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&style=for-the-badge&labelColor=0F172A&logoColor=white"></a>
   <a href="https://stand-with-ukraine.pp.ua"><img alt="Stand With Ukraine" src="https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg"></a>
 </p>
 
@@ -32,14 +32,12 @@ value that keeps the member name, the type name, nested fields and properties, a
 
 ## Features
 
-| | What you get |
-|---|---|
-| **Serialize / Deserialize** | Live objects to `SerializedMember` JSON and back, with type names, nested members and `$ref` entries for repeated or cyclic references |
-| **In-place changes** | `TryModify`, `TryModifyAt` (one path) and `TryPatch` (JSON Merge Patch style) keep the object identity |
-| **Inspection** | `TryReadAt` reads one path, `View` returns a filtered tree, `Grep` searches member names by regex |
-| **JSON Schema** | `GetSchema`, `GetArgumentsSchema` and `GetReturnSchema` for types and methods, with `$defs` reuse and `[Description]` text |
-| **Method calls** | `FindMethod` finds methods by exact or fuzzy name, `MethodCall` binds JSON arguments, invokes and returns the result as text |
-| **Extensible** | Priority-based reflection converters, custom JSON converters and a type blacklist |
+- ✅ **Serialize / Deserialize** — live objects to `SerializedMember` JSON and back
+- ✅ **In-place changes** — `TryModify`, `TryModifyAt` and `TryPatch` keep object identity
+- ✅ **Inspection** — `TryReadAt` one path, `View` a filtered tree, `Grep` by member name
+- ✅ **JSON Schema** — for types, method arguments and return values
+- ✅ **Method calls** — find methods by fuzzy name and call them with JSON arguments
+- ✅ **Extensible** — custom reflection and JSON converters, type blacklist
 
 ## Install
 
