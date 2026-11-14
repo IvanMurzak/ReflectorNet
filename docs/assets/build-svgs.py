@@ -10,6 +10,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import svgkit as K  # noqa: E402
 
+MONO_W = 9.7          # mono glyph width at font-size 16
+ROW0, ROW_H = 74, 29  # first code row and row pitch in the hero card
+
 
 def code_card():
     """Right side of the hero: a static editor card with real ReflectorNet output (x 820..1180)."""
@@ -21,7 +24,7 @@ def code_card():
     for i, c in enumerate(("#FF5F57", "#FEBC2E", "#28C840")):
         s.append(f'<circle cx="{x + 22 + i * 20}" cy="{y + 20}" r="6" fill="{c}"/>')
     s.append(f'<text x="{x + w - 18}" y="{y + 26}" text-anchor="end" class="m" font-size="16" fill="{K.MUTED}">Program.cs</text>')
-    T, M, KEY, STR, NUM, OK, RED = K.TEXT, K.MUTED, "#A5C8E4", "#F5D08A", "#F59AB0", K.GREEN, K.RED_TEXT
+    T, KEY, STR, NUM, OK, RED = K.TEXT, "#A5C8E4", "#F5D08A", "#F59AB0", K.GREEN, K.RED_TEXT
     lines = [
         [(RED, "› "), (T, "reflector.Serialize(player)")],
         [(T, "{ "), (KEY, '"name"'), (T, ": "), (STR, '"player"'), (T, ",")],
@@ -33,10 +36,11 @@ def code_card():
     ]
     for i, parts in enumerate(lines):
         n = sum(len(t) for _, t in parts)
-        assert n * 9.7 <= w - 36, (n, parts)
+        assert n * MONO_W <= w - 36, (n, parts)
         spans = "".join(f'<tspan fill="{c}">{K.esc(t)}</tspan>' for c, t in parts)
-        s.append(f'<text x="{x + 18}" y="{y + 74 + i * 29}" class="m" font-size="16">{spans}</text>')
-    s.append(f'<rect class="blink" x="{x + 26 + 28 * 9.7:.0f}" y="{y + 74 + 6 * 29 - 15}" width="9" height="19" fill="{K.TEXT}"/>')
+        s.append(f'<text x="{x + 18}" y="{y + ROW0 + i * ROW_H}" class="m" font-size="16">{spans}</text>')
+    last = sum(len(t) for _, t in lines[-1])
+    s.append(f'<rect class="blink" x="{x + 26 + last * MONO_W:.0f}" y="{y + ROW0 + (len(lines) - 1) * ROW_H - 15}" width="9" height="19" fill="{K.TEXT}"/>')
     return "".join(s)
 
 

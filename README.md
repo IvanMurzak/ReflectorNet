@@ -109,9 +109,8 @@ public static class Shop
 }
 ```
 
-Type and method names may be partial: `FindMethod` and `MethodCall` take match levels from exact
-(`6`) down to case-insensitive substring (`1`). For instance methods, pass the target object as
-`targetObject`; otherwise ReflectorNet tries to create an instance of the declaring type.
+Type and method names may be partial; match levels and instance methods (`targetObject`) are in the
+[usage guide](https://github.com/IvanMurzak/ReflectorNet/blob/main/docs/usage.md).
 
 ## Inspect and search
 
@@ -121,8 +120,7 @@ var tree = reflector.View(player, new ViewQuery { MaxDepth = 1 });   // filtered
 var hits = reflector.Grep(player, "^Lev");                           // ViewMatch: Path + Value
 ```
 
-Paths are slash-delimited: `Inventory/Items/[0]/Count` for members and list items, `Settings/[timeout]`
-for dictionary keys.
+Paths are slash-delimited (`Items/[0]/Count`, `Stats/[hp]`); see [Paths](https://github.com/IvanMurzak/ReflectorNet/blob/main/docs/usage.md#paths).
 
 ## Documentation
 
