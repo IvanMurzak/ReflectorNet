@@ -1,13 +1,7 @@
-<p align="center">
-  <img alt="ReflectorNet: .NET reflection toolkit. Live objects to JSON and back, JSON Schema and method calls for AI agents" src="docs/assets/hero.svg" width="100%">
-</p>
+![ReflectorNet: .NET reflection toolkit. Live objects to JSON and back, JSON Schema and method calls for AI agents](https://raw.githubusercontent.com/IvanMurzak/ReflectorNet/main/docs/assets/hero.svg)
 
-<div align="center">
-
-[![NuGet](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) [![NuGet downloads](https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![.NET: netstandard2.1, net8.0, net9.0](https://img.shields.io/badge/netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white)<br>
-[![Release workflow](https://img.shields.io/github/actions/workflow/status/IvanMurzak/ReflectorNet/release.yml?label=Release&color=15803D&style=for-the-badge&logo=github&logoColor=white&labelColor=0F172A)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache--2.0-047857?style=for-the-badge&labelColor=0F172A&logoColor=white)](LICENSE) [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://discord.gg/Cgs6nM8BPU) [![Stand with Ukraine](https://raw.githubusercontent.com/IvanMurzak/IvanMurzak/main/images/ukraine/flag-badge.svg)](https://stand-with-ukraine.pp.ua)
-
-</div>
+[![NuGet](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) [![NuGet downloads](https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![.NET: netstandard2.1, net8.0, net9.0](https://img.shields.io/badge/netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white)
+[![Release workflow](https://img.shields.io/github/actions/workflow/status/IvanMurzak/ReflectorNet/release.yml?label=Release&color=15803D&style=for-the-badge&logo=github&logoColor=white&labelColor=0F172A)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache--2.0-047857?style=for-the-badge&labelColor=0F172A&logoColor=white)](https://github.com/IvanMurzak/ReflectorNet/blob/main/LICENSE) [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://discord.gg/Cgs6nM8BPU) [![Stand with Ukraine](https://raw.githubusercontent.com/IvanMurzak/IvanMurzak/main/images/ukraine/flag-badge.svg)](https://stand-with-ukraine.pp.ua)
 
 **ReflectorNet** is a .NET reflection toolkit that lets an AI agent, or any tool without compiled
 bindings, work with a running program through JSON. It serializes live objects with their type
@@ -17,18 +11,16 @@ and method signatures, and finds and calls methods described by name with JSON a
 The entry point is the `Reflector` class. Its data model is `SerializedMember`: a JSON-friendly
 value that keeps the member name, the type name, nested fields and properties, and the raw value.
 
-<p align="center">
-  <img alt="A live .NET object is serialized to SerializedMember JSON and changed back in place; types and methods produce JSON Schema; an AI agent reads the JSON and the schema and sends patches and JSON method calls that ReflectorNet finds and invokes" src="docs/assets/flow.svg" width="100%">
-</p>
+![A live .NET object is serialized to SerializedMember JSON and changed back in place; types and methods produce JSON Schema; an AI agent reads the JSON and the schema and sends patches and JSON method calls that ReflectorNet finds and invokes](https://raw.githubusercontent.com/IvanMurzak/ReflectorNet/main/docs/assets/flow.svg)
 
 ## Features
 
-✅ **Serialize / Deserialize** — live objects to `SerializedMember` JSON and back<br>
-✅ **In-place changes** — `TryModify`, `TryModifyAt` and `TryPatch` keep object identity<br>
-✅ **Inspection** — `TryReadAt` one path, `View` a filtered tree, `Grep` by member name<br>
-✅ **JSON Schema** — for types, method arguments and return values<br>
-✅ **Method calls** — find methods by fuzzy name and call them with JSON arguments<br>
-✅ **Extensible** — custom reflection and JSON converters, type blacklist
+- ✅ **Serialize / Deserialize** — live objects to `SerializedMember` JSON and back
+- ✅ **In-place changes** — `TryModify`, `TryModifyAt` and `TryPatch` keep object identity
+- ✅ **Inspection** — `TryReadAt` one path, `View` a filtered tree, `Grep` by member name
+- ✅ **JSON Schema** — for types, method arguments and return values
+- ✅ **Method calls** — find methods by fuzzy name and call them with JSON arguments
+- ✅ **Extensible** — custom reflection and JSON converters, type blacklist
 
 ## Install
 
@@ -134,10 +126,10 @@ for dictionary keys.
 
 ## Documentation
 
-- [Usage guide](docs/usage.md): serialization, paths, `View` and `Grep`, `TryModifyAt` and `TryPatch`,
+- [Usage guide](https://github.com/IvanMurzak/ReflectorNet/blob/main/docs/usage.md): serialization, paths, `View` and `Grep`, `TryModifyAt` and `TryPatch`,
   method discovery and calls, JSON Schema, converters and the type blacklist.
-- [Architecture](docs/agents/architecture.md), [models](docs/agents/models.md),
-  [thread safety](docs/agents/threading.md) and [release process](docs/agents/release.md).
+- [Architecture](https://github.com/IvanMurzak/ReflectorNet/blob/main/docs/agents/architecture.md), [models](https://github.com/IvanMurzak/ReflectorNet/blob/main/docs/agents/models.md),
+  [thread safety](https://github.com/IvanMurzak/ReflectorNet/blob/main/docs/agents/threading.md) and [release process](https://github.com/IvanMurzak/ReflectorNet/blob/main/docs/agents/release.md).
 - [Changelog](https://github.com/IvanMurzak/ReflectorNet/releases): GitHub Releases.
 
 ReflectorNet is the reflection layer of [Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) and the
@@ -153,4 +145,4 @@ dotnet pack ReflectorNet/ReflectorNet.csproj --configuration Release --output ./
 
 ## License
 
-[Apache License 2.0](LICENSE). Copyright (c) Ivan Murzak.
+[Apache License 2.0](https://github.com/IvanMurzak/ReflectorNet/blob/main/LICENSE). Copyright (c) Ivan Murzak.
