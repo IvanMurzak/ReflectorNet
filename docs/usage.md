@@ -60,8 +60,9 @@ var parsed = reflector.JsonSerializer.Deserialize<SerializedMember>(json)!;
 Player? copy = reflector.Deserialize<Player>(parsed);
 ```
 
-Serialization tracks visited objects and writes `$ref` entries for repeated references, so cyclic
-graphs do not recurse forever. Read a primitive back with `member.GetValue<T>(reflector)`.
+Serialization tracks the objects on the current branch and writes a `$ref` entry when an object refers
+back to one of its parents, so cyclic graphs do not recurse forever. An object shared by two
+branches is serialized in full each time. Read a primitive back with `member.GetValue<T>(reflector)`.
 
 ## Paths
 
@@ -73,7 +74,8 @@ Path-based APIs (`TryReadAt`, `TryModifyAt`, `View`) use slash-delimited paths:
 | `[0]` | Array or `IList` index | `Items/[0]/Count` |
 | `[key]` | Dictionary key | `Stats/[hp]` |
 
-A leading `#/` is accepted and stripped, so `$ref` paths from serialization work as input.
+A leading `#/` is accepted and stripped. A `$ref` path starts with the root's name when you serialize
+with `name:` (`#/player/Items/[0]`): drop that first segment before you pass it to a path API.
 
 ## Reading and searching
 
@@ -85,8 +87,8 @@ if (reflector.TryReadAt(player, "Items/[0]/Count", out SerializedMember? count, 
 // A filtered tree of the whole object or a subtree
 SerializedMember? view = reflector.View(player, new ViewQuery { NamePattern = "Name|Level", MaxDepth = 1 });
 
-// Flat path/value matches anywhere in the live graph, including list items.
-// Prints "Items/[0]/Count = 3", ...
+// Flat path/value matches anywhere in the live graph, including list items and the properties of
+// collections. Prints "Items/[0]/Count = 3", ... and also "Stats/Count = ..." for the dictionary.
 foreach (ViewMatch match in reflector.Grep(player, "^Count$"))
     Console.WriteLine($"{match.Path} = {match.Value.GetValue<int>(reflector)}");
 ```
@@ -169,8 +171,10 @@ Match levels (the minimum score a name must reach):
 | `1` | Contains, case-insensitive (default) |
 | `0` | No filtering on this name |
 
-Set `MethodRef.Namespace` with `knownNamespace: true` to search one namespace, and
-`parametersMatchLevel` to match parameter names and types.
+Set `MethodRef.Namespace` with `knownNamespace: true` to search one namespace. `parametersMatchLevel`
+sets how strictly parameter names and types must match: `FindMethod` ignores parameters by default
+(`0`), while `MethodCall` defaults to `2`, so the argument names you send must match the method's
+parameter names.
 
 `MethodCall` finds the method, deserializes the arguments, invokes it and returns the result as text:
 
@@ -217,7 +221,7 @@ scores how well it handles a type, and the highest score wins. Built in:
 `TypeReflectionConverter` and `AssemblyReflectionConverter`.
 
 ```csharp
-var reflector = new Reflector();
+// MyReflectionConverter and MyJsonConverter stand for your own converter classes.
 reflector.Converters.Add(new MyReflectionConverter());        // custom traversal, creation or mutation
 reflector.JsonSerializer.AddConverter(new MyJsonConverter()); // custom JSON or schema
 ```

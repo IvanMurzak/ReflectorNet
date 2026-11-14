@@ -29,8 +29,8 @@ def code_card():
         [(RED, "› "), (T, "reflector.Serialize(player)")],
         [(T, "{ "), (KEY, '"name"'), (T, ": "), (STR, '"player"'), (T, ",")],
         [(T, "  "), (KEY, '"typeName"'), (T, ": "), (STR, '"Player"'), (T, ",")],
-        [(T, "  "), (KEY, '"props"'), (T, ": [ { "), (KEY, '"name"'), (T, ": "), (STR, '"Level"'), (T, ",")],
-        [(T, "      "), (KEY, '"value"'), (T, ": "), (NUM, "7"), (T, " }, … ] }")],
+        [(T, "  "), (KEY, '"props"'), (T, ": […, { "), (KEY, '"name"'), (T, ": "), (STR, '"Level"'), (T, ",")],
+        [(T, "      "), (KEY, '"value"'), (T, ": "), (NUM, "7"), (T, ", … } ] }")],
         [(RED, "› "), (T, "reflector.MethodCall(…"), (STR, '"Buy"'), (T, "…)")],
         [(OK, "[Success] "), (STR, '"Bought 2 x potion"')],
     ]
