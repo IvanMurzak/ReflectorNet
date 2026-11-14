@@ -42,7 +42,7 @@ def code_card():
 
 def hero():
     return K.hero(
-        title="Reflector", accent="Net", eyebrow_text=".NET reflection toolkit",
+        title="Reflector", accent="Net", eyebrow_text=".NET reflection toolkit", accent_fx="flow",
         subtitle=["Live objects to JSON and back,", "JSON Schema and method calls for AI agents."],
         chip_items=["netstandard2.1", "net8.0", "net9.0"],
         right=K.mark(688, 190, 76) + code_card(),
