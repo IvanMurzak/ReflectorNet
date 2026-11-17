@@ -21,12 +21,6 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
-  <!-- Targeting net10.0 turns NuGet package pruning on for every TFM, which would drop System.Text.Json
-       from the published net8.0/net9.0 dependency groups. Keep the pre-net10 TFMs exactly as before. -->
-  <PropertyGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
-    <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
-  </PropertyGroup>
-
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\LICENSE" Pack="true" PackagePath="\" />
@@ -36,7 +30,12 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
   </ItemGroup>
 
-  <!-- System.Text.Json ships in the net10.0 shared framework (NU1510): reference the package only below it. -->
+  <!-- Below net10.0 the package shape stays as before: System.Text.Json is a package dependency, and package pruning
+       (on for every TFM once net10.0 is targeted) is off so it is not dropped from the net8.0/net9.0 groups.
+       On net10.0 System.Text.Json is inbox (NU1510). -->
+  <PropertyGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
+    <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
+  </PropertyGroup>
   <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
