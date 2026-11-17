@@ -11,8 +11,8 @@ ReflectorNet is a reflection toolkit for AI-driven .NET scenarios — fuzzy meth
 
 ## Target Frameworks & Language
 
-- **Library**: `netstandard2.1`, `net8.0`, `net9.0` — LangVersion `10.0`
-- **Tests**: `net8.0`, `net9.0` — LangVersion `11.0`
+- **Library**: `netstandard2.1`, `net8.0`, `net9.0`, `net10.0` — LangVersion `10.0`
+- **Tests**: `net8.0`, `net9.0`, `net10.0` — LangVersion `11.0`
 - Nullable enabled, ImplicitUsings disabled throughout
 - Root namespace: `com.IvanMurzak.ReflectorNet`
 
