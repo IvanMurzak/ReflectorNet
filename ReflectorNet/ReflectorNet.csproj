@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
     <LangVersion>10.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -21,6 +21,12 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
+  <!-- Targeting net10.0 turns NuGet package pruning on for every TFM, which would drop System.Text.Json
+       from the published net8.0/net9.0 dependency groups. Keep the pre-net10 TFMs exactly as before. -->
+  <PropertyGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
+    <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\LICENSE" Pack="true" PackagePath="\" />
@@ -28,6 +34,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+  </ItemGroup>
+
+  <!-- System.Text.Json ships in the net10.0 shared framework (NU1510): reference the package only below it. -->
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 

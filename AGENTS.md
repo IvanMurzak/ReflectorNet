@@ -8,7 +8,7 @@ type-preserving serialization, and dynamic invocation. It ships as the NuGet pac
 
 ```bash
 dotnet build --configuration Release
-dotnet test --configuration Release --verbosity normal   # multi-TFM: net8.0 + net9.0
+dotnet test --configuration Release --verbosity normal   # multi-TFM: net8.0 + net9.0 + net10.0
 dotnet test --configuration Release --filter "FullyQualifiedName~com.IvanMurzak.ReflectorNet.Tests.ClassName.MethodName"
 dotnet pack ReflectorNet/ReflectorNet.csproj --configuration Release --output ./packages
 ```

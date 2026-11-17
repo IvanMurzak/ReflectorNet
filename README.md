@@ -1,6 +1,6 @@
 ![ReflectorNet: .NET reflection toolkit. Live objects to JSON and back, JSON Schema and method calls for AI agents](https://raw.githubusercontent.com/IvanMurzak/ReflectorNet/main/docs/assets/hero.svg)
 
-[![NuGet](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) [![NuGet downloads](https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![.NET: netstandard2.1, net8.0, net9.0](https://img.shields.io/badge/netstandard2.1%20%7C%208.0%20%7C%209.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white)
+[![NuGet](https://img.shields.io/nuget/v/com.IvanMurzak.ReflectorNet?label=NuGet&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) [![NuGet downloads](https://img.shields.io/nuget/dt/com.IvanMurzak.ReflectorNet?label=Downloads&color=2F6F9F&logo=nuget&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://www.nuget.org/packages/com.IvanMurzak.ReflectorNet/) ![.NET: netstandard2.1, net8.0, net9.0, net10.0](https://img.shields.io/badge/netstandard2.1%20%7C%208.0%20%7C%209.0%20%7C%2010.0-0E7490?logo=dotnet&style=for-the-badge&labelColor=0F172A&logoColor=white)
 [![Release workflow](https://img.shields.io/github/actions/workflow/status/IvanMurzak/ReflectorNet/release.yml?label=Release&color=15803D&style=for-the-badge&logo=github&logoColor=white&labelColor=0F172A)](https://github.com/IvanMurzak/ReflectorNet/actions/workflows/release.yml) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache--2.0-047857?style=for-the-badge&labelColor=0F172A&logoColor=white)](https://github.com/IvanMurzak/ReflectorNet/blob/main/LICENSE) [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&style=for-the-badge&labelColor=0F172A&logoColor=white)](https://discord.gg/Cgs6nM8BPU) [![Stand with Ukraine](https://raw.githubusercontent.com/IvanMurzak/IvanMurzak/main/images/ukraine/flag-badge.svg)](https://stand-with-ukraine.pp.ua)
 
 **ReflectorNet** is a .NET reflection toolkit that lets an AI agent, or any tool without compiled
@@ -28,7 +28,7 @@ value that keeps the member name, the type name, nested fields and properties, a
 dotnet add package com.IvanMurzak.ReflectorNet
 ```
 
-Targets `netstandard2.1`, `net8.0` and `net9.0`. Dependencies: `System.Text.Json` and
+Targets `netstandard2.1`, `net8.0`, `net9.0` and `net10.0`. Dependencies: `System.Text.Json` (inbox on net10.0) and
 `Microsoft.Extensions.Logging`.
 
 ## Quick start
@@ -137,7 +137,7 @@ AI Game Developer tools. Questions and ideas: [Discord](https://discord.gg/Cgs6n
 
 ```bash
 dotnet build --configuration Release
-dotnet test --configuration Release      # tests run on net8.0 and net9.0
+dotnet test --configuration Release      # tests run on net8.0, net9.0 and net10.0
 dotnet pack ReflectorNet/ReflectorNet.csproj --configuration Release --output ./packages
 ```
 
