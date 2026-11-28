@@ -170,7 +170,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             // "null" is never added to a member's type (no ["string","null"], no anyOf null): some agents then fill
             // null with ""/0/false/[].
             var schema = JsonSchemaValidation(type)!;
-            Assert.DoesNotContain("null", schema.ToJsonString());
+            AssertNoNullType(schema);
         }
 
         [Fact]

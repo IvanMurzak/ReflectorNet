@@ -102,7 +102,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             Assert.Empty(Required(method));
             // Optional, not nullable-typed: "null" is never added to a type (agents fill it with ""/0/false/[]).
-            Assert.DoesNotContain("null", schema.ToJsonString());
+            SchemaTestBase.AssertNoNullType(schema);
         }
 
         [Fact]
