@@ -152,6 +152,32 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         /// <summary>
+        /// Asserts that no "type" in the schema (at any depth, anyOf/oneOf branches included) is, or lists, "null":
+        /// ReflectorNet never advertises null (agents then fill it with ""/0/false/[]).
+        /// </summary>
+        internal static void AssertNoNullType(JsonNode? node)
+        {
+            switch (node)
+            {
+                case JsonObject obj:
+                    foreach (var kv in obj)
+                    {
+                        if (kv.Key == JsonSchema.Type)
+                        {
+                            var types = kv.Value is JsonArray array ? array.Select(t => t?.ToString()) : new[] { kv.Value?.ToString() };
+                            Assert.DoesNotContain(JsonSchema.Null, types);
+                        }
+                        AssertNoNullType(kv.Value);
+                    }
+                    break;
+                case JsonArray arr:
+                    foreach (var item in arr)
+                        AssertNoNullType(item);
+                    break;
+            }
+        }
+
+        /// <summary>
         /// Asserts that "result" is NOT in the required array (for nullable types)
         /// </summary>
         protected void AssertResultNotRequired(JsonNode schema)

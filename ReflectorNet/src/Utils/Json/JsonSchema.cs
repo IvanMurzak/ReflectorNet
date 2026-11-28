@@ -415,6 +415,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <param name="reflector">The Reflector instance used for type analysis and schema generation.</param>
         /// <param name="method">The MethodInfo for which to generate the parameter schema.</param>
         /// <param name="justRef">Whether to use compact references for complex types in parameter schemas. Default is false.</param>
+        /// <param name="defines">Optional definitions to fill. Do not share it with an output (return) schema: input
+        /// definitions drop the required mark of members the deserializer cannot write.</param>
         /// <returns>A JsonNode containing the complete JSON Schema for the method's parameters.</returns>
         /// <exception cref="ArgumentNullException">Thrown when method parameter is null.</exception>
         public JsonNode GetArgumentsSchema(Reflector reflector, MethodInfo method, bool justRef = false, JsonObject? defines = null)
@@ -435,7 +437,17 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     required: !p.HasDefaultValue && !MethodUtils.IsParameterNullable(p),
                     attributeProvider: (ICustomAttributeProvider?)p));
 
-            return GenerateSchema(reflector, types, justRef, defines);
+            // Members the deserializer cannot write are never required in an input schema (see IsMemberRequired).
+            var outerScope = _inputSchemaScope;
+            _inputSchemaScope = true;
+            try
+            {
+                return GenerateSchema(reflector, types, justRef, defines);
+            }
+            finally
+            {
+                _inputSchemaScope = outerScope;
+            }
         }
 
         /// <summary>

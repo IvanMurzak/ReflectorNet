@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 
@@ -110,6 +111,110 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         {
             ClearFieldCache(logger);
             ClearPropertyCache(logger);
+        }
+
+        private const string RequiredMemberAttributeName = "System.Runtime.CompilerServices.RequiredMemberAttribute";
+        private const string DataAnnotationsRequiredAttributeName = "System.ComponentModel.DataAnnotations.RequiredAttribute";
+        private const string JsonRequiredAttributeName = "System.Text.Json.Serialization.JsonRequiredAttribute";
+        private const string JsonIncludeAttributeName = "System.Text.Json.Serialization.JsonIncludeAttribute";
+        private const string JsonConstructorAttributeName = "System.Text.Json.Serialization.JsonConstructorAttribute";
+
+        /// <summary>
+        /// Whether a field or property is explicitly marked required: the C# 11 <c>required</c> modifier (the compiler
+        /// emits <c>RequiredMemberAttribute</c> on the member), <c>[System.ComponentModel.DataAnnotations.Required]</c>
+        /// or <c>[System.Text.Json.Serialization.JsonRequired]</c> (or an attribute derived from one of them).
+        /// Attributes are matched by full name from their metadata (no attribute is constructed), so this works on every
+        /// target framework, including netstandard2.1 / Unity where those types may not exist. A mark on an overridden
+        /// base property counts. Nullability does not matter: an explicit mark makes even a nullable (<c>?</c>) member
+        /// required.
+        /// </summary>
+        public static bool IsMarkedRequired(MemberInfo member)
+        {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+
+            return HasAttributeNamed(member, RequiredMemberAttributeName, DataAnnotationsRequiredAttributeName, JsonRequiredAttributeName);
+        }
+
+        /// <summary>
+        /// Whether System.Text.Json can set the member when it deserializes: a field that is not <c>readonly</c> or
+        /// <c>const</c>; a property with a public setter (<c>init</c> included), or any setter plus
+        /// <c>[JsonInclude]</c>; or a member matched (by name, ignoring case) by a parameter of the constructor the
+        /// deserializer uses (<c>[JsonConstructor]</c>, or the only public constructor of a class without a public
+        /// parameterless one). A getter-only property outside that constructor is not writable.
+        /// </summary>
+        public static bool IsDeserializerWritable(MemberInfo member)
+        {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+
+            var writable = member switch
+            {
+                FieldInfo field => !field.IsInitOnly && !field.IsLiteral,
+                PropertyInfo property => property.GetSetMethod(nonPublic: true) is { } setter
+                    && (setter.IsPublic || HasAttributeNamed(property, JsonIncludeAttributeName)),
+                _ => false
+            };
+            return writable || IsConstructorParameter(member);
+        }
+
+        static bool IsConstructorParameter(MemberInfo member)
+        {
+            var type = member.ReflectedType ?? member.DeclaringType;
+            if (type == null)
+                return false;
+
+            var constructors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var constructor = constructors.FirstOrDefault(c => HasAttributeNamed(c, JsonConstructorAttributeName));
+            if (constructor == null && !type.IsValueType)
+            {
+                var publicConstructors = constructors.Where(c => c.IsPublic).ToArray();
+                if (publicConstructors.Length == 1 && publicConstructors[0].GetParameters().Length > 0)
+                    constructor = publicConstructors[0];
+            }
+            return constructor != null
+                && constructor.GetParameters().Any(p => string.Equals(p.Name, member.Name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Whether the member, or for a property any base property it overrides, carries an attribute whose type (or a
+        /// base type of it) has one of the given full names. Reads attribute metadata only.
+        /// </summary>
+        static bool HasAttributeNamed(MemberInfo member, params string[] names)
+        {
+            for (var current = member; current != null; current = OverriddenProperty(current))
+            {
+                foreach (var attribute in current.GetCustomAttributesData())
+                {
+                    for (var type = attribute.AttributeType; type != null; type = type.BaseType)
+                    {
+                        if (Array.IndexOf(names, type.FullName) >= 0)
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>The base property <paramref name="member"/> overrides, or null (not a property, or not an override).</summary>
+        static MemberInfo? OverriddenProperty(MemberInfo member)
+        {
+            if (member is not PropertyInfo property)
+                return null;
+            var accessor = property.GetGetMethod(nonPublic: true) ?? property.GetSetMethod(nonPublic: true);
+            if (accessor == null || accessor.GetBaseDefinition().DeclaringType == accessor.DeclaringType)
+                return null;
+
+            var indexCount = property.GetIndexParameters().Length;
+            for (var type = property.DeclaringType?.BaseType; type != null; type = type.BaseType)
+            {
+                var overridden = type
+                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                    .FirstOrDefault(p => p.Name == property.Name && p.GetIndexParameters().Length == indexCount);
+                if (overridden != null)
+                    return overridden;
+            }
+            return null;
         }
     }
 }

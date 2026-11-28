@@ -50,6 +50,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public static string Oblivious(string text) => text;
 #nullable enable
 
+        // Mirrors Unity-MCP's ScreenshotIsolated(GameObjectRef? gameObjectRef, bool? includeChildren = true, ...).
+        public static void ScreenshotLike(NullableParameterRequiredTests? target, bool? includeChildren = true, int? width = null, string name = "") { }
+
         static string[] Required(string methodName) => Required(typeof(NullableParameterRequiredTests).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!);
 
         static string[] Required(MethodInfo method)
@@ -88,6 +91,18 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public void ObliviousReferenceParameter_StaysRequired()
         {
             Assert.Equal(new[] { "text" }, Required(nameof(Oblivious)));
+        }
+
+        [Fact]
+        public void NullableReferenceToCustomClass_IsNotRequired_AndItsTypeHasNoNull()
+        {
+            var method = typeof(NullableParameterRequiredTests).GetMethod(nameof(ScreenshotLike))!;
+            var schema = _reflector.GetArgumentsSchema(method)!;
+            _output.WriteLine(schema.ToJsonString());
+
+            Assert.Empty(Required(method));
+            // Optional, not nullable-typed: "null" is never added to a type (agents fill it with ""/0/false/[]).
+            SchemaTestBase.AssertNoNullType(schema);
         }
 
         [Fact]
