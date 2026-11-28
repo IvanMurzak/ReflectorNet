@@ -163,9 +163,10 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                 }
             }
 
-            // Handle regular objects by introspecting their fields and properties
+            // Handle regular objects by introspecting their fields and properties.
+            // No member is listed in "required": deserialization leaves a missing member at its default,
+            // so every key may be left out (the same contract as the RQL tool layer).
             var properties = new JsonObject();
-            var required = new JsonArray();
             var schema = new JsonObject { [Type] = Object };
 
             // Get serializable fields
@@ -201,10 +202,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         fieldSchemaObj[Description] = JsonValue.Create(description);
 
                     properties[fieldName] = schemaRef;
-
-                    // Fields are typically required unless they are nullable
-                    if (underlyingType == null && !field.FieldType.IsClass)
-                        required.Add(fieldName);
                 }
             }
 
@@ -241,19 +238,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         propSchemaObj[Description] = JsonValue.Create(description);
 
                     properties![propName] = schemaRef;
-
-                    // Properties are required if they are value types and not nullable
-                    if (underlyingType == null && !prop.PropertyType.IsClass && prop.CanWrite)
-                        required.Add(propName);
                 }
             }
 
             if (properties.Count > 0)
                 schema[Properties] = properties;
-
-            // Add required array if it has items
-            if (required.Count > 0)
-                schema[Required] = required;
 
             return schema;
         }

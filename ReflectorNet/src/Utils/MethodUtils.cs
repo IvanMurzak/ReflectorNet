@@ -210,6 +210,25 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
+        /// Whether a parameter is listed in the arguments schema's <c>required</c>: it has no default value, is not
+        /// <c>[Optional]</c>, and is not a <see cref="Nullable{T}"/> value type (<c>int?</c>). A nullable reference
+        /// annotation (<c>string?</c>) alone does not make a parameter optional: it is a compile-time hint, not a
+        /// declared default. The same rule as the RQL tool layer, so both describe a tool the same way.
+        /// </summary>
+        public static bool IsParameterRequired(ParameterInfo parameter)
+        {
+            if (parameter == null)
+                throw new ArgumentNullException(nameof(parameter));
+
+            var type = parameter.ParameterType;
+            if (type.IsByRef)
+                type = type.GetElementType()!;
+            return !parameter.HasDefaultValue
+                && !parameter.IsOptional
+                && Nullable.GetUnderlyingType(type) == null;
+        }
+
+        /// <summary>
         /// Whether a parameter accepts null: a <see cref="Nullable{T}"/> value type (<c>int?</c>), or a reference
         /// type annotated nullable (<c>string?</c>) in a nullable-enabled context. A reference type in a
         /// nullable-oblivious context, and any non-nullable value type, is not. Reads the compiler's nullable
