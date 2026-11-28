@@ -218,7 +218,9 @@ unwrapped; `[Description]` text on members; custom output through `IJsonSchemaCo
 - **Members (fields and properties):** in input and output schemas, a member is not required by default, whatever
   its type or nullability, because a missing member keeps its default value.
 - **Marked members:** the C# 11 `required` modifier or `[System.ComponentModel.DataAnnotations.Required]` makes a
-  member required, even a nullable one; the mark takes precedence over nullability.
+  member required, even a nullable one; the mark takes precedence over nullability. Matched by attribute name, so it
+  also works where those types do not exist (netstandard2.1, Unity). The serializer omits null members, so a
+  marked member that is null is missing from the serialized output even though the output schema requires it.
 - **No `null` type:** `"null"` is never added to a type (no `["string","null"]`), so leave an optional value out
   rather than sending `null`.
 

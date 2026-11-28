@@ -64,6 +64,11 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             public int other;
         }
 
+        public class RenamedAndInherited : AnnotatedConfig
+        {
+            [Required, System.Text.Json.Serialization.JsonPropertyName("wire_name")] public int Renamed { get; set; }
+        }
+
 #if NET7_0_OR_GREATER
         public class ModifierConfig
         {
@@ -151,6 +156,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         {
             var schema = JsonSchemaValidation(typeof(DerivedAnnotation))!.AsObject();
             Assert.Equal(new[] { "id" }, RequiredOf(schema));
+        }
+
+        [Fact]
+        public void MarkedMember_UsesItsJsonName_AndInheritedMarksAreHonoured()
+        {
+            var schema = JsonSchemaValidation(typeof(RenamedAndInherited))!.AsObject();
+            Assert.Equal(new[] { nameof(AnnotatedConfig.Limit), nameof(AnnotatedConfig.Speed), "count", "label", "wire_name" }, RequiredOf(schema));
         }
 
 #if NET7_0_OR_GREATER
