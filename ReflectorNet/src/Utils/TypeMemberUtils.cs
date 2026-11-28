@@ -111,5 +111,32 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             ClearFieldCache(logger);
             ClearPropertyCache(logger);
         }
+
+        private const string RequiredMemberAttributeName = "System.Runtime.CompilerServices.RequiredMemberAttribute";
+        private const string DataAnnotationsRequiredAttributeName = "System.ComponentModel.DataAnnotations.RequiredAttribute";
+
+        /// <summary>
+        /// Whether a field or property is explicitly marked required: the C# 11 <c>required</c> modifier (the compiler
+        /// emits <c>RequiredMemberAttribute</c> on the member) or <c>[System.ComponentModel.DataAnnotations.Required]</c>
+        /// (or an attribute derived from it). Attributes are matched by full name, so this works on every target
+        /// framework, including netstandard2.1 / Unity where those types may not exist. Nullability does not matter:
+        /// an explicit mark makes even a nullable (<c>?</c>) member required.
+        /// </summary>
+        public static bool IsMarkedRequired(MemberInfo member)
+        {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+
+            foreach (var attribute in member.GetCustomAttributesData())
+            {
+                for (var type = attribute.AttributeType; type != null; type = type.BaseType)
+                {
+                    var name = type.FullName;
+                    if (name == RequiredMemberAttributeName || name == DataAnnotationsRequiredAttributeName)
+                        return true;
+                }
+            }
+            return false;
+        }
     }
 }

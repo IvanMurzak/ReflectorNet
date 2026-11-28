@@ -253,15 +253,8 @@ namespace com.IvanMurzak.ReflectorNet
             }
             else if (MethodUtils.IsParameterNullable(methodParameter))
             {
-                // A missing nullable parameter is null. The arguments schema still lists a nullable reference
-                // (string?) as required (MethodUtils.IsParameterRequired); the binder is only more lenient.
+                // Optional in the arguments schema (see JsonSchema.GetArgumentsSchema): a missing nullable parameter is null.
                 return null;
-            }
-            else if (methodParameter.IsOptional)
-            {
-                // [Optional] without a default: not required in the arguments schema, so bind default(T) as C# does.
-                var type = MethodUtils.GetParameterValueType(methodParameter);
-                return type.IsValueType ? Activator.CreateInstance(type) : null;
             }
             else
             {

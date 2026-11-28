@@ -164,9 +164,12 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             }
 
             // Handle regular objects by introspecting their fields and properties.
-            // No member is listed in "required": deserialization leaves a missing member at its default,
-            // so every key may be left out (the same contract as the RQL tool layer).
+            // A member is not "required" by default, whatever its type or nullability: deserialization leaves a
+            // missing member at its default, so the key may be left out. Only an explicit mark (the C# 11 `required`
+            // modifier or [DataAnnotations.Required]) makes it required, nullable or not. "null" is never added to
+            // a member's type: some agents then fill null with ""/0/false/[].
             var properties = new JsonObject();
+            var required = new JsonArray();
             var schema = new JsonObject { [Type] = Object };
 
             // Get serializable fields
@@ -202,6 +205,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         fieldSchemaObj[Description] = JsonValue.Create(description);
 
                     properties[fieldName] = schemaRef;
+                    if (TypeMemberUtils.IsMarkedRequired(field))
+                        required.Add(fieldName);
                 }
             }
 
@@ -237,12 +242,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     if (!string.IsNullOrEmpty(description) && schemaRef is JsonObject propSchemaObj)
                         propSchemaObj[Description] = JsonValue.Create(description);
 
-                    properties![propName] = schemaRef;
+                    properties[propName] = schemaRef;
+                    if (TypeMemberUtils.IsMarkedRequired(prop))
+                        required.Add(propName);
                 }
             }
 
             if (properties.Count > 0)
                 schema[Properties] = properties;
+            if (required.Count > 0)
+                schema[Required] = required;
 
             return schema;
         }

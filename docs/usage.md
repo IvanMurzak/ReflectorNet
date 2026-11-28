@@ -213,6 +213,15 @@ Covered: fields and properties, primitives, collections, dictionaries, generics 
 `$defs` reuse; nullable and optional parameters; `Task<T>` and `ValueTask<T>` return types are
 unwrapped; `[Description]` text on members; custom output through `IJsonSchemaConverter`.
 
+`required`:
+- **Parameters:** a parameter is required unless it has a default value or is nullable (`int?`, `string?`).
+- **Members (fields and properties):** in input and output schemas, a member is not required by default, whatever
+  its type or nullability, because a missing member keeps its default value.
+- **Marked members:** the C# 11 `required` modifier or `[System.ComponentModel.DataAnnotations.Required]` makes a
+  member required, even a nullable one; the mark takes precedence over nullability.
+- **No `null` type:** `"null"` is never added to a type (no `["string","null"]`), so leave an optional value out
+  rather than sending `null`.
+
 ## Converters and the type blacklist
 
 A priority-based registry picks the reflection converter for each type: every `IReflectionConverter`

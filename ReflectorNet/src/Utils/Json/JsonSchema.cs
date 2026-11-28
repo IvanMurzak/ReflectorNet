@@ -387,7 +387,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         ///
         /// Schema Structure:
         /// - Root object schema with "properties" containing each parameter
-        /// - "required" array listing parameters with no default value, not [Optional] and not Nullable&lt;T&gt; (int?); a nullable reference (string?) stays required
+        /// - "required" array listing parameters without default values that are not nullable (int?, string?)
         /// - "$defs" section containing complex type definitions to avoid duplication
         /// - Parameter descriptions extracted from DescriptionAttribute annotations
         /// - Proper JSON Schema Draft 2020-12 compliance
@@ -431,7 +431,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     type: p.ParameterType,
                     name: p.Name ?? throw new InvalidOperationException($"Parameter in method '{method.Name}' has no name."),
                     description: TypeUtils.GetDescription(p),
-                    required: MethodUtils.IsParameterRequired(p),
+                    // A nullable parameter without a default is optional too: the binder passes null when it is missing.
+                    required: !p.HasDefaultValue && !MethodUtils.IsParameterNullable(p),
                     attributeProvider: (ICustomAttributeProvider?)p));
 
             return GenerateSchema(reflector, types, justRef, defines);

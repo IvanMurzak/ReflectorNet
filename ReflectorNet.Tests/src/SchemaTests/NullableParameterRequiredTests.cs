@@ -17,10 +17,9 @@ using Xunit.Abstractions;
 namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 {
     /// <summary>
-    /// A parameter is required in the arguments schema iff it has no default value, is not <c>[Optional]</c> and is
-    /// not a <see cref="System.Nullable{T}"/> value type — the RQL tool layer's rule. A nullable reference
-    /// annotation (<c>string? x</c>) alone does not make it optional. The binder stays more lenient: a missing
-    /// nullable parameter (<c>string?</c> or <c>int?</c>) is still bound as null.
+    /// A nullable parameter without a default (<c>string? x</c>, <c>int? x</c>) is optional in the arguments
+    /// schema: the binder passes null when it is missing, so listing it as required made schema validators
+    /// reject calls the method accepts.
     /// </summary>
     public class NullableParameterRequiredTests : BaseTest
     {
@@ -51,16 +50,8 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public static string Oblivious(string text) => text;
 #nullable enable
 
-        public static string OptionalAttribute(
-            [System.Runtime.InteropServices.Optional] int count,
-            [System.Runtime.InteropServices.Optional] string label,
-            [System.Runtime.InteropServices.Optional, System.Runtime.InteropServices.DefaultParameterValue(7)] int withDefault)
-            => $"{count}|{label ?? "-"}|{withDefault}";
-
-        public static void ByRefNullableValue(ref int? nullableNumber, ref int number) { }
-
         // Mirrors Unity-MCP's ScreenshotIsolated(GameObjectRef? gameObjectRef, bool? includeChildren = true, ...).
-        public static void ScreenshotLike(NullableParameterRequiredTests? target, bool? includeChildren = true, int? width = null) { }
+        public static void ScreenshotLike(NullableParameterRequiredTests? target, bool? includeChildren = true, int? width = null, string name = "") { }
 
         static string[] Required(string methodName) => Required(typeof(NullableParameterRequiredTests).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!);
 
@@ -73,66 +64,45 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public void NullableReferenceWithoutDefault_IsRequired_NullableValueTypeAndDefaults_AreNot()
+        public void NullableParametersWithoutDefault_AreNotRequired()
         {
-            // nullableNumber (int?) and the two parameters with defaults are optional; string? is not.
-            Assert.Equal(new[] { "nullableText", "number", "text" }, Required(nameof(Mixed)));
+            Assert.Equal(new[] { "number", "text" }, Required(nameof(Mixed)));
         }
 
         [Fact]
-        public void NullableContextOnMethod_DoesNotMakeReferencesOptional()
+        public void NullableContextOnMethod_KeepsTheNonNullableParameterRequired()
         {
-            Assert.Equal(new[] { "a", "b", "c", "text" }, Required(nameof(MostlyNullable)));
+            Assert.Equal(new[] { "text" }, Required(nameof(MostlyNullable)));
         }
 
         [Fact]
-        public void NullableContextFromEnclosingType_DoesNotMakeReferencesOptional()
+        public void NullableContextFromEnclosingType_IsHonoured()
         {
-            Assert.Equal(new[] { "a", "b", "c" }, Required(typeof(Nested).GetMethod(nameof(Nested.Inherits))!));
+            Assert.Empty(Required(typeof(Nested).GetMethod(nameof(Nested.Inherits))!));
         }
 
         [Fact]
-        public void NullableReferenceToGenericType_IsRequired()
+        public void NullableReferenceToGenericType_IsNotRequired()
         {
-            Assert.Equal(new[] { "items", "nonNullList" }, Required(nameof(NullableList)));
-        }
-
-        [Fact]
-        public void OptionalAttribute_IsNotRequired()
-        {
-            Assert.Empty(Required(nameof(OptionalAttribute)));
-        }
-
-        [Fact]
-        public void NullableReferenceTarget_IsRequired_LikeRql()
-        {
-            Assert.Equal(new[] { "target" }, Required(nameof(ScreenshotLike)));
-        }
-
-        [Theory]
-        [InlineData(nameof(Mixed), "nullableText", true)]
-        [InlineData(nameof(Mixed), "text", true)]
-        [InlineData(nameof(Mixed), "nullableNumber", false)]
-        [InlineData(nameof(Mixed), "number", true)]
-        [InlineData(nameof(Mixed), "withDefault", false)]
-        [InlineData(nameof(Mixed), "numberWithDefault", false)]
-        [InlineData(nameof(ByRef), "nullableRef", true)]
-        [InlineData(nameof(OptionalAttribute), "count", false)]
-        [InlineData(nameof(OptionalAttribute), "label", false)]
-        [InlineData(nameof(OptionalAttribute), "withDefault", false)]
-        [InlineData(nameof(ByRefNullableValue), "nullableNumber", false)]
-        [InlineData(nameof(ByRefNullableValue), "number", true)]
-        public void IsParameterRequired(string methodName, string parameterName, bool expected)
-        {
-            var parameter = typeof(NullableParameterRequiredTests).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!
-                .GetParameters().Single(p => p.Name == parameterName);
-            Assert.Equal(expected, MethodUtils.IsParameterRequired(parameter));
+            Assert.Equal(new[] { "nonNullList" }, Required(nameof(NullableList)));
         }
 
         [Fact]
         public void ObliviousReferenceParameter_StaysRequired()
         {
             Assert.Equal(new[] { "text" }, Required(nameof(Oblivious)));
+        }
+
+        [Fact]
+        public void NullableReferenceToCustomClass_IsNotRequired_AndItsTypeHasNoNull()
+        {
+            var method = typeof(NullableParameterRequiredTests).GetMethod(nameof(ScreenshotLike))!;
+            var schema = _reflector.GetArgumentsSchema(method)!;
+            _output.WriteLine(schema.ToJsonString());
+
+            Assert.Empty(Required(method));
+            // Optional, not nullable-typed: "null" is never added to a type (agents fill it with ""/0/false/[]).
+            Assert.DoesNotContain("null", schema.ToJsonString());
         }
 
         [Fact]
@@ -167,20 +137,10 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public async Task MissingNullableParameter_IsBoundAsNull_ByName()
         {
-            // The binder is more lenient than the schema: a missing nullable parameter (string? included) is null.
+            // The binder side of the contract the schema now states: a missing nullable parameter is null.
             var wrapper = new MethodWrapper(_reflector, logger: null, typeof(NullableParameterRequiredTests).GetMethod(nameof(EchoNullable))!);
             var result = await wrapper.InvokeDict(new Dictionary<string, object?>());
             Assert.Equal(((string?)null, (int?)null), Assert.IsType<(string?, int?)>(result));
-        }
-
-        [Fact]
-        public async Task MissingOptionalAttributeParameters_AreBoundAsDefault_Positionally()
-        {
-            // The positional path (Invoke) raises "No value provided" for a missing required parameter;
-            // [Optional] ones bind default(T), or their [DefaultParameterValue].
-            var wrapper = new MethodWrapper(_reflector, logger: null, typeof(NullableParameterRequiredTests).GetMethod(nameof(OptionalAttribute))!);
-            Assert.Equal("0|-|7", await wrapper.Invoke());
-            Assert.Equal("5|-|7", await wrapper.Invoke(5));
         }
 
         [Fact]
