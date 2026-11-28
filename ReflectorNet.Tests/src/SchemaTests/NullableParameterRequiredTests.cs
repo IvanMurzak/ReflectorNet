@@ -51,8 +51,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public static string Oblivious(string text) => text;
 #nullable enable
 
-        public static int OptionalAttribute([System.Runtime.InteropServices.Optional] int count, [System.Runtime.InteropServices.Optional] string? label)
-            => count;
+        public static string OptionalAttribute(
+            [System.Runtime.InteropServices.Optional] int count,
+            [System.Runtime.InteropServices.Optional] string label,
+            [System.Runtime.InteropServices.Optional, System.Runtime.InteropServices.DefaultParameterValue(7)] int withDefault)
+            => $"{count}|{label ?? "-"}|{withDefault}";
+
+        public static void ByRefNullableValue(ref int? nullableNumber, ref int number) { }
 
         // Mirrors Unity-MCP's ScreenshotIsolated(GameObjectRef? gameObjectRef, bool? includeChildren = true, ...).
         public static void ScreenshotLike(NullableParameterRequiredTests? target, bool? includeChildren = true, int? width = null) { }
@@ -114,6 +119,9 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [InlineData(nameof(ByRef), "nullableRef", true)]
         [InlineData(nameof(OptionalAttribute), "count", false)]
         [InlineData(nameof(OptionalAttribute), "label", false)]
+        [InlineData(nameof(OptionalAttribute), "withDefault", false)]
+        [InlineData(nameof(ByRefNullableValue), "nullableNumber", false)]
+        [InlineData(nameof(ByRefNullableValue), "number", true)]
         public void IsParameterRequired(string methodName, string parameterName, bool expected)
         {
             var parameter = typeof(NullableParameterRequiredTests).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!
@@ -166,11 +174,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         }
 
         [Fact]
-        public async Task MissingOptionalAttributeParameter_IsBoundAsDefault()
+        public async Task MissingOptionalAttributeParameters_AreBoundAsDefault_Positionally()
         {
+            // The positional path (Invoke) raises "No value provided" for a missing required parameter;
+            // [Optional] ones bind default(T), or their [DefaultParameterValue].
             var wrapper = new MethodWrapper(_reflector, logger: null, typeof(NullableParameterRequiredTests).GetMethod(nameof(OptionalAttribute))!);
-            var result = await wrapper.InvokeDict(new Dictionary<string, object?>());
-            Assert.Equal(0, Assert.IsType<int>(result));
+            Assert.Equal("0|-|7", await wrapper.Invoke());
+            Assert.Equal("5|-|7", await wrapper.Invoke(5));
         }
 
         [Fact]
