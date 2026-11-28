@@ -22,7 +22,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
     /// missing member at its default, so every key may be left out (the RQL tool layer's contract). Hand-written
     /// converter schemas keep their own <c>required</c>.
     /// </summary>
-    public class MemberRequiredTests : BaseTest
+    public class MemberRequiredTests : SchemaTestBase
     {
         public MemberRequiredTests(ITestOutputHelper output) : base(output) { }
 
@@ -50,8 +50,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void ValueTypeFieldsAndProperties_AreNotRequired()
         {
-            var schema = new Reflector().GetSchema<WaveConfig>().AsObject();
-            _output.WriteLine(schema.ToJsonString());
+            var schema = JsonSchemaValidation(typeof(WaveConfig))!.AsObject();
 
             Assert.False(schema.ContainsKey(JsonSchema.Required));
             var properties = schema[JsonSchema.Properties]!.AsObject();
@@ -62,7 +61,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [Fact]
         public void NestedStructDefinition_HasNoRequired()
         {
-            var schema = new Reflector().GetSchema<WaveConfig>();
+            var schema = JsonSchemaValidation(typeof(WaveConfig))!;
             Assert.False(Definition(schema, typeof(Point)).ContainsKey(JsonSchema.Required));
         }
 
@@ -95,8 +94,7 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         [InlineData(typeof(Complex))]
         public void HandWrittenConverterSchema_KeepsItsRequired(Type type)
         {
-            var schema = new Reflector().GetSchema(type);
-            _output.WriteLine(schema.ToJsonString());
+            var schema = JsonSchemaValidation(type)!;
             Assert.NotEmpty(schema[JsonSchema.Required]!.AsArray());
         }
     }

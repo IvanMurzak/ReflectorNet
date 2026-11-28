@@ -220,13 +220,16 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (parameter == null)
                 throw new ArgumentNullException(nameof(parameter));
 
-            var type = parameter.ParameterType;
-            if (type.IsByRef)
-                type = type.GetElementType()!;
             return !parameter.HasDefaultValue
                 && !parameter.IsOptional
-                && Nullable.GetUnderlyingType(type) == null;
+                && Nullable.GetUnderlyingType(GetParameterValueType(parameter)) == null;
         }
+
+        /// <summary>The parameter's type with a by-ref (<c>ref</c>/<c>out</c>/<c>in</c>) wrapper removed.</summary>
+        internal static Type GetParameterValueType(ParameterInfo parameter)
+            => parameter.ParameterType.IsByRef
+                ? parameter.ParameterType.GetElementType()!
+                : parameter.ParameterType;
 
         /// <summary>
         /// Whether a parameter accepts null: a <see cref="Nullable{T}"/> value type (<c>int?</c>), or a reference
@@ -239,9 +242,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             if (parameter == null)
                 throw new ArgumentNullException(nameof(parameter));
 
-            var type = parameter.ParameterType;
-            if (type.IsByRef)
-                type = type.GetElementType()!;
+            var type = GetParameterValueType(parameter);
             if (Nullable.GetUnderlyingType(type) != null)
                 return true;
             if (type.IsValueType)

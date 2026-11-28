@@ -260,9 +260,7 @@ namespace com.IvanMurzak.ReflectorNet
             else if (methodParameter.IsOptional)
             {
                 // [Optional] without a default: not required in the arguments schema, so bind default(T) as C# does.
-                var type = methodParameter.ParameterType.IsByRef
-                    ? methodParameter.ParameterType.GetElementType()!
-                    : methodParameter.ParameterType;
+                var type = MethodUtils.GetParameterValueType(methodParameter);
                 return type.IsValueType ? Activator.CreateInstance(type) : null;
             }
             else
