@@ -223,8 +223,9 @@ unwrapped; `[Description]` text on members; custom output through `IJsonSchemaCo
   - Attributes are matched by name, so this also works where those types do not exist (netstandard2.1, Unity).
   - A mark on an overridden base property counts.
   - In an input (arguments) schema, a marked member that the deserializer cannot write (a getter-only property, a
-    `readonly` field, a non-public setter without `[JsonInclude]`) is not required. Output and type schemas keep
-    every mark.
+    `readonly` field, a non-public setter without `[JsonInclude]`, and not a parameter of the deserializing
+    constructor) is not required. Output and type schemas keep every mark, so do not pass one `defines` object to
+    both `GetArgumentsSchema` and `GetReturnSchema`: a shared `$defs` entry is built once, for whichever came first.
   - The serializer omits null members, so a marked member that is null is missing from the serialized output even
     though the output schema requires it.
 - **No `null` type:** `"null"` is never added to a type (no `["string","null"]`), so leave an optional value out

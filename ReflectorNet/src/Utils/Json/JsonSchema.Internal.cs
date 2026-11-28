@@ -94,10 +94,6 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         }
 
         /// <summary>
-        /// Generate a JSON schema from a type using ReflectorNet's introspection capabilities.
-        /// This method uses the Reflector's converter system to understand the type structure.
-        /// </summary>
-        /// <summary>
         /// True while an input (arguments) schema is generated on this thread. Schema generation is synchronous, so a
         /// thread-static scope reaches every nested <see cref="GetSchema(Reflector, Type, JsonObject?)"/> call.
         /// </summary>
@@ -112,7 +108,11 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             => TypeMemberUtils.IsMarkedRequired(member)
                 && (!_inputSchemaScope || TypeMemberUtils.IsDeserializerWritable(member));
 
-                JsonNode GenerateSchemaFromType(Reflector reflector, Type type, JsonObject defines)
+        /// <summary>
+        /// Generate a JSON schema from a type using ReflectorNet's introspection capabilities.
+        /// This method uses the Reflector's converter system to understand the type structure.
+        /// </summary>
+        JsonNode GenerateSchemaFromType(Reflector reflector, Type type, JsonObject defines)
         {
             // Handle primitive types
             if (TypeUtils.IsPrimitive(type))

@@ -116,6 +116,14 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             [Required] public int Settable { get; set; }
         }
 
+        public class ConstructorFilled
+        {
+            public ConstructorFilled(int id) { Id = id; }
+            [Required] public int Id { get; }
+            [Required] public int NotInConstructor { get; }
+        }
+
+        public static void Create(ConstructorFilled value) { }
         public static void Configure(WriteAccess access) { }
         public static WriteAccess Inspect() => new WriteAccess();
 
@@ -241,6 +249,13 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
 
             Assert.Contains(nameof(WriteAccess.GetterOnly), listed);
             Assert.Equal(listed, RequiredOf(definition));
+        }
+
+        [Fact]
+        public void InputSchema_GetterOnlyPropertyFilledByTheConstructor_StaysRequired()
+        {
+            var schema = new Reflector().GetArgumentsSchema(Method(nameof(Create)))!;
+            Assert.Equal(new[] { nameof(ConstructorFilled.Id) }, RequiredOf(Definition(schema, typeof(ConstructorFilled))));
         }
 
         [Fact]

@@ -415,6 +415,8 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// <param name="reflector">The Reflector instance used for type analysis and schema generation.</param>
         /// <param name="method">The MethodInfo for which to generate the parameter schema.</param>
         /// <param name="justRef">Whether to use compact references for complex types in parameter schemas. Default is false.</param>
+        /// <param name="defines">Optional definitions to fill. Do not share it with an output (return) schema: input
+        /// definitions drop the required mark of members the deserializer cannot write.</param>
         /// <returns>A JsonNode containing the complete JSON Schema for the method's parameters.</returns>
         /// <exception cref="ArgumentNullException">Thrown when method parameter is null.</exception>
         public JsonNode GetArgumentsSchema(Reflector reflector, MethodInfo method, bool justRef = false, JsonObject? defines = null)
