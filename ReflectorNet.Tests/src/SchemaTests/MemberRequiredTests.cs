@@ -86,6 +86,39 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
         public static WaveConfig Build() => new WaveConfig();
         public static AnnotatedConfig BuildAnnotated() => new AnnotatedConfig();
 
+        public class JsonRequiredConfig
+        {
+            [System.Text.Json.Serialization.JsonRequired] public int count;
+            [System.Text.Json.Serialization.JsonRequired] public string? Label { get; set; }
+            public int other;
+        }
+
+        public class OverrideBase
+        {
+            [Required] public virtual int Marked { get; set; }
+            public virtual int Plain { get; set; }
+        }
+
+        public class OverrideDerived : OverrideBase
+        {
+            public override int Marked { get; set; }
+            public override int Plain { get; set; }
+        }
+
+        public class WriteAccess
+        {
+            [Required] public int writable;
+            [Required] public readonly int readOnlyField;
+            [Required] public int GetterOnly { get; }
+            [Required] public int PrivateSet { get; private set; }
+            [Required, System.Text.Json.Serialization.JsonInclude] public int IncludedPrivateSet { get; private set; }
+            [Required] public int InitOnly { get; init; }
+            [Required] public int Settable { get; set; }
+        }
+
+        public static void Configure(WriteAccess access) { }
+        public static WriteAccess Inspect() => new WriteAccess();
+
         static JsonObject Definition(JsonNode schema, Type type)
             => schema[JsonSchema.Defs]![type.GetSchemaTypeId()]!.AsObject();
 
@@ -173,6 +206,51 @@ namespace com.IvanMurzak.ReflectorNet.Tests.SchemaTests
             Assert.Equal(new[] { nameof(ModifierConfig.Limit), nameof(ModifierConfig.Speed), "count", "label" }, RequiredOf(schema));
         }
 #endif
+
+        [Fact]
+        public void JsonRequired_MakesMembersRequired_NullableOrNot()
+        {
+            var schema = JsonSchemaValidation(typeof(JsonRequiredConfig))!.AsObject();
+            Assert.Equal(new[] { nameof(JsonRequiredConfig.Label), "count" }, RequiredOf(schema));
+        }
+
+        [Fact]
+        public void MarkOnOverriddenBaseProperty_IsHonoured()
+        {
+            var schema = JsonSchemaValidation(typeof(OverrideDerived))!.AsObject();
+            Assert.Equal(new[] { nameof(OverrideBase.Marked) }, RequiredOf(schema));
+        }
+
+        [Fact]
+        public void InputSchema_MemberTheDeserializerCannotWrite_IsNeverRequired()
+        {
+            var schema = new Reflector().GetArgumentsSchema(Method(nameof(Configure)))!;
+            _output.WriteLine(schema.ToJsonString());
+            var definition = Definition(schema, typeof(WriteAccess));
+
+            Assert.Equal(new[] { nameof(WriteAccess.IncludedPrivateSet), nameof(WriteAccess.InitOnly), nameof(WriteAccess.Settable), "writable" }, RequiredOf(definition));
+        }
+
+        [Fact]
+        public void OutputSchema_KeepsEveryMark_EvenOnMembersThatCannotBeWritten()
+        {
+            var schema = new Reflector().GetReturnSchema(Method(nameof(Inspect)))!;
+            _output.WriteLine(schema.ToJsonString());
+            var definition = Definition(schema, typeof(WriteAccess));
+            var listed = definition[JsonSchema.Properties]!.AsObject().Select(kv => kv.Key).OrderBy(n => n, StringComparer.Ordinal).ToArray();
+
+            Assert.Contains(nameof(WriteAccess.GetterOnly), listed);
+            Assert.Equal(listed, RequiredOf(definition));
+        }
+
+        [Fact]
+        public void InputScope_EndsWithTheArgumentsSchema()
+        {
+            var reflector = new Reflector();
+            reflector.GetArgumentsSchema(Method(nameof(Configure)));
+            var schema = JsonSchemaValidation(typeof(WriteAccess), reflector)!.AsObject();
+            Assert.Contains(nameof(WriteAccess.GetterOnly), RequiredOf(schema));
+        }
 
         [Theory]
         [InlineData(typeof(WaveConfig))]

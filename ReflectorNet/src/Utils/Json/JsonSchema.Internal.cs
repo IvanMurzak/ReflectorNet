@@ -97,7 +97,22 @@ namespace com.IvanMurzak.ReflectorNet.Utils
         /// Generate a JSON schema from a type using ReflectorNet's introspection capabilities.
         /// This method uses the Reflector's converter system to understand the type structure.
         /// </summary>
-        JsonNode GenerateSchemaFromType(Reflector reflector, Type type, JsonObject defines)
+        /// <summary>
+        /// True while an input (arguments) schema is generated on this thread. Schema generation is synchronous, so a
+        /// thread-static scope reaches every nested <see cref="GetSchema(Reflector, Type, JsonObject?)"/> call.
+        /// </summary>
+        [ThreadStatic]
+        static bool _inputSchemaScope;
+
+        /// <summary>
+        /// A member is required only when explicitly marked; in an input schema also only when the deserializer can
+        /// write it (a getter-only property cannot be supplied). Output and standalone type schemas keep every mark.
+        /// </summary>
+        static bool IsMemberRequired(MemberInfo member)
+            => TypeMemberUtils.IsMarkedRequired(member)
+                && (!_inputSchemaScope || TypeMemberUtils.IsDeserializerWritable(member));
+
+                JsonNode GenerateSchemaFromType(Reflector reflector, Type type, JsonObject defines)
         {
             // Handle primitive types
             if (TypeUtils.IsPrimitive(type))
@@ -166,8 +181,9 @@ namespace com.IvanMurzak.ReflectorNet.Utils
             // Handle regular objects by introspecting their fields and properties.
             // A member is not "required" by default, whatever its type or nullability: deserialization leaves a
             // missing member at its default, so the key may be left out. Only an explicit mark (the C# 11 `required`
-            // modifier or [DataAnnotations.Required]) makes it required, nullable or not. "null" is never added to
-            // a member's type: some agents then fill null with ""/0/false/[].
+            // modifier, [DataAnnotations.Required] or [JsonRequired]) makes it required, nullable or not; in an
+            // input schema only when the deserializer can write the member. "null" is never added to a member's
+            // type: some agents then fill null with ""/0/false/[].
             var properties = new JsonObject();
             var required = new JsonArray();
             var schema = new JsonObject { [Type] = Object };
@@ -205,7 +221,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         fieldSchemaObj[Description] = JsonValue.Create(description);
 
                     properties[fieldName] = schemaRef;
-                    if (TypeMemberUtils.IsMarkedRequired(field))
+                    if (IsMemberRequired(field))
                         required.Add(fieldName);
                 }
             }
@@ -243,7 +259,7 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                         propSchemaObj[Description] = JsonValue.Create(description);
 
                     properties[propName] = schemaRef;
-                    if (TypeMemberUtils.IsMarkedRequired(prop))
+                    if (IsMemberRequired(prop))
                         required.Add(propName);
                 }
             }

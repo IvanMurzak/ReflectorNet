@@ -114,25 +114,57 @@ namespace com.IvanMurzak.ReflectorNet.Utils
 
         private const string RequiredMemberAttributeName = "System.Runtime.CompilerServices.RequiredMemberAttribute";
         private const string DataAnnotationsRequiredAttributeName = "System.ComponentModel.DataAnnotations.RequiredAttribute";
+        private const string JsonRequiredAttributeName = "System.Text.Json.Serialization.JsonRequiredAttribute";
+        private const string JsonIncludeAttributeName = "System.Text.Json.Serialization.JsonIncludeAttribute";
 
         /// <summary>
         /// Whether a field or property is explicitly marked required: the C# 11 <c>required</c> modifier (the compiler
-        /// emits <c>RequiredMemberAttribute</c> on the member) or <c>[System.ComponentModel.DataAnnotations.Required]</c>
-        /// (or an attribute derived from it). Attributes are matched by full name, so this works on every target
-        /// framework, including netstandard2.1 / Unity where those types may not exist. Nullability does not matter:
-        /// an explicit mark makes even a nullable (<c>?</c>) member required.
+        /// emits <c>RequiredMemberAttribute</c> on the member), <c>[System.ComponentModel.DataAnnotations.Required]</c>
+        /// or <c>[System.Text.Json.Serialization.JsonRequired]</c> (or an attribute derived from one of them).
+        /// Attributes are matched by full name, so this works on every target framework, including netstandard2.1 /
+        /// Unity where those types may not exist. A mark on an overridden base property counts. Nullability does not
+        /// matter: an explicit mark makes even a nullable (<c>?</c>) member required.
         /// </summary>
         public static bool IsMarkedRequired(MemberInfo member)
         {
             if (member == null)
                 throw new ArgumentNullException(nameof(member));
 
-            foreach (var attribute in member.GetCustomAttributesData())
+            // Attribute.GetCustomAttributes honours `inherit` for properties (marks on an overridden base property);
+            // MemberInfo.GetCustomAttributes ignores it there.
+            return HasAttributeNamed(Attribute.GetCustomAttributes(member, inherit: true),
+                RequiredMemberAttributeName, DataAnnotationsRequiredAttributeName, JsonRequiredAttributeName);
+        }
+
+        /// <summary>
+        /// Whether System.Text.Json can set the member when it deserializes: a field that is not <c>readonly</c> or
+        /// <c>const</c>, or a property with a public setter (<c>init</c> included) or any setter plus
+        /// <c>[JsonInclude]</c>. A getter-only property is not writable.
+        /// </summary>
+        public static bool IsDeserializerWritable(MemberInfo member)
+        {
+            switch (member)
             {
-                for (var type = attribute.AttributeType; type != null; type = type.BaseType)
+                case FieldInfo field:
+                    return !field.IsInitOnly && !field.IsLiteral;
+                case PropertyInfo property:
+                    var setter = property.GetSetMethod(nonPublic: true);
+                    if (setter == null)
+                        return false;
+                    return setter.IsPublic
+                        || HasAttributeNamed(Attribute.GetCustomAttributes(property, inherit: true), JsonIncludeAttributeName);
+                default:
+                    return false;
+            }
+        }
+
+        static bool HasAttributeNamed(Attribute[] attributes, params string[] names)
+        {
+            foreach (var attribute in attributes)
+            {
+                for (var type = attribute.GetType(); type != null; type = type.BaseType)
                 {
-                    var name = type.FullName;
-                    if (name == RequiredMemberAttributeName || name == DataAnnotationsRequiredAttributeName)
+                    if (Array.IndexOf(names, type.FullName) >= 0)
                         return true;
                 }
             }

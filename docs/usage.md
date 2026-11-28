@@ -217,10 +217,16 @@ unwrapped; `[Description]` text on members; custom output through `IJsonSchemaCo
 - **Parameters:** a parameter is required unless it has a default value or is nullable (`int?`, `string?`).
 - **Members (fields and properties):** in input and output schemas, a member is not required by default, whatever
   its type or nullability, because a missing member keeps its default value.
-- **Marked members:** the C# 11 `required` modifier or `[System.ComponentModel.DataAnnotations.Required]` makes a
-  member required, even a nullable one; the mark takes precedence over nullability. Matched by attribute name, so it
-  also works where those types do not exist (netstandard2.1, Unity). The serializer omits null members, so a
-  marked member that is null is missing from the serialized output even though the output schema requires it.
+- **Marked members:** the C# 11 `required` modifier, `[System.ComponentModel.DataAnnotations.Required]` or
+  `[System.Text.Json.Serialization.JsonRequired]` makes a member required, even a nullable one; the mark takes
+  precedence over nullability.
+  - Attributes are matched by name, so this also works where those types do not exist (netstandard2.1, Unity).
+  - A mark on an overridden base property counts.
+  - In an input (arguments) schema, a marked member that the deserializer cannot write (a getter-only property, a
+    `readonly` field, a non-public setter without `[JsonInclude]`) is not required. Output and type schemas keep
+    every mark.
+  - The serializer omits null members, so a marked member that is null is missing from the serialized output even
+    though the output schema requires it.
 - **No `null` type:** `"null"` is never added to a type (no `["string","null"]`), so leave an optional value out
   rather than sending `null`.
 

@@ -435,7 +435,17 @@ namespace com.IvanMurzak.ReflectorNet.Utils
                     required: !p.HasDefaultValue && !MethodUtils.IsParameterNullable(p),
                     attributeProvider: (ICustomAttributeProvider?)p));
 
-            return GenerateSchema(reflector, types, justRef, defines);
+            // Members the deserializer cannot write are never required in an input schema (see IsMemberRequired).
+            var outerScope = _inputSchemaScope;
+            _inputSchemaScope = true;
+            try
+            {
+                return GenerateSchema(reflector, types, justRef, defines);
+            }
+            finally
+            {
+                _inputSchemaScope = outerScope;
+            }
         }
 
         /// <summary>
